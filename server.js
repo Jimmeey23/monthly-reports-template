@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-// Basic .env file loader if process.env.OPENAI_API_KEY is not already set
+// Basic .env file loader
 if (fs.existsSync(path.join(__dirname, '.env'))) {
   const envConfig = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
   for (const line of envConfig.split('\n')) {
@@ -27,10 +27,26 @@ const { renderReportToPdf } = require('./pdf_export');
 const PORT = process.env.PORT || 3000;
 const PYTHON = process.env.PYTHON || 'python3';
 
-// Use OS tmpdir on serverless hosts like Vercel so filesystem writes never fail
-const UPLOADS_DIR = path.join(os.tmpdir(), 'report_uploads');
+// Persistent uploads dir — use /uploads inside app dir (works on Railway/Render/VPS)
+// Falls back to os.tmpdir() only if /uploads is not writable (e.g. read-only cloud sandbox)
+function resolveUploadsDir() {
+  const local = path.join(__dirname, 'uploads');
+  try {
+    fs.mkdirSync(local, { recursive: true });
+    fs.accessSync(local, fs.constants.W_OK);
+    return local;
+  } catch (e) {
+    const tmp = path.join(os.tmpdir(), 'report_uploads');
+    fs.mkdirSync(tmp, { recursive: true });
+    return tmp;
+  }
+}
+
+const UPLOADS_DIR = resolveUploadsDir();
 const ANALYZE_SCRIPT = path.join(__dirname, 'analyze_v2.py');
 const GEN_REPORT_SCRIPT = path.join(__dirname, 'gen_report_v2.py');
+
+console.log(`UPLOADS_DIR: ${UPLOADS_DIR}`);
 
 // fieldname -> filename analyze_v2.py expects inside the input dir
 const CSV_SLOTS = [
@@ -43,8 +59,6 @@ const CSV_SLOTS = [
   { field: 'active', label: 'Active', filename: 'active.csv' },
 ];
 
-fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-
 // sessionId -> { dir, analysisPath, locations, months }
 const sessions = new Map();
 
@@ -52,7 +66,7 @@ function getSession(sessionId) {
   if (!sessionId) return null;
   if (sessions.has(sessionId)) return sessions.get(sessionId);
 
-  // Fallback: reload from disk in /tmp if running in stateless serverless instance
+  // Fallback: reload from disk if in-memory map was cleared (e.g. server restart)
   const sessionDir = path.join(UPLOADS_DIR, sessionId);
   const sessionFile = path.join(sessionDir, 'session.json');
   if (fs.existsSync(sessionFile)) {
@@ -73,48 +87,14 @@ function saveSession(sessionId, sessionData) {
   } catch (e) {}
 }
 
-function runPythonScript(scriptType, payload, reqHost, callback) {
-  if (!process.env.VERCEL) {
-    const scriptPath = scriptType === 'analyze' ? ANALYZE_SCRIPT : GEN_REPORT_SCRIPT;
-    const args =
-      scriptType === 'analyze'
-        ? [payload.sessionDir, payload.analysisPath]
-        : [payload.analysisPath, payload.locKeys.join(','), payload.monthKeys.join(','), payload.outputPath];
-
-    execFile(PYTHON, [scriptPath, ...args], { maxBuffer: 1024 * 1024 * 50 }, (err, stdout, stderr) => {
-      if (!err) return callback(null, stdout, stderr);
-      callVercelPythonApi(scriptType, payload, reqHost, callback);
-    });
-  } else {
-    callVercelPythonApi(scriptType, payload, reqHost, callback);
-  }
+function runPythonScript(scriptPath, args, callback) {
+  execFile(PYTHON, [scriptPath, ...args], { maxBuffer: 1024 * 1024 * 100 }, callback);
 }
 
-function callVercelPythonApi(scriptType, payload, reqHost, callback) {
-  const host = reqHost || process.env.VERCEL_URL || 'localhost:3000';
-  const protocol = host.includes('localhost') ? 'http' : 'https';
-  const url = `${protocol}://${host}/api/${scriptType}`;
-
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-    .then(async (res) => {
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.error) {
-        return callback(new Error(data.error || `Python serverless function error ${res.status}`));
-      }
-      callback(null, '', '');
-    })
-    .catch((err) => callback(err));
-}
-
-// Use memory storage so Vercel serverless never needs a writable temp filesystem path.
-// Chunks are small (1.5 MB each) so RAM usage is safe.
+// Use memoryStorage — writes buffers directly to disk avoiding any temp file dependency
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB per chunk/file — chunks are max 1.5 MB
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB per chunk — chunks are 1.5 MB each
 });
 
 function assignSessionId(req, res, next) {
@@ -135,7 +115,9 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json({ limit: '20mb' }));
+app.use(express.json({ limit: '5mb' }));
+
+// ─── Routes ────────────────────────────────────────────────────────────────────
 
 app.get('/', (req, res) => {
   res.render('upload', { slots: CSV_SLOTS, error: null });
@@ -153,62 +135,38 @@ app.get('/select', (req, res) => {
   });
 });
 
+// Chunk-based upload: receives 1.5 MB binary blobs and appends them to the target CSV
 app.post('/upload-chunk', upload.single('chunk'), (req, res) => {
-  const sessionId = req.body.sessionId || req.query.sessionId;
-  const slot = req.body.slot || req.query.slot;
-  const chunkIndex = parseInt(req.body.chunkIndex || req.query.chunkIndex || '0', 10);
-  const totalChunks = parseInt(req.body.totalChunks || req.query.totalChunks || '1', 10);
+  const sessionId = req.body.sessionId;
+  const slot = req.body.slot;
+  const chunkIndex = parseInt(req.body.chunkIndex || '0', 10);
 
   if (!sessionId || !slot || !req.file) {
     return res.status(400).json({ error: 'Missing sessionId, slot, or chunk file' });
   }
 
   const sessionDir = path.join(UPLOADS_DIR, sessionId);
-  fs.mkdirSync(sessionDir, { recursive: true });
+  try { fs.mkdirSync(sessionDir, { recursive: true }); } catch (e) {}
 
   const slotInfo = CSV_SLOTS.find((s) => s.field === slot);
   const targetFilename = slotInfo ? slotInfo.filename : `${slot}.csv`;
   const targetPath = path.join(sessionDir, targetFilename);
 
   try {
-    // req.file.buffer is available because we use multer memoryStorage
-    const chunkBuffer = req.file.buffer;
     if (chunkIndex === 0) {
-      fs.writeFileSync(targetPath, chunkBuffer);
+      fs.writeFileSync(targetPath, req.file.buffer);
     } else {
-      fs.appendFileSync(targetPath, chunkBuffer);
+      fs.appendFileSync(targetPath, req.file.buffer);
     }
   } catch (err) {
+    console.error(`chunk write error: ${err.message}`);
     return res.status(500).json({ error: `Failed to write chunk: ${err.message}` });
   }
 
-  res.json({ ok: true, slot, chunkIndex, totalChunks, isComplete: chunkIndex === totalChunks - 1 });
+  res.json({ ok: true, slot, chunkIndex });
 });
 
-app.post('/upload-slot', upload.single('file'), (req, res) => {
-  const sessionId = req.body.sessionId || req.query.sessionId;
-  const slot = req.body.slot || req.query.slot;
-  if (!sessionId || !slot || !req.file) {
-    return res.status(400).json({ error: 'Missing sessionId, slot, or file' });
-  }
-
-  const sessionDir = path.join(UPLOADS_DIR, sessionId);
-  fs.mkdirSync(sessionDir, { recursive: true });
-
-  const slotInfo = CSV_SLOTS.find((s) => s.field === slot);
-  const targetFilename = slotInfo ? slotInfo.filename : `${slot}.csv`;
-  const targetPath = path.join(sessionDir, targetFilename);
-
-  try {
-    // req.file.buffer is available because we use multer memoryStorage
-    fs.writeFileSync(targetPath, req.file.buffer);
-  } catch (err) {
-    return res.status(500).json({ error: `Failed to save file: ${err.message}` });
-  }
-
-  res.json({ ok: true, slot, targetFilename });
-});
-
+// Trigger analysis after all CSV files are uploaded
 app.post('/analyze-session', (req, res) => {
   const { sessionId } = req.body;
   if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
@@ -223,7 +181,7 @@ app.post('/analyze-session', (req, res) => {
 
   const analysisPath = path.join(sessionDir, 'analysis.json');
 
-  runPythonScript('analyze', { sessionDir, analysisPath }, req.headers.host, (err, stdout, stderr) => {
+  runPythonScript(ANALYZE_SCRIPT, [sessionDir, analysisPath], (err, stdout, stderr) => {
     if (err) {
       console.error(stderr || err.message);
       return res.status(500).json({ error: `Analysis failed: ${stderr || err.message}` });
@@ -249,79 +207,6 @@ app.post('/analyze-session', (req, res) => {
     res.json({ ok: true, redirectUrl: `/select?sessionId=${sessionId}` });
   });
 });
-
-app.post(
-  '/upload',
-  assignSessionId,
-  upload.fields(CSV_SLOTS.map((s) => ({ name: s.field, maxCount: 1 }))),
-  (req, res) => {
-    const missing = CSV_SLOTS.filter((s) => !req.files || !req.files[s.field]);
-    if (missing.length) {
-      return res.render('upload', {
-        slots: CSV_SLOTS,
-        error: `Missing file(s): ${missing.map((s) => s.label).join(', ')}`,
-      });
-    }
-
-    const sessionDir = path.join(UPLOADS_DIR, req.sessionId);
-    fs.mkdirSync(sessionDir, { recursive: true });
-
-    // Write each file buffer to disk (memoryStorage keeps files in req.file.buffer)
-    try {
-      for (const slot of CSV_SLOTS) {
-        const file = req.files[slot.field][0];
-        fs.writeFileSync(path.join(sessionDir, slot.filename), file.buffer);
-      }
-    } catch (writeErr) {
-      return res.render('upload', {
-        slots: CSV_SLOTS,
-        error: `Failed to save uploaded files: ${writeErr.message}`,
-      });
-    }
-
-    const analysisPath = path.join(sessionDir, 'analysis.json');
-
-    runPythonScript('analyze', { sessionDir, analysisPath }, req.headers.host, (err, stdout, stderr) => {
-      if (err) {
-        console.error(stderr || err.message);
-        return res.render('upload', {
-          slots: CSV_SLOTS,
-          error: `Analysis failed: ${stderr || err.message}`,
-        });
-      }
-
-      let analysis;
-      try {
-        analysis = JSON.parse(fs.readFileSync(analysisPath, 'utf8'));
-      } catch (e) {
-        return res.render('upload', {
-          slots: CSV_SLOTS,
-          error: `Could not read analysis output: ${e.message}`,
-        });
-      }
-
-      const locations = analysis.meta.locations; // { loc_key: full_name }
-      const months = analysis.meta.months; // ["2026-01", ...]
-
-      if (!Object.keys(locations).length || !months.length) {
-        return res.render('upload', {
-          slots: CSV_SLOTS,
-          error: 'No studios or months detected in the uploaded CSVs.',
-        });
-      }
-
-      const sessionData = { dir: sessionDir, analysisPath, locations, months };
-      saveSession(req.sessionId, sessionData);
-
-      res.render('select', {
-        sessionId: req.sessionId,
-        locations,
-        months: [...months].reverse(),
-        error: null,
-      });
-    });
-  }
-);
 
 app.post('/generate', (req, res) => {
   const { sessionId } = req.body;
@@ -359,52 +244,49 @@ app.post('/generate', (req, res) => {
   }
   const outputPath = path.join(session.dir, outputFilename);
 
-  const payload = {
-    analysisPath: session.analysisPath,
-    locKeys: selectedLocs,
-    monthKeys: selectedMonths,
-    outputPath,
-  };
+  runPythonScript(
+    GEN_REPORT_SCRIPT,
+    [session.analysisPath, selectedLocs.join(','), selectedMonths.join(','), outputPath],
+    (err, stdout, stderr) => {
+      if (err) {
+        console.error(stderr || err.message);
+        return res.render('select', {
+          sessionId,
+          locations: session.locations,
+          months: [...session.months].reverse(),
+          error: `Report generation failed: ${stderr || err.message}`,
+        });
+      }
 
-  runPythonScript('generate', payload, req.headers.host, (err, stdout, stderr) => {
-    if (err) {
-      console.error(stderr || err.message);
-      return res.render('select', {
+      try {
+        const html = fs.readFileSync(outputPath, 'utf8');
+        const protocol = req.headers['x-forwarded-proto'] || 'http';
+        const host = req.headers.host || `localhost:${PORT}`;
+        const bootstrap = `<script>window.__REPORT_CTX__ = ${JSON.stringify({
+          sessionId,
+          loc: selectedLocs[0],
+          month: selectedMonths[0],
+          filename: outputFilename,
+          serverUrl: process.env.SERVER_URL || `${protocol}://${host}`,
+        })};</script>\n<script src="/report-client.js"></script>`;
+        fs.writeFileSync(outputPath, html.replace('<!-- REPORT_CLIENT_PLACEHOLDER -->', bootstrap));
+      } catch (spliceErr) {
+        console.error('Could not inject report client script:', spliceErr.message);
+      }
+
+      res.render('result', {
         sessionId,
+        locs: selectedLocs,
+        selectedMonths,
+        comboCount,
         locations: session.locations,
         months: [...session.months].reverse(),
-        error: `Report generation failed: ${stderr || err.message}`,
+        reportUrl: `/report/${sessionId}/${encodeURIComponent(outputFilename)}`,
+        pdfUrl: `/download-pdf/${sessionId}/${encodeURIComponent(outputFilename)}`,
+        filename: outputFilename,
       });
     }
-
-    try {
-      const html = fs.readFileSync(outputPath, 'utf8');
-      const protocol = req.headers['x-forwarded-proto'] || 'http';
-      const host = req.headers.host || `localhost:${PORT}`;
-      const bootstrap = `<script>window.__REPORT_CTX__ = ${JSON.stringify({
-        sessionId,
-        loc: selectedLocs[0],
-        month: selectedMonths[0],
-        filename: outputFilename,
-        serverUrl: process.env.SERVER_URL || `${protocol}://${host}`,
-      })};</script>\n<script src="/report-client.js"></script>`;
-      fs.writeFileSync(outputPath, html.replace('<!-- REPORT_CLIENT_PLACEHOLDER -->', bootstrap));
-    } catch (spliceErr) {
-      console.error('Could not inject report client script:', spliceErr.message);
-    }
-
-    res.render('result', {
-      sessionId,
-      locs: selectedLocs,
-      selectedMonths,
-      comboCount,
-      locations: session.locations,
-      months: [...session.months].reverse(),
-      reportUrl: `/report/${sessionId}/${encodeURIComponent(outputFilename)}`,
-      pdfUrl: `/download-pdf/${sessionId}/${encodeURIComponent(outputFilename)}`,
-      filename: outputFilename,
-    });
-  });
+  );
 });
 
 app.get('/download-pdf/:sessionId/:filename', async (req, res) => {
@@ -489,6 +371,9 @@ app.get('/download/:sessionId/:filename', (req, res) => {
     if (err) res.status(404).send('Report not found.');
   });
 });
+
+// Health check endpoint
+app.get('/health', (req, res) => res.json({ status: 'ok', uploadsDir: UPLOADS_DIR }));
 
 if (require.main === module) {
   app.listen(PORT, () => {

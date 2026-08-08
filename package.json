@@ -4,6 +4,9 @@
   "private": true,
   "description": "Upload CSV exports, pick a studio + month, auto-generate the performance report.",
   "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js"

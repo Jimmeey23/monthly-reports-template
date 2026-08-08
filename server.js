@@ -147,6 +147,83 @@ app.get('/', (req, res) => {
   res.render('upload', { slots: CSV_SLOTS, error: null });
 });
 
+app.get('/select', (req, res) => {
+  const sessionId = req.query.sessionId;
+  const session = getSession(sessionId);
+  if (!session) return res.redirect('/');
+  res.render('select', {
+    sessionId,
+    locations: session.locations,
+    months: [...session.months].reverse(),
+    error: null,
+  });
+});
+
+app.post('/upload-slot', upload.single('file'), (req, res) => {
+  const sessionId = req.body.sessionId || req.query.sessionId;
+  const slot = req.body.slot || req.query.slot;
+  if (!sessionId || !slot || !req.file) {
+    return res.status(400).json({ error: 'Missing sessionId, slot, or file' });
+  }
+
+  const sessionDir = path.join(UPLOADS_DIR, sessionId);
+  fs.mkdirSync(sessionDir, { recursive: true });
+
+  const slotInfo = CSV_SLOTS.find((s) => s.field === slot);
+  const targetFilename = slotInfo ? slotInfo.filename : `${slot}.csv`;
+  const targetPath = path.join(sessionDir, targetFilename);
+
+  try {
+    fs.copyFileSync(req.file.path, targetPath);
+    try { fs.unlinkSync(req.file.path); } catch (e) {}
+  } catch (err) {
+    return res.status(500).json({ error: `Failed to save file: ${err.message}` });
+  }
+
+  res.json({ ok: true, slot, targetFilename });
+});
+
+app.post('/analyze-session', (req, res) => {
+  const { sessionId } = req.body;
+  if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
+
+  const sessionDir = path.join(UPLOADS_DIR, sessionId);
+  const missing = CSV_SLOTS.filter((s) => !fs.existsSync(path.join(sessionDir, s.filename)));
+  if (missing.length) {
+    return res.status(400).json({
+      error: `Missing CSV file(s): ${missing.map((s) => s.label).join(', ')}`,
+    });
+  }
+
+  const analysisPath = path.join(sessionDir, 'analysis.json');
+
+  runPythonScript('analyze', { sessionDir, analysisPath }, req.headers.host, (err, stdout, stderr) => {
+    if (err) {
+      console.error(stderr || err.message);
+      return res.status(500).json({ error: `Analysis failed: ${stderr || err.message}` });
+    }
+
+    let analysis;
+    try {
+      analysis = JSON.parse(fs.readFileSync(analysisPath, 'utf8'));
+    } catch (e) {
+      return res.status(500).json({ error: `Could not read analysis output: ${e.message}` });
+    }
+
+    const locations = analysis.meta.locations;
+    const months = analysis.meta.months;
+
+    if (!Object.keys(locations).length || !months.length) {
+      return res.status(400).json({ error: 'No studios or months detected in the uploaded CSVs.' });
+    }
+
+    const sessionData = { dir: sessionDir, analysisPath, locations, months };
+    saveSession(sessionId, sessionData);
+
+    res.json({ ok: true, redirectUrl: `/select?sessionId=${sessionId}` });
+  });
+});
+
 app.post(
   '/upload',
   assignSessionId,

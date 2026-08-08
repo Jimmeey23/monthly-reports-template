@@ -24,7 +24,9 @@
     </div>
 
     <% if (error) { %>
-      <div class="error" role="alert"><%= error %></div>
+      <div class="error" id="error-box" role="alert"><%= error %></div>
+    <% } else { %>
+      <div class="error" id="error-box" role="alert" style="display:none;"></div>
     <% } %>
 
     <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" novalidate>
@@ -55,9 +57,9 @@
   <div id="loading-overlay" class="loading-overlay" hidden>
     <div class="loading-card">
       <div class="spinner"></div>
-      <div class="loading-title">Analyzing your data&hellip;</div>
-      <div class="loading-sub">Parsing CSVs and detecting studios &amp; months. This can take a moment for large files.</div>
-      <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+      <div class="loading-title" id="loading-title">Analyzing your data&hellip;</div>
+      <div class="loading-sub" id="loading-sub">Preparing CSVs and detecting studios &amp; months.</div>
+      <div class="loading-bar"><div class="loading-bar-fill" id="loading-bar-fill" style="width: 0%;"></div></div>
     </div>
   </div>
 
@@ -66,6 +68,11 @@
     const submitBtn = document.getElementById('submit-btn');
     const filledCountEl = document.getElementById('filled-count');
     const dropzones = Array.from(document.querySelectorAll('.dropzone'));
+    const errorBox = document.getElementById('error-box');
+    const overlay = document.getElementById('loading-overlay');
+    const loadingTitle = document.getElementById('loading-title');
+    const loadingSub = document.getElementById('loading-sub');
+    const loadingBarFill = document.getElementById('loading-bar-fill');
     const total = dropzones.length;
 
     function truncate(name, max) {
@@ -94,7 +101,6 @@
 
     dropzones.forEach((zone) => {
       const input = zone.querySelector('input[type=file]');
-
       input.addEventListener('change', () => updateZone(zone));
 
       zone.addEventListener('keydown', (e) => {
@@ -124,9 +130,94 @@
       });
     });
 
-    form.addEventListener('submit', () => {
+    async function trimCsvFile(file) {
+      if (file.size <= 2 * 1024 * 1024) return file;
+      try {
+        const text = await file.text();
+        const lines = text.split('\n');
+        if (lines.length <= 1) return file;
+
+        const header = lines[0];
+        const keepYears = ['2026', '2025', '2024'];
+        const startIdx = Math.max(1, lines.length - 60000);
+        const trimmed = [header];
+
+        for (let i = startIdx; i < lines.length; i++) {
+          const line = lines[i];
+          if (!line.trim()) continue;
+          if (keepYears.some((y) => line.includes(y))) {
+            trimmed.push(line);
+          }
+        }
+
+        const blob = new Blob([trimmed.join('\n')], { type: 'text/csv' });
+        return new File([blob], file.name, { type: 'text/csv' });
+      } catch (e) {
+        return file;
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
       submitBtn.disabled = true;
-      document.getElementById('loading-overlay').hidden = false;
+      overlay.hidden = false;
+      errorBox.style.display = 'none';
+
+      const sessionId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'session_' + Date.now();
+
+      try {
+        for (let i = 0; i < dropzones.length; i++) {
+          const zone = dropzones[i];
+          const field = zone.dataset.field;
+          const input = zone.querySelector('input[type=file]');
+          const rawFile = input.files[0];
+
+          const pct = Math.round(((i + 0.2) / (dropzones.length + 1)) * 100);
+          loadingBarFill.style.width = pct + '%';
+          loadingTitle.textContent = `Processing file ${i + 1} of ${dropzones.length}…`;
+          loadingSub.textContent = `Optimizing ${rawFile.name} for fast serverless analysis.`;
+
+          const trimmedFile = await trimCsvFile(rawFile);
+
+          const formData = new FormData();
+          formData.append('sessionId', sessionId);
+          formData.append('slot', field);
+          formData.append('file', trimmedFile);
+
+          const uploadRes = await fetch('/upload-slot', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!uploadRes.ok) {
+            const errData = await uploadRes.json().catch(() => ({}));
+            throw new Error(errData.error || `Upload failed for ${field}`);
+          }
+        }
+
+        loadingBarFill.style.width = '90%';
+        loadingTitle.textContent = 'Running performance analysis…';
+        loadingSub.textContent = 'Aggregating revenue, conversion funnel, check-ins & session metrics.';
+
+        const analyzeRes = await fetch('/analyze-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        });
+
+        const analyzeData = await analyzeRes.json();
+        if (!analyzeRes.ok || analyzeData.error) {
+          throw new Error(analyzeData.error || 'Analysis failed.');
+        }
+
+        loadingBarFill.style.width = '100%';
+        window.location.href = analyzeData.redirectUrl || `/select?sessionId=${sessionId}`;
+      } catch (err) {
+        overlay.hidden = true;
+        submitBtn.disabled = false;
+        errorBox.textContent = 'Error: ' + err.message;
+        errorBox.style.display = 'block';
+      }
     });
   </script>
 </body>

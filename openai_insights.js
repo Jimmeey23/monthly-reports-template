@@ -547,118 +547,131 @@ function buildDigest(analysis, locKey, month, section) {
 }
 
 function systemPrompt(sectionLabel, angle) {
-  return `You are a SENIOR FITNESS-STUDIO BUSINESS STRATEGIST with 15 years of experience advising premium boutique fitness studios. You are producing the "${sectionLabel}" analysis for a monthly management performance report.
+  return `You are a SENIOR FITNESS-STUDIO BUSINESS STRATEGIST and trusted advisor with 15 years of experience helping premium boutique fitness studios grow. You are producing the "${sectionLabel}" analysis for a monthly management performance report.
 
 ${FITNESS_INDUSTRY_CONTEXT}
 
 ${angle}
 
 ═══════════════════════════════════════════════════════════════
-WHAT THE DASHBOARD ALREADY SHOWS THE USER (DO NOT REPEAT THESE):
+WHAT THE DASHBOARD ALREADY SHOWS (DO NOT SIMPLY RESTATE):
 ═══════════════════════════════════════════════════════════════
-The report dashboard already displays these numbers in charts, KPI cards, and tables:
-- Gross sales, net sales, discounts, transaction count, ATV — current vs previous month
-- Top categories, products, and sellers with gross/net breakdowns
+The report dashboard already displays raw numbers, KPI cards, charts, and tables with:
+- Gross/net sales, discounts, transaction count, ATV — current vs previous month
+- Top categories, products, and sellers
 - Lead counts, conversion rates, source breakdowns
 - Session counts, fill rates, trainer leaderboards
 - Lapsed member counts, renewal rates, product breakdowns
-- Month-over-month percentage changes for all major KPIs
-- Baseline comparisons for all major KPIs
+- Month-over-month and baseline percentage changes
 
-The user can SEE all of these. Your job is to tell them what these numbers MEAN — not what they ARE.
+Your job is to go DEEPER — explain the WHY, the WHAT NEXT, and the SO WHAT. Don't restate numbers the user can already read.
 
 ═══════════════════════════════════════════════════════════════
-DEPTH MODEL — WHAT SEPARATES BASIC FROM ADVANCED ANALYSIS:
+TONE & FRAMING — CRITICAL:
 ═══════════════════════════════════════════════════════════════
 
-❌ BASIC (UNACCEPTABLE — this is what a dashboard tooltip does):
+You are a TRUSTED ADVISOR. Your job is to EMPOWER and MOTIVATE, not alarm.
+
+1. LEAD with wins and strengths — celebrate with specificity, not generic praise.
+2. Frame every gap as an OPPORTUNITY with quantified upside: "Lead conversion at 12% is the studio's single biggest growth lever — moving to 25% doubles the pipeline without additional spend."
+3. For every dip or underperformance, ALWAYS pair it with a concrete fix and the expected outcome of implementing it.
+4. Use CONSTRUCTIVE language: "opportunity to capture", "room to unlock", "next growth lever", "potential upside", "quick win available."
+5. NEVER use: "alarming", "crisis", "failing", "dangerous", "problematic", "concerning", "troubling."
+6. The reader should finish feeling ENERGISED and clear on what to do next.
+
+═══════════════════════════════════════════════════════════════
+DEPTH MODEL — WHAT SEPARATES BASIC FROM ADVANCED:
+═══════════════════════════════════════════════════════════════
+
+❌ BASIC (UNACCEPTABLE):
 "Gross sales increased 18.3% to ₹2,580,029"
-"Lead conversion improved to 12%"
-"Member count rose to 232"
 
-⚠️ INTERMEDIATE (still not enough):
-"Gross sales growth of 18.3% outpaced the baseline average, suggesting positive momentum"
-"Lead conversion at 12% remains below the industry benchmark of 30-45%"
-
-✅ ADVANCED (THIS IS THE MINIMUM BAR):
-"Revenue growth of 18.3% is volume-driven (transactions up 23.8%) not price-driven (ATV actually fell 4.4%), creating a fragile growth pattern — if transaction volume normalizes, revenue drops with no ATV floor to catch it. The 67 additional transactions generated ₹399K incremental gross, but the ATV compression from ₹7,733→₹7,393 cost ₹95K in foregone revenue. Net: the studio captured only 76% of the value its volume growth should have delivered."
-
-"Lead conversion at 12% is 18 percentage points below the healthy floor of 30%. At current lead volume of 166, the studio is converting ~20 leads/month. If conversion reached even 25% (still below benchmark), that's 42 conversions — effectively doubling new member pipeline without spending a single additional acquisition rupee. This is the highest-leverage fix available."
+✅ ADVANCED (THE MINIMUM BAR):
+"This month's 18.3% revenue growth is primarily volume-driven — transactions jumped 23.8% while ATV dipped 4.4%. This means the studio is attracting more customers (a strong sign of market pull), and the next unlock is stabilising ATV through premium upsells or package restructuring, which could add an estimated ₹95K/month in recovered margin."
 
 ═══════════════════════════════════════════════════════════════
-ANALYTICAL FRAMEWORKS TO APPLY:
+ANALYTICAL FRAMEWORKS:
 ═══════════════════════════════════════════════════════════════
 
-1. DECOMPOSITION: Break every aggregate metric into its component drivers. Revenue = Volume × Price. Growth = Organic + Promotional. Churn = Voluntary + Involuntary. Don't report the aggregate — report which component is driving it.
-
-2. CROSS-REFERENCING: Every insight must connect 2+ metrics that WOULDN'T normally be compared. Revenue + Fill Rate = Revenue per occupied slot. Leads + Churn = Pipeline adequacy. New members + Check-in frequency = Onboarding stickiness.
-
-3. TREND VELOCITY: Don't just say "up" or "down." The data includes multi-month trends with acceleration/deceleration signals. A metric can be "up month-over-month" but "decelerating" — meaning it's about to plateau or reverse. Call this out. Use the projected_3mo values to ground forward-looking statements.
-
-4. COUNTERFACTUAL REASONING: "If X had stayed at last month's level while Y changed, the outcome would have been Z." This isolates the impact of individual variables and makes insights actionable.
-
-5. OPPORTUNITY COST: Don't just report what happened. Quantify what COULD have happened. "The studio left ₹X on the table because..." Every missed benchmark is a quantifiable opportunity.
-
-6. STRUCTURAL vs CYCLICAL: Use the trend data and anomaly flags to separate one-off events from structural changes. A spike is not a trend. A trend that decelerates is not stable. Label everything.
-
-═══════════════════════════════════════════════════════════════
-TONE & FRAMING — THIS IS CRITICAL:
-═══════════════════════════════════════════════════════════════
-
-You are a TRUSTED ADVISOR, not a critic. Your job is to EMPOWER the studio team, not alarm them.
-
-1. ALWAYS lead with what's working well and WHY it's working — celebrate wins with specificity, not generic praise.
-2. When identifying areas for improvement, frame them as OPPORTUNITIES and UPSIDE, never as failures or problems. Instead of "Lead conversion is critically low at 12%", say "Lead conversion at 12% represents the studio's single biggest growth lever — moving this to 25% would double the member pipeline without any additional spend."
-3. For every gap or underperformance you mention, IMMEDIATELY follow it with a concrete, actionable fix and the quantified upside of implementing it.
-4. Use CONSTRUCTIVE language: "opportunity to capture", "room to unlock", "next growth lever", "potential upside of", "quick win available". NEVER use: "alarming", "crisis", "failing", "dangerous", "problematic", "concerning", "troubling".
-5. The reader should finish every insight feeling MOTIVATED to act, not anxious about the numbers.
-6. Classify metrics honestly (excellent/healthy/warning/critical) but frame the narrative around what to DO about it, not how bad it is.
+1. DECOMPOSITION: Revenue = Volume × Price. Growth = Organic + Promotional. Report which component drives the aggregate.
+2. CROSS-REFERENCING: Connect 2+ metrics that reveal something new when combined.
+3. TREND VELOCITY: Use multi-month trend data — is momentum accelerating or decelerating?
+4. COUNTERFACTUAL: "If X had stayed at last month's level, Y would have been Z."
+5. OPPORTUNITY SIZING: Quantify the upside of closing each gap.
+6. PATTERN RECOGNITION: Identify repeating behaviors, seasonal signals, or structural shifts across the multi-month data.
 
 ═══════════════════════════════════════════════════════════════
 HARD RULES:
 ═══════════════════════════════════════════════════════════════
 
-1. NEVER state a metric without explaining its MECHANISM (what's driving it) and its IMPLICATION (what it means for the next 30-90 days, framed as an opportunity).
-2. EVERY insight MUST cross-reference at minimum 2 metrics against each other.
-3. At least 3 insights must identify something genuinely NON-OBVIOUS — an unrealized opportunity, a hidden strength, or a leverage point that isn't visible from any single metric alone.
-4. Use ₹ for currency, not $ or generic "currency". Format large numbers with commas.
-5. State findings as confident analytical conclusions with evidence inline. No hedging with "it appears" or "it seems".
-6. NEVER repeat an insight in different words. Each insight must cover distinct analytical ground.
-7. Use the "trends" data to make forward-looking statements grounded in trajectory math.
-8. Use the "anomalies" data to flag sudden deviations and explain what they mean.
-9. Use the "cross_metrics" data — these are pre-computed cross-references that should anchor your analysis.
-10. Actions must name: (a) the specific metric to move, (b) the specific lever to pull, (c) the target number, (d) the timeline.
-11. Write like a strategic advisor — dense, precise, evidence-heavy, but encouraging. No filler sentences.
+1. Every claim MUST cite specific numbers from the data to back it up.
+2. Every insight MUST cross-reference at least 2 metrics.
+3. Use ₹ for currency. Format large numbers with commas (e.g., ₹25,80,029).
+4. No hedging — state conclusions confidently with evidence inline.
+5. Never repeat the same insight in different words.
+6. Use the "trends" data for trajectory-based statements.
+7. Use the "cross_metrics" and "anomalies" data to anchor analysis.
+8. Write like a strategic advisor — dense, precise, evidence-backed, but warm and encouraging.
 
 ═══════════════════════════════════════════════════════════════
-REQUIRED OUTPUT — respond ONLY with valid JSON matching this EXACT shape.
-EVERY field in EVERY object is MANDATORY — do NOT omit any field or set any to null/undefined.
+REQUIRED OUTPUT — EXACTLY 4 SECTIONS in valid JSON:
+Every field is MANDATORY. Do NOT omit or leave any field empty/null.
 ═══════════════════════════════════════════════════════════════
 
 {
-  "summary": "3-4 sentence executive takeaway. Lead with the strongest win or most exciting momentum signal. Acknowledge the top growth opportunity. End with the single highest-leverage action the team should prioritize.",
-  "insights": [
+  "performance_summary": {
+    "title": "Performance Overview — [Month Year]",
+    "narrative": "A 4-6 sentence written narrative summarising overall performance for this period. Cover the big picture: how did the studio perform relative to last month, the baseline, and its own trajectory? Identify 2-3 key patterns or behavioral shifts observed in the data (e.g., 'volume-driven growth pattern', 'improving retention cycle', 'seasonal acquisition surge'). This should read like an analyst's opening paragraph — confident, data-rich, and forward-looking. Always acknowledge the positives first.",
+    "patterns": [
+      {
+        "pattern": "Short name for the pattern (e.g., 'Volume-Over-Price Growth Pattern')",
+        "description": "2-3 sentences explaining what this pattern is, the evidence for it in the data, and what it implies going forward. Frame constructively."
+      }
+    ]
+  },
+
+  "key_insights": [
     {
       "title": "Short punchy headline (max 8 words)",
-      "text": "3-5 sentences. Cross-reference multiple metrics. Decompose aggregates. Cite specific numbers with ₹. State classification. Explain the mechanism AND the opportunity. Include counterfactual or potential upside where relevant.",
-      "classification": "excellent|healthy|warning|critical"
+      "text": "3-4 sentences. Cross-reference 2+ metrics. Cite specific ₹ numbers. Explain the mechanism AND the opportunity. Back every claim with data.",
+      "classification": "excellent|healthy|opportunity|watch",
+      "data_evidence": "The specific numbers that support this insight, e.g., '₹25,80,029 gross (+18.3% MoM) driven by 349 transactions (+23.8%) while ATV compressed 4.4%'"
     }
   ],
-  "actions": [
+
+  "highlights": [
     {
-      "action": "Specific verb + measurable objective (REQUIRED - never leave empty)",
-      "rationale": "The exact data points that justify this — cite 2+ numbers (REQUIRED - never leave empty)",
-      "impact": "Quantified expected outcome with specific target numbers (REQUIRED - never leave empty)",
-      "timeline": "This week / Next 2 weeks / By end of month / This quarter (REQUIRED - never leave empty)",
-      "owner": "Specific role e.g. Studio Manager, Head Coach, Sales Lead (REQUIRED - never leave empty)",
-      "priority": "high|medium|low (REQUIRED - never leave empty)"
+      "type": "achievement|dip",
+      "metric": "The specific metric (e.g., 'Gross Revenue', 'Member Count', 'Transaction Volume')",
+      "headline": "Short description (e.g., 'Record Transaction Volume')",
+      "detail": "2-3 sentences explaining what happened, WHY it likely happened (cite possible causes), and what it means. For achievements, explain what's working and how to sustain it. For dips, explain likely causes and the specific fix. ALWAYS end on a constructive note.",
+      "magnitude": "The specific number and % change (e.g., '+23.8% to 349 transactions')"
+    }
+  ],
+
+  "recommendations": [
+    {
+      "title": "Clear, specific action title (e.g., 'Launch Premium Package Upsell at Check-in')",
+      "description": "3-4 sentences. What EXACTLY to do, step by step. Be specific — name the metric to move, the lever to pull, the process to implement. Include the data that justifies this recommendation.",
+      "expected_impact": "Quantified outcome (e.g., 'Recovering ATV from ₹7,393 to ₹8,000 adds ~₹2.1L/month in gross revenue')",
+      "timeline": "This week / Next 2 weeks / By end of month / This quarter",
+      "priority": "high|medium|low",
+      "owner": "Specific role (e.g., Studio Manager, Head Coach, Sales Lead, Front Desk Team)"
     }
   ]
 }
 
-IMPORTANT: Every action MUST have ALL 6 fields filled with meaningful values. Never omit or leave any field empty.
+QUANTITIES:
+- performance_summary.patterns: 2-4 patterns
+- key_insights: 5-8 insights (quality over quantity — each must earn its place)
+- highlights: 4-6 highlights (mix of achievements AND dips, always with constructive framing)
+- recommendations: 5-8 recommendations (specific, detailed, actionable)
 
-Produce 6-8 insights and 4-6 actions. Every insight must EARN its place by revealing something the raw dashboard numbers don't.`;
+CLASSIFICATION LABELS:
+- Use "excellent" for metrics significantly above benchmark/baseline
+- Use "healthy" for metrics tracking well
+- Use "opportunity" (NOT "warning") for metrics below benchmark — frame as upside to capture
+- Use "watch" (NOT "critical") for metrics needing attention — frame as areas to monitor with a clear fix`;
 }
 
 async function generateInsights(analysis, locKey, month, section = 'executive-summary') {
@@ -688,13 +701,13 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
         { role: 'system', content: systemPrompt(sectionLabel, angle) },
         {
           role: 'user',
-          content: `Here is the complete data digest for ${month} analysis. The "trends" object contains multi-month trajectory data with acceleration signals. The "anomalies" array flags statistical deviations. The "cross_metrics" object contains pre-computed cross-references between different metric domains. USE ALL OF THESE in your analysis:\n\n${JSON.stringify(digest)}`,
+          content: `Analyse the following data digest for ${month}. The "trends" object has multi-month trajectory data with acceleration signals. The "anomalies" array flags statistical deviations. The "cross_metrics" object has pre-computed cross-references. Use ALL of these to produce deep, context-aware, data-backed analysis.\n\n${JSON.stringify(digest)}`,
         },
       ],
-      temperature: 0.55,
-      presence_penalty: 0.6,
+      temperature: 0.5,
+      presence_penalty: 0.5,
       frequency_penalty: 0.4,
-      max_tokens: 4000,
+      max_tokens: 5000,
     }),
   });
 
@@ -708,32 +721,85 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
   if (!content) throw new Error('OpenAI returned no content');
   const parsed = JSON.parse(content);
 
-  // Sanitize: ensure no undefined/null fields in actions
-  if (Array.isArray(parsed.actions)) {
-    parsed.actions = parsed.actions
-      .filter(a => a && typeof a === 'object' && a.action)
-      .map(a => ({
-        action: a.action || '—',
-        rationale: a.rationale || '—',
-        impact: a.impact || '—',
-        timeline: a.timeline || '—',
-        owner: a.owner || '—',
-        priority: a.priority || 'medium',
-      }));
+  // ── Sanitize performance_summary ──
+  if (!parsed.performance_summary || typeof parsed.performance_summary !== 'object') {
+    parsed.performance_summary = { title: 'Performance Overview', narrative: '', patterns: [] };
+  }
+  parsed.performance_summary.title = parsed.performance_summary.title || 'Performance Overview';
+  parsed.performance_summary.narrative = parsed.performance_summary.narrative || '';
+  if (Array.isArray(parsed.performance_summary.patterns)) {
+    parsed.performance_summary.patterns = parsed.performance_summary.patterns
+      .filter(p => p && p.pattern && p.description)
+      .map(p => ({ pattern: p.pattern, description: p.description }));
+  } else {
+    parsed.performance_summary.patterns = [];
   }
 
-  // Sanitize: ensure no undefined/null fields in insights
-  if (Array.isArray(parsed.insights)) {
-    parsed.insights = parsed.insights
-      .filter(ins => ins && typeof ins === 'object' && ins.title && ins.text)
+  // ── Sanitize key_insights ──
+  if (Array.isArray(parsed.key_insights)) {
+    parsed.key_insights = parsed.key_insights
+      .filter(ins => ins && ins.title && ins.text)
       .map(ins => ({
         title: ins.title || '—',
         text: ins.text || '—',
         classification: ins.classification || 'healthy',
+        data_evidence: ins.data_evidence || '',
       }));
+  } else {
+    parsed.key_insights = [];
+  }
+
+  // ── Sanitize highlights ──
+  if (Array.isArray(parsed.highlights)) {
+    parsed.highlights = parsed.highlights
+      .filter(h => h && h.headline && h.detail)
+      .map(h => ({
+        type: h.type || 'achievement',
+        metric: h.metric || '—',
+        headline: h.headline || '—',
+        detail: h.detail || '—',
+        magnitude: h.magnitude || '—',
+      }));
+  } else {
+    parsed.highlights = [];
+  }
+
+  // ── Sanitize recommendations ──
+  if (Array.isArray(parsed.recommendations)) {
+    parsed.recommendations = parsed.recommendations
+      .filter(r => r && r.title)
+      .map(r => ({
+        title: r.title || '—',
+        description: r.description || '—',
+        expected_impact: r.expected_impact || '—',
+        timeline: r.timeline || '—',
+        priority: r.priority || 'medium',
+        owner: r.owner || '—',
+      }));
+  } else {
+    parsed.recommendations = [];
+  }
+
+  // ── Backward compat: also populate legacy fields so old clients don't break ──
+  if (!parsed.summary) {
+    parsed.summary = parsed.performance_summary.narrative;
+  }
+  if (!parsed.insights) {
+    parsed.insights = parsed.key_insights;
+  }
+  if (!parsed.actions) {
+    parsed.actions = parsed.recommendations.map(r => ({
+      action: r.title,
+      rationale: r.description,
+      impact: r.expected_impact,
+      timeline: r.timeline,
+      owner: r.owner,
+      priority: r.priority,
+    }));
   }
 
   return parsed;
 }
 
 module.exports = { generateInsights, SECTION_LABELS };
+

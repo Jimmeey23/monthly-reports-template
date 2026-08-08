@@ -110,18 +110,12 @@ function callVercelPythonApi(scriptType, payload, reqHost, callback) {
     .catch((err) => callback(err));
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(UPLOADS_DIR, req.sessionId);
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const slot = CSV_SLOTS.find((s) => s.field === file.fieldname);
-    cb(null, slot ? slot.filename : file.originalname);
-  },
+// Use memory storage so Vercel serverless never needs a writable temp filesystem path.
+// Chunks are small (1.5 MB each) so RAM usage is safe.
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB per chunk/file — chunks are max 1.5 MB
 });
-const upload = multer({ storage, limits: { fileSize: 200 * 1024 * 1024 } });
 
 function assignSessionId(req, res, next) {
   req.sessionId = crypto.randomUUID();
@@ -177,13 +171,13 @@ app.post('/upload-chunk', upload.single('chunk'), (req, res) => {
   const targetPath = path.join(sessionDir, targetFilename);
 
   try {
-    const chunkBuffer = fs.readFileSync(req.file.path);
+    // req.file.buffer is available because we use multer memoryStorage
+    const chunkBuffer = req.file.buffer;
     if (chunkIndex === 0) {
       fs.writeFileSync(targetPath, chunkBuffer);
     } else {
       fs.appendFileSync(targetPath, chunkBuffer);
     }
-    try { fs.unlinkSync(req.file.path); } catch (e) {}
   } catch (err) {
     return res.status(500).json({ error: `Failed to write chunk: ${err.message}` });
   }
@@ -206,8 +200,8 @@ app.post('/upload-slot', upload.single('file'), (req, res) => {
   const targetPath = path.join(sessionDir, targetFilename);
 
   try {
-    fs.copyFileSync(req.file.path, targetPath);
-    try { fs.unlinkSync(req.file.path); } catch (e) {}
+    // req.file.buffer is available because we use multer memoryStorage
+    fs.writeFileSync(targetPath, req.file.buffer);
   } catch (err) {
     return res.status(500).json({ error: `Failed to save file: ${err.message}` });
   }
@@ -270,6 +264,21 @@ app.post(
     }
 
     const sessionDir = path.join(UPLOADS_DIR, req.sessionId);
+    fs.mkdirSync(sessionDir, { recursive: true });
+
+    // Write each file buffer to disk (memoryStorage keeps files in req.file.buffer)
+    try {
+      for (const slot of CSV_SLOTS) {
+        const file = req.files[slot.field][0];
+        fs.writeFileSync(path.join(sessionDir, slot.filename), file.buffer);
+      }
+    } catch (writeErr) {
+      return res.render('upload', {
+        slots: CSV_SLOTS,
+        error: `Failed to save uploaded files: ${writeErr.message}`,
+      });
+    }
+
     const analysisPath = path.join(sessionDir, 'analysis.json');
 
     runPythonScript('analyze', { sessionDir, analysisPath }, req.headers.host, (err, stdout, stderr) => {

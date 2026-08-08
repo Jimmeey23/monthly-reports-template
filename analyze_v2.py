@@ -36,6 +36,21 @@ LAPSED_UNIQUE_FILE = os.path.join(INPUT_DIR, 'lapsed_unique.csv')
 ACTIVE_FILE = os.path.join(INPUT_DIR, 'active.csv')
 
 
+def run_analysis(input_dir, output_json):
+    global INPUT_DIR, OUTPUT_JSON, SALES_FILE, SESSIONS_FILE, CHECKINS_FILE, LEADS_FILE, NEW_FILE, LAPSED_FILE, LAPSED_UNIQUE_FILE, ACTIVE_FILE
+    INPUT_DIR = input_dir
+    OUTPUT_JSON = output_json
+    SALES_FILE = os.path.join(INPUT_DIR, 'sales.csv')
+    SESSIONS_FILE = os.path.join(INPUT_DIR, 'sessions.csv')
+    CHECKINS_FILE = os.path.join(INPUT_DIR, 'checkins.csv')
+    LEADS_FILE = os.path.join(INPUT_DIR, 'leads.csv')
+    NEW_FILE = os.path.join(INPUT_DIR, 'new.csv')
+    LAPSED_FILE = os.path.join(INPUT_DIR, 'lapsed.csv')
+    LAPSED_UNIQUE_FILE = os.path.join(INPUT_DIR, 'lapsed_unique.csv')
+    ACTIVE_FILE = os.path.join(INPUT_DIR, 'active.csv')
+    main()
+
+
 def slugify(name):
     token = re.sub(r'[^a-z0-9]', '', name.split(',')[0].split(' ')[0].lower())
     return token or 'loc'

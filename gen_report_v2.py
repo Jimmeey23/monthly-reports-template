@@ -21,9 +21,34 @@ OUTPUT_HTML = sys.argv[4] if len(sys.argv) > 4 else None
 with open(os.path.join(SCRIPT_DIR, 'full_css.txt'), 'r') as f:
     CSS = f.read()
 
-# Load analysis data
-with open(ANALYSIS_JSON, 'r') as f:
-    DATA = json.load(f)
+# Load analysis data if file exists (safe for module import)
+DATA = {}
+if os.path.exists(ANALYSIS_JSON):
+    try:
+        with open(ANALYSIS_JSON, 'r') as f:
+            DATA = json.load(f)
+    except Exception:
+        pass
+
+LOCATIONS = DATA.get('meta', {}).get('locations', {})
+MONTHS = DATA.get('meta', {}).get('months', {})
+
+
+def run_generate(analysis_path, loc_keys, month_keys, output_path=None):
+    global DATA, LOCATIONS, MONTHS
+    with open(analysis_path, 'r') as f:
+        DATA = json.load(f)
+    LOCATIONS = DATA['meta']['locations']
+    MONTHS = DATA['meta']['months']
+    if isinstance(loc_keys, str):
+        loc_keys = [k.strip() for k in loc_keys.split(',') if k.strip()]
+    if isinstance(month_keys, str):
+        month_keys = [k.strip() for k in month_keys.split(',') if k.strip()]
+    html = generate_report(loc_keys, month_keys)
+    if output_path:
+        with open(output_path, 'w') as f:
+            f.write(html)
+    return html
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 

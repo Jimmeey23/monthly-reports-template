@@ -12,28 +12,36 @@ const SECTION_LABELS = {
 
 // Randomly varied analytical angles per call — prevents cookie-cutter output
 const ANALYTICAL_ANGLES = [
-  'Your primary lens is: what early warning signals exist in this data that, if ignored, will become serious problems in 60-90 days? Identify the leading indicators, not just the lagging ones.',
-  'Your primary lens is: where is this studio leaving money on the table RIGHT NOW? Find the specific gap between current performance and realistic best-case, and quantify the revenue at stake.',
-  'Your primary lens is: what story do the RATIOS tell that the raw numbers hide? Cross-reference metrics against each other — leads per session, revenue per member, churn as % of new joins, etc.',
-  'Your primary lens is: where is the studio working HARDER for WORSE results? Find efficiency drains — high-effort, low-yield activities — and contrast with what IS working.',
-  'Your primary lens is: what single intervention, if executed this week, would have the highest compounding effect over the next quarter? Reason from the data to a specific decision.',
-  'Your primary lens is: what does the baseline trend reveal that this month alone cannot? Identify structural trends vs one-off spikes, and assign confidence to each insight accordingly.',
-  'Your primary lens is: what would a private equity owner of this studio find alarming, and what would excite them? Separate vanity metrics from value-driving metrics.',
+  'ANALYTICAL LENS: LEADING vs LAGGING INDICATORS. Separate metrics that PREDICT the future (lead volume trend, trial conversion momentum, churn velocity) from metrics that REPORT the past (total revenue, member count). Your insights must explicitly label which type each metric is. For every lagging indicator you cite, connect it to the leading indicator that caused it. Identify at minimum one leading indicator that is flashing a warning the lagging indicators haven\'t caught up to yet.',
+
+  'ANALYTICAL LENS: REVENUE QUALITY DECOMPOSITION. Revenue can grow for bad reasons (discounts buying volume, one-off spikes, unsustainable promotional dependency). Decompose this month\'s revenue into: (a) organic growth vs promotional lift, (b) recurring/membership revenue vs transactional, (c) price-driven vs volume-driven. Quantify each component. Flag any growth that is "hollow" — top-line expansion masking structural weakness.',
+
+  'ANALYTICAL LENS: UNIT ECONOMICS & EFFICIENCY. Ignore total numbers entirely. Focus ONLY on per-unit metrics: revenue per member, revenue per session, cost of acquisition (leads needed per new member), lifetime value signals (churn rate × average monthly value), capacity utilization. Compare these ratios across months to find efficiency trends the totals hide. A studio can grow revenue while destroying unit economics — find out if that\'s happening.',
+
+  'ANALYTICAL LENS: COHORT BEHAVIOR SIGNALS. Even without explicit cohort data, the relationship between new joins, lapsed, active base, and check-in frequency reveals cohort behavior. Are new members sticking (check-in frequency stable despite growth)? Is the lapsed pool growing faster than acquisition (negative net flow)? Is the "active" base actually active or just technically subscribed? Build a narrative about member lifecycle health.',
+
+  'ANALYTICAL LENS: STRUCTURAL CEILINGS & BOTTLENECKS. Find the constraint that will cap growth BEFORE the studio hits it. Is it class capacity (fill rates approaching limits)? Trainer bandwidth (top 3 trainers overloaded)? Sales pipeline thinness (not enough leads to sustain conversion targets)? Facility throughput (check-ins per day approaching physical limits)? Identify the binding constraint and quantify how close the studio is to hitting it.',
+
+  'ANALYTICAL LENS: MOMENTUM & VELOCITY. Don\'t just compare month-to-month — compute the RATE OF CHANGE of the rate of change. Is growth accelerating or decelerating? A metric can be "up" month-over-month but losing momentum (growth rate slowing). Plot the trajectory: if current velocity continues, where does each metric land in 3 months? Flag any metric where velocity is diverging from the headline number (e.g., revenue up but growth rate halving each month).',
+
+  'ANALYTICAL LENS: HIDDEN CORRELATIONS & CONTRADICTIONS. Find metrics that SHOULD move together but aren\'t. Revenue up but transactions down = price increase or mix shift. Leads up but conversions flat = acquisition quality problem. Sessions up but check-ins flat = ghost classes. New members up but active base flat = churn eating growth. Identify at least 3 such tensions and explain what each reveals about the underlying business dynamics.',
 ];
 
-// Industry benchmarks for fitness studios — gives AI grounding for "good/bad"
+// Industry benchmarks for fitness studios
 const FITNESS_INDUSTRY_CONTEXT = `
 FITNESS STUDIO INDUSTRY BENCHMARKS (use these to contextualise every metric):
 - Lead → Trial conversion: 30-45% is healthy; below 25% signals a sales process problem
 - Trial → Member conversion: 50-65% is strong; below 40% means the trial experience is weak
 - Monthly churn rate: <3% is excellent; 3-6% is average; >8% is crisis territory
 - Class fill rate: >65% is healthy; >80% on peak sessions indicates capacity ceiling
-- Revenue per active member (monthly): should be tracked against ATV trends
+- Revenue per active member (monthly): ₹8,000-12,000 is healthy for premium studios
 - Net Promoter Score proxy: check-in frequency per member — active members visit 8-12x/month
 - Membership to new-trial ratio: if new trials < 20% of active member count, pipeline is thin
 - Lapsed recovery: if lapsed > new joins in any month, the studio is shrinking in real terms
 - Discount rate: >20% gross-to-net gap signals promotional dependency, margin erosion risk
 - Top trainer concentration: if top 3 trainers > 50% of sessions, there's key-person risk
+- Late cancellation rate: >10% of check-ins indicates scheduling friction or commitment issues
+- Healthy growth: net member change should be positive and accelerating quarter-over-quarter
 `;
 
 function pick(obj, keys) {
@@ -46,12 +54,12 @@ function topN(dict, n, sortKey = 'sessions') {
   return Object.entries(dict || {})
     .sort((a, b) => (b[1][sortKey] || 0) - (a[1][sortKey] || 0))
     .slice(0, n)
-    .map(([name, v]) => ({ name, ...pick(v, ['sessions', 'visits', 'capacity', 'revenue', 'fill', 'total', 'gross', 'net', 'churn', 'renewed']) }));
+    .map(([name, v]) => ({ name, ...pick(v, ['sessions', 'visits', 'capacity', 'revenue', 'fill', 'total', 'gross', 'net', 'churn', 'renewed', 'lapsed', 'frozen']) }));
 }
 
 function pct(a, b) {
   if (!b || b === 0) return null;
-  return Math.round(((a - b) / b) * 1000) / 10; // e.g. 18.3
+  return Math.round(((a - b) / b) * 1000) / 10;
 }
 
 function ratio(a, b, decimals = 2) {
@@ -59,19 +67,198 @@ function ratio(a, b, decimals = 2) {
   return Math.round((a / b) * Math.pow(10, decimals)) / Math.pow(10, decimals);
 }
 
-/** Enrich data with derived ratios and MoM/baseline deltas — gives AI the "so what" numbers */
+/** Compute trend direction and velocity from an array of values */
+function trendAnalysis(values) {
+  if (!values || values.length < 3) return null;
+  const recent3 = values.slice(-3);
+  const deltas = [];
+  for (let i = 1; i < values.length; i++) {
+    if (values[i - 1] !== 0 && values[i - 1] != null) {
+      deltas.push(((values[i] - values[i - 1]) / values[i - 1]) * 100);
+    }
+  }
+  const avgDelta = deltas.length ? deltas.reduce((s, d) => s + d, 0) / deltas.length : 0;
+  const recentDelta = deltas.length >= 2 ? deltas[deltas.length - 1] : null;
+  const prevDelta = deltas.length >= 2 ? deltas[deltas.length - 2] : null;
+
+  let acceleration = null;
+  if (recentDelta != null && prevDelta != null) {
+    acceleration = Math.round((recentDelta - prevDelta) * 10) / 10;
+  }
+
+  // Linear regression for 3-month projection
+  let projected_3mo = null;
+  if (values.length >= 3) {
+    const n = values.length;
+    const xMean = (n - 1) / 2;
+    const yMean = values.reduce((s, v) => s + v, 0) / n;
+    let num = 0, den = 0;
+    for (let i = 0; i < n; i++) {
+      num += (i - xMean) * (values[i] - yMean);
+      den += (i - xMean) * (i - xMean);
+    }
+    const slope = den !== 0 ? num / den : 0;
+    projected_3mo = Math.round(values[n - 1] + slope * 3);
+  }
+
+  return {
+    direction: avgDelta > 2 ? 'upward' : avgDelta < -2 ? 'downward' : 'flat',
+    avg_mom_change_pct: Math.round(avgDelta * 10) / 10,
+    recent_mom_change_pct: recentDelta != null ? Math.round(recentDelta * 10) / 10 : null,
+    acceleration_pct_pts: acceleration,
+    momentum: acceleration != null ? (acceleration > 1 ? 'accelerating' : acceleration < -1 ? 'decelerating' : 'steady') : null,
+    projected_3mo_if_trend_continues: projected_3mo,
+    values_last_6mo: values.slice(-6).map(v => Math.round(v)),
+  };
+}
+
+/** Build multi-month time series for a metric */
+function buildTimeSeries(data, months, key) {
+  return months.map(m => (data[m] || {})[key] || 0);
+}
+
+/** Detect anomalies — values that deviate significantly from recent average */
+function detectAnomalies(values, label) {
+  if (!values || values.length < 4) return [];
+  const recent = values.slice(-4, -1); // last 3 months excluding current
+  const avg = recent.reduce((s, v) => s + v, 0) / recent.length;
+  const current = values[values.length - 1];
+  if (avg === 0) return [];
+  const deviation = ((current - avg) / avg) * 100;
+  if (Math.abs(deviation) > 15) {
+    return [{
+      metric: label,
+      current_value: Math.round(current),
+      recent_3mo_avg: Math.round(avg),
+      deviation_pct: Math.round(deviation * 10) / 10,
+      type: deviation > 0 ? 'spike' : 'drop',
+    }];
+  }
+  return [];
+}
+
+/** Compute cross-metric correlations and tensions */
+function computeCrossMetrics(salesData, leadsData, sessionsData, lapsedData, newData, checkinsData, activeTotal, months) {
+  const crossMetrics = {};
+  const curMonth = months[months.length - 1];
+  const prevMonth = months.length > 1 ? months[months.length - 2] : null;
+
+  const curSales = salesData[curMonth] || {};
+  const prevSales = prevMonth ? (salesData[prevMonth] || {}) : {};
+  const curLeads = leadsData[curMonth] || {};
+  const prevLeads = prevMonth ? (leadsData[prevMonth] || {}) : {};
+  const curSessions = sessionsData[curMonth] || {};
+  const curLapsed = lapsedData[curMonth] || {};
+  const prevLapsed = prevMonth ? (lapsedData[prevMonth] || {}) : {};
+  const curNew = newData[curMonth] || {};
+  const prevNew = prevMonth ? (newData[prevMonth] || {}) : {};
+  const curCheckins = checkinsData[curMonth] || {};
+
+  // Revenue per active member
+  if (activeTotal && curSales.net) {
+    crossMetrics.revenue_per_active_member = Math.round(curSales.net / activeTotal);
+  }
+
+  // Revenue per session (class economics)
+  if (curSessions.sessions && curSales.net) {
+    crossMetrics.revenue_per_session = Math.round(curSales.net / curSessions.sessions);
+  }
+
+  // Acquisition efficiency: leads needed per new member
+  if (curLeads.total && curNew.total) {
+    crossMetrics.leads_per_new_member = Math.round((curLeads.total / curNew.total) * 10) / 10;
+  }
+
+  // Net member flow: new joins minus lapsed
+  crossMetrics.net_member_flow = (curNew.total || 0) - (curLapsed.total || 0);
+  if (prevMonth) {
+    crossMetrics.prev_net_member_flow = (prevNew.total || 0) - (prevLapsed.total || 0);
+  }
+
+  // Check-in intensity: visits per member per month
+  if (curCheckins.total && activeTotal) {
+    crossMetrics.checkins_per_member = Math.round((curCheckins.total / activeTotal) * 10) / 10;
+  }
+
+  // Late cancellation rate
+  if (curCheckins.total && curCheckins.late_cancel) {
+    crossMetrics.late_cancel_rate_pct = Math.round((curCheckins.late_cancel / (curCheckins.total + curCheckins.late_cancel)) * 1000) / 10;
+    crossMetrics.late_cancel_member_pct = curCheckins.lc_member_count && activeTotal
+      ? Math.round((curCheckins.lc_member_count / activeTotal) * 1000) / 10
+      : null;
+  }
+
+  // Revenue composition: membership vs non-membership (needs breakdown data)
+
+  // Capacity utilization
+  if (curSessions.capacity && curSessions.visits) {
+    crossMetrics.capacity_utilization_pct = Math.round((curSessions.visits / curSessions.capacity) * 1000) / 10;
+  }
+
+  // Churn replacement ratio: how many new members to replace one churned
+  if (curLapsed.total && curNew.total && curLapsed.total > 0) {
+    crossMetrics.churn_replacement_ratio = Math.round((curNew.total / curLapsed.total) * 100) / 100;
+    crossMetrics.churn_replacement_label = crossMetrics.churn_replacement_ratio > 1
+      ? 'growing (acquiring faster than losing)'
+      : crossMetrics.churn_replacement_ratio === 1
+        ? 'treading water'
+        : 'shrinking (losing faster than acquiring)';
+  }
+
+  // Revenue volatility: standard deviation of monthly gross over available months
+  const grossValues = months.map(m => (salesData[m] || {}).gross || 0).filter(v => v > 0);
+  if (grossValues.length >= 3) {
+    const mean = grossValues.reduce((s, v) => s + v, 0) / grossValues.length;
+    const variance = grossValues.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / grossValues.length;
+    crossMetrics.revenue_volatility_cv = Math.round((Math.sqrt(variance) / mean) * 1000) / 10;
+    crossMetrics.revenue_volatility_label = crossMetrics.revenue_volatility_cv < 10
+      ? 'very stable'
+      : crossMetrics.revenue_volatility_cv < 20
+        ? 'moderately stable'
+        : crossMetrics.revenue_volatility_cv < 35
+          ? 'volatile'
+          : 'highly volatile — needs investigation';
+  }
+
+  // Discount dependency trend
+  const discRates = months.map(m => {
+    const s = salesData[m] || {};
+    return s.gross ? Math.round(((s.gross - s.net) / s.gross) * 1000) / 10 : null;
+  }).filter(v => v != null);
+  if (discRates.length >= 2) {
+    crossMetrics.discount_rate_trend = discRates;
+    crossMetrics.discount_dependency_direction = discRates[discRates.length - 1] > discRates[discRates.length - 2] ? 'increasing' : 'decreasing';
+  }
+
+  return crossMetrics;
+}
+
+/** Enrich data with derived ratios and MoM/baseline deltas */
 function enrichSales(cur, prev, base) {
   return {
     ...cur,
     prev_gross: prev.gross,
+    prev_net: prev.net,
+    prev_transactions: prev.sales,
     gross_mom_pct: pct(cur.gross, prev.gross),
     gross_vs_baseline_pct: pct(cur.gross, base.gross),
     net_mom_pct: pct(cur.net, prev.net),
+    net_vs_baseline_pct: pct(cur.net, base.net),
     discount_rate_pct: cur.gross ? Math.round(((cur.gross - cur.net) / cur.gross) * 1000) / 10 : null,
     prev_discount_rate_pct: prev.gross ? Math.round(((prev.gross - prev.net) / prev.gross) * 1000) / 10 : null,
-    transactions_mom_pct: pct(cur.transactions, prev.transactions),
+    baseline_discount_rate_pct: base.gross ? Math.round(((base.gross - base.net) / base.gross) * 1000) / 10 : null,
+    transactions_mom_pct: pct(cur.sales, prev.sales),
     atv_mom_pct: pct(cur.atv, prev.atv),
+    atv_vs_baseline_pct: pct(cur.atv, base.atv),
     revenue_per_member: cur.members ? ratio(cur.net, cur.members) : null,
+    prev_revenue_per_member: prev.members ? ratio(prev.net, prev.members) : null,
+    // Revenue growth decomposition
+    volume_driven_growth: prev.gross && cur.sales && prev.sales
+      ? Math.round((cur.sales - prev.sales) * prev.atv)
+      : null,
+    price_driven_growth: prev.gross && cur.atv && prev.atv
+      ? Math.round((cur.atv - prev.atv) * prev.sales)
+      : null,
   };
 }
 
@@ -79,10 +266,15 @@ function enrichLeads(cur, prev, base) {
   return {
     ...cur,
     prev_total: prev.total,
+    prev_converted: prev.converted,
     leads_mom_pct: pct(cur.total, prev.total),
     leads_vs_baseline_pct: pct(cur.total, base.total),
     lead_to_trial_rate_pct: cur.total ? Math.round((cur.converted / cur.total) * 1000) / 10 : null,
     prev_lead_to_trial_rate_pct: prev.total ? Math.round((prev.converted / prev.total) * 1000) / 10 : null,
+    baseline_conversion_rate_pct: base.rate || null,
+    conversion_rate_vs_baseline: base.rate && cur.total
+      ? Math.round(((cur.converted / cur.total) * 100 - base.rate) * 10) / 10
+      : null,
   };
 }
 
@@ -91,7 +283,11 @@ function enrichSessions(cur, base) {
     ...cur,
     sessions_vs_baseline_pct: pct(cur.sessions, base.sessions),
     avg_fill_rate_pct: cur.capacity && cur.visits ? ratio(cur.visits, cur.capacity, 1) * 100 : null,
+    baseline_fill_rate_pct: base.fill || null,
     visits_per_session: cur.sessions ? ratio(cur.visits, cur.sessions) : null,
+    baseline_visits_per_session: base.sessions ? ratio(base.visits, base.sessions) : null,
+    empty_sessions: cur.empty || 0,
+    revenue_per_session: cur.sessions && cur.revenue ? Math.round(cur.revenue / cur.sessions) : null,
   };
 }
 
@@ -99,15 +295,34 @@ function enrichLapsed(cur, prev, base) {
   return {
     ...cur,
     prev_total: prev.total,
+    prev_renewed: prev.renewed,
+    prev_lapsed: prev.lapsed,
     lapsed_mom_pct: pct(cur.total, prev.total),
     lapsed_vs_baseline_pct: pct(cur.total, base.total),
     churn_rate_pct: cur.active_base ? ratio(cur.total, cur.active_base, 3) * 100 : null,
+    renewal_rate_pct: cur.total ? Math.round((cur.renewed / cur.total) * 1000) / 10 : null,
+    prev_renewal_rate_pct: prev.total ? Math.round((prev.renewed / prev.total) * 1000) / 10 : null,
+    baseline_renewal_rate_pct: base.renewal_rate || null,
+    hard_churn_rate_pct: cur.total ? Math.round((cur.lapsed / cur.total) * 1000) / 10 : null,
   };
+}
+
+function prevMonthKey(month) {
+  const [y, m] = month.split('-').map(Number);
+  const py = m > 1 ? y : y - 1;
+  const pm = m > 1 ? m - 1 : 12;
+  return `${py}-${String(pm).padStart(2, '0')}`;
+}
+
+/** Get all sorted month keys available for a location's sales data */
+function getAvailableMonths(analysis, locKey) {
+  const salesData = (analysis.sales || {})[locKey] || {};
+  return Object.keys(salesData).sort();
 }
 
 function baseCtx(analysis, locKey, month) {
   const get = (section) => (analysis[section] || {})[locKey] || {};
-  return { studio: analysis.meta.locations[locKey], month, baseline_months: analysis.meta.baseline_months, get };
+  return { studio: (analysis.meta || {}).locations ? analysis.meta.locations[locKey] : locKey, month, baseline_months: (analysis.meta || {}).baseline_months, get };
 }
 
 function buildDigest(analysis, locKey, month, section) {
@@ -116,28 +331,78 @@ function buildDigest(analysis, locKey, month, section) {
   const common = { studio, month, baseline_months };
   const prevMonth = prevMonthKey(month);
 
+  // Get ALL available months for trend analysis
+  const allMonths = getAvailableMonths(analysis, locKey);
+  const salesData = get('sales');
+  const leadsData = get('leads');
+  const sessionsData = get('sessions');
+  const lapsedData = get('lapsed');
+  const newData = get('new');
+  const checkinsData = get('checkins');
+  const activeTotal = (get('active') || {}).total;
+
+  // Build multi-month trend analysis
+  const trendData = {
+    gross_revenue_trend: trendAnalysis(buildTimeSeries(salesData, allMonths, 'gross')),
+    net_revenue_trend: trendAnalysis(buildTimeSeries(salesData, allMonths, 'net')),
+    transactions_trend: trendAnalysis(buildTimeSeries(salesData, allMonths, 'sales')),
+    atv_trend: trendAnalysis(buildTimeSeries(salesData, allMonths, 'atv')),
+    members_trend: trendAnalysis(buildTimeSeries(salesData, allMonths, 'members')),
+    leads_trend: trendAnalysis(buildTimeSeries(leadsData, allMonths, 'total')),
+    sessions_trend: trendAnalysis(buildTimeSeries(sessionsData, allMonths, 'sessions')),
+    visits_trend: trendAnalysis(buildTimeSeries(sessionsData, allMonths, 'visits')),
+    lapsed_trend: trendAnalysis(buildTimeSeries(lapsedData, allMonths, 'total')),
+    new_joins_trend: trendAnalysis(buildTimeSeries(newData, allMonths, 'total')),
+    checkins_trend: trendAnalysis(buildTimeSeries(checkinsData, allMonths, 'total')),
+  };
+
+  // Detect anomalies
+  const anomalies = [
+    ...detectAnomalies(buildTimeSeries(salesData, allMonths, 'gross'), 'gross_revenue'),
+    ...detectAnomalies(buildTimeSeries(salesData, allMonths, 'sales'), 'transaction_count'),
+    ...detectAnomalies(buildTimeSeries(salesData, allMonths, 'atv'), 'average_transaction_value'),
+    ...detectAnomalies(buildTimeSeries(leadsData, allMonths, 'total'), 'lead_volume'),
+    ...detectAnomalies(buildTimeSeries(lapsedData, allMonths, 'total'), 'lapsed_members'),
+    ...detectAnomalies(buildTimeSeries(checkinsData, allMonths, 'total'), 'checkins'),
+    ...detectAnomalies(buildTimeSeries(checkinsData, allMonths, 'late_cancel'), 'late_cancellations'),
+  ];
+
+  // Cross-metric analysis
+  const crossMetrics = computeCrossMetrics(salesData, leadsData, sessionsData, lapsedData, newData, checkinsData, activeTotal, allMonths);
+
   switch (section) {
     case 'revenue-performance': {
-      const cur = get('sales')[month] || {};
-      const prev = get('sales')[prevMonth] || {};
+      const cur = salesData[month] || {};
+      const prev = salesData[prevMonth] || {};
       const base = baseline.sales || {};
+
+      // Monthly gross revenue values for sparkline context
+      const monthlyGross = {};
+      allMonths.forEach(m => { monthlyGross[m] = (salesData[m] || {}).gross || 0; });
+
       return {
         ...common,
         sales: enrichSales(cur, prev, base),
         baseline_sales: base,
-        top_categories: topN(get('sales_breakdowns')[month]?.category, 6, 'gross'),
+        top_categories: topN(get('sales_breakdowns')[month]?.category, 8, 'gross'),
         top_products: topN(get('sales_breakdowns')[month]?.product, 10, 'gross'),
-        top_sellers: topN(get('sales_breakdowns')[month]?.seller, 6, 'gross'),
-        prev_top_categories: topN(get('sales_breakdowns')[prevMonth]?.category, 6, 'gross'),
+        top_sellers: topN(get('sales_breakdowns')[month]?.seller, 8, 'gross'),
+        prev_top_categories: topN(get('sales_breakdowns')[prevMonth]?.category, 8, 'gross'),
+        prev_top_products: topN(get('sales_breakdowns')[prevMonth]?.product, 10, 'gross'),
+        trends: pick(trendData, ['gross_revenue_trend', 'net_revenue_trend', 'transactions_trend', 'atv_trend', 'members_trend']),
+        anomalies: anomalies.filter(a => ['gross_revenue', 'transaction_count', 'average_transaction_value'].includes(a.metric)),
+        cross_metrics: pick(crossMetrics, ['revenue_per_active_member', 'revenue_per_session', 'revenue_volatility_cv', 'revenue_volatility_label', 'discount_rate_trend', 'discount_dependency_direction']),
+        monthly_revenue_history: monthlyGross,
+        active_member_count: activeTotal,
       };
     }
 
     case 'conversion-funnel': {
-      const curLeads = get('leads')[month] || {};
-      const prevLeads = get('leads')[prevMonth] || {};
+      const curLeads = leadsData[month] || {};
+      const prevLeads = leadsData[prevMonth] || {};
       const baseLeads = baseline.leads || {};
-      const curTrials = get('new')[month] || {};
-      const prevTrials = get('new')[prevMonth] || {};
+      const curTrials = newData[month] || {};
+      const prevTrials = newData[prevMonth] || {};
       return {
         ...common,
         leads: enrichLeads(curLeads, prevLeads, baseLeads),
@@ -150,141 +415,234 @@ function buildDigest(analysis, locKey, month, section) {
             ? ratio(curLeads.converted, curTrials.total, 3) * 100
             : null,
         },
-        leads_by_source: topN(get('leads_by_source')[month], 8, 'total'),
-        prev_leads_by_source: topN(get('leads_by_source')[prevMonth], 8, 'total'),
+        leads_by_source: topN(get('leads_by_source')[month], 10, 'total'),
+        prev_leads_by_source: topN(get('leads_by_source')[prevMonth], 10, 'total'),
+        new_by_type: topN(get('new_by_type')[month], 10, 'total'),
+        prev_new_by_type: topN(get('new_by_type')[prevMonth], 10, 'total'),
+        trends: pick(trendData, ['leads_trend', 'new_joins_trend']),
+        anomalies: anomalies.filter(a => ['lead_volume'].includes(a.metric)),
+        cross_metrics: pick(crossMetrics, ['leads_per_new_member', 'net_member_flow', 'prev_net_member_flow', 'churn_replacement_ratio', 'churn_replacement_label']),
+        active_member_count: activeTotal,
       };
     }
 
     case 'sessions': {
-      const curSess = get('sessions')[month] || {};
+      const curSess = sessionsData[month] || {};
       const baseSess = baseline.sessions || {};
-      const trainers = topN(get('sessions_by_trainer')[month], 10);
+      const trainers = topN(get('sessions_by_trainer')[month], 12);
+      const prevTrainers = topN(get('sessions_by_trainer')[prevMonth], 12);
       const totalTrainerSessions = trainers.reduce((s, t) => s + (t.sessions || 0), 0);
       const top3Sessions = trainers.slice(0, 3).reduce((s, t) => s + (t.sessions || 0), 0);
+      const curCheckins = checkinsData[month] || {};
       return {
         ...common,
         sessions: enrichSessions(curSess, baseSess),
         baseline_sessions: baseSess,
-        top_formats: topN(get('sessions_by_format')[month], 5),
-        top_classes: topN(get('sessions_by_class')[month], 10),
+        top_formats: topN(get('sessions_by_format')[month], 8),
+        prev_top_formats: topN(get('sessions_by_format')[prevMonth], 8),
+        top_classes: topN(get('sessions_by_class')[month], 12),
+        prev_top_classes: topN(get('sessions_by_class')[prevMonth], 12),
         top_trainers: trainers,
+        prev_top_trainers: prevTrainers,
         trainer_concentration_risk: totalTrainerSessions
-          ? { top3_share_pct: Math.round((top3Sessions / totalTrainerSessions) * 100) }
+          ? {
+              top3_share_pct: Math.round((top3Sessions / totalTrainerSessions) * 100),
+              total_trainers: trainers.length,
+              top3_sessions: top3Sessions,
+              total_sessions: totalTrainerSessions,
+            }
           : null,
+        checkins: curCheckins,
+        trends: pick(trendData, ['sessions_trend', 'visits_trend', 'checkins_trend']),
+        anomalies: anomalies.filter(a => ['checkins', 'late_cancellations'].includes(a.metric)),
+        cross_metrics: pick(crossMetrics, ['capacity_utilization_pct', 'checkins_per_member', 'late_cancel_rate_pct', 'late_cancel_member_pct', 'revenue_per_session']),
+        active_member_count: activeTotal,
       };
     }
 
     case 'lapsed': {
-      const curLapsed = get('lapsed')[month] || {};
-      const prevLapsed = get('lapsed')[prevMonth] || {};
+      const curLapsed = lapsedData[month] || {};
+      const prevLapsed = lapsedData[prevMonth] || {};
       const baseLapsed = baseline.lapsed || {};
-      const newJoins = (get('new')[month] || {}).total || 0;
-      const prevNewJoins = (get('new')[prevMonth] || {}).total || 0;
+      const newJoins = (newData[month] || {}).total || 0;
+      const prevNewJoins = (newData[prevMonth] || {}).total || 0;
+
+      // Multi-month net member flow
+      const netFlowHistory = {};
+      allMonths.forEach(m => {
+        const nj = (newData[m] || {}).total || 0;
+        const lp = (lapsedData[m] || {}).total || 0;
+        netFlowHistory[m] = nj - lp;
+      });
+
       return {
         ...common,
         lapsed: enrichLapsed(curLapsed, prevLapsed, baseLapsed),
         baseline_lapsed: baseLapsed,
         cumulative_lapsed: (get('lapsed_cumulative') || {})[month],
-        top_lapsed_products: topN(get('lapsed_by_product')[month], 8, 'total'),
+        top_lapsed_products: topN(get('lapsed_by_product')[month], 10, 'total'),
+        prev_top_lapsed_products: topN(get('lapsed_by_product')[prevMonth], 10, 'total'),
         net_member_change: newJoins - (curLapsed.total || 0),
         prev_net_member_change: prevNewJoins - (prevLapsed.total || 0),
         new_joins_this_month: newJoins,
+        prev_new_joins: prevNewJoins,
         lapsed_to_new_ratio: newJoins ? ratio(curLapsed.total || 0, newJoins) : null,
+        trends: pick(trendData, ['lapsed_trend', 'new_joins_trend']),
+        anomalies: anomalies.filter(a => ['lapsed_members'].includes(a.metric)),
+        cross_metrics: pick(crossMetrics, ['net_member_flow', 'prev_net_member_flow', 'churn_replacement_ratio', 'churn_replacement_label']),
+        net_flow_history: netFlowHistory,
+        active_member_count: activeTotal,
       };
     }
 
     case 'predictions': {
-      const cur = get('sales')[month] || {};
-      const prev = get('sales')[prevMonth] || {};
+      const cur = salesData[month] || {};
+      const prev = salesData[prevMonth] || {};
       const base = baseline.sales || {};
       return {
         ...common,
         sales: enrichSales(cur, prev, base),
         baseline_sales: base,
-        leads: enrichLeads(get('leads')[month] || {}, get('leads')[prevMonth] || {}, baseline.leads || {}),
-        sessions: get('sessions')[month] || {},
-        checkins: get('checkins')[month] || {},
-        lapsed: get('lapsed')[month] || {},
-        new_joins: (get('new')[month] || {}).total,
-        active_memberships: (get('active') || {}).total,
+        leads: enrichLeads(leadsData[month] || {}, leadsData[prevMonth] || {}, baseline.leads || {}),
+        sessions: sessionsData[month] || {},
+        checkins: checkinsData[month] || {},
+        lapsed: lapsedData[month] || {},
+        new_joins: (newData[month] || {}).total,
+        active_memberships: activeTotal,
+        trends: trendData,
+        anomalies,
+        cross_metrics: crossMetrics,
       };
     }
 
     case 'recommendations':
     case 'executive-summary':
     default: {
-      const cur = get('sales')[month] || {};
-      const prev = get('sales')[prevMonth] || {};
+      const cur = salesData[month] || {};
+      const prev = salesData[prevMonth] || {};
       const base = baseline.sales || {};
-      const curLapsed = get('lapsed')[month] || {};
-      const newJoins = (get('new')[month] || {}).total || 0;
+      const curLapsed = lapsedData[month] || {};
+      const newJoins = (newData[month] || {}).total || 0;
       return {
         ...common,
         sales: enrichSales(cur, prev, base),
         baseline_sales: base,
-        sessions: enrichSessions(get('sessions')[month] || {}, baseline.sessions || {}),
-        leads: enrichLeads(get('leads')[month] || {}, get('leads')[prevMonth] || {}, baseline.leads || {}),
-        trials: get('new')[month] || {},
-        lapsed: enrichLapsed(curLapsed, get('lapsed')[prevMonth] || {}, baseline.lapsed || {}),
-        checkins: get('checkins')[month] || {},
-        active_memberships: (get('active') || {}).total,
+        sessions: enrichSessions(sessionsData[month] || {}, baseline.sessions || {}),
+        leads: enrichLeads(leadsData[month] || {}, leadsData[prevMonth] || {}, baseline.leads || {}),
+        trials: newData[month] || {},
+        lapsed: enrichLapsed(curLapsed, lapsedData[prevMonth] || {}, baseline.lapsed || {}),
+        checkins: checkinsData[month] || {},
+        active_memberships: activeTotal,
         net_member_change: newJoins - (curLapsed.total || 0),
-        top_formats: topN(get('sessions_by_format')[month], 4),
-        top_trainers: topN(get('sessions_by_trainer')[month], 6),
-        top_categories: topN(get('sales_breakdowns')[month]?.category, 5, 'gross'),
+        top_formats: topN(get('sessions_by_format')[month], 5),
+        top_trainers: topN(get('sessions_by_trainer')[month], 8),
+        top_categories: topN(get('sales_breakdowns')[month]?.category, 6, 'gross'),
+        top_products: topN(get('sales_breakdowns')[month]?.product, 8, 'gross'),
+        trends: trendData,
+        anomalies,
+        cross_metrics: crossMetrics,
       };
     }
   }
 }
 
-function prevMonthKey(month) {
-  const [y, m] = month.split('-').map(Number);
-  const py = m > 1 ? y : y - 1;
-  const pm = m > 1 ? m - 1 : 12;
-  return `${py}-${String(pm).padStart(2, '0')}`;
-}
-
 function systemPrompt(sectionLabel, angle) {
-  return `You are a senior fitness-studio business analyst producing the "${sectionLabel}" section of a management performance report.
+  return `You are a SENIOR FITNESS-STUDIO BUSINESS STRATEGIST with 15 years of experience advising premium boutique fitness studios. You are producing the "${sectionLabel}" analysis for a monthly management performance report.
 
 ${FITNESS_INDUSTRY_CONTEXT}
 
-ANALYTICAL DIRECTIVE FOR THIS CALL:
 ${angle}
 
-RULES — violating any of these makes the output useless:
-1. NEVER just restate a number without explaining WHY it matters and WHAT it implies about the business. "Gross sales were X" is worthless. "Gross sales outpaced the baseline by X% while ATV fell 5% — meaning volume is growing but ticket size is softening, likely from product mix shift" is what we want.
-2. EVERY insight must connect at least TWO metrics to each other — find correlations, ratios, tensions, contradictions.
-3. Compare against BOTH month-on-month AND baseline where available. A metric can look good MoM but be structurally declining vs baseline — call this out.
-4. Use the industry benchmarks above to classify each metric as "excellent / healthy / warning / critical". State the classification explicitly.
-5. At least 2 of your insights must identify something NON-OBVIOUS that a studio manager would NOT already know just from reading the dashboard numbers.
-6. Actions must be SPECIFIC: name the exact metric to move, the lever to pull, the person responsible, and what success looks like numerically.
-7. Write like an analyst, not a chatbot. Vary sentence structure. Use precise business language. No hedging phrases like "it appears" or "it seems".
-8. Do NOT repeat the same insight in different words across the insights list.
+═══════════════════════════════════════════════════════════════
+WHAT THE DASHBOARD ALREADY SHOWS THE USER (DO NOT REPEAT THESE):
+═══════════════════════════════════════════════════════════════
+The report dashboard already displays these numbers in charts, KPI cards, and tables:
+- Gross sales, net sales, discounts, transaction count, ATV — current vs previous month
+- Top categories, products, and sellers with gross/net breakdowns
+- Lead counts, conversion rates, source breakdowns
+- Session counts, fill rates, trainer leaderboards
+- Lapsed member counts, renewal rates, product breakdowns
+- Month-over-month percentage changes for all major KPIs
+- Baseline comparisons for all major KPIs
 
+The user can SEE all of these. Your job is to tell them what these numbers MEAN — not what they ARE.
+
+═══════════════════════════════════════════════════════════════
+DEPTH MODEL — WHAT SEPARATES BASIC FROM ADVANCED ANALYSIS:
+═══════════════════════════════════════════════════════════════
+
+❌ BASIC (UNACCEPTABLE — this is what a dashboard tooltip does):
+"Gross sales increased 18.3% to ₹2,580,029"
+"Lead conversion improved to 12%"
+"Member count rose to 232"
+
+⚠️ INTERMEDIATE (still not enough):
+"Gross sales growth of 18.3% outpaced the baseline average, suggesting positive momentum"
+"Lead conversion at 12% remains below the industry benchmark of 30-45%"
+
+✅ ADVANCED (THIS IS THE MINIMUM BAR):
+"Revenue growth of 18.3% is volume-driven (transactions up 23.8%) not price-driven (ATV actually fell 4.4%), creating a fragile growth pattern — if transaction volume normalizes, revenue drops with no ATV floor to catch it. The 67 additional transactions generated ₹399K incremental gross, but the ATV compression from ₹7,733→₹7,393 cost ₹95K in foregone revenue. Net: the studio captured only 76% of the value its volume growth should have delivered."
+
+"Lead conversion at 12% is 18 percentage points below the healthy floor of 30%. At current lead volume of 166, the studio is converting ~20 leads/month. If conversion reached even 25% (still below benchmark), that's 42 conversions — effectively doubling new member pipeline without spending a single additional acquisition rupee. This is the highest-leverage fix available."
+
+═══════════════════════════════════════════════════════════════
+ANALYTICAL FRAMEWORKS TO APPLY:
+═══════════════════════════════════════════════════════════════
+
+1. DECOMPOSITION: Break every aggregate metric into its component drivers. Revenue = Volume × Price. Growth = Organic + Promotional. Churn = Voluntary + Involuntary. Don't report the aggregate — report which component is driving it.
+
+2. CROSS-REFERENCING: Every insight must connect 2+ metrics that WOULDN'T normally be compared. Revenue + Fill Rate = Revenue per occupied slot. Leads + Churn = Pipeline adequacy. New members + Check-in frequency = Onboarding stickiness.
+
+3. TREND VELOCITY: Don't just say "up" or "down." The data includes multi-month trends with acceleration/deceleration signals. A metric can be "up month-over-month" but "decelerating" — meaning it's about to plateau or reverse. Call this out. Use the projected_3mo values to ground forward-looking statements.
+
+4. COUNTERFACTUAL REASONING: "If X had stayed at last month's level while Y changed, the outcome would have been Z." This isolates the impact of individual variables and makes insights actionable.
+
+5. OPPORTUNITY COST: Don't just report what happened. Quantify what COULD have happened. "The studio left ₹X on the table because..." Every missed benchmark is a quantifiable opportunity.
+
+6. STRUCTURAL vs CYCLICAL: Use the trend data and anomaly flags to separate one-off events from structural changes. A spike is not a trend. A trend that decelerates is not stable. Label everything.
+
+═══════════════════════════════════════════════════════════════
+HARD RULES — VIOLATING ANY MAKES OUTPUT WORTHLESS:
+═══════════════════════════════════════════════════════════════
+
+1. NEVER state a metric without explaining its MECHANISM (what caused it) and its IMPLICATION (what it means for the next 30-90 days).
+2. EVERY insight MUST cross-reference at minimum 2 metrics against each other.
+3. At least 3 insights must identify something genuinely NON-OBVIOUS — a tension, a hidden risk, an unrealized opportunity that isn't visible from any single metric alone.
+4. Use ₹ for currency, not $ or generic "currency". Format large numbers with commas.
+5. NEVER hedge with "it appears", "it seems", "this suggests". State findings as analytical conclusions with the evidence inline.
+6. NEVER repeat an insight in different words. Each insight must cover distinct analytical ground.
+7. Use the "trends" data to make forward-looking statements grounded in trajectory math, not speculation.
+8. Use the "anomalies" data to flag sudden deviations that warrant investigation.
+9. Use the "cross_metrics" data — these are pre-computed cross-references that should anchor your analysis.
+10. Actions must name: (a) the specific metric to move, (b) the specific lever to pull, (c) the target number, (d) the timeline.
+11. Write like a McKinsey engagement partner, not a chatbot. Dense, precise, evidence-heavy. No filler sentences.
+
+═══════════════════════════════════════════════════════════════
 REQUIRED OUTPUT — respond ONLY with valid JSON matching this exact shape:
+═══════════════════════════════════════════════════════════════
+
 {
-  "summary": "2-3 sentence executive takeaway that captures the most important tension or opportunity this month — not just 'performance was good'",
+  "summary": "3-4 sentence executive takeaway. Lead with the single most important TENSION or RISK, not a celebration. Quantify the stakes. End with the one decision this data demands.",
   "insights": [
     {
       "title": "Short punchy headline (max 8 words)",
-      "text": "2-3 sentences. Cite specific numbers. Cross-reference metrics. State classification (excellent/healthy/warning/critical). Explain the implication, not just the observation.",
+      "text": "3-5 sentences. Cross-reference multiple metrics. Decompose aggregates. Cite specific numbers with ₹. State classification. Explain the mechanism AND the implication. Include counterfactual or opportunity cost where relevant.",
       "classification": "excellent|healthy|warning|critical"
     }
   ],
   "actions": [
     {
-      "action": "Specific action verb + what to do",
-      "rationale": "Exact numbers from the data that justify this action",
-      "impact": "Specific expected outcome, quantified where possible",
-      "timeline": "e.g. This week / Next 2 weeks / By end of month",
-      "owner": "Job title of person responsible",
+      "action": "Specific verb + measurable objective",
+      "rationale": "The exact data points that make this urgent — cite 2+ numbers",
+      "impact": "Quantified expected outcome with specific target numbers",
+      "timeline": "This week / Next 2 weeks / By end of month / This quarter",
+      "owner": "Specific role (e.g., Studio Manager, Head Coach, Sales Lead)",
       "priority": "high|medium|low"
     }
   ]
 }
 
-Produce 6-8 insights and 4-6 actions. Quality over quantity — each insight must earn its place.`;
+Produce 6-8 insights and 4-6 actions. Every insight must EARN its place by revealing something the raw dashboard numbers don't.`;
 }
 
 async function generateInsights(analysis, locKey, month, section = 'executive-summary') {
@@ -312,11 +670,15 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt(sectionLabel, angle) },
-        { role: 'user', content: JSON.stringify(digest) },
+        {
+          role: 'user',
+          content: `Here is the complete data digest for ${month} analysis. The "trends" object contains multi-month trajectory data with acceleration signals. The "anomalies" array flags statistical deviations. The "cross_metrics" object contains pre-computed cross-references between different metric domains. USE ALL OF THESE in your analysis:\n\n${JSON.stringify(digest)}`,
+        },
       ],
-      temperature: 0.8,
-      presence_penalty: 0.5,
-      frequency_penalty: 0.3,
+      temperature: 0.55,
+      presence_penalty: 0.6,
+      frequency_penalty: 0.4,
+      max_tokens: 4000,
     }),
   });
 

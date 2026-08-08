@@ -1,0 +1,8634 @@
+{
+  "sales": {
+    "2026-01": {
+      "ym": "2026-01",
+      "gross": 2744704.6600000006,
+      "net": 2613189.9699999997,
+      "disc": 359812.0,
+      "disc_txn": 37,
+      "disc_pen": 12.251655629139073,
+      "txn": 302,
+      "members": 190,
+      "cats": {
+        "Memberships": [
+          1432490.3099999998,
+          36,
+          234057.0
+        ],
+        "Retail": [
+          70793.43,
+          62,
+          0.0
+        ],
+        "Sessions/Single Classes": [
+          197316.96999999997,
+          108,
+          0.0
+        ],
+        "Class Packages": [
+          847759.03,
+          61,
+          41340.0
+        ],
+        "Money Credits": [
+          21495.01,
+          20,
+          2040.0
+        ],
+        "Newcomers Special": [
+          12862.51,
+          7,
+          0.0
+        ],
+        "Privates": [
+          161987.40000000002,
+          8,
+          82375.0
+        ]
+      },
+      "prods": {
+        "Studio 1 Month Unlimited": [
+          250338.90000000002,
+          16,
+          45582.0
+        ],
+        "Studio 3 Month Unlimited": [
+          463601.25,
+          9,
+          15225.0
+        ],
+        "Retail Product": [
+          70793.43,
+          62,
+          0.0
+        ],
+        "Session": [
+          85412.5,
+          47,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          31500.0,
+          1,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          626587.5,
+          4,
+          173250.0
+        ],
+        "Studio Single Class": [
+          111904.47000000002,
+          61,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          28350.0,
+          2,
+          3000.0
+        ],
+        "Money Credits": [
+          21495.01,
+          20,
+          2040.0
+        ],
+        "Studio 8 Class Package": [
+          138131.0,
+          14,
+          6120.0
+        ],
+        "Studio 4 Class Package": [
+          89880.0,
+          16,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          329121.15,
+          21,
+          2257.5
+        ],
+        "Studio 57 Class Package": [
+          89026.88,
+          1,
+          14962.5
+        ],
+        "Studio Newcomers 2 For 1": [
+          12862.51,
+          7,
+          0.0
+        ],
+        "Studio Private Class": [
+          133873.65000000002,
+          3,
+          67500.0
+        ],
+        "Studio 30 Single Class Package": [
+          85050.0,
+          2,
+          9000.0
+        ],
+        "Private Class": [
+          28113.75,
+          5,
+          14875.0
+        ],
+        "Studio 2 Week Unlimited": [
+          20824.66,
+          2,
+          0.0
+        ],
+        "Barre 2 week Unlimited": [
+          7088.0,
+          1,
+          0.0
+        ],
+        "Studio 10 Class Package": [
+          56700.0,
+          4,
+          6000.0
+        ],
+        "Barre 1 month Unlimited": [
+          64050.0,
+          4,
+          0.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          259453.95,
+          35
+        ],
+        "Akshay Rane": [
+          878635.73,
+          85
+        ],
+        "Vahishta Fitter": [
+          546429.67,
+          55
+        ],
+        "Tahira Sayyed": [
+          493282.15,
+          60
+        ],
+        "Zaheer Agarbattiwala": [
+          358743.76,
+          53
+        ],
+        "Deesha Changwani": [
+          23205.0,
+          3
+        ],
+        "Admin Admin": [
+          5327.0,
+          1
+        ],
+        "Zahur Shaikh": [
+          161987.40000000002,
+          8
+        ],
+        "Nadiya Shaikh": [
+          17640.0,
+          2
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          259453.95,
+          35
+        ],
+        "Cash": [
+          410735.33,
+          56
+        ],
+        "Custom (in-studio)": [
+          1940550.23,
+          193
+        ],
+        "Multiple payment methods": [
+          133965.15,
+          18
+        ]
+      },
+      "promo": 1297735.06,
+      "mem": 1432490.3099999998,
+      "pkg": 847759.03,
+      "drop": 197316.96999999997,
+      "atv": 9088.426026490068,
+      "rev_per_member": 13753.63142105263,
+      "disc_eff": 7.262653746956743
+    },
+    "2026-02": {
+      "ym": "2026-02",
+      "gross": 1921109.6099999992,
+      "net": 1827226.7399999981,
+      "disc": 391117.1399999999,
+      "disc_txn": 67,
+      "disc_pen": 20.743034055727556,
+      "txn": 323,
+      "members": 190,
+      "cats": {
+        "Class Packages": [
+          675686.13,
+          55,
+          48777.5
+        ],
+        "Memberships": [
+          928665.9100000001,
+          56,
+          243273.08000000002
+        ],
+        "Sessions/Single Classes": [
+          174412.5,
+          94,
+          0.0
+        ],
+        "Retail": [
+          52788.49999999999,
+          68,
+          0.0
+        ],
+        "Newcomers Special": [
+          34912.5,
+          19,
+          0.0
+        ],
+        "Privates": [
+          48672.81,
+          10,
+          93986.96
+        ],
+        "Money Credits": [
+          5971.259999999999,
+          21,
+          5079.6
+        ]
+      },
+      "prods": {
+        "Studio 30 Single Class Package": [
+          80325.0,
+          2,
+          27000.0
+        ],
+        "Barre 2 week Unlimited": [
+          8925.0,
+          1,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          662274.7800000001,
+          46,
+          204546.74
+        ],
+        "Session": [
+          89954.5,
+          48,
+          0.0
+        ],
+        "Studio Single Class": [
+          84458.0,
+          46,
+          0.0
+        ],
+        "Retail Product": [
+          52788.49999999999,
+          68,
+          0.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          34912.5,
+          19,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          243768.63,
+          16,
+          8277.5
+        ],
+        "Studio 4 Class Package": [
+          95497.5,
+          17,
+          0.0
+        ],
+        "Studio Private Class": [
+          36425.31,
+          8,
+          93986.96
+        ],
+        "Studio 3 Month Unlimited": [
+          183016.3,
+          4,
+          38726.340000000004
+        ],
+        "Studio 8 Class Package": [
+          128520.0,
+          12,
+          0.0
+        ],
+        "Money Credits": [
+          5971.259999999999,
+          21,
+          5079.6
+        ],
+        "Private Class": [
+          12247.5,
+          2,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          14175.0,
+          1,
+          1500.0
+        ],
+        "Barre 1 month Unlimited": [
+          64037.5,
+          4,
+          0.0
+        ],
+        "Studio 10 Class Package": [
+          85050.0,
+          6,
+          9000.0
+        ],
+        "Studio 2 Week Unlimited": [
+          10412.33,
+          1,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          28350.0,
+          1,
+          3000.0
+        ]
+      },
+      "sellers": {
+        "Tahira Sayyed": [
+          821687.1400000001,
+          134
+        ],
+        "Vahishta Fitter": [
+          417121.81000000006,
+          70
+        ],
+        "Imran Shaikh": [
+          27956.26,
+          2
+        ],
+        "Akshay Rane": [
+          462798.1400000001,
+          78
+        ],
+        "-": [
+          191546.26,
+          39
+        ]
+      },
+      "pay": {
+        "Custom (in-studio)": [
+          1277000.35,
+          188
+        ],
+        "Cash": [
+          300470.95000000007,
+          79
+        ],
+        "Stripe (online)": [
+          191546.26,
+          39
+        ],
+        "Multiple payment methods": [
+          152092.05,
+          17
+        ]
+      },
+      "promo": 1083066.2700000003,
+      "mem": 928665.9100000001,
+      "pkg": 675686.13,
+      "drop": 174412.5,
+      "atv": 5947.70777089783,
+      "rev_per_member": 9616.982842105253,
+      "disc_eff": 4.671814536177061
+    },
+    "2026-03": {
+      "ym": "2026-03",
+      "gross": 2018320.609999999,
+      "net": 1922628.7899999972,
+      "disc": 379267.5,
+      "disc_txn": 42,
+      "disc_pen": 12.883435582822086,
+      "txn": 326,
+      "members": 182,
+      "cats": {
+        "Sessions/Single Classes": [
+          205292.19,
+          115,
+          175.0
+        ],
+        "Memberships": [
+          702869.2300000001,
+          20,
+          130362.5
+        ],
+        "Class Packages": [
+          753036.5700000001,
+          60,
+          33030.0
+        ],
+        "Retail": [
+          89339.01,
+          78,
+          0.0
+        ],
+        "Money Credits": [
+          10920.01,
+          21,
+          0.0
+        ],
+        "Others": [
+          2.1,
+          2,
+          0.0
+        ],
+        "Newcomers Special": [
+          25725.0,
+          14,
+          0.0
+        ],
+        "Privates": [
+          231136.5,
+          16,
+          215700.0
+        ]
+      },
+      "prods": {
+        "Session": [
+          119439.0,
+          68,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          303187.5,
+          2,
+          96250.0
+        ],
+        "Studio Single Class": [
+          85853.19,
+          47,
+          175.0
+        ],
+        "Studio 8 Class Package": [
+          160650.0,
+          15,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          190898.14,
+          11,
+          11537.5
+        ],
+        "Retail Product": [
+          89339.01,
+          78,
+          0.0
+        ],
+        "Money Credits": [
+          10920.01,
+          21,
+          0.0
+        ],
+        "Studio 4 Class Package": [
+          78645.0,
+          14,
+          0.0
+        ],
+        "Test": [
+          2.1,
+          2,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          288766.07,
+          19,
+          9030.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          25725.0,
+          14,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          113400.0,
+          4,
+          12000.0
+        ],
+        "Barre 1 month Unlimited": [
+          64050.0,
+          4,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          42525.0,
+          3,
+          4500.0
+        ],
+        "Studio 2 Week Unlimited": [
+          10412.33,
+          1,
+          0.0
+        ],
+        "Studio Private Class": [
+          197400.71999999997,
+          10,
+          182280.0
+        ],
+        "Studio 10 Class Package": [
+          69050.5,
+          5,
+          7500.0
+        ],
+        "Studio 3 Month Unlimited": [
+          45294.38,
+          1,
+          7612.5
+        ],
+        "Studio 6 Month Unlimited": [
+          89026.88,
+          1,
+          14962.5
+        ],
+        "Private Class": [
+          33735.78,
+          6,
+          33420.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          239886.68,
+          52
+        ],
+        "Tahira Sayyed": [
+          607134.26,
+          97
+        ],
+        "Zaheer Agarbattiwala": [
+          17716.5,
+          11
+        ],
+        "Akshay Rane": [
+          639843.3200000001,
+          91
+        ],
+        "Vahishta Fitter": [
+          289083.35,
+          56
+        ],
+        "Zahur Shaikh": [
+          222819.0,
+          18
+        ],
+        "Imran Shaikh": [
+          1837.5,
+          1
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          239884.58000000002,
+          50
+        ],
+        "Custom (in-studio)": [
+          1466795.659999999,
+          200
+        ],
+        "Multiple payment methods": [
+          49820.19,
+          12
+        ],
+        "Cash": [
+          261820.18,
+          64
+        ]
+      },
+      "promo": 1049181.1500000004,
+      "mem": 702869.2300000001,
+      "pkg": 753036.5700000001,
+      "drop": 205292.19,
+      "atv": 6191.16751533742,
+      "rev_per_member": 10563.894450549435,
+      "disc_eff": 5.069321231057228
+    },
+    "2026-04": {
+      "ym": "2026-04",
+      "gross": 5001387.709999996,
+      "net": 4762669.010000001,
+      "disc": 2151915.21,
+      "disc_txn": 134,
+      "disc_pen": 31.828978622327792,
+      "txn": 421,
+      "members": 223,
+      "cats": {
+        "Memberships": [
+          2895413.039999996,
+          99,
+          1404000.21
+        ],
+        "Retail": [
+          107401.98999999999,
+          65,
+          0.0
+        ],
+        "Money Credits": [
+          28870.93,
+          32,
+          0.0
+        ],
+        "Sessions/Single Classes": [
+          225762.49,
+          123,
+          0.0
+        ],
+        "Others": [
+          477263.85000000003,
+          5,
+          24750.0
+        ],
+        "Class Packages": [
+          849724.26,
+          63,
+          48065.0
+        ],
+        "Privates": [
+          393063.64999999997,
+          21,
+          675100.0
+        ],
+        "Newcomers Special": [
+          23887.5,
+          13,
+          0.0
+        ]
+      },
+      "prods": {
+        "Studio 6 Month Unlimited": [
+          267080.64,
+          3,
+          44887.5
+        ],
+        "Studio 1 Month Unlimited": [
+          977909.02,
+          70,
+          848450.2100000001
+        ],
+        "Studio 3 Month Unlimited": [
+          654494.17,
+          16,
+          248500.0
+        ],
+        "Retail Product": [
+          107401.98999999999,
+          65,
+          0.0
+        ],
+        "Money Credits": [
+          28870.93,
+          32,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          939881.25,
+          6,
+          259875.0
+        ],
+        "Session": [
+          123113.0,
+          67,
+          0.0
+        ],
+        "Others": [
+          477262.80000000005,
+          4,
+          24750.0
+        ],
+        "Studio 10 Class Package": [
+          171675.0,
+          12,
+          16500.0
+        ],
+        "Studio 12 Class Package": [
+          327111.77,
+          22,
+          19565.0
+        ],
+        "Studio Single Class": [
+          102649.48999999999,
+          56,
+          0.0
+        ],
+        "Studio Private Class": [
+          348081.00999999995,
+          13,
+          629020.0
+        ],
+        "Studio 8 Class Package": [
+          128520.0,
+          12,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          28350.0,
+          1,
+          3000.0
+        ],
+        "Studio 4 Class Package": [
+          61792.49,
+          11,
+          0.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          23887.5,
+          13,
+          0.0
+        ],
+        "Studio 30 Single Class Package": [
+          89750.0,
+          2,
+          4500.0
+        ],
+        "Barre 1 month Unlimited": [
+          32025.0,
+          2,
+          0.0
+        ],
+        "Private Class": [
+          44982.64000000001,
+          8,
+          46080.0
+        ],
+        "Strength Lab 1 month Unlimited": [
+          13610.63,
+          1,
+          2287.5
+        ],
+        "Studio 2 Week Unlimited": [
+          10412.33,
+          1,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          42525.0,
+          3,
+          4500.0
+        ],
+        "Test": [
+          1.05,
+          1,
+          0.0
+        ]
+      },
+      "sellers": {
+        "Zaheer Agarbattiwala": [
+          1196744.8,
+          68
+        ],
+        "Vahishta Fitter": [
+          857028.23,
+          86
+        ],
+        "Admin Admin": [
+          122175.0,
+          4
+        ],
+        "-": [
+          452702.77999999997,
+          63
+        ],
+        "Tahira Sayyed": [
+          1146120.56,
+          101
+        ],
+        "Akshay Rane": [
+          848052.6900000001,
+          80
+        ],
+        "Sheetal Kataria": [
+          1250.0,
+          1
+        ],
+        "Zahur Shaikh": [
+          377313.64999999997,
+          18
+        ]
+      },
+      "pay": {
+        "Custom (in-studio)": [
+          3223312.4299999983,
+          239
+        ],
+        "Cash": [
+          724932.85,
+          83
+        ],
+        "Stripe (online)": [
+          452701.73,
+          62
+        ],
+        "Multiple payment methods": [
+          600440.7000000002,
+          37
+        ]
+      },
+      "promo": 3586348.559999997,
+      "mem": 2895413.039999996,
+      "pkg": 849724.26,
+      "drop": 225762.49,
+      "atv": 11879.780783847971,
+      "rev_per_member": 21357.26013452915,
+      "disc_eff": 2.213223359297693
+    },
+    "2026-05": {
+      "ym": "2026-05",
+      "gross": 2428385.71,
+      "net": 2311178.8799999966,
+      "disc": 957890.9399999995,
+      "disc_txn": 42,
+      "disc_pen": 13.125,
+      "txn": 320,
+      "members": 193,
+      "cats": {
+        "Class Packages": [
+          732790.3200000001,
+          58,
+          34505.0
+        ],
+        "Memberships": [
+          1100679.8599999999,
+          37,
+          372135.94
+        ],
+        "Sessions/Single Classes": [
+          229364.94,
+          124,
+          0.0
+        ],
+        "Money Credits": [
+          9089.02,
+          22,
+          0.0
+        ],
+        "Privates": [
+          263817.47,
+          10,
+          551250.0
+        ],
+        "Retail": [
+          76106.6,
+          60,
+          0.0
+        ],
+        "Newcomers Special": [
+          16537.5,
+          9,
+          0.0
+        ]
+      },
+      "prods": {
+        "Studio 8 Class Package": [
+          160650.0,
+          15,
+          0.0
+        ],
+        "Studio 3 Month Unlimited": [
+          360946.88999999996,
+          9,
+          149599.22
+        ],
+        "Studio 4 Class Package": [
+          89880.0,
+          16,
+          0.0
+        ],
+        "Session": [
+          154187.5,
+          83,
+          0.0
+        ],
+        "Money Credits": [
+          9089.02,
+          22,
+          0.0
+        ],
+        "Studio Single Class": [
+          75177.44,
+          41,
+          0.0
+        ],
+        "Studio Private Class": [
+          15750.0,
+          3,
+          0.0
+        ],
+        "Studio 10 Class Package": [
+          158813.0,
+          11,
+          12000.0
+        ],
+        "Retail Product": [
+          76106.6,
+          60,
+          0.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          16537.5,
+          9,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          172247.32,
+          11,
+          1505.0
+        ],
+        "Studio 1 Month Unlimited": [
+          348958.23,
+          21,
+          145536.72
+        ],
+        "Barre 1 month Unlimited": [
+          48037.41,
+          3,
+          0.0
+        ],
+        "Private Class": [
+          248067.46999999997,
+          7,
+          551250.0
+        ],
+        "Studio 30 Single Class Package": [
+          122850.0,
+          3,
+          18000.0
+        ],
+        "Studio Annual Unlimited": [
+          323400.0,
+          2,
+          77000.0
+        ],
+        "Studio 10 Single Class Package": [
+          28350.0,
+          2,
+          3000.0
+        ],
+        "Studio 2 Week Unlimited": [
+          10412.33,
+          1,
+          0.0
+        ],
+        "Barre 2 week Unlimited": [
+          8925.0,
+          1,
+          0.0
+        ]
+      },
+      "sellers": {
+        "Zaheer Agarbattiwala": [
+          700726.45,
+          50
+        ],
+        "-": [
+          237776.71,
+          55
+        ],
+        "Sheetal Kataria": [
+          253523.90000000002,
+          37
+        ],
+        "Akshay Rane": [
+          261351.72999999998,
+          65
+        ],
+        "Vahishta Fitter": [
+          349666.23,
+          63
+        ],
+        "Admin Admin": [
+          22500.0,
+          1
+        ],
+        "Tahira Sayyed": [
+          602840.69,
+          49
+        ]
+      },
+      "pay": {
+        "Custom (in-studio)": [
+          1533410.9700000002,
+          190
+        ],
+        "Stripe (online)": [
+          237776.71,
+          55
+        ],
+        "Cash": [
+          198538.47999999998,
+          49
+        ],
+        "Multiple payment methods": [
+          458659.55,
+          26
+        ]
+      },
+      "promo": 1353345.4400000004,
+      "mem": 1100679.8599999999,
+      "pkg": 732790.3200000001,
+      "drop": 229364.94,
+      "atv": 7588.70534375,
+      "rev_per_member": 11975.020103626926,
+      "disc_eff": 2.412778724058083
+    },
+    "2026-06": {
+      "ym": "2026-06",
+      "gross": 2180716.0,
+      "net": 2076834.459999998,
+      "disc": 227855.03999999998,
+      "disc_txn": 44,
+      "disc_pen": 13.664596273291925,
+      "txn": 322,
+      "members": 217,
+      "cats": {
+        "Sessions/Single Classes": [
+          198186.0,
+          107,
+          0.0
+        ],
+        "Class Packages": [
+          838388.5,
+          67,
+          28040.0
+        ],
+        "Retail": [
+          32177.75,
+          70,
+          0.0
+        ],
+        "Newcomers Special": [
+          25725.0,
+          14,
+          0.0
+        ],
+        "Memberships": [
+          843558.7100000002,
+          32,
+          147915.03999999998
+        ],
+        "Money Credits": [
+          61383.91,
+          17,
+          0.0
+        ],
+        "Privates": [
+          64795.48000000001,
+          13,
+          51900.0
+        ],
+        "Others": [
+          116500.65000000001,
+          2,
+          0.0
+        ]
+      },
+      "prods": {
+        "Studio Single Class": [
+          69561.0,
+          38,
+          0.0
+        ],
+        "Session": [
+          128625.0,
+          69,
+          0.0
+        ],
+        "Studio 4 Class Package": [
+          101115.0,
+          18,
+          0.0
+        ],
+        "Studio 8 Class Package": [
+          137996.0,
+          13,
+          1020.0
+        ],
+        "Retail Product": [
+          32177.75,
+          70,
+          0.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          25725.0,
+          14,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          354535.04,
+          21,
+          74545.01999999999
+        ],
+        "Studio 10 Class Package": [
+          114713.0,
+          8,
+          9000.0
+        ],
+        "Studio 3 Month Unlimited": [
+          373935.25999999995,
+          8,
+          63395.020000000004
+        ],
+        "Studio 6 Month Unlimited": [
+          94263.75,
+          1,
+          9975.0
+        ],
+        "Money Credits": [
+          61383.91,
+          17,
+          0.0
+        ],
+        "Studio Private Class": [
+          53550.32000000001,
+          11,
+          41520.0
+        ],
+        "Studio 12 Class Package": [
+          355414.5,
+          23,
+          6020.0
+        ],
+        "Others": [
+          116500.65000000001,
+          2,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          113400.0,
+          4,
+          12000.0
+        ],
+        "Studio 2 Week Unlimited": [
+          20824.66,
+          2,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          15750.0,
+          1,
+          0.0
+        ],
+        "Private Class": [
+          11245.16,
+          2,
+          10380.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          296257.5,
+          53
+        ],
+        "Zaheer Agarbattiwala": [
+          333365.85,
+          32
+        ],
+        "Vahishta Fitter": [
+          502035.39999999997,
+          70
+        ],
+        "Sheetal Kataria": [
+          321569.55,
+          52
+        ],
+        "Tahira Sayyed": [
+          105643.25,
+          23
+        ],
+        "Akshay Rane": [
+          520446.97,
+          80
+        ],
+        "Zahur Shaikh": [
+          101397.47999999997,
+          12
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          296257.5,
+          53
+        ],
+        "Custom (in-studio)": [
+          1050848.4900000002,
+          191
+        ],
+        "Multiple payment methods": [
+          381612.83999999997,
+          21
+        ],
+        "Cash": [
+          451997.17,
+          57
+        ]
+      },
+      "promo": 824523.4400000005,
+      "mem": 843558.7100000002,
+      "pkg": 838388.5,
+      "drop": 198186.0,
+      "atv": 6772.409937888198,
+      "rev_per_member": 9570.665714285706,
+      "disc_eff": 9.114718112006644
+    },
+    "2026-07": {
+      "ym": "2026-07",
+      "gross": 1486659.68,
+      "net": 1412789.1899999995,
+      "disc": 151050.8,
+      "disc_txn": 22,
+      "disc_pen": 11.0,
+      "txn": 200,
+      "members": 128,
+      "cats": {
+        "Sessions/Single Classes": [
+          132592.5,
+          72,
+          0.0
+        ],
+        "Memberships": [
+          801911.3899999999,
+          17,
+          98137.5
+        ],
+        "Retail": [
+          32036.75,
+          40,
+          0.0
+        ],
+        "Class Packages": [
+          406158.1699999999,
+          33,
+          22493.3
+        ],
+        "Money Credits": [
+          11082.75,
+          20,
+          0.0
+        ],
+        "Others": [
+          5512.5,
+          3,
+          0.0
+        ],
+        "Newcomers Special": [
+          14700.0,
+          8,
+          0.0
+        ],
+        "Privates": [
+          82665.62,
+          7,
+          30420.0
+        ]
+      },
+      "prods": {
+        "Session": [
+          56963.0,
+          30,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          323400.0,
+          2,
+          77000.0
+        ],
+        "Retail Product": [
+          32036.75,
+          40,
+          0.0
+        ],
+        "Studio Single Class": [
+          75629.5,
+          42,
+          0.0
+        ],
+        "Studio 8 Class Package": [
+          92411.28000000001,
+          9,
+          3789.3
+        ],
+        "Studio 1 Month Unlimited": [
+          145372.5,
+          8,
+          3550.0
+        ],
+        "Money Credits": [
+          11082.75,
+          20,
+          0.0
+        ],
+        "Studio 3 Month Unlimited - Monthly": [
+          17762.93,
+          1,
+          0.0
+        ],
+        "Others": [
+          5512.5,
+          3,
+          0.0
+        ],
+        "Studio 4 Class Package": [
+          29648.3,
+          6,
+          3674.0
+        ],
+        "Studio 12 Class Package": [
+          180148.51,
+          12,
+          9030.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          14700.0,
+          8,
+          0.0
+        ],
+        "Studio 3 Month Unlimited": [
+          205099.71,
+          4,
+          7612.5
+        ],
+        "Studio 10 Class Package": [
+          59850.08,
+          4,
+          3000.0
+        ],
+        "Studio 10 Single Class Package": [
+          15750.0,
+          1,
+          0.0
+        ],
+        "Studio Private Class": [
+          61424.619999999995,
+          3,
+          10140.0
+        ],
+        "Studio 20 Single Class Package": [
+          28350.0,
+          1,
+          3000.0
+        ],
+        "Private Class": [
+          21241.0,
+          4,
+          20280.0
+        ],
+        "Barre 1 month Unlimited": [
+          16012.5,
+          1,
+          0.0
+        ],
+        "Studio 6 Month Unlimited": [
+          94263.75,
+          1,
+          9975.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          153195.0,
+          35
+        ],
+        "Akshay Rane": [
+          405985.62,
+          49
+        ],
+        "Tahira Sayyed": [
+          90608.41,
+          22
+        ],
+        "Zahur Shaikh": [
+          83663.12,
+          9
+        ],
+        "Zaheer Agarbattiwala": [
+          176473.63,
+          20
+        ],
+        "Vahishta Fitter": [
+          401305.6,
+          26
+        ],
+        "Sheetal Kataria": [
+          175428.3,
+          39
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          153195.0,
+          35
+        ],
+        "Cash": [
+          369076.89,
+          37
+        ],
+        "Custom (in-studio)": [
+          862901.87,
+          113
+        ],
+        "Multiple payment methods": [
+          101485.92,
+          15
+        ]
+      },
+      "promo": 661136.9199999999,
+      "mem": 801911.3899999999,
+      "pkg": 406158.1699999999,
+      "drop": 132592.5,
+      "atv": 7433.2984,
+      "rev_per_member": 11037.415546874996,
+      "disc_eff": 9.353073204511327
+    },
+    "2025-06": {
+      "ym": "2025-06",
+      "gross": 2008033.89,
+      "net": 1699635.7699999998,
+      "disc": 106397.5,
+      "disc_txn": 33,
+      "disc_pen": 9.939759036144578,
+      "txn": 332,
+      "members": 193,
+      "cats": {
+        "Sessions/Single Classes": [
+          178770.0,
+          97,
+          0.0
+        ],
+        "Class Packages": [
+          852597.2600000002,
+          60,
+          45810.0
+        ],
+        "Retail": [
+          93985.93999999997,
+          129,
+          0.0
+        ],
+        "Memberships": [
+          855327.75,
+          35,
+          60587.5
+        ],
+        "Privates": [
+          11800.0,
+          2,
+          0.0
+        ],
+        "Money Credits": [
+          15552.94,
+          9,
+          0.0
+        ]
+      },
+      "prods": {
+        "Session": [
+          88500.0,
+          46,
+          0.0
+        ],
+        "Studio 8 Class Package": [
+          168504.0,
+          14,
+          0.0
+        ],
+        "Studio 30 Single Class Package": [
+          92925.0,
+          2,
+          11250.0
+        ],
+        "Retail Product": [
+          93985.93999999997,
+          129,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          390466.75,
+          23,
+          17537.5
+        ],
+        "Studio Single Class": [
+          90270.0,
+          51,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          333869.26,
+          20,
+          18060.0
+        ],
+        "Studio 4 Class Package": [
+          82069.0,
+          13,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          175230.0,
+          11,
+          16500.0
+        ],
+        "Studio Private Class": [
+          11800.0,
+          2,
+          0.0
+        ],
+        "Money Credits": [
+          15552.94,
+          9,
+          0.0
+        ],
+        "Studio 2 Week Unlimited": [
+          40120.0,
+          4,
+          0.0
+        ],
+        "Studio 3 Month Unlimited - Monthly": [
+          17110.0,
+          1,
+          0.0
+        ],
+        "Studio 3 Month Unlimited": [
+          236118.0,
+          5,
+          17400.0
+        ],
+        "Studio 6 Month Unlimited": [
+          171513.0,
+          2,
+          25650.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          411309.65,
+          53
+        ],
+        "Akshay Rane": [
+          631486.5800000001,
+          89
+        ],
+        "Zaheer Agarbattiwala": [
+          523319.12000000005,
+          105
+        ],
+        "Tahira Sayyed": [
+          421334.54000000004,
+          76
+        ],
+        "Admin Admin": [
+          19924.0,
+          5
+        ],
+        "Zahur Shaikh": [
+          660.0,
+          4
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          411309.65,
+          53
+        ],
+        "Custom (in-studio)": [
+          979689.0700000002,
+          194
+        ],
+        "Cash": [
+          431660.5,
+          68
+        ],
+        "Multiple payment methods": [
+          185374.66999999998,
+          17
+        ]
+      },
+      "promo": 799157.9500000002,
+      "mem": 855327.75,
+      "pkg": 852597.2600000002,
+      "drop": 178770.0,
+      "atv": 6048.29484939759,
+      "rev_per_member": 8806.402953367875,
+      "disc_eff": 15.974395732982446
+    },
+    "2025-07": {
+      "ym": "2025-07",
+      "gross": 2111894.159999999,
+      "net": 1789995.8700000006,
+      "disc": 161744.79,
+      "disc_txn": 29,
+      "disc_pen": 10.247349823321555,
+      "txn": 283,
+      "members": 178,
+      "cats": {
+        "Retail": [
+          95591.0,
+          70,
+          0.0
+        ],
+        "Sessions/Single Classes": [
+          186160.01,
+          102,
+          0.0
+        ],
+        "Memberships": [
+          1164294.25,
+          42,
+          130199.79000000001
+        ],
+        "Class Packages": [
+          628001.9600000002,
+          49,
+          31545.0
+        ],
+        "Money Credits": [
+          1443.94,
+          13,
+          0.0
+        ],
+        "Privates": [
+          32863.0,
+          5,
+          0.0
+        ],
+        "Newcomers Special": [
+          3540.0,
+          2,
+          0.0
+        ]
+      },
+      "prods": {
+        "Retail Product": [
+          95591.0,
+          70,
+          0.0
+        ],
+        "Session": [
+          127750.0,
+          69,
+          0.0
+        ],
+        "Studio 3 Month Unlimited - Monthly": [
+          17100.0,
+          1,
+          0.0
+        ],
+        "Studio Single Class": [
+          58410.009999999995,
+          33,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          179365.93999999997,
+          11,
+          13545.0
+        ],
+        "Studio 2 Week Unlimited": [
+          50150.0,
+          5,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          486764.75,
+          28,
+          14487.5
+        ],
+        "Money Credits": [
+          1443.94,
+          13,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          95580.0,
+          3,
+          9000.0
+        ],
+        "Studio 10 Single Class Package": [
+          15930.0,
+          1,
+          1500.0
+        ],
+        "Studio 4 Class Package": [
+          101008.0,
+          16,
+          0.0
+        ],
+        "Studio 10 Class Package": [
+          79650.0,
+          5,
+          7500.0
+        ],
+        "Studio 3 Month Unlimited": [
+          213123.0,
+          5,
+          36887.29
+        ],
+        "Studio Private Class": [
+          11799.99,
+          2,
+          0.0
+        ],
+        "Private Class": [
+          21063.010000000002,
+          3,
+          0.0
+        ],
+        "Studio 8 Class Package": [
+          156468.02,
+          13,
+          0.0
+        ],
+        "Studio 6 Month Unlimited": [
+          85756.5,
+          1,
+          12825.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          3540.0,
+          2,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          311400.0,
+          2,
+          66000.0
+        ]
+      },
+      "sellers": {
+        "Zaheer Agarbattiwala": [
+          880571.49,
+          113
+        ],
+        "Akshay Rane": [
+          775762.2699999999,
+          92
+        ],
+        "Imran Shaikh": [
+          8867.5,
+          9
+        ],
+        "-": [
+          357620.4,
+          57
+        ],
+        "Zahur Shaikh": [
+          34338.0,
+          6
+        ],
+        "Shipra Bhika": [
+          17065.75,
+          2
+        ],
+        "Admin Admin": [
+          35400.0,
+          2
+        ],
+        "Nadiya Shaikh": [
+          2268.75,
+          2
+        ]
+      },
+      "pay": {
+        "Multiple payment methods": [
+          198135.0,
+          7
+        ],
+        "Custom (in-studio)": [
+          1058444.5299999998,
+          162
+        ],
+        "Cash": [
+          505608.23,
+          65
+        ],
+        "Stripe (online)": [
+          349706.4,
+          49
+        ]
+      },
+      "promo": 982885.1500000001,
+      "mem": 1164294.25,
+      "pkg": 628001.9600000002,
+      "drop": 186160.01,
+      "atv": 7462.523533568902,
+      "rev_per_member": 10056.156573033712,
+      "disc_eff": 11.066791517674236
+    }
+  },
+  "baseline": {
+    "gross": 2228044.9599999995,
+    "net": 2121015.166666665,
+    "disc": 376732.2133333333,
+    "txn": 317.0,
+    "members": 187.33333333333334,
+    "promo": 1143327.4933333334,
+    "mem": 1021341.8166666665,
+    "pkg": 758827.2433333335,
+    "drop": 192340.55333333332,
+    "disc_txn": 48.666666666666664,
+    "atv": 7075.767104241772,
+    "rev_per_member": 11311.502904569106,
+    "disc_eff": 5.630033991253058
+  },
+  "sessions": {
+    "2026-01": {
+      "ym": "2026-01",
+      "sessions": 332,
+      "capacity": 4577.0,
+      "visits": 2060,
+      "empty": 9,
+      "fill": 45.00764693030369,
+      "late_cancel": 295,
+      "booked": 2356,
+      "revenue": 1535835.8299999984,
+      "class_avg": 6.204819277108434,
+      "byclass": {
+        "Studio Barre 57": [
+          71,
+          1228.0,
+          486.0,
+          59.0,
+          432398.18999999994
+        ],
+        "Studio PowerCycle": [
+          71,
+          710.0,
+          371.0,
+          68.0,
+          256255.63999999996
+        ],
+        "Studio Recovery": [
+          5,
+          80.0,
+          32.0,
+          3.0,
+          18726.21
+        ],
+        "Studio Strength Lab (Pull)": [
+          16,
+          112.0,
+          77.0,
+          21.0,
+          55801.16999999999
+        ],
+        "Studio Mat 57": [
+          21,
+          398.0,
+          235.0,
+          35.0,
+          167425.77
+        ],
+        "Studio FIT": [
+          25,
+          405.0,
+          169.0,
+          17.0,
+          133114.9
+        ],
+        "Studio Cardio Barre Express": [
+          10,
+          188.0,
+          39.0,
+          3.0,
+          32929.43
+        ],
+        "Studio PowerCycle Express": [
+          9,
+          90.0,
+          41.0,
+          6.0,
+          33557.86
+        ],
+        "Studio Cardio Barre Plus": [
+          9,
+          164.0,
+          52.0,
+          5.0,
+          42838.95999999999
+        ],
+        "Studio Strength Lab (Full Body)": [
+          23,
+          161.0,
+          84.0,
+          17.0,
+          61898.599999999984
+        ],
+        "Studio Cardio Barre": [
+          17,
+          301.0,
+          114.0,
+          10.0,
+          86772.29999999999
+        ],
+        "Studio Back Body Blaze Express": [
+          9,
+          170.0,
+          64.0,
+          12.0,
+          50654.36
+        ],
+        "Studio Strength Lab (Push)": [
+          22,
+          154.0,
+          101.0,
+          10.0,
+          64908.66
+        ],
+        "Studio Back Body Blaze": [
+          8,
+          136.0,
+          52.0,
+          8.0,
+          39901.11
+        ],
+        "Studio Mat 57 Express": [
+          8,
+          116.0,
+          55.0,
+          8.0,
+          36801.39
+        ],
+        "Studio Amped Up!": [
+          4,
+          80.0,
+          35.0,
+          7.0,
+          21851.28
+        ],
+        "Studio Hosted Class": [
+          4,
+          84.0,
+          53.0,
+          6.0,
+          0.0
+        ]
+      },
+      "bytype": {
+        "Barre 57": [
+          191,
+          3350.0,
+          1386.0,
+          173.0,
+          1063413.9
+        ],
+        "powerCycle": [
+          80,
+          800.0,
+          412.0,
+          74.0,
+          289813.49999999994
+        ],
+        "Strength Lab!": [
+          61,
+          427.0,
+          262.0,
+          48.0,
+          182608.43000000002
+        ]
+      },
+      "bytrainer": {
+        "Simonelle De Vitre": [
+          15,
+          279.0,
+          82.0,
+          0.0,
+          73147.61
+        ],
+        "Raunak Khemuka": [
+          18,
+          180.0,
+          64.0,
+          0.0,
+          54860.200000000004
+        ],
+        "Pranjali Jain": [
+          31,
+          489.0,
+          239.0,
+          0.0,
+          165212.81000000006
+        ],
+        "Reshma Sharma": [
+          31,
+          438.0,
+          238.0,
+          0.0,
+          181050.58999999997
+        ],
+        "Rohan Dahima": [
+          36,
+          611.0,
+          314.0,
+          0.0,
+          246036.94999999995
+        ],
+        "Vivaran Dhasmana": [
+          19,
+          263.0,
+          109.0,
+          0.0,
+          87190.18
+        ],
+        "Richard  D'Costa": [
+          22,
+          282.0,
+          133.0,
+          0.0,
+          101608.09999999999
+        ],
+        "Anisha Shah": [
+          25,
+          328.0,
+          178.0,
+          0.0,
+          112235.27
+        ],
+        "Anmol Sharma": [
+          9,
+          90.0,
+          32.0,
+          0.0,
+          24444.49
+        ],
+        "Mrigakshi Jaiswal": [
+          35,
+          438.0,
+          204.0,
+          0.0,
+          149820.13
+        ],
+        "Cauveri Vikrant": [
+          36,
+          536.0,
+          222.0,
+          0.0,
+          160199.52000000002
+        ],
+        "Atulan Purohit": [
+          20,
+          200.0,
+          99.0,
+          0.0,
+          73519.09
+        ],
+        "Bret Saldanha": [
+          17,
+          170.0,
+          67.0,
+          0.0,
+          37069.26
+        ],
+        "Karan Bhatia": [
+          6,
+          80.0,
+          21.0,
+          0.0,
+          18107.68
+        ],
+        "Simran Dutt": [
+          12,
+          193.0,
+          58.0,
+          0.0,
+          51333.94999999999
+        ]
+      },
+      "heat": {
+        "17:30": {
+          "Saturday": [
+            24.0,
+            104.0
+          ]
+        },
+        "16:30": {
+          "Saturday": [
+            15.0,
+            52.0
+          ]
+        },
+        "12:30": {
+          "Saturday": [
+            32.0,
+            80.0
+          ]
+        },
+        "11:30": {
+          "Saturday": [
+            117.0,
+            188.0
+          ],
+          "Wednesday": [
+            33.0,
+            80.0
+          ],
+          "Sunday": [
+            42.0,
+            121.0
+          ]
+        },
+        "10:15": {
+          "Saturday": [
+            108.0,
+            137.0
+          ],
+          "Thursday": [
+            19.0,
+            56.0
+          ],
+          "Wednesday": [
+            21.0,
+            48.0
+          ],
+          "Sunday": [
+            32.0,
+            81.0
+          ]
+        },
+        "10:00": {
+          "Saturday": [
+            28.0,
+            50.0
+          ],
+          "Tuesday": [
+            14.0,
+            40.0
+          ],
+          "Monday": [
+            21.0,
+            88.0
+          ],
+          "Sunday": [
+            30.0,
+            68.0
+          ],
+          "Friday": [
+            9.0,
+            10.0
+          ]
+        },
+        "09:00": {
+          "Saturday": [
+            24.0,
+            75.0
+          ],
+          "Friday": [
+            46.0,
+            75.0
+          ],
+          "Thursday": [
+            28.0,
+            92.0
+          ],
+          "Wednesday": [
+            53.0,
+            108.0
+          ],
+          "Tuesday": [
+            26.0,
+            76.0
+          ],
+          "Monday": [
+            21.0,
+            28.0
+          ]
+        },
+        "08:00": {
+          "Saturday": [
+            17.0,
+            104.0
+          ],
+          "Thursday": [
+            30.0,
+            40.0
+          ],
+          "Wednesday": [
+            32.0,
+            40.0
+          ],
+          "Monday": [
+            15.0,
+            40.0
+          ]
+        },
+        "19:15": {
+          "Friday": [
+            26.0,
+            50.0
+          ],
+          "Thursday": [
+            50.0,
+            116.0
+          ],
+          "Wednesday": [
+            49.0,
+            136.0
+          ],
+          "Tuesday": [
+            72.0,
+            108.0
+          ],
+          "Monday": [
+            21.0,
+            28.0
+          ]
+        },
+        "19:00": {
+          "Friday": [
+            28.0,
+            92.0
+          ],
+          "Monday": [
+            20.0,
+            40.0
+          ]
+        },
+        "18:00": {
+          "Friday": [
+            23.0,
+            35.0
+          ],
+          "Thursday": [
+            37.0,
+            40.0
+          ],
+          "Wednesday": [
+            20.0,
+            28.0
+          ],
+          "Tuesday": [
+            18.0,
+            28.0
+          ],
+          "Monday": [
+            21.0,
+            68.0
+          ]
+        },
+        "17:45": {
+          "Friday": [
+            43.0,
+            92.0
+          ],
+          "Tuesday": [
+            36.0,
+            88.0
+          ],
+          "Monday": [
+            27.0,
+            36.0
+          ]
+        },
+        "11:15": {
+          "Friday": [
+            37.0,
+            92.0
+          ],
+          "Monday": [
+            35.0,
+            74.0
+          ]
+        },
+        "11:00": {
+          "Friday": [
+            22.0,
+            35.0
+          ],
+          "Thursday": [
+            25.0,
+            58.0
+          ],
+          "Tuesday": [
+            52.0,
+            80.0
+          ],
+          "Monday": [
+            2.0,
+            20.0
+          ]
+        },
+        "08:30": {
+          "Friday": [
+            49.0,
+            110.0
+          ],
+          "Tuesday": [
+            35.0,
+            80.0
+          ],
+          "Monday": [
+            50.0,
+            80.0
+          ]
+        },
+        "07:30": {
+          "Friday": [
+            43.0,
+            90.0
+          ],
+          "Thursday": [
+            28.0,
+            80.0
+          ],
+          "Wednesday": [
+            47.0,
+            108.0
+          ],
+          "Tuesday": [
+            36.0,
+            108.0
+          ],
+          "Monday": [
+            14.0,
+            48.0
+          ]
+        },
+        "18:15": {
+          "Thursday": [
+            21.0,
+            80.0
+          ],
+          "Wednesday": [
+            18.0,
+            72.0
+          ]
+        },
+        "09:30": {
+          "Thursday": [
+            8.0,
+            40.0
+          ]
+        },
+        "09:15": {
+          "Thursday": [
+            9.0,
+            28.0
+          ],
+          "Wednesday": [
+            9.0,
+            20.0
+          ]
+        },
+        "18:30": {
+          "Wednesday": [
+            22.0,
+            40.0
+          ],
+          "Saturday": [
+            4.0,
+            10.0
+          ]
+        },
+        "08:45": {
+          "Wednesday": [
+            13.0,
+            28.0
+          ]
+        },
+        "18:45": {
+          "Monday": [
+            23.0,
+            48.0
+          ]
+        },
+        "07:15": {
+          "Monday": [
+            27.0,
+            28.0
+          ]
+        },
+        "17:15": {
+          "Sunday": [
+            28.0,
+            69.0
+          ]
+        },
+        "17:00": {
+          "Sunday": [
+            8.0,
+            40.0
+          ],
+          "Saturday": [
+            1.0,
+            7.0
+          ]
+        },
+        "16:00": {
+          "Sunday": [
+            23.0,
+            78.0
+          ]
+        },
+        "12:45": {
+          "Sunday": [
+            23.0,
+            30.0
+          ],
+          "Saturday": [
+            20.0,
+            30.0
+          ]
+        }
+      }
+    },
+    "2026-02": {
+      "ym": "2026-02",
+      "sessions": 309,
+      "capacity": 4372.0,
+      "visits": 1919,
+      "empty": 8,
+      "fill": 43.89295516925892,
+      "late_cancel": 208,
+      "booked": 2130,
+      "revenue": 1430518.4100000008,
+      "class_avg": 6.210355987055016,
+      "byclass": {
+        "Studio Barre 57": [
+          67,
+          1191.0,
+          459.0,
+          28.0,
+          413596.7400000002
+        ],
+        "Studio PowerCycle": [
+          72,
+          723.0,
+          384.0,
+          52.0,
+          288656.89000000013
+        ],
+        "Studio Recovery": [
+          4,
+          80.0,
+          21.0,
+          0.0,
+          14068.529999999999
+        ],
+        "Studio Strength Lab (Pull)": [
+          19,
+          133.0,
+          94.0,
+          10.0,
+          63956.950000000004
+        ],
+        "Studio Mat 57": [
+          20,
+          400.0,
+          203.0,
+          22.0,
+          147544.10000000003
+        ],
+        "Studio FIT": [
+          25,
+          425.0,
+          178.0,
+          19.0,
+          120586.06999999999
+        ],
+        "Studio Cardio Barre Express": [
+          8,
+          158.0,
+          37.0,
+          5.0,
+          27575.680000000004
+        ],
+        "Studio PowerCycle Express": [
+          5,
+          50.0,
+          17.0,
+          5.0,
+          12370.2
+        ],
+        "Studio Cardio Barre Plus": [
+          8,
+          152.0,
+          28.0,
+          4.0,
+          19332.28
+        ],
+        "Studio Strength Lab (Full Body)": [
+          20,
+          140.0,
+          81.0,
+          11.0,
+          62994.25
+        ],
+        "Studio Cardio Barre": [
+          16,
+          300.0,
+          115.0,
+          15.0,
+          80842.23
+        ],
+        "Studio Back Body Blaze Express": [
+          7,
+          140.0,
+          65.0,
+          5.0,
+          34810.15
+        ],
+        "Studio Back Body Blaze": [
+          8,
+          128.0,
+          47.0,
+          7.0,
+          37391.020000000004
+        ],
+        "Studio Strength Lab (Push)": [
+          16,
+          112.0,
+          71.0,
+          11.0,
+          44422.37
+        ],
+        "Studio Mat 57 Express": [
+          8,
+          116.0,
+          48.0,
+          7.0,
+          35246.32000000001
+        ],
+        "Studio Amped Up!": [
+          4,
+          80.0,
+          43.0,
+          5.0,
+          27124.63
+        ],
+        "Studio Hosted Class": [
+          2,
+          44.0,
+          28.0,
+          2.0,
+          0.0
+        ]
+      },
+      "bytype": {
+        "Barre 57": [
+          177,
+          3214.0,
+          1272.0,
+          119.0,
+          958117.7500000002
+        ],
+        "powerCycle": [
+          77,
+          773.0,
+          401.0,
+          57.0,
+          301027.09000000014
+        ],
+        "Strength Lab!": [
+          55,
+          385.0,
+          246.0,
+          32.0,
+          171373.56999999995
+        ]
+      },
+      "bytrainer": {
+        "Simonelle De Vitre": [
+          19,
+          318.0,
+          117.0,
+          0.0,
+          103188.21
+        ],
+        "Bret Saldanha": [
+          18,
+          183.0,
+          86.0,
+          0.0,
+          68121.09
+        ],
+        "Pranjali Jain": [
+          31,
+          503.0,
+          207.0,
+          0.0,
+          150334.11999999997
+        ],
+        "Cauveri Vikrant": [
+          34,
+          498.0,
+          207.0,
+          0.0,
+          160759.09999999998
+        ],
+        "Richard  D'Costa": [
+          19,
+          246.0,
+          84.0,
+          0.0,
+          70858.14
+        ],
+        "Rohan Dahima": [
+          41,
+          649.0,
+          313.0,
+          0.0,
+          224879.26000000004
+        ],
+        "Vivaran Dhasmana": [
+          19,
+          293.0,
+          107.0,
+          0.0,
+          66538.23000000001
+        ],
+        "Mrigakshi Jaiswal": [
+          25,
+          356.0,
+          151.0,
+          0.0,
+          100024.44
+        ],
+        "Raunak Khemuka": [
+          14,
+          140.0,
+          44.0,
+          0.0,
+          43827.84
+        ],
+        "Anmol Sharma": [
+          12,
+          120.0,
+          54.0,
+          0.0,
+          40013.15
+        ],
+        "Atulan Purohit": [
+          18,
+          176.0,
+          119.0,
+          0.0,
+          71753.97
+        ],
+        "Anisha Shah": [
+          27,
+          351.0,
+          194.0,
+          0.0,
+          125931.47999999998
+        ],
+        "Reshma Sharma": [
+          17,
+          268.0,
+          160.0,
+          0.0,
+          126584.28
+        ],
+        "Karan Bhatia": [
+          4,
+          48.0,
+          20.0,
+          0.0,
+          16347.5
+        ],
+        "Simran Dutt": [
+          11,
+          223.0,
+          56.0,
+          0.0,
+          61357.6
+        ]
+      },
+      "heat": {
+        "17:30": {
+          "Saturday": [
+            42.0,
+            92.0
+          ],
+          "Thursday": [
+            13.0,
+            17.0
+          ]
+        },
+        "16:30": {
+          "Saturday": [
+            16.0,
+            43.0
+          ]
+        },
+        "12:30": {
+          "Saturday": [
+            21.0,
+            80.0
+          ]
+        },
+        "11:30": {
+          "Saturday": [
+            85.0,
+            160.0
+          ],
+          "Wednesday": [
+            32.0,
+            80.0
+          ],
+          "Sunday": [
+            47.0,
+            121.0
+          ]
+        },
+        "10:15": {
+          "Saturday": [
+            87.0,
+            128.0
+          ],
+          "Thursday": [
+            18.0,
+            48.0
+          ],
+          "Wednesday": [
+            30.0,
+            48.0
+          ],
+          "Monday": [
+            11.0,
+            22.0
+          ],
+          "Sunday": [
+            29.0,
+            92.0
+          ]
+        },
+        "10:00": {
+          "Saturday": [
+            19.0,
+            40.0
+          ],
+          "Friday": [
+            4.0,
+            40.0
+          ],
+          "Tuesday": [
+            22.0,
+            40.0
+          ],
+          "Monday": [
+            34.0,
+            78.0
+          ],
+          "Sunday": [
+            30.0,
+            68.0
+          ]
+        },
+        "09:00": {
+          "Saturday": [
+            29.0,
+            68.0
+          ],
+          "Friday": [
+            46.0,
+            68.0
+          ],
+          "Thursday": [
+            26.0,
+            92.0
+          ],
+          "Wednesday": [
+            48.0,
+            116.0
+          ],
+          "Tuesday": [
+            29.0,
+            76.0
+          ],
+          "Monday": [
+            10.0,
+            28.0
+          ]
+        },
+        "08:00": {
+          "Saturday": [
+            17.0,
+            92.0
+          ],
+          "Thursday": [
+            34.0,
+            40.0
+          ],
+          "Wednesday": [
+            35.0,
+            40.0
+          ],
+          "Monday": [
+            10.0,
+            40.0
+          ]
+        },
+        "19:15": {
+          "Friday": [
+            16.0,
+            40.0
+          ],
+          "Thursday": [
+            50.0,
+            119.0
+          ],
+          "Wednesday": [
+            37.0,
+            136.0
+          ],
+          "Tuesday": [
+            49.0,
+            108.0
+          ],
+          "Monday": [
+            26.0,
+            28.0
+          ]
+        },
+        "19:00": {
+          "Friday": [
+            12.0,
+            80.0
+          ],
+          "Monday": [
+            14.0,
+            40.0
+          ]
+        },
+        "18:00": {
+          "Friday": [
+            22.0,
+            28.0
+          ],
+          "Thursday": [
+            34.0,
+            40.0
+          ],
+          "Wednesday": [
+            17.0,
+            28.0
+          ],
+          "Tuesday": [
+            25.0,
+            28.0
+          ],
+          "Monday": [
+            22.0,
+            68.0
+          ]
+        },
+        "17:45": {
+          "Friday": [
+            26.0,
+            80.0
+          ],
+          "Tuesday": [
+            25.0,
+            88.0
+          ],
+          "Monday": [
+            26.0,
+            36.0
+          ]
+        },
+        "11:15": {
+          "Friday": [
+            22.0,
+            80.0
+          ],
+          "Monday": [
+            16.0,
+            72.0
+          ],
+          "Sunday": [
+            17.0,
+            22.0
+          ]
+        },
+        "11:00": {
+          "Friday": [
+            12.0,
+            28.0
+          ],
+          "Thursday": [
+            21.0,
+            68.0
+          ],
+          "Tuesday": [
+            58.0,
+            80.0
+          ]
+        },
+        "08:30": {
+          "Friday": [
+            36.0,
+            88.0
+          ],
+          "Tuesday": [
+            43.0,
+            80.0
+          ],
+          "Monday": [
+            51.0,
+            80.0
+          ]
+        },
+        "07:30": {
+          "Friday": [
+            45.0,
+            80.0
+          ],
+          "Thursday": [
+            22.0,
+            80.0
+          ],
+          "Wednesday": [
+            61.0,
+            108.0
+          ],
+          "Tuesday": [
+            58.0,
+            108.0
+          ],
+          "Monday": [
+            18.0,
+            48.0
+          ]
+        },
+        "18:15": {
+          "Thursday": [
+            20.0,
+            60.0
+          ],
+          "Wednesday": [
+            20.0,
+            66.0
+          ]
+        },
+        "09:30": {
+          "Thursday": [
+            8.0,
+            40.0
+          ]
+        },
+        "09:15": {
+          "Thursday": [
+            14.0,
+            28.0
+          ]
+        },
+        "18:30": {
+          "Wednesday": [
+            19.0,
+            40.0
+          ]
+        },
+        "08:45": {
+          "Wednesday": [
+            23.0,
+            28.0
+          ]
+        },
+        "18:45": {
+          "Monday": [
+            32.0,
+            48.0
+          ]
+        },
+        "07:15": {
+          "Monday": [
+            21.0,
+            28.0
+          ]
+        },
+        "17:15": {
+          "Sunday": [
+            18.0,
+            80.0
+          ]
+        },
+        "17:00": {
+          "Sunday": [
+            22.0,
+            40.0
+          ]
+        },
+        "16:00": {
+          "Sunday": [
+            17.0,
+            88.0
+          ]
+        }
+      }
+    },
+    "2026-03": {
+      "ym": "2026-03",
+      "sessions": 332,
+      "capacity": 4695.0,
+      "visits": 2284,
+      "empty": 8,
+      "fill": 48.64749733759318,
+      "late_cancel": 304,
+      "booked": 2591,
+      "revenue": 1693529.4400000004,
+      "class_avg": 6.879518072289157,
+      "byclass": {
+        "Studio FIT": [
+          25,
+          425.0,
+          218.0,
+          26.0,
+          143684.24
+        ],
+        "Studio PowerCycle": [
+          79,
+          796.0,
+          426.0,
+          59.0,
+          311604.33999999997
+        ],
+        "Studio Strength Lab (Full Body)": [
+          22,
+          154.0,
+          102.0,
+          25.0,
+          69168.52
+        ],
+        "Studio Barre 57": [
+          73,
+          1306.0,
+          557.0,
+          69.0,
+          499881.12000000005
+        ],
+        "Studio Mat 57": [
+          21,
+          420.0,
+          206.0,
+          22.0,
+          152463.69999999998
+        ],
+        "Studio Amped Up!": [
+          4,
+          80.0,
+          54.0,
+          5.0,
+          35856.07
+        ],
+        "Studio Strength Lab (Push)": [
+          19,
+          133.0,
+          104.0,
+          16.0,
+          57554.11
+        ],
+        "Studio Mat 57 Express": [
+          9,
+          125.0,
+          59.0,
+          11.0,
+          51815.29000000001
+        ],
+        "Studio Cardio Barre Plus": [
+          9,
+          180.0,
+          59.0,
+          6.0,
+          47657.26
+        ],
+        "Studio Cardio Barre": [
+          18,
+          351.0,
+          145.0,
+          22.0,
+          98124.18
+        ],
+        "Studio Recovery": [
+          4,
+          80.0,
+          20.0,
+          0.0,
+          12742.529999999999
+        ],
+        "Studio Strength Lab (Pull)": [
+          20,
+          140.0,
+          106.0,
+          19.0,
+          77560.49
+        ],
+        "Studio PowerCycle Express": [
+          4,
+          40.0,
+          18.0,
+          5.0,
+          11412.08
+        ],
+        "Studio Back Body Blaze Express": [
+          8,
+          160.0,
+          75.0,
+          7.0,
+          48528.13
+        ],
+        "Studio Back Body Blaze": [
+          8,
+          128.0,
+          59.0,
+          5.0,
+          43304.28
+        ],
+        "Studio Cardio Barre Express": [
+          7,
+          135.0,
+          46.0,
+          3.0,
+          32173.1
+        ],
+        "Studio Hosted Class": [
+          2,
+          42.0,
+          30.0,
+          4.0,
+          0.0
+        ]
+      },
+      "bytype": {
+        "Barre 57": [
+          188,
+          3432.0,
+          1528.0,
+          180.0,
+          1166229.9000000006
+        ],
+        "powerCycle": [
+          83,
+          836.0,
+          444.0,
+          64.0,
+          323016.4199999999
+        ],
+        "Strength Lab!": [
+          61,
+          427.0,
+          312.0,
+          60.0,
+          204283.12000000002
+        ]
+      },
+      "bytrainer": {
+        "Anisha Shah": [
+          24,
+          289.0,
+          155.0,
+          0.0,
+          89533.96000000002
+        ],
+        "Rohan Dahima": [
+          38,
+          630.0,
+          338.0,
+          0.0,
+          274029.4799999999
+        ],
+        "Reshma Sharma": [
+          20,
+          321.0,
+          194.0,
+          0.0,
+          143806.81999999998
+        ],
+        "Bret Saldanha": [
+          20,
+          206.0,
+          89.0,
+          0.0,
+          55844.029999999984
+        ],
+        "Karan Bhatia": [
+          9,
+          124.0,
+          54.0,
+          0.0,
+          40028.68
+        ],
+        "Pranjali Jain": [
+          25,
+          398.0,
+          193.0,
+          0.0,
+          148890.02000000002
+        ],
+        "Atulan Purohit": [
+          23,
+          270.0,
+          188.0,
+          0.0,
+          118327.93000000001
+        ],
+        "Raunak Khemuka": [
+          17,
+          170.0,
+          52.0,
+          0.0,
+          45171.969999999994
+        ],
+        "Cauveri Vikrant": [
+          34,
+          507.0,
+          240.0,
+          0.0,
+          199839.47999999995
+        ],
+        "Mrigakshi Jaiswal": [
+          37,
+          516.0,
+          276.0,
+          0.0,
+          182270.02000000002
+        ],
+        "Simonelle De Vitre": [
+          24,
+          408.0,
+          149.0,
+          0.0,
+          133060.64
+        ],
+        "Richard  D'Costa": [
+          18,
+          227.0,
+          107.0,
+          0.0,
+          68734.90000000001
+        ],
+        "Simran Dutt": [
+          12,
+          231.0,
+          73.0,
+          0.0,
+          76703.69999999998
+        ],
+        "Anmol Sharma": [
+          11,
+          110.0,
+          40.0,
+          0.0,
+          36876.63999999999
+        ],
+        "Vivaran Dhasmana": [
+          20,
+          288.0,
+          136.0,
+          0.0,
+          80411.17000000001
+        ]
+      },
+      "heat": {
+        "19:15": {
+          "Tuesday": [
+            77.0,
+            135.0
+          ],
+          "Monday": [
+            27.0,
+            35.0
+          ],
+          "Friday": [
+            18.0,
+            40.0
+          ],
+          "Thursday": [
+            70.0,
+            116.0
+          ],
+          "Wednesday": [
+            51.0,
+            128.0
+          ]
+        },
+        "18:00": {
+          "Tuesday": [
+            24.0,
+            35.0
+          ],
+          "Monday": [
+            54.0,
+            85.0
+          ],
+          "Friday": [
+            16.0,
+            28.0
+          ],
+          "Thursday": [
+            33.0,
+            40.0
+          ],
+          "Wednesday": [
+            15.0,
+            28.0
+          ],
+          "Saturday": [
+            8.0,
+            10.0
+          ]
+        },
+        "17:45": {
+          "Tuesday": [
+            54.0,
+            110.0
+          ],
+          "Monday": [
+            39.0,
+            45.0
+          ],
+          "Friday": [
+            36.0,
+            80.0
+          ],
+          "Saturday": [
+            10.0,
+            10.0
+          ]
+        },
+        "11:00": {
+          "Tuesday": [
+            38.0,
+            80.0
+          ],
+          "Friday": [
+            16.0,
+            28.0
+          ],
+          "Thursday": [
+            21.0,
+            68.0
+          ]
+        },
+        "10:00": {
+          "Tuesday": [
+            18.0,
+            40.0
+          ],
+          "Monday": [
+            29.0,
+            110.0
+          ],
+          "Sunday": [
+            42.0,
+            85.0
+          ],
+          "Friday": [
+            17.0,
+            40.0
+          ],
+          "Saturday": [
+            23.0,
+            30.0
+          ]
+        },
+        "09:00": {
+          "Tuesday": [
+            35.0,
+            76.0
+          ],
+          "Monday": [
+            26.0,
+            35.0
+          ],
+          "Saturday": [
+            37.0,
+            61.0
+          ],
+          "Friday": [
+            49.0,
+            68.0
+          ],
+          "Thursday": [
+            28.0,
+            92.0
+          ],
+          "Wednesday": [
+            56.0,
+            128.0
+          ]
+        },
+        "08:30": {
+          "Tuesday": [
+            54.0,
+            80.0
+          ],
+          "Monday": [
+            59.0,
+            100.0
+          ],
+          "Saturday": [
+            5.0,
+            20.0
+          ],
+          "Friday": [
+            38.0,
+            88.0
+          ],
+          "Sunday": [
+            19.0,
+            22.0
+          ]
+        },
+        "07:30": {
+          "Tuesday": [
+            46.0,
+            108.0
+          ],
+          "Monday": [
+            17.0,
+            60.0
+          ],
+          "Friday": [
+            42.0,
+            80.0
+          ],
+          "Thursday": [
+            20.0,
+            80.0
+          ],
+          "Wednesday": [
+            64.0,
+            108.0
+          ]
+        },
+        "19:00": {
+          "Monday": [
+            20.0,
+            50.0
+          ],
+          "Friday": [
+            24.0,
+            80.0
+          ]
+        },
+        "18:45": {
+          "Monday": [
+            43.0,
+            60.0
+          ]
+        },
+        "11:15": {
+          "Monday": [
+            35.0,
+            100.0
+          ],
+          "Friday": [
+            14.0,
+            60.0
+          ]
+        },
+        "08:00": {
+          "Monday": [
+            28.0,
+            50.0
+          ],
+          "Thursday": [
+            32.0,
+            40.0
+          ],
+          "Wednesday": [
+            38.0,
+            40.0
+          ],
+          "Saturday": [
+            10.0,
+            69.0
+          ]
+        },
+        "07:15": {
+          "Monday": [
+            30.0,
+            35.0
+          ]
+        },
+        "17:15": {
+          "Sunday": [
+            31.0,
+            100.0
+          ]
+        },
+        "17:00": {
+          "Sunday": [
+            16.0,
+            50.0
+          ]
+        },
+        "16:00": {
+          "Sunday": [
+            24.0,
+            110.0
+          ]
+        },
+        "11:30": {
+          "Sunday": [
+            70.0,
+            165.0
+          ],
+          "Saturday": [
+            90.0,
+            139.0
+          ],
+          "Wednesday": [
+            29.0,
+            80.0
+          ],
+          "Friday": [
+            5.0,
+            20.0
+          ]
+        },
+        "10:15": {
+          "Sunday": [
+            49.0,
+            115.0
+          ],
+          "Thursday": [
+            31.0,
+            48.0
+          ],
+          "Wednesday": [
+            33.0,
+            56.0
+          ],
+          "Saturday": [
+            81.0,
+            96.0
+          ]
+        },
+        "17:30": {
+          "Saturday": [
+            26.0,
+            92.0
+          ]
+        },
+        "16:30": {
+          "Saturday": [
+            25.0,
+            46.0
+          ]
+        },
+        "12:30": {
+          "Saturday": [
+            20.0,
+            80.0
+          ]
+        },
+        "18:15": {
+          "Thursday": [
+            33.0,
+            80.0
+          ],
+          "Wednesday": [
+            36.0,
+            66.0
+          ]
+        },
+        "09:30": {
+          "Thursday": [
+            8.0,
+            40.0
+          ]
+        },
+        "09:15": {
+          "Thursday": [
+            21.0,
+            28.0
+          ]
+        },
+        "18:30": {
+          "Wednesday": [
+            16.0,
+            40.0
+          ]
+        },
+        "08:45": {
+          "Wednesday": [
+            24.0,
+            28.0
+          ]
+        },
+        "09:45": {
+          "Tuesday": [
+            11.0,
+            20.0
+          ]
+        }
+      }
+    },
+    "2026-04": {
+      "ym": "2026-04",
+      "sessions": 338,
+      "capacity": 4738.0,
+      "visits": 2165,
+      "empty": 7,
+      "fill": 45.694385816800335,
+      "late_cancel": 239,
+      "booked": 2406,
+      "revenue": 1640986.6999999993,
+      "class_avg": 6.405325443786983,
+      "byclass": {
+        "Studio Strength Lab (Pull)": [
+          24,
+          168.0,
+          134.0,
+          17.0,
+          91275.32999999999
+        ],
+        "Studio Barre 57": [
+          72,
+          1229.0,
+          474.0,
+          44.0,
+          443171.8900000001
+        ],
+        "Studio Back Body Blaze Express": [
+          9,
+          180.0,
+          54.0,
+          8.0,
+          32027.11
+        ],
+        "Studio PowerCycle": [
+          82,
+          823.0,
+          396.0,
+          59.0,
+          305540.34
+        ],
+        "Studio FIT": [
+          25,
+          425.0,
+          230.0,
+          24.0,
+          165609.62
+        ],
+        "Studio Back Body Blaze": [
+          10,
+          160.0,
+          60.0,
+          2.0,
+          39298.25
+        ],
+        "Studio Strength Lab (Push)": [
+          17,
+          119.0,
+          94.0,
+          10.0,
+          54388.04
+        ],
+        "Studio Mat 57 Express": [
+          9,
+          136.0,
+          67.0,
+          10.0,
+          56474.880000000005
+        ],
+        "Studio Mat 57": [
+          20,
+          400.0,
+          245.0,
+          18.0,
+          189397.06
+        ],
+        "Studio Cardio Barre Express": [
+          9,
+          183.0,
+          38.0,
+          9.0,
+          26217.57
+        ],
+        "Studio Cardio Barre": [
+          18,
+          363.0,
+          114.0,
+          9.0,
+          87025.37
+        ],
+        "Studio Strength Lab (Full Body)": [
+          20,
+          140.0,
+          96.0,
+          19.0,
+          67680.51000000001
+        ],
+        "Studio Amped Up!": [
+          4,
+          80.0,
+          48.0,
+          2.0,
+          30485.089999999997
+        ],
+        "Studio Cardio Barre Plus": [
+          8,
+          160.0,
+          39.0,
+          1.0,
+          31467.020000000004
+        ],
+        "Studio Recovery": [
+          4,
+          80.0,
+          23.0,
+          0.0,
+          7129.37
+        ],
+        "Studio PowerCycle Express": [
+          4,
+          40.0,
+          14.0,
+          4.0,
+          13799.25
+        ],
+        "Studio Hosted Class": [
+          3,
+          52.0,
+          39.0,
+          3.0,
+          0.0
+        ]
+      },
+      "bytype": {
+        "Strength Lab!": [
+          61,
+          427.0,
+          324.0,
+          46.0,
+          213343.88000000006
+        ],
+        "Barre 57": [
+          191,
+          3448.0,
+          1431.0,
+          130.0,
+          1108303.2299999995
+        ],
+        "powerCycle": [
+          86,
+          863.0,
+          410.0,
+          63.0,
+          319339.59
+        ]
+      },
+      "bytrainer": {
+        "Mrigakshi Jaiswal": [
+          27,
+          358.0,
+          160.0,
+          0.0,
+          111015.51999999999
+        ],
+        "Rohan Dahima": [
+          46,
+          764.0,
+          396.0,
+          0.0,
+          307048.77000000014
+        ],
+        "Vivaran Dhasmana": [
+          18,
+          243.0,
+          108.0,
+          0.0,
+          68057.07999999999
+        ],
+        "Bret Saldanha": [
+          24,
+          243.0,
+          72.0,
+          0.0,
+          55792.19999999999
+        ],
+        "Cauveri Vikrant": [
+          30,
+          475.0,
+          198.0,
+          0.0,
+          153383.07999999996
+        ],
+        "Karan Bhatia": [
+          14,
+          208.0,
+          53.0,
+          0.0,
+          39525.55
+        ],
+        "Pranjali Jain": [
+          31,
+          470.0,
+          256.0,
+          0.0,
+          176466.80000000005
+        ],
+        "Simonelle De Vitre": [
+          22,
+          359.0,
+          117.0,
+          0.0,
+          106945.04000000001
+        ],
+        "Anisha Shah": [
+          21,
+          260.0,
+          171.0,
+          0.0,
+          119483.89999999998
+        ],
+        "Reshma Sharma": [
+          22,
+          334.0,
+          217.0,
+          0.0,
+          179138.42999999996
+        ],
+        "Raunak Khemuka": [
+          17,
+          170.0,
+          48.0,
+          0.0,
+          40036.4
+        ],
+        "Atulan Purohit": [
+          20,
+          232.0,
+          131.0,
+          0.0,
+          81003.15999999999
+        ],
+        "Karanvir Bhatia": [
+          12,
+          137.0,
+          73.0,
+          0.0,
+          68304.27000000002
+        ],
+        "Simran Dutt": [
+          7,
+          140.0,
+          33.0,
+          0.0,
+          31852.790000000005
+        ],
+        "Anmol Sharma": [
+          9,
+          87.0,
+          38.0,
+          0.0,
+          35265.99
+        ],
+        "Richard  D'Costa": [
+          18,
+          258.0,
+          94.0,
+          0.0,
+          67667.72
+        ]
+      },
+      "heat": {
+        "19:15": {
+          "Thursday": [
+            71.0,
+            137.0
+          ],
+          "Wednesday": [
+            69.0,
+            160.0
+          ],
+          "Tuesday": [
+            68.0,
+            108.0
+          ],
+          "Monday": [
+            21.0,
+            28.0
+          ],
+          "Friday": [
+            14.0,
+            40.0
+          ]
+        },
+        "18:15": {
+          "Thursday": [
+            26.0,
+            100.0
+          ],
+          "Wednesday": [
+            42.0,
+            140.0
+          ]
+        },
+        "18:00": {
+          "Thursday": [
+            43.0,
+            50.0
+          ],
+          "Wednesday": [
+            25.0,
+            35.0
+          ],
+          "Tuesday": [
+            26.0,
+            28.0
+          ],
+          "Monday": [
+            48.0,
+            108.0
+          ],
+          "Friday": [
+            15.0,
+            28.0
+          ]
+        },
+        "11:00": {
+          "Thursday": [
+            27.0,
+            85.0
+          ],
+          "Tuesday": [
+            50.0,
+            80.0
+          ],
+          "Friday": [
+            19.0,
+            28.0
+          ]
+        },
+        "10:30": {
+          "Thursday": [
+            19.0,
+            40.0
+          ]
+        },
+        "10:15": {
+          "Thursday": [
+            21.0,
+            60.0
+          ],
+          "Wednesday": [
+            24.0,
+            100.0
+          ],
+          "Sunday": [
+            33.0,
+            83.0
+          ],
+          "Saturday": [
+            94.0,
+            128.0
+          ]
+        },
+        "09:15": {
+          "Thursday": [
+            24.0,
+            35.0
+          ]
+        },
+        "09:00": {
+          "Thursday": [
+            31.0,
+            103.0
+          ],
+          "Wednesday": [
+            71.0,
+            160.0
+          ],
+          "Tuesday": [
+            24.0,
+            76.0
+          ],
+          "Monday": [
+            24.0,
+            28.0
+          ],
+          "Saturday": [
+            63.0,
+            78.0
+          ],
+          "Friday": [
+            48.0,
+            68.0
+          ]
+        },
+        "08:00": {
+          "Thursday": [
+            36.0,
+            50.0
+          ],
+          "Wednesday": [
+            44.0,
+            50.0
+          ],
+          "Monday": [
+            14.0,
+            40.0
+          ],
+          "Saturday": [
+            10.0,
+            83.0
+          ]
+        },
+        "07:30": {
+          "Thursday": [
+            38.0,
+            100.0
+          ],
+          "Wednesday": [
+            63.0,
+            135.0
+          ],
+          "Tuesday": [
+            42.0,
+            108.0
+          ],
+          "Monday": [
+            16.0,
+            48.0
+          ],
+          "Friday": [
+            28.0,
+            80.0
+          ]
+        },
+        "11:30": {
+          "Wednesday": [
+            47.0,
+            100.0
+          ],
+          "Sunday": [
+            84.0,
+            135.0
+          ],
+          "Saturday": [
+            100.0,
+            162.0
+          ]
+        },
+        "08:45": {
+          "Wednesday": [
+            33.0,
+            35.0
+          ]
+        },
+        "17:45": {
+          "Tuesday": [
+            30.0,
+            88.0
+          ],
+          "Monday": [
+            29.0,
+            36.0
+          ],
+          "Friday": [
+            20.0,
+            80.0
+          ]
+        },
+        "10:00": {
+          "Tuesday": [
+            16.0,
+            40.0
+          ],
+          "Monday": [
+            22.0,
+            80.0
+          ],
+          "Sunday": [
+            37.0,
+            68.0
+          ],
+          "Saturday": [
+            12.0,
+            40.0
+          ],
+          "Friday": [
+            11.0,
+            40.0
+          ]
+        },
+        "08:30": {
+          "Tuesday": [
+            48.0,
+            80.0
+          ],
+          "Monday": [
+            56.0,
+            80.0
+          ],
+          "Friday": [
+            35.0,
+            104.0
+          ]
+        },
+        "19:30": {
+          "Monday": [
+            2.0,
+            40.0
+          ]
+        },
+        "18:45": {
+          "Monday": [
+            31.0,
+            48.0
+          ]
+        },
+        "11:15": {
+          "Monday": [
+            18.0,
+            80.0
+          ],
+          "Friday": [
+            24.0,
+            80.0
+          ]
+        },
+        "07:15": {
+          "Monday": [
+            25.0,
+            28.0
+          ]
+        },
+        "17:15": {
+          "Sunday": [
+            20.0,
+            60.0
+          ]
+        },
+        "17:00": {
+          "Sunday": [
+            24.0,
+            40.0
+          ]
+        },
+        "16:00": {
+          "Sunday": [
+            9.0,
+            60.0
+          ]
+        },
+        "17:30": {
+          "Saturday": [
+            31.0,
+            83.0
+          ]
+        },
+        "16:30": {
+          "Saturday": [
+            8.0,
+            43.0
+          ]
+        },
+        "12:30": {
+          "Saturday": [
+            23.0,
+            80.0
+          ]
+        },
+        "19:00": {
+          "Friday": [
+            21.0,
+            80.0
+          ]
+        },
+        "16:15": {
+          "Saturday": [
+            14.0,
+            20.0
+          ]
+        },
+        "09:30": {
+          "Thursday": [
+            1.0,
+            10.0
+          ]
+        },
+        "18:30": {
+          "Wednesday": [
+            3.0,
+            10.0
+          ]
+        }
+      }
+    },
+    "2026-05": {
+      "ym": "2026-05",
+      "sessions": 348,
+      "capacity": 4890.0,
+      "visits": 2307,
+      "empty": 3,
+      "fill": 47.17791411042945,
+      "late_cancel": 271,
+      "booked": 2584,
+      "revenue": 1813836.4899999986,
+      "class_avg": 6.629310344827586,
+      "byclass": {
+        "Studio Mat 57": [
+          22,
+          440.0,
+          274.0,
+          27.0,
+          222359.59
+        ],
+        "Studio PowerCycle": [
+          84,
+          840.0,
+          432.0,
+          75.0,
+          341177.69999999995
+        ],
+        "Studio Barre 57": [
+          75,
+          1292.0,
+          500.0,
+          49.0,
+          452141.08
+        ],
+        "Studio Hosted Class": [
+          2,
+          42.0,
+          35.0,
+          0.0,
+          0.0
+        ],
+        "Studio Cardio Barre": [
+          22,
+          408.0,
+          153.0,
+          17.0,
+          121834.37999999999
+        ],
+        "Studio Strength Lab (Full Body)": [
+          23,
+          161.0,
+          120.0,
+          21.0,
+          92512.70999999999
+        ],
+        "Studio Recovery": [
+          5,
+          100.0,
+          41.0,
+          2.0,
+          18725.39
+        ],
+        "Studio Strength Lab (Pull)": [
+          21,
+          147.0,
+          129.0,
+          11.0,
+          103619.34999999998
+        ],
+        "Studio FIT": [
+          26,
+          442.0,
+          234.0,
+          23.0,
+          172674.00999999998
+        ],
+        "Studio Cardio Barre Express": [
+          9,
+          172.0,
+          21.0,
+          6.0,
+          16619.949999999997
+        ],
+        "Studio PowerCycle Express": [
+          5,
+          50.0,
+          25.0,
+          3.0,
+          20740.36
+        ],
+        "Studio Cardio Barre Plus": [
+          9,
+          180.0,
+          36.0,
+          2.0,
+          23072.14
+        ],
+        "Studio Back Body Blaze Express": [
+          9,
+          180.0,
+          57.0,
+          6.0,
+          43760.33
+        ],
+        "Studio Back Body Blaze": [
+          8,
+          128.0,
+          66.0,
+          4.0,
+          56479.32
+        ],
+        "Studio Strength Lab (Push)": [
+          16,
+          112.0,
+          90.0,
+          15.0,
+          64454.27999999999
+        ],
+        "Studio Mat 57 Express": [
+          8,
+          116.0,
+          59.0,
+          5.0,
+          42512.44
+        ],
+        "Studio Amped Up!": [
+          4,
+          80.0,
+          35.0,
+          5.0,
+          21153.46
+        ]
+      },
+      "bytype": {
+        "Barre 57": [
+          198,
+          3560.0,
+          1500.0,
+          144.0,
+          1185465.6100000008
+        ],
+        "powerCycle": [
+          89,
+          890.0,
+          457.0,
+          78.0,
+          361918.05999999994
+        ],
+        "Strength Lab!": [
+          61,
+          440.0,
+          350.0,
+          49.0,
+          266452.8200000001
+        ]
+      },
+      "bytrainer": {
+        "Simran Dutt": [
+          10,
+          200.0,
+          57.0,
+          0.0,
+          49374.52
+        ],
+        "Anmol Sharma": [
+          12,
+          111.0,
+          60.0,
+          0.0,
+          52989.420000000006
+        ],
+        "Karanvir Bhatia": [
+          9,
+          100.0,
+          32.0,
+          0.0,
+          27648.069999999996
+        ],
+        "Raunak Khemuka": [
+          17,
+          170.0,
+          68.0,
+          0.0,
+          59732.850000000006
+        ],
+        "Rohan Dahima": [
+          43,
+          706.0,
+          412.0,
+          0.0,
+          330139.64999999997
+        ],
+        "Richard  D'Costa": [
+          19,
+          284.0,
+          112.0,
+          0.0,
+          82806.93999999999
+        ],
+        "Simonelle De Vitre": [
+          22,
+          366.0,
+          122.0,
+          0.0,
+          113358.38999999998
+        ],
+        "Bret Saldanha": [
+          25,
+          250.0,
+          97.0,
+          0.0,
+          78192.26000000001
+        ],
+        "Pranjali Jain": [
+          33,
+          528.0,
+          277.0,
+          0.0,
+          218701.01999999993
+        ],
+        "Cauveri Vikrant": [
+          38,
+          544.0,
+          261.0,
+          0.0,
+          199628.17000000004
+        ],
+        "Reshma Sharma": [
+          24,
+          352.0,
+          225.0,
+          0.0,
+          178325.27000000005
+        ],
+        "Vivaran Dhasmana": [
+          22,
+          320.0,
+          133.0,
+          0.0,
+          105100.07999999999
+        ],
+        "Mrigakshi Jaiswal": [
+          29,
+          395.0,
+          171.0,
+          0.0,
+          139545.28000000003
+        ],
+        "Karan Bhatia": [
+          12,
+          176.0,
+          35.0,
+          0.0,
+          26008.84
+        ],
+        "Anisha Shah": [
+          21,
+          248.0,
+          154.0,
+          0.0,
+          89376.87
+        ],
+        "Atulan Purohit": [
+          12,
+          140.0,
+          91.0,
+          0.0,
+          62908.86
+        ]
+      },
+      "heat": {
+        "17:15": {
+          "Sunday": [
+            37.0,
+            100.0
+          ]
+        },
+        "17:00": {
+          "Sunday": [
+            26.0,
+            50.0
+          ]
+        },
+        "16:00": {
+          "Sunday": [
+            20.0,
+            100.0
+          ]
+        },
+        "11:30": {
+          "Sunday": [
+            103.0,
+            162.0
+          ],
+          "Saturday": [
+            99.0,
+            185.0
+          ],
+          "Wednesday": [
+            39.0,
+            80.0
+          ]
+        },
+        "10:15": {
+          "Sunday": [
+            58.0,
+            100.0
+          ],
+          "Saturday": [
+            109.0,
+            160.0
+          ],
+          "Thursday": [
+            34.0,
+            48.0
+          ],
+          "Wednesday": [
+            21.0,
+            80.0
+          ]
+        },
+        "10:00": {
+          "Sunday": [
+            46.0,
+            85.0
+          ],
+          "Saturday": [
+            34.0,
+            50.0
+          ],
+          "Friday": [
+            21.0,
+            50.0
+          ],
+          "Tuesday": [
+            14.0,
+            40.0
+          ],
+          "Monday": [
+            18.0,
+            80.0
+          ]
+        },
+        "17:30": {
+          "Saturday": [
+            53.0,
+            100.0
+          ]
+        },
+        "16:30": {
+          "Saturday": [
+            17.0,
+            50.0
+          ]
+        },
+        "12:30": {
+          "Saturday": [
+            41.0,
+            100.0
+          ]
+        },
+        "09:00": {
+          "Saturday": [
+            60.0,
+            85.0
+          ],
+          "Friday": [
+            59.0,
+            85.0
+          ],
+          "Thursday": [
+            30.0,
+            128.0
+          ],
+          "Wednesday": [
+            43.0,
+            128.0
+          ],
+          "Tuesday": [
+            21.0,
+            40.0
+          ],
+          "Monday": [
+            20.0,
+            28.0
+          ]
+        },
+        "08:00": {
+          "Saturday": [
+            31.0,
+            114.0
+          ],
+          "Thursday": [
+            31.0,
+            40.0
+          ],
+          "Wednesday": [
+            34.0,
+            40.0
+          ],
+          "Monday": [
+            10.0,
+            40.0
+          ]
+        },
+        "19:15": {
+          "Friday": [
+            25.0,
+            50.0
+          ],
+          "Thursday": [
+            55.0,
+            108.0
+          ],
+          "Wednesday": [
+            70.0,
+            128.0
+          ],
+          "Tuesday": [
+            73.0,
+            108.0
+          ],
+          "Monday": [
+            26.0,
+            28.0
+          ]
+        },
+        "19:00": {
+          "Friday": [
+            16.0,
+            100.0
+          ]
+        },
+        "18:00": {
+          "Friday": [
+            26.0,
+            35.0
+          ],
+          "Thursday": [
+            38.0,
+            40.0
+          ],
+          "Wednesday": [
+            26.0,
+            28.0
+          ],
+          "Tuesday": [
+            24.0,
+            28.0
+          ],
+          "Monday": [
+            44.0,
+            108.0
+          ]
+        },
+        "17:45": {
+          "Friday": [
+            37.0,
+            100.0
+          ],
+          "Tuesday": [
+            39.0,
+            88.0
+          ],
+          "Monday": [
+            32.0,
+            36.0
+          ]
+        },
+        "11:15": {
+          "Friday": [
+            38.0,
+            100.0
+          ],
+          "Monday": [
+            20.0,
+            80.0
+          ]
+        },
+        "11:00": {
+          "Friday": [
+            26.0,
+            35.0
+          ],
+          "Thursday": [
+            21.0,
+            78.0
+          ],
+          "Tuesday": [
+            58.0,
+            80.0
+          ]
+        },
+        "08:30": {
+          "Friday": [
+            47.0,
+            142.0
+          ],
+          "Tuesday": [
+            35.0,
+            80.0
+          ],
+          "Monday": [
+            50.0,
+            80.0
+          ]
+        },
+        "07:30": {
+          "Friday": [
+            37.0,
+            100.0
+          ],
+          "Thursday": [
+            27.0,
+            80.0
+          ],
+          "Wednesday": [
+            47.0,
+            108.0
+          ],
+          "Tuesday": [
+            42.0,
+            108.0
+          ],
+          "Monday": [
+            12.0,
+            48.0
+          ]
+        },
+        "18:15": {
+          "Thursday": [
+            20.0,
+            80.0
+          ],
+          "Wednesday": [
+            23.0,
+            120.0
+          ]
+        },
+        "09:15": {
+          "Thursday": [
+            17.0,
+            28.0
+          ]
+        },
+        "08:45": {
+          "Wednesday": [
+            27.0,
+            28.0
+          ]
+        },
+        "09:45": {
+          "Tuesday": [
+            11.0,
+            36.0
+          ]
+        },
+        "19:30": {
+          "Monday": [
+            21.0,
+            40.0
+          ]
+        },
+        "18:45": {
+          "Monday": [
+            34.0,
+            48.0
+          ]
+        },
+        "07:15": {
+          "Monday": [
+            27.0,
+            28.0
+          ]
+        },
+        "10:30": {
+          "Thursday": [
+            7.0,
+            30.0
+          ]
+        }
+      }
+    },
+    "2026-06": {
+      "ym": "2026-06",
+      "sessions": 352,
+      "capacity": 4922.0,
+      "visits": 2281,
+      "empty": 14,
+      "fill": 46.34295002031694,
+      "late_cancel": 257,
+      "booked": 2540,
+      "revenue": 1785983.3499999999,
+      "class_avg": 6.480113636363637,
+      "byclass": {
+        "Studio FIT": [
+          28,
+          476.0,
+          259.0,
+          25.0,
+          184015.19999999998
+        ],
+        "Studio PowerCycle": [
+          82,
+          820.0,
+          440.0,
+          71.0,
+          337282.8599999999
+        ],
+        "Studio Strength Lab (Full Body)": [
+          22,
+          154.0,
+          112.0,
+          24.0,
+          80689.82
+        ],
+        "Studio Barre 57": [
+          73,
+          1222.0,
+          569.0,
+          43.0,
+          502064.46
+        ],
+        "Studio Mat 57": [
+          23,
+          460.0,
+          252.0,
+          17.0,
+          179896.73
+        ],
+        "Studio Amped Up!": [
+          5,
+          100.0,
+          47.0,
+          4.0,
+          35535.78
+        ],
+        "Studio Strength Lab (Push)": [
+          19,
+          133.0,
+          106.0,
+          16.0,
+          67570.05
+        ],
+        "Studio Mat 57 Express": [
+          9,
+          125.0,
+          63.0,
+          8.0,
+          54871.89
+        ],
+        "Unknown Class": [
+          10,
+          184.0,
+          1.0,
+          0.0,
+          1750.0
+        ],
+        "Studio Cardio Barre Plus": [
+          9,
+          164.0,
+          30.0,
+          0.0,
+          23958.53
+        ],
+        "Studio Cardio Barre": [
+          20,
+          376.0,
+          120.0,
+          10.0,
+          93639.48000000003
+        ],
+        "Studio Recovery": [
+          4,
+          80.0,
+          18.0,
+          1.0,
+          11062.9
+        ],
+        "Studio Strength Lab (Pull)": [
+          20,
+          140.0,
+          107.0,
+          25.0,
+          83121.46
+        ],
+        "Studio Cardio Barre Express": [
+          8,
+          160.0,
+          32.0,
+          3.0,
+          28925.339999999997
+        ],
+        "Studio PowerCycle Express": [
+          4,
+          40.0,
+          29.0,
+          2.0,
+          21534.280000000002
+        ],
+        "Studio Back Body Blaze Express": [
+          8,
+          160.0,
+          62.0,
+          7.0,
+          47901.0
+        ],
+        "Studio Back Body Blaze": [
+          8,
+          128.0,
+          34.0,
+          1.0,
+          32163.570000000003
+        ]
+      },
+      "bytype": {
+        "Barre 57": [
+          205,
+          3635.0,
+          1487.0,
+          119.0,
+          1195784.8800000006
+        ],
+        "powerCycle": [
+          86,
+          860.0,
+          469.0,
+          73.0,
+          358817.13999999984
+        ],
+        "Strength Lab!": [
+          61,
+          427.0,
+          325.0,
+          65.0,
+          231381.33000000005
+        ]
+      },
+      "bytrainer": {
+        "Richard  D'Costa": [
+          18,
+          262.0,
+          104.0,
+          0.0,
+          67812.86000000002
+        ],
+        "Rohan Dahima": [
+          42,
+          693.0,
+          398.0,
+          0.0,
+          345683.4600000001
+        ],
+        "Atulan Purohit": [
+          18,
+          218.0,
+          118.0,
+          0.0,
+          84108.3
+        ],
+        "Bret Saldanha": [
+          32,
+          320.0,
+          153.0,
+          0.0,
+          117063.42
+        ],
+        "Reshma Sharma": [
+          26,
+          380.0,
+          222.0,
+          0.0,
+          157685.41999999998
+        ],
+        "Raunak Khemuka": [
+          14,
+          140.0,
+          46.0,
+          0.0,
+          35322.54
+        ],
+        "Cauveri Vikrant": [
+          35,
+          504.0,
+          190.0,
+          0.0,
+          166247.24000000002
+        ],
+        "Simonelle De Vitre": [
+          27,
+          460.0,
+          157.0,
+          0.0,
+          150915.32
+        ],
+        "Mrigakshi Jaiswal": [
+          33,
+          433.0,
+          175.0,
+          0.0,
+          138367.41
+        ],
+        "Anisha Shah": [
+          20,
+          271.0,
+          173.0,
+          0.0,
+          111759.04000000001
+        ],
+        "Simran Dutt": [
+          8,
+          160.0,
+          46.0,
+          0.0,
+          50863.65
+        ],
+        "Anmol Sharma": [
+          12,
+          108.0,
+          77.0,
+          0.0,
+          58533.249999999985
+        ],
+        "Pranjali Jain": [
+          33,
+          515.0,
+          262.0,
+          0.0,
+          198671.27000000002
+        ],
+        "Karanvir Bhatia": [
+          10,
+          120.0,
+          34.0,
+          0.0,
+          17853.63
+        ],
+        "Karan Bhatia": [
+          9,
+          132.0,
+          38.0,
+          0.0,
+          32200.390000000003
+        ],
+        "Vivaran Dhasmana": [
+          15,
+          206.0,
+          88.0,
+          0.0,
+          52896.15
+        ]
+      },
+      "heat": {
+        "19:15": {
+          "Tuesday": [
+            96.0,
+            135.0
+          ],
+          "Monday": [
+            33.0,
+            35.0
+          ],
+          "Friday": [
+            29.0,
+            40.0
+          ],
+          "Thursday": [
+            73.0,
+            108.0
+          ],
+          "Wednesday": [
+            75.0,
+            128.0
+          ]
+        },
+        "18:00": {
+          "Tuesday": [
+            32.0,
+            35.0
+          ],
+          "Monday": [
+            60.0,
+            135.0
+          ],
+          "Friday": [
+            21.0,
+            28.0
+          ],
+          "Thursday": [
+            36.0,
+            40.0
+          ],
+          "Wednesday": [
+            23.0,
+            28.0
+          ]
+        },
+        "17:45": {
+          "Tuesday": [
+            79.0,
+            110.0
+          ],
+          "Monday": [
+            37.0,
+            45.0
+          ],
+          "Friday": [
+            38.0,
+            80.0
+          ]
+        },
+        "11:00": {
+          "Tuesday": [
+            52.0,
+            100.0
+          ],
+          "Friday": [
+            22.0,
+            28.0
+          ],
+          "Thursday": [
+            28.0,
+            68.0
+          ]
+        },
+        "10:00": {
+          "Tuesday": [
+            23.0,
+            50.0
+          ],
+          "Monday": [
+            23.0,
+            100.0
+          ],
+          "Sunday": [
+            37.0,
+            68.0
+          ],
+          "Saturday": [
+            28.0,
+            40.0
+          ],
+          "Friday": [
+            17.0,
+            40.0
+          ]
+        },
+        "09:45": {
+          "Tuesday": [
+            16.0,
+            60.0
+          ]
+        },
+        "09:00": {
+          "Tuesday": [
+            14.0,
+            35.0
+          ],
+          "Monday": [
+            22.0,
+            35.0
+          ],
+          "Saturday": [
+            48.0,
+            68.0
+          ],
+          "Friday": [
+            25.0,
+            68.0
+          ],
+          "Thursday": [
+            45.0,
+            128.0
+          ],
+          "Wednesday": [
+            29.0,
+            128.0
+          ]
+        },
+        "08:30": {
+          "Tuesday": [
+            47.0,
+            100.0
+          ],
+          "Monday": [
+            52.0,
+            100.0
+          ],
+          "Friday": [
+            54.0,
+            104.0
+          ],
+          "Sunday": [
+            10.0,
+            17.0
+          ]
+        },
+        "07:30": {
+          "Tuesday": [
+            79.0,
+            135.0
+          ],
+          "Monday": [
+            38.0,
+            60.0
+          ],
+          "Friday": [
+            33.0,
+            80.0
+          ],
+          "Thursday": [
+            26.0,
+            80.0
+          ],
+          "Wednesday": [
+            50.0,
+            108.0
+          ]
+        },
+        "19:30": {
+          "Monday": [
+            19.0,
+            50.0
+          ]
+        },
+        "18:45": {
+          "Monday": [
+            44.0,
+            60.0
+          ]
+        },
+        "16:30": {
+          "Monday": [
+            0.0,
+            60.0
+          ],
+          "Saturday": [
+            14.0,
+            40.0
+          ],
+          "Wednesday": [
+            1.0,
+            40.0
+          ]
+        },
+        "11:30": {
+          "Monday": [
+            0.0,
+            60.0
+          ],
+          "Sunday": [
+            60.0,
+            132.0
+          ],
+          "Saturday": [
+            76.0,
+            148.0
+          ],
+          "Thursday": [
+            0.0,
+            24.0
+          ],
+          "Wednesday": [
+            28.0,
+            80.0
+          ]
+        },
+        "11:15": {
+          "Monday": [
+            16.0,
+            84.0
+          ],
+          "Friday": [
+            11.0,
+            80.0
+          ]
+        },
+        "08:00": {
+          "Monday": [
+            10.0,
+            50.0
+          ],
+          "Saturday": [
+            14.0,
+            80.0
+          ],
+          "Thursday": [
+            32.0,
+            40.0
+          ],
+          "Wednesday": [
+            33.0,
+            40.0
+          ]
+        },
+        "07:15": {
+          "Monday": [
+            32.0,
+            35.0
+          ]
+        },
+        "17:15": {
+          "Sunday": [
+            21.0,
+            80.0
+          ]
+        },
+        "17:00": {
+          "Sunday": [
+            27.0,
+            40.0
+          ]
+        },
+        "16:00": {
+          "Sunday": [
+            25.0,
+            80.0
+          ]
+        },
+        "10:15": {
+          "Sunday": [
+            38.0,
+            80.0
+          ],
+          "Saturday": [
+            94.0,
+            128.0
+          ],
+          "Thursday": [
+            12.0,
+            48.0
+          ],
+          "Wednesday": [
+            23.0,
+            80.0
+          ]
+        },
+        "17:30": {
+          "Saturday": [
+            52.0,
+            80.0
+          ]
+        },
+        "12:30": {
+          "Saturday": [
+            18.0,
+            80.0
+          ]
+        },
+        "19:00": {
+          "Friday": [
+            14.0,
+            80.0
+          ]
+        },
+        "18:15": {
+          "Thursday": [
+            29.0,
+            80.0
+          ],
+          "Wednesday": [
+            40.0,
+            120.0
+          ]
+        },
+        "10:30": {
+          "Thursday": [
+            13.0,
+            40.0
+          ]
+        },
+        "09:15": {
+          "Thursday": [
+            19.0,
+            28.0
+          ]
+        },
+        "08:45": {
+          "Wednesday": [
+            16.0,
+            28.0
+          ]
+        }
+      }
+    },
+    "2026-07": {
+      "ym": "2026-07",
+      "sessions": 368,
+      "capacity": 5142.0,
+      "visits": 2432,
+      "empty": 16,
+      "fill": 47.296771684169585,
+      "late_cancel": 295,
+      "booked": 2727,
+      "revenue": 2103153.9599999986,
+      "class_avg": 6.608695652173913,
+      "byclass": {
+        "Studio PowerCycle Express": [
+          5,
+          50.0,
+          44.0,
+          6.0,
+          44292.5
+        ],
+        "Studio Cardio Barre Plus": [
+          9,
+          148.0,
+          39.0,
+          3.0,
+          33487.04
+        ],
+        "Studio Strength Lab (Full Body)": [
+          22,
+          154.0,
+          137.0,
+          16.0,
+          109826.28
+        ],
+        "Studio Barre 57": [
+          74,
+          1198.0,
+          508.0,
+          45.0,
+          500072.5500000001
+        ],
+        "Studio Cardio Barre": [
+          20,
+          400.0,
+          137.0,
+          14.0,
+          123918.25
+        ],
+        "Studio PowerCycle": [
+          85,
+          850.0,
+          541.0,
+          82.0,
+          470717.35
+        ],
+        "Studio FIT": [
+          25,
+          425.0,
+          228.0,
+          19.0,
+          179999.93
+        ],
+        "Studio Back Body Blaze Express": [
+          10,
+          200.0,
+          70.0,
+          13.0,
+          64149.8
+        ],
+        "Studio Strength Lab (Pull)": [
+          24,
+          168.0,
+          134.0,
+          25.0,
+          105920.51999999999
+        ],
+        "Unknown Class": [
+          18,
+          320.0,
+          7.0,
+          0.0,
+          12250.0
+        ],
+        "Studio Back Body Blaze": [
+          10,
+          160.0,
+          43.0,
+          2.0,
+          44737.31
+        ],
+        "Studio Strength Lab (Push)": [
+          16,
+          112.0,
+          93.0,
+          18.0,
+          75251.98000000001
+        ],
+        "Studio Mat 57 Express": [
+          8,
+          127.0,
+          55.0,
+          7.0,
+          57146.99
+        ],
+        "Studio Mat 57": [
+          21,
+          420.0,
+          251.0,
+          27.0,
+          199218.67999999996
+        ],
+        "Studio Cardio Barre Express": [
+          9,
+          180.0,
+          43.0,
+          7.0,
+          44195.57
+        ],
+        "Studio Hosted Class": [
+          4,
+          70.0,
+          52.0,
+          5.0,
+          6831.62
+        ],
+        "Studio Amped Up!": [
+          4,
+          80.0,
+          30.0,
+          3.0,
+          20611.649999999998
+        ],
+        "Studio Recovery": [
+          4,
+          80.0,
+          20.0,
+          3.0,
+          10525.939999999999
+        ]
+      },
+      "bytype": {
+        "powerCycle": [
+          90,
+          900.0,
+          585.0,
+          88.0,
+          515009.84999999986
+        ],
+        "Barre 57": [
+          216,
+          3808.0,
+          1483.0,
+          148.0,
+          1297145.3299999998
+        ],
+        "Strength Lab!": [
+          62,
+          434.0,
+          364.0,
+          59.0,
+          290998.77999999997
+        ]
+      },
+      "bytrainer": {
+        "Anmol Sharma": [
+          18,
+          159.0,
+          136.0,
+          0.0,
+          118476.01
+        ],
+        "Vivaran Dhasmana": [
+          28,
+          391.0,
+          177.0,
+          0.0,
+          124726.59
+        ],
+        "Richard  D'Costa": [
+          27,
+          355.0,
+          121.0,
+          0.0,
+          99647.26999999999
+        ],
+        "Mrigakshi Jaiswal": [
+          37,
+          494.0,
+          251.0,
+          0.0,
+          211678.47000000003
+        ],
+        "Bret Saldanha": [
+          26,
+          251.0,
+          132.0,
+          0.0,
+          122500.92999999998
+        ],
+        "Rohan Dahima": [
+          41,
+          638.0,
+          351.0,
+          0.0,
+          333051.2000000001
+        ],
+        "Karanvir Bhatia": [
+          23,
+          362.0,
+          117.0,
+          0.0,
+          107156.08
+        ],
+        "Cauveri Vikrant": [
+          41,
+          595.0,
+          230.0,
+          0.0,
+          211829.61
+        ],
+        "Pranjali Jain": [
+          29,
+          482.0,
+          236.0,
+          0.0,
+          202461.22
+        ],
+        "Atulan Purohit": [
+          21,
+          242.0,
+          150.0,
+          0.0,
+          122498.78
+        ],
+        "Simonelle De Vitre": [
+          27,
+          458.0,
+          168.0,
+          0.0,
+          179741.15999999997
+        ],
+        "Anisha Shah": [
+          11,
+          159.0,
+          106.0,
+          0.0,
+          54907.4
+        ],
+        "Reshma Sharma": [
+          21,
+          356.0,
+          171.0,
+          0.0,
+          125904.95
+        ],
+        "Raunak Khemuka": [
+          16,
+          160.0,
+          78.0,
+          0.0,
+          79917.41
+        ],
+        "Simran Dutt": [
+          2,
+          40.0,
+          8.0,
+          0.0,
+          8656.880000000001
+        ]
+      },
+      "heat": {
+        "19:15": {
+          "Friday": [
+            44.0,
+            50.0
+          ],
+          "Thursday": [
+            83.0,
+            135.0
+          ],
+          "Wednesday": [
+            98.0,
+            152.0
+          ],
+          "Tuesday": [
+            61.0,
+            108.0
+          ],
+          "Monday": [
+            21.0,
+            21.0
+          ]
+        },
+        "19:00": {
+          "Friday": [
+            18.0,
+            100.0
+          ]
+        },
+        "18:00": {
+          "Friday": [
+            30.0,
+            35.0
+          ],
+          "Thursday": [
+            45.0,
+            50.0
+          ],
+          "Wednesday": [
+            30.0,
+            35.0
+          ],
+          "Tuesday": [
+            27.0,
+            28.0
+          ],
+          "Monday": [
+            61.0,
+            81.0
+          ]
+        },
+        "17:45": {
+          "Friday": [
+            30.0,
+            100.0
+          ],
+          "Tuesday": [
+            39.0,
+            78.0
+          ],
+          "Monday": [
+            15.0,
+            27.0
+          ]
+        },
+        "11:15": {
+          "Friday": [
+            24.0,
+            100.0
+          ],
+          "Monday": [
+            21.0,
+            48.0
+          ]
+        },
+        "11:00": {
+          "Friday": [
+            32.0,
+            35.0
+          ],
+          "Thursday": [
+            39.0,
+            85.0
+          ],
+          "Tuesday": [
+            39.0,
+            80.0
+          ]
+        },
+        "10:00": {
+          "Friday": [
+            26.0,
+            50.0
+          ],
+          "Tuesday": [
+            23.0,
+            40.0
+          ],
+          "Monday": [
+            21.0,
+            80.0
+          ],
+          "Sunday": [
+            49.0,
+            68.0
+          ],
+          "Saturday": [
+            36.0,
+            40.0
+          ]
+        },
+        "09:00": {
+          "Friday": [
+            64.0,
+            85.0
+          ],
+          "Thursday": [
+            51.0,
+            160.0
+          ],
+          "Wednesday": [
+            44.0,
+            160.0
+          ],
+          "Tuesday": [
+            20.0,
+            28.0
+          ],
+          "Monday": [
+            17.0,
+            28.0
+          ],
+          "Saturday": [
+            32.0,
+            68.0
+          ]
+        },
+        "08:30": {
+          "Friday": [
+            39.0,
+            110.0
+          ],
+          "Tuesday": [
+            30.0,
+            80.0
+          ],
+          "Monday": [
+            49.0,
+            80.0
+          ]
+        },
+        "07:30": {
+          "Friday": [
+            38.0,
+            100.0
+          ],
+          "Thursday": [
+            40.0,
+            100.0
+          ],
+          "Wednesday": [
+            71.0,
+            135.0
+          ],
+          "Tuesday": [
+            50.0,
+            108.0
+          ],
+          "Monday": [
+            29.0,
+            48.0
+          ]
+        },
+        "07:15": {
+          "Friday": [
+            9.0,
+            48.0
+          ],
+          "Monday": [
+            24.0,
+            28.0
+          ]
+        },
+        "18:15": {
+          "Thursday": [
+            32.0,
+            100.0
+          ],
+          "Wednesday": [
+            34.0,
+            110.0
+          ]
+        },
+        "11:30": {
+          "Thursday": [
+            2.0,
+            60.0
+          ],
+          "Wednesday": [
+            35.0,
+            100.0
+          ],
+          "Monday": [
+            2.0,
+            80.0
+          ],
+          "Sunday": [
+            54.0,
+            120.0
+          ],
+          "Saturday": [
+            121.0,
+            172.0
+          ]
+        },
+        "10:30": {
+          "Thursday": [
+            33.0,
+            50.0
+          ],
+          "Wednesday": [
+            25.0,
+            40.0
+          ]
+        },
+        "10:15": {
+          "Thursday": [
+            20.0,
+            60.0
+          ],
+          "Sunday": [
+            40.0,
+            80.0
+          ],
+          "Saturday": [
+            96.0,
+            128.0
+          ],
+          "Wednesday": [
+            5.0,
+            20.0
+          ]
+        },
+        "09:15": {
+          "Thursday": [
+            31.0,
+            35.0
+          ]
+        },
+        "08:00": {
+          "Thursday": [
+            41.0,
+            50.0
+          ],
+          "Wednesday": [
+            42.0,
+            50.0
+          ],
+          "Monday": [
+            10.0,
+            30.0
+          ],
+          "Saturday": [
+            14.0,
+            80.0
+          ]
+        },
+        "16:30": {
+          "Wednesday": [
+            3.0,
+            100.0
+          ],
+          "Monday": [
+            0.0,
+            80.0
+          ],
+          "Saturday": [
+            22.0,
+            40.0
+          ]
+        },
+        "08:45": {
+          "Wednesday": [
+            26.0,
+            35.0
+          ]
+        },
+        "17:30": {
+          "Tuesday": [
+            10.0,
+            20.0
+          ],
+          "Saturday": [
+            43.0,
+            80.0
+          ]
+        },
+        "09:45": {
+          "Tuesday": [
+            20.0,
+            64.0
+          ]
+        },
+        "19:30": {
+          "Monday": [
+            10.0,
+            30.0
+          ]
+        },
+        "18:45": {
+          "Monday": [
+            28.0,
+            36.0
+          ]
+        },
+        "17:15": {
+          "Sunday": [
+            33.0,
+            80.0
+          ]
+        },
+        "17:00": {
+          "Sunday": [
+            28.0,
+            40.0
+          ]
+        },
+        "16:00": {
+          "Sunday": [
+            23.0,
+            80.0
+          ]
+        },
+        "12:30": {
+          "Saturday": [
+            30.0,
+            90.0
+          ]
+        },
+        "08:15": {
+          "Monday": [
+            0.0,
+            10.0
+          ]
+        }
+      }
+    },
+    "2025-06": {
+      "ym": "2025-06",
+      "sessions": 243,
+      "capacity": 4058.0,
+      "visits": 1691,
+      "empty": 2,
+      "fill": 41.67077378018729,
+      "late_cancel": 445,
+      "booked": 2148,
+      "revenue": 1265107.2499999993,
+      "class_avg": 6.958847736625515,
+      "byclass": {
+        "Studio Trainer's Choice": [
+          5,
+          110.0,
+          21.0,
+          5.0,
+          14448.54
+        ],
+        "Studio Barre 57": [
+          86,
+          1302.0,
+          640.0,
+          185.0,
+          506281.31999999983
+        ],
+        "Studio FIT": [
+          21,
+          325.0,
+          196.0,
+          45.0,
+          153713.5
+        ],
+        "Studio Mat 57 Express": [
+          9,
+          81.0,
+          64.0,
+          21.0,
+          53345.34999999999
+        ],
+        "Studio Pre/Post Natal": [
+          8,
+          115.0,
+          26.0,
+          0.0,
+          33947.79
+        ],
+        "Studio Cardio Barre Plus": [
+          9,
+          180.0,
+          36.0,
+          5.0,
+          26428.57
+        ],
+        "Studio Cardio Barre Express": [
+          24,
+          426.0,
+          88.0,
+          19.0,
+          62991.83
+        ],
+        "Studio Mat 57": [
+          22,
+          440.0,
+          243.0,
+          74.0,
+          174977.09000000005
+        ],
+        "Studio Cardio Barre": [
+          24,
+          367.0,
+          155.0,
+          37.0,
+          109079.16000000005
+        ],
+        "Studio Recovery": [
+          4,
+          80.0,
+          13.0,
+          5.0,
+          5562.86
+        ],
+        "Studio Foundations": [
+          4,
+          80.0,
+          12.0,
+          1.0,
+          9542.0
+        ],
+        "Studio Back Body Blaze Express": [
+          8,
+          168.0,
+          58.0,
+          16.0,
+          44322.86
+        ],
+        "Studio HIIT": [
+          8,
+          160.0,
+          42.0,
+          10.0,
+          21288.11
+        ],
+        "Studio Back Body Blaze": [
+          4,
+          80.0,
+          42.0,
+          11.0,
+          27468.21
+        ],
+        "Studio Amped Up!": [
+          4,
+          88.0,
+          35.0,
+          7.0,
+          13184.269999999999
+        ],
+        "Studio Barre 57 Express": [
+          2,
+          44.0,
+          15.0,
+          4.0,
+          8525.79
+        ],
+        "Studio Hosted Class": [
+          1,
+          12.0,
+          5.0,
+          0.0,
+          0.0
+        ]
+      },
+      "bytype": {
+        "Barre 57": [
+          243,
+          4058.0,
+          1691.0,
+          445.0,
+          1265107.2499999993
+        ]
+      },
+      "bytrainer": {
+        "Atulan Purohit": [
+          26,
+          467.0,
+          198.0,
+          0.0,
+          147380.62
+        ],
+        "Pranjali Jain": [
+          43,
+          727.0,
+          349.0,
+          0.0,
+          279548.07999999996
+        ],
+        "Anisha Shah": [
+          10,
+          166.0,
+          92.0,
+          0.0,
+          72513.9
+        ],
+        "Reshma Sharma": [
+          41,
+          661.0,
+          263.0,
+          0.0,
+          186890.36000000002
+        ],
+        "Karanvir Bhatia": [
+          8,
+          144.0,
+          48.0,
+          0.0,
+          38023.63
+        ],
+        "Rohan Dahima": [
+          31,
+          532.0,
+          281.0,
+          0.0,
+          199894.24000000002
+        ],
+        "Cauveri Vikrant": [
+          14,
+          274.0,
+          84.0,
+          0.0,
+          63351.01000000001
+        ],
+        "Vivaran Dhasmana": [
+          8,
+          160.0,
+          61.0,
+          0.0,
+          45107.020000000004
+        ],
+        "Mrigakshi Jaiswal": [
+          16,
+          256.0,
+          97.0,
+          0.0,
+          71151.65999999999
+        ],
+        "Karan Bhatia": [
+          15,
+          214.0,
+          59.0,
+          0.0,
+          44429.630000000005
+        ],
+        "Richard  D'Costa": [
+          31,
+          457.0,
+          159.0,
+          0.0,
+          116817.1
+        ]
+      },
+      "heat": {
+        "19:15": {
+          "Monday": [
+            21.0,
+            110.0
+          ],
+          "Thursday": [
+            40.0,
+            128.0
+          ],
+          "Wednesday": [
+            44.0,
+            80.0
+          ],
+          "Tuesday": [
+            83.0,
+            108.0
+          ]
+        },
+        "18:45": {
+          "Monday": [
+            49.0,
+            60.0
+          ]
+        },
+        "18:00": {
+          "Monday": [
+            34.0,
+            60.0
+          ],
+          "Tuesday": [
+            17.0,
+            47.0
+          ],
+          "Wednesday": [
+            13.0,
+            20.0
+          ]
+        },
+        "17:45": {
+          "Monday": [
+            33.0,
+            45.0
+          ],
+          "Friday": [
+            37.0,
+            80.0
+          ],
+          "Thursday": [
+            31.0,
+            48.0
+          ],
+          "Wednesday": [
+            11.0,
+            36.0
+          ],
+          "Tuesday": [
+            30.0,
+            88.0
+          ]
+        },
+        "11:30": {
+          "Monday": [
+            29.0,
+            135.0
+          ],
+          "Sunday": [
+            60.0,
+            100.0
+          ],
+          "Saturday": [
+            66.0,
+            134.0
+          ],
+          "Thursday": [
+            7.0,
+            60.0
+          ],
+          "Wednesday": [
+            24.0,
+            92.0
+          ]
+        },
+        "11:15": {
+          "Monday": [
+            2.0,
+            20.0
+          ]
+        },
+        "10:15": {
+          "Monday": [
+            26.0,
+            55.0
+          ],
+          "Sunday": [
+            62.0,
+            100.0
+          ],
+          "Saturday": [
+            113.0,
+            128.0
+          ],
+          "Wednesday": [
+            16.0,
+            48.0
+          ],
+          "Tuesday": [
+            13.0,
+            44.0
+          ]
+        },
+        "09:15": {
+          "Monday": [
+            8.0,
+            60.0
+          ],
+          "Saturday": [
+            12.0,
+            80.0
+          ],
+          "Thursday": [
+            41.0,
+            88.0
+          ]
+        },
+        "08:30": {
+          "Monday": [
+            57.0,
+            100.0
+          ],
+          "Wednesday": [
+            28.0,
+            48.0
+          ],
+          "Tuesday": [
+            35.0,
+            88.0
+          ]
+        },
+        "07:30": {
+          "Monday": [
+            44.0,
+            57.0
+          ],
+          "Friday": [
+            29.0,
+            80.0
+          ],
+          "Thursday": [
+            31.0,
+            36.0
+          ],
+          "Wednesday": [
+            32.0,
+            96.0
+          ],
+          "Tuesday": [
+            36.0,
+            60.0
+          ]
+        },
+        "17:15": {
+          "Sunday": [
+            38.0,
+            100.0
+          ]
+        },
+        "16:00": {
+          "Sunday": [
+            20.0,
+            100.0
+          ]
+        },
+        "17:30": {
+          "Saturday": [
+            34.0,
+            80.0
+          ]
+        },
+        "16:30": {
+          "Saturday": [
+            9.0,
+            80.0
+          ]
+        },
+        "12:30": {
+          "Saturday": [
+            13.0,
+            80.0
+          ]
+        },
+        "08:00": {
+          "Saturday": [
+            7.0,
+            80.0
+          ],
+          "Friday": [
+            12.0,
+            48.0
+          ]
+        },
+        "19:00": {
+          "Friday": [
+            24.0,
+            80.0
+          ],
+          "Wednesday": [
+            20.0,
+            36.0
+          ]
+        },
+        "11:00": {
+          "Friday": [
+            22.0,
+            88.0
+          ],
+          "Thursday": [
+            26.0,
+            60.0
+          ],
+          "Tuesday": [
+            28.0,
+            80.0
+          ]
+        },
+        "09:30": {
+          "Friday": [
+            18.0,
+            48.0
+          ]
+        },
+        "09:00": {
+          "Friday": [
+            39.0,
+            68.0
+          ],
+          "Wednesday": [
+            42.0,
+            80.0
+          ],
+          "Tuesday": [
+            22.0,
+            44.0
+          ]
+        },
+        "18:15": {
+          "Thursday": [
+            29.0,
+            88.0
+          ],
+          "Wednesday": [
+            19.0,
+            66.0
+          ]
+        },
+        "10:00": {
+          "Thursday": [
+            10.0,
+            36.0
+          ]
+        },
+        "08:15": {
+          "Thursday": [
+            30.0,
+            80.0
+          ]
+        },
+        "18:06": {
+          "Monday": [
+            15.0,
+            17.0
+          ]
+        }
+      }
+    },
+    "2025-07": {
+      "ym": "2025-07",
+      "sessions": 261,
+      "capacity": 4377.0,
+      "visits": 1902,
+      "empty": 4,
+      "fill": 43.45442083618917,
+      "late_cancel": 462,
+      "booked": 2364,
+      "revenue": 1396397.3,
+      "class_avg": 7.287356321839081,
+      "byclass": {
+        "Studio HIIT": [
+          10,
+          152.0,
+          49.0,
+          18.0,
+          24652.280000000002
+        ],
+        "Studio Barre 57": [
+          91,
+          1402.0,
+          600.0,
+          189.0,
+          505369.0800000001
+        ],
+        "Studio Back Body Blaze Express": [
+          9,
+          190.0,
+          83.0,
+          17.0,
+          57308.07
+        ],
+        "Studio Pre/Post Natal": [
+          9,
+          144.0,
+          21.0,
+          3.0,
+          22225.86
+        ],
+        "Studio FIT": [
+          23,
+          355.0,
+          232.0,
+          43.0,
+          187752.15999999997
+        ],
+        "Studio Cardio Barre": [
+          29,
+          464.0,
+          200.0,
+          37.0,
+          142790.95
+        ],
+        "Studio Mat 57 Express": [
+          9,
+          125.0,
+          86.0,
+          22.0,
+          72082.92
+        ],
+        "Studio Mat 57": [
+          22,
+          440.0,
+          260.0,
+          64.0,
+          172211.50000000003
+        ],
+        "Studio Cardio Barre Express": [
+          24,
+          419.0,
+          111.0,
+          26.0,
+          79321.78000000001
+        ],
+        "Studio Back Body Blaze": [
+          5,
+          100.0,
+          62.0,
+          10.0,
+          33589.9
+        ],
+        "Studio Amped Up!": [
+          5,
+          110.0,
+          51.0,
+          13.0,
+          28576.52
+        ],
+        "Studio Trainer's Choice": [
+          4,
+          88.0,
+          30.0,
+          4.0,
+          19516.29
+        ],
+        "Studio Cardio Barre Plus": [
+          8,
+          160.0,
+          39.0,
+          3.0,
+          15055.529999999999
+        ],
+        "Studio Barre 57 Express": [
+          3,
+          34.0,
+          25.0,
+          7.0,
+          18488.64
+        ],
+        "Studio Hosted Class": [
+          2,
+          44.0,
+          25.0,
+          2.0,
+          0.0
+        ],
+        "Studio Recovery": [
+          4,
+          70.0,
+          20.0,
+          1.0,
+          10982.029999999999
+        ],
+        "Studio Foundations": [
+          4,
+          80.0,
+          8.0,
+          3.0,
+          6473.790000000001
+        ]
+      },
+      "bytype": {
+        "Barre 57": [
+          260,
+          4355.0,
+          1895.0,
+          460.0,
+          1392553.7300000002
+        ],
+        "Strength Lab!": [
+          1,
+          22.0,
+          7.0,
+          2.0,
+          3843.57
+        ]
+      },
+      "bytrainer": {
+        "Karan Bhatia": [
+          20,
+          280.0,
+          86.0,
+          0.0,
+          72507.35
+        ],
+        "Richard  D'Costa": [
+          24,
+          355.0,
+          165.0,
+          0.0,
+          127059.66999999997
+        ],
+        "Mrigakshi Jaiswal": [
+          23,
+          397.0,
+          167.0,
+          0.0,
+          123720.22999999997
+        ],
+        "Rohan Dahima": [
+          31,
+          497.0,
+          252.0,
+          0.0,
+          199769.67999999996
+        ],
+        "Cauveri Vikrant": [
+          16,
+          282.0,
+          101.0,
+          0.0,
+          83341.34999999999
+        ],
+        "Atulan Purohit": [
+          23,
+          400.0,
+          166.0,
+          0.0,
+          110747.79000000001
+        ],
+        "Anisha Shah": [
+          32,
+          540.0,
+          284.0,
+          0.0,
+          189941.47999999995
+        ],
+        "Reshma Sharma": [
+          32,
+          544.0,
+          221.0,
+          0.0,
+          137173.49999999997
+        ],
+        "Vivaran Dhasmana": [
+          8,
+          157.0,
+          50.0,
+          0.0,
+          39135.990000000005
+        ],
+        "Karanvir Bhatia": [
+          8,
+          160.0,
+          65.0,
+          0.0,
+          50705.78
+        ],
+        "Simonelle De Vitre": [
+          2,
+          42.0,
+          26.0,
+          0.0,
+          19872.15
+        ],
+        "Pranjali Jain": [
+          42,
+          723.0,
+          319.0,
+          0.0,
+          242422.32999999996
+        ]
+      },
+      "heat": {
+        "19:15": {
+          "Thursday": [
+            43.0,
+            160.0
+          ],
+          "Wednesday": [
+            47.0,
+            100.0
+          ],
+          "Tuesday": [
+            100.0,
+            135.0
+          ],
+          "Monday": [
+            30.0,
+            88.0
+          ]
+        },
+        "18:15": {
+          "Thursday": [
+            45.0,
+            110.0
+          ],
+          "Wednesday": [
+            33.0,
+            110.0
+          ]
+        },
+        "17:45": {
+          "Thursday": [
+            20.0,
+            60.0
+          ],
+          "Wednesday": [
+            28.0,
+            60.0
+          ],
+          "Tuesday": [
+            29.0,
+            110.0
+          ],
+          "Monday": [
+            34.0,
+            36.0
+          ],
+          "Friday": [
+            30.0,
+            80.0
+          ]
+        },
+        "11:30": {
+          "Thursday": [
+            12.0,
+            100.0
+          ],
+          "Wednesday": [
+            24.0,
+            115.0
+          ],
+          "Monday": [
+            25.0,
+            124.0
+          ],
+          "Sunday": [
+            53.0,
+            86.0
+          ],
+          "Saturday": [
+            67.0,
+            136.0
+          ]
+        },
+        "11:00": {
+          "Thursday": [
+            36.0,
+            75.0
+          ],
+          "Tuesday": [
+            44.0,
+            100.0
+          ],
+          "Friday": [
+            24.0,
+            88.0
+          ]
+        },
+        "10:00": {
+          "Thursday": [
+            25.0,
+            60.0
+          ]
+        },
+        "09:15": {
+          "Thursday": [
+            52.0,
+            110.0
+          ],
+          "Monday": [
+            16.0,
+            48.0
+          ],
+          "Saturday": [
+            8.0,
+            80.0
+          ]
+        },
+        "08:15": {
+          "Thursday": [
+            33.0,
+            52.0
+          ]
+        },
+        "07:30": {
+          "Thursday": [
+            52.0,
+            89.0
+          ],
+          "Wednesday": [
+            50.0,
+            118.0
+          ],
+          "Tuesday": [
+            57.0,
+            77.0
+          ],
+          "Monday": [
+            32.0,
+            46.0
+          ],
+          "Friday": [
+            38.0,
+            80.0
+          ]
+        },
+        "19:00": {
+          "Wednesday": [
+            22.0,
+            60.0
+          ],
+          "Friday": [
+            23.0,
+            80.0
+          ]
+        },
+        "10:15": {
+          "Wednesday": [
+            34.0,
+            68.0
+          ],
+          "Tuesday": [
+            15.0,
+            55.0
+          ],
+          "Monday": [
+            18.0,
+            44.0
+          ],
+          "Sunday": [
+            41.0,
+            80.0
+          ],
+          "Saturday": [
+            109.0,
+            128.0
+          ]
+        },
+        "09:00": {
+          "Wednesday": [
+            62.0,
+            100.0
+          ],
+          "Tuesday": [
+            25.0,
+            55.0
+          ],
+          "Friday": [
+            40.0,
+            68.0
+          ]
+        },
+        "08:30": {
+          "Wednesday": [
+            28.0,
+            60.0
+          ],
+          "Tuesday": [
+            51.0,
+            110.0
+          ],
+          "Monday": [
+            47.0,
+            80.0
+          ]
+        },
+        "18:00": {
+          "Tuesday": [
+            20.0,
+            60.0
+          ],
+          "Monday": [
+            38.0,
+            60.0
+          ]
+        },
+        "18:45": {
+          "Monday": [
+            42.0,
+            48.0
+          ]
+        },
+        "17:15": {
+          "Sunday": [
+            45.0,
+            80.0
+          ]
+        },
+        "16:00": {
+          "Sunday": [
+            20.0,
+            80.0
+          ]
+        },
+        "17:30": {
+          "Saturday": [
+            32.0,
+            80.0
+          ]
+        },
+        "16:30": {
+          "Saturday": [
+            5.0,
+            80.0
+          ]
+        },
+        "12:45": {
+          "Saturday": [
+            12.0,
+            22.0
+          ]
+        },
+        "12:30": {
+          "Saturday": [
+            20.0,
+            70.0
+          ]
+        },
+        "08:00": {
+          "Saturday": [
+            20.0,
+            80.0
+          ],
+          "Friday": [
+            23.0,
+            48.0
+          ]
+        },
+        "09:30": {
+          "Friday": [
+            23.0,
+            48.0
+          ]
+        }
+      }
+    }
+  },
+  "checkins": {
+    "2026-04": {
+      "ym": "2026-04",
+      "checkins": 2406,
+      "late_cancel": 239,
+      "lc_members": 116,
+      "new_visits": 110,
+      "heavy_cancelers": 1,
+      "heavy_cancels": 6
+    },
+    "2026-05": {
+      "ym": "2026-05",
+      "checkins": 2584,
+      "late_cancel": 271,
+      "lc_members": 128,
+      "new_visits": 133,
+      "heavy_cancelers": 8,
+      "heavy_cancels": 51
+    },
+    "2026-06": {
+      "ym": "2026-06",
+      "checkins": 2540,
+      "late_cancel": 257,
+      "lc_members": 125,
+      "new_visits": 137,
+      "heavy_cancelers": 6,
+      "heavy_cancels": 37
+    },
+    "2026-07": {
+      "ym": "2026-07",
+      "checkins": 2727,
+      "late_cancel": 295,
+      "lc_members": 150,
+      "new_visits": 136,
+      "heavy_cancelers": 4,
+      "heavy_cancels": 26
+    }
+  },
+  "funnel": {
+    "2026-01": {
+      "ym": "2026-01",
+      "leads": 177,
+      "trials": 121,
+      "converted": 18,
+      "retained": 28,
+      "lead_ltv": 818366.991985,
+      "lead_visits": 721,
+      "src": {
+        "Website Form": [
+          13,
+          2,
+          2,
+          80798.18,
+          94.0
+        ],
+        "Website": [
+          74,
+          1,
+          2,
+          12598.95,
+          18.0
+        ],
+        "Client Referral": [
+          17,
+          8,
+          8,
+          531732.14,
+          364.0
+        ],
+        "Hosted Class": [
+          57,
+          2,
+          7,
+          89092.3992,
+          107.0
+        ],
+        "Walkin": [
+          1,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Enquiry on call": [
+          4,
+          2,
+          1,
+          44362.5,
+          29.0
+        ],
+        "Abandoned checkout": [
+          4,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Social": [
+          1,
+          0,
+          0,
+          0.0,
+          1.0
+        ],
+        "Incoming sms": [
+          2,
+          1,
+          0,
+          1836.992785,
+          2.0
+        ],
+        "Incoming call": [
+          1,
+          1,
+          1,
+          29505.0,
+          18.0
+        ],
+        "Yellow Messenger/Whatsapp Enquiry": [
+          3,
+          1,
+          1,
+          28440.83,
+          88.0
+        ]
+      },
+      "trial_types": {
+        "New - Trial Class": 33,
+        "New - Referral Class": 20,
+        "New - Hosted Class": 65,
+        "New - Paid First Visit": 2,
+        "New - Complimentary Class": 1
+      },
+      "conv_rate": 10.16949152542373,
+      "retain_rate": 15.819209039548024
+    },
+    "2026-02": {
+      "ym": "2026-02",
+      "leads": 160,
+      "trials": 105,
+      "converted": 25,
+      "retained": 31,
+      "lead_ltv": 571324.8172500001,
+      "lead_visits": 552,
+      "src": {
+        "Website": [
+          64,
+          0,
+          1,
+          0.0,
+          2.0
+        ],
+        "Influencer Marketing - Shaan": [
+          2,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Website Form": [
+          19,
+          4,
+          3,
+          23467.5,
+          20.0
+        ],
+        "Events - Stronger in 30": [
+          5,
+          2,
+          2,
+          29820.0,
+          31.0
+        ],
+        "Hosted Class": [
+          30,
+          3,
+          2,
+          105359.63,
+          77.0
+        ],
+        "Enquiry on call": [
+          4,
+          4,
+          3,
+          65546.26000000001,
+          89.0
+        ],
+        "Walkin": [
+          9,
+          3,
+          6,
+          104291.26999999999,
+          140.0
+        ],
+        "Social": [
+          1,
+          1,
+          0,
+          5617.5,
+          1.0
+        ],
+        "Client Referral": [
+          11,
+          3,
+          5,
+          152330.14724999998,
+          144.0
+        ],
+        "Abandoned checkout": [
+          7,
+          2,
+          1,
+          29793.76,
+          5.0
+        ],
+        "Incoming sms": [
+          1,
+          1,
+          1,
+          28586.25,
+          36.0
+        ],
+        "Incoming call": [
+          2,
+          1,
+          1,
+          15802.5,
+          3.0
+        ],
+        "Social - Instagram": [
+          2,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Dashboard": [
+          1,
+          0,
+          0,
+          0.0,
+          1.0
+        ],
+        "Yellow Messenger/Whatsapp Enquiry": [
+          2,
+          1,
+          1,
+          10710.0,
+          3.0
+        ]
+      },
+      "trial_types": {
+        "New - Trial Class": 43,
+        "New - Referral Class": 27,
+        "New - Paid First Visit": 7,
+        "New - Others": 1,
+        "New - Hosted Class": 27
+      },
+      "conv_rate": 15.625,
+      "retain_rate": 19.375
+    },
+    "2026-03": {
+      "ym": "2026-03",
+      "leads": 163,
+      "trials": 95,
+      "converted": 20,
+      "retained": 28,
+      "lead_ltv": 560902.27,
+      "lead_visits": 374,
+      "src": {
+        "Website Form": [
+          24,
+          5,
+          7,
+          58051.88,
+          59.0
+        ],
+        "Website": [
+          54,
+          0,
+          0,
+          0.0,
+          1.0
+        ],
+        "Client Referral": [
+          15,
+          3,
+          3,
+          36584.630000000005,
+          32.0
+        ],
+        "Abandoned checkout": [
+          7,
+          0,
+          4,
+          0.0,
+          21.0
+        ],
+        "Walkin": [
+          3,
+          1,
+          1,
+          5617.5,
+          5.0
+        ],
+        "Staff Referral": [
+          1,
+          0,
+          1,
+          0.0,
+          3.0
+        ],
+        "Hosted Class": [
+          30,
+          0,
+          0,
+          0.0,
+          27.0
+        ],
+        "Yellow Messenger/Whatsapp Enquiry": [
+          14,
+          7,
+          4,
+          136567.76,
+          86.0
+        ],
+        "Influencer Marketing - Shaan": [
+          4,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Influencer Marketing - The Mum Tribe": [
+          2,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Incoming call": [
+          6,
+          3,
+          5,
+          280123.36,
+          97.0
+        ],
+        "Social - Instagram": [
+          1,
+          0,
+          1,
+          0.0,
+          2.0
+        ],
+        "Enquiry on call": [
+          2,
+          1,
+          1,
+          43957.14,
+          41.0
+        ]
+      },
+      "trial_types": {
+        "New - Referral Class": 14,
+        "New - Trial Class": 40,
+        "New - Others": 2,
+        "New - Paid First Visit": 6,
+        "New - Hosted Class": 32,
+        "New - Complimentary Class": 1
+      },
+      "conv_rate": 12.269938650306749,
+      "retain_rate": 17.177914110429448
+    },
+    "2026-04": {
+      "ym": "2026-04",
+      "leads": 166,
+      "trials": 91,
+      "converted": 17,
+      "retained": 23,
+      "lead_ltv": 417529.180995,
+      "lead_visits": 313,
+      "src": {
+        "Social - Instagram": [
+          3,
+          1,
+          1,
+          1837.5,
+          5.0
+        ],
+        "Client Referral": [
+          18,
+          8,
+          8,
+          180310.01099500002,
+          187.0
+        ],
+        "Abandoned checkout": [
+          4,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Website Form": [
+          13,
+          1,
+          1,
+          30024.75,
+          24.0
+        ],
+        "Enquiry on call": [
+          2,
+          0,
+          0,
+          0.0,
+          1.0
+        ],
+        "Hosted Class": [
+          39,
+          0,
+          0,
+          0.0,
+          28.0
+        ],
+        "Website": [
+          24,
+          0,
+          0,
+          0.0,
+          1.0
+        ],
+        "Yellow Messenger/Whatsapp Enquiry": [
+          13,
+          2,
+          4,
+          16012.5,
+          16.0
+        ],
+        "Walkin": [
+          9,
+          4,
+          3,
+          170543.92,
+          32.0
+        ],
+        "Staff Referral": [
+          1,
+          1,
+          1,
+          18800.5,
+          15.0
+        ],
+        "Website - AC": [
+          35,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Incoming call": [
+          5,
+          0,
+          1,
+          0.0,
+          4.0
+        ]
+      },
+      "trial_types": {
+        "New - Trial Class": 28,
+        "New - Referral Class": 25,
+        "New - Paid First Visit": 6,
+        "New - Others": 1,
+        "New - Hosted Class": 30,
+        "New - Complimentary Class": 1
+      },
+      "conv_rate": 10.240963855421686,
+      "retain_rate": 13.855421686746988
+    },
+    "2026-05": {
+      "ym": "2026-05",
+      "leads": 127,
+      "trials": 117,
+      "converted": 29,
+      "retained": 37,
+      "lead_ltv": 367315.0,
+      "lead_visits": 216,
+      "src": {
+        "Hosted Class": [
+          18,
+          1,
+          3,
+          71911.75,
+          53.0
+        ],
+        "Website Form": [
+          22,
+          4,
+          4,
+          12967.5,
+          17.0
+        ],
+        "Website": [
+          18,
+          0,
+          0,
+          0.0,
+          4.0
+        ],
+        "Client Referral": [
+          31,
+          13,
+          10,
+          156922.75,
+          59.0
+        ],
+        "Abandoned checkout": [
+          5,
+          1,
+          1,
+          7455.0,
+          5.0
+        ],
+        "Social - Instagram": [
+          5,
+          1,
+          1,
+          15750.0,
+          10.0
+        ],
+        "Yellow Messenger/Whatsapp Enquiry": [
+          6,
+          3,
+          2,
+          30234.75,
+          19.0
+        ],
+        "Dashboard": [
+          1,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Incoming call": [
+          8,
+          3,
+          3,
+          36478.25,
+          29.0
+        ],
+        "Influencer Marketing - Inde Wild": [
+          1,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Walkin": [
+          9,
+          2,
+          2,
+          21420.0,
+          15.0
+        ],
+        "Social": [
+          2,
+          1,
+          1,
+          14175.0,
+          5.0
+        ],
+        "Enquiry on call": [
+          1,
+          0,
+          0,
+          0.0,
+          0.0
+        ]
+      },
+      "trial_types": {
+        "New - Hosted Class": 29,
+        "New - Trial Class": 48,
+        "New - Referral Class": 30,
+        "New - Paid First Visit": 9,
+        "New - Others": 1
+      },
+      "conv_rate": 22.83464566929134,
+      "retain_rate": 29.133858267716533
+    },
+    "2026-06": {
+      "ym": "2026-06",
+      "leads": 128,
+      "trials": 129,
+      "converted": 31,
+      "retained": 47,
+      "lead_ltv": 630300.8099999999,
+      "lead_visits": 434,
+      "src": {
+        "The Amazing Race Signups": [
+          6,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Client Referral": [
+          19,
+          6,
+          6,
+          81508.88,
+          57.0
+        ],
+        "Website Form": [
+          32,
+          8,
+          9,
+          99756.25,
+          101.0
+        ],
+        "Hosted Class": [
+          22,
+          2,
+          2,
+          3675.0,
+          16.0
+        ],
+        "Physique Kids": [
+          4,
+          1,
+          0,
+          30.0,
+          0.0
+        ],
+        "Website": [
+          9,
+          1,
+          0,
+          290.0,
+          3.0
+        ],
+        "Enquiry on call": [
+          5,
+          1,
+          3,
+          5512.5,
+          12.0
+        ],
+        "Staff Referral": [
+          1,
+          1,
+          1,
+          170431.24,
+          26.0
+        ],
+        "Abandoned checkout": [
+          5,
+          2,
+          2,
+          12547.5,
+          10.0
+        ],
+        "Walkin": [
+          8,
+          3,
+          3,
+          111553.36000000002,
+          131.0
+        ],
+        "Influencer Marketing - Inde Wild": [
+          2,
+          0,
+          0,
+          0.0,
+          1.0
+        ],
+        "Incoming call": [
+          8,
+          3,
+          3,
+          120146.25,
+          60.0
+        ],
+        "Yellow Messenger/Whatsapp Enquiry": [
+          4,
+          3,
+          2,
+          24849.83,
+          17.0
+        ],
+        "Social - Instagram": [
+          2,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Social": [
+          1,
+          0,
+          0,
+          0.0,
+          0.0
+        ]
+      },
+      "trial_types": {
+        "New - Referral Class": 18,
+        "New - Trial Class": 79,
+        "New - Paid First Visit": 9,
+        "New - Hosted Class": 21,
+        "New - Complimentary Class": 1,
+        "New - Others": 1
+      },
+      "conv_rate": 24.21875,
+      "retain_rate": 36.71875
+    },
+    "2026-07": {
+      "ym": "2026-07",
+      "leads": 151,
+      "trials": 121,
+      "converted": 15,
+      "retained": 32,
+      "lead_ltv": 162492.0,
+      "lead_visits": 245,
+      "src": {
+        "Hosted Class": [
+          34,
+          1,
+          2,
+          1837.5,
+          25.0
+        ],
+        "Website": [
+          25,
+          0,
+          2,
+          0.0,
+          29.0
+        ],
+        "Abandoned checkout": [
+          10,
+          1,
+          5,
+          14300.25,
+          57.0
+        ],
+        "Enquiry on call": [
+          4,
+          1,
+          1,
+          14222.25,
+          12.0
+        ],
+        "Client Referral": [
+          33,
+          4,
+          8,
+          23514.25,
+          51.0
+        ],
+        "Walkin": [
+          7,
+          0,
+          1,
+          0.0,
+          4.0
+        ],
+        "Yellow Messenger/Whatsapp Enquiry": [
+          12,
+          3,
+          4,
+          62580.0,
+          24.0
+        ],
+        "Staff Referral": [
+          2,
+          0,
+          0,
+          0.0,
+          1.0
+        ],
+        "Website Form": [
+          15,
+          1,
+          4,
+          15802.5,
+          25.0
+        ],
+        "Incoming call": [
+          8,
+          3,
+          2,
+          24617.75,
+          11.0
+        ],
+        "Dashboard": [
+          1,
+          1,
+          1,
+          5617.5,
+          6.0
+        ]
+      },
+      "trial_types": {
+        "New - Referral Class": 24,
+        "New - Others": 2,
+        "New - Paid First Visit": 22,
+        "New - Trial Class": 48,
+        "New - Hosted Class": 24,
+        "New - Complimentary Class": 1
+      },
+      "conv_rate": 9.933774834437086,
+      "retain_rate": 21.192052980132452
+    },
+    "2025-06": {
+      "ym": "2025-06",
+      "leads": 105,
+      "trials": 87,
+      "converted": 17,
+      "retained": 40,
+      "lead_ltv": 619021.9295,
+      "lead_visits": 456,
+      "src": {
+        "Website Form": [
+          10,
+          1,
+          1,
+          37747.5,
+          41.0
+        ],
+        "Website": [
+          39,
+          4,
+          2,
+          23437.5,
+          15.0
+        ],
+        "Hosted Class": [
+          8,
+          1,
+          2,
+          13965.0,
+          14.0
+        ],
+        "Client Referral": [
+          19,
+          5,
+          5,
+          57334.5,
+          36.0
+        ],
+        "Abandoned checkout": [
+          10,
+          1,
+          1,
+          6313.0,
+          8.0
+        ],
+        "Enquiry on call": [
+          7,
+          3,
+          4,
+          331676.4,
+          251.0
+        ],
+        "Social - Instagram": [
+          2,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Walkin": [
+          4,
+          0,
+          0,
+          0.0,
+          3.0
+        ],
+        "Incoming call": [
+          2,
+          1,
+          1,
+          96064.1495,
+          58.0
+        ],
+        "Dashboard": [
+          4,
+          1,
+          1,
+          52483.88,
+          30.0
+        ]
+      },
+      "trial_types": {
+        "New - Referral Class": 25,
+        "New - Paid First Visit": 10,
+        "New - Trial Class": 49,
+        "New - Hosted Class": 3
+      },
+      "conv_rate": 16.19047619047619,
+      "retain_rate": 38.095238095238095
+    },
+    "2025-07": {
+      "ym": "2025-07",
+      "leads": 82,
+      "trials": 76,
+      "converted": 20,
+      "retained": 41,
+      "lead_ltv": 341275.80000000005,
+      "lead_visits": 249,
+      "src": {
+        "Incoming call": [
+          2,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Website Form": [
+          11,
+          5,
+          6,
+          199632.0,
+          142.0
+        ],
+        "Hosted Class": [
+          20,
+          8,
+          5,
+          52925.0,
+          39.0
+        ],
+        "Website": [
+          29,
+          3,
+          3,
+          64713.65,
+          45.0
+        ],
+        "Abandoned checkout": [
+          7,
+          1,
+          0,
+          1890.0,
+          1.0
+        ],
+        "Social - Instagram": [
+          4,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Walkin": [
+          4,
+          1,
+          1,
+          1770.0,
+          2.0
+        ],
+        "Client Referral": [
+          2,
+          2,
+          2,
+          20345.15,
+          19.0
+        ],
+        "Yellow Messenger/Whatsapp Enquiry": [
+          1,
+          0,
+          0,
+          0.0,
+          0.0
+        ],
+        "Staff Referral": [
+          2,
+          0,
+          0,
+          0.0,
+          1.0
+        ]
+      },
+      "trial_types": {
+        "New - Trial Class": 46,
+        "New - Referral Class": 17,
+        "New - Hosted Class": 10,
+        "New - Others": 2,
+        "New - Paid First Visit": 1
+      },
+      "conv_rate": 24.390243902439025,
+      "retain_rate": 50.0
+    }
+  },
+  "lapsed": {
+    "2026-01": {
+      "ym": "2026-01",
+      "expirations": 517,
+      "renewed": 326,
+      "lapsed": 190,
+      "frozen": 1,
+      "renewal_rate": 63.05609284332688,
+      "churn_rate": 36.7504835589942,
+      "byprod": {
+        "Studio Open Barre Class": 57,
+        "Studio Single Class": 35,
+        "Studio Complimentary Referral Class": 28,
+        "Newcomers 2 For 1": 22,
+        "Studio 4 Class Package": 10,
+        "Studio 8 Class Package": 8,
+        "Studio 12 Class Package": 7,
+        "Studio 1 Month Unlimited Membership": 4,
+        "Studio Extended 10 Single Class Pack": 4,
+        "Studio 6 Month Unlimited Membership": 2,
+        "Studio 2 Week Unlimited Membership": 2,
+        "Studio Complimentary Referrer Class": 2,
+        "Barre 2 week Unlimited": 2,
+        "Studio Complimentary Class": 2,
+        "Barre 1 month Unlimited": 1,
+        "Studio Staff/Family Class": 1,
+        "Studio 20 Single Class Pack": 1,
+        "Studio Referrer Complimentary Class Package": 1,
+        "Studio 3 Month Unlimited Membership": 1
+      },
+      "late_cancels": 101
+    },
+    "2026-02": {
+      "ym": "2026-02",
+      "expirations": 533,
+      "renewed": 316,
+      "lapsed": 217,
+      "frozen": 0,
+      "renewal_rate": 59.28705440900563,
+      "churn_rate": 40.71294559099437,
+      "byprod": {
+        "Studio Open Barre Class": 79,
+        "Newcomers 2 For 1": 35,
+        "Studio Complimentary Referral Class": 34,
+        "Studio Single Class": 26,
+        "Studio 4 Class Package": 8,
+        "Studio 12 Class Package": 8,
+        "Studio 1 Month Unlimited Membership": 7,
+        "Studio Extended 10 Single Class Pack": 6,
+        "Studio 8 Class Package": 5,
+        "Studio Complimentary Class": 2,
+        "Studio Staff/Family Class": 2,
+        "Studio 30 Single Class Pack": 1,
+        "Studio Referrer Complimentary Class Package": 1,
+        "Studio Annual Unlimited Membership": 1,
+        "Studio Newcomers 2 Week Unlimited Membership": 1,
+        "Studio 2 Week Unlimited Membership": 1
+      },
+      "late_cancels": 123
+    },
+    "2026-03": {
+      "ym": "2026-03",
+      "expirations": 542,
+      "renewed": 339,
+      "lapsed": 203,
+      "frozen": 0,
+      "renewal_rate": 62.54612546125461,
+      "churn_rate": 37.45387453874539,
+      "byprod": {
+        "Studio Open Barre Class": 58,
+        "Newcomers 2 For 1": 38,
+        "Studio Single Class": 37,
+        "Studio Complimentary Referral Class": 29,
+        "Studio 4 Class Package": 8,
+        "Studio 1 Month Unlimited Membership": 7,
+        "Studio 8 Class Package": 6,
+        "Studio 12 Class Package": 5,
+        "Studio Staff/Family Class": 5,
+        "Studio 6 Month Unlimited Membership": 3,
+        "Studio Extended 10 Single Class Pack": 2,
+        "Studio 30 Single Class Pack": 1,
+        "Studio Annual Unlimited Membership": 1,
+        "Studio 20 Single Class Pack": 1,
+        "Studio 3 Month Unlimited Membership": 1,
+        "Barre 3 months Unlimited": 1
+      },
+      "late_cancels": 105
+    },
+    "2026-04": {
+      "ym": "2026-04",
+      "expirations": 608,
+      "renewed": 390,
+      "lapsed": 218,
+      "frozen": 0,
+      "renewal_rate": 64.14473684210526,
+      "churn_rate": 35.85526315789473,
+      "byprod": {
+        "Studio Open Barre Class": 60,
+        "Studio Complimentary Referral Class": 34,
+        "Studio Single Class": 31,
+        "Newcomers 2 For 1": 29,
+        "Studio Staff/Family Class": 16,
+        "Studio 12 Class Package": 10,
+        "Studio 8 Class Package": 8,
+        "Studio 4 Class Package": 8,
+        "Studio 1 Month Unlimited Membership": 6,
+        "Studio 10 Single Class Pack": 3,
+        "Studio Extended 10 Single Class Pack": 3,
+        "Studio 3 Month Unlimited Membership": 2,
+        "Studio Referrer Complimentary Class Package": 1,
+        "Barre 1 month Unlimited": 1,
+        "Studio 6 Month Unlimited Membership": 1,
+        "Studio 2 Week Unlimited Membership": 1,
+        "Barre 3 months Unlimited": 1,
+        "Saanchi's Sign up link": 1,
+        "Studio Hybrid 1 Month unlimited": 1,
+        "Studio Complimentary Class": 1
+      },
+      "late_cancels": 89
+    },
+    "2026-05": {
+      "ym": "2026-05",
+      "expirations": 588,
+      "renewed": 351,
+      "lapsed": 236,
+      "frozen": 1,
+      "renewal_rate": 59.693877551020414,
+      "churn_rate": 40.136054421768705,
+      "byprod": {
+        "Studio Complimentary Referral Class": 58,
+        "Studio Open Barre Class": 57,
+        "Studio Single Class": 37,
+        "Newcomers 2 For 1": 27,
+        "Studio 1 Month Unlimited Membership": 8,
+        "Studio 12 Class Package": 7,
+        "Studio 4 Class Package": 7,
+        "Studio 8 Class Package": 6,
+        "Studio Staff/Family Class": 6,
+        "Studio Extended 10 Single Class Pack": 5,
+        "Studio 6 Month Unlimited Membership": 4,
+        "Studio Complimentary Class": 4,
+        "Studio Complimentary Referrer Class": 4,
+        "Barre 2 week Unlimited": 2,
+        "Barre 3 months Unlimited": 1,
+        "Strength Lab 1 month Unlimited": 1,
+        "Studio 10 Single Class Pack": 1,
+        "Studio 3 Month Unlimited Membership": 1
+      },
+      "late_cancels": 111
+    },
+    "2026-06": {
+      "ym": "2026-06",
+      "expirations": 635,
+      "renewed": 360,
+      "lapsed": 271,
+      "frozen": 4,
+      "renewal_rate": 56.69291338582677,
+      "churn_rate": 42.67716535433071,
+      "byprod": {
+        "Studio Open Barre Class": 98,
+        "Studio Complimentary Referral Class": 36,
+        "Newcomers 2 For 1": 33,
+        "Studio Single Class": 23,
+        "Studio 4 Class Package": 18,
+        "Studio 1 Month Unlimited Membership": 10,
+        "Studio 8 Class Package": 8,
+        "Studio 12 Class Package": 8,
+        "Studio Complimentary Referrer Class": 7,
+        "Studio Complimentary Class": 6,
+        "Studio Extended 10 Single Class Pack": 6,
+        "Studio Staff/Family Class": 5,
+        "Studio 6 Month Unlimited Membership": 3,
+        "Studio 2 Week Unlimited Membership": 3,
+        "Studio 3 Month Unlimited Membership": 2,
+        "Studio 10 Single Class Pack": 2,
+        "Barre 1 month Unlimited": 1,
+        "Studio Anniversary 4 Complimentary Class Package": 1,
+        "Studio 20 Single Class Pack": 1
+      },
+      "late_cancels": 117
+    },
+    "2026-07": {
+      "ym": "2026-07",
+      "expirations": 730,
+      "renewed": 411,
+      "lapsed": 298,
+      "frozen": 21,
+      "renewal_rate": 56.3013698630137,
+      "churn_rate": 40.821917808219176,
+      "byprod": {
+        "Studio Open Barre Class": 83,
+        "Studio Single Class": 68,
+        "Studio Complimentary Referral Class": 42,
+        "Newcomers 2 For 1": 26,
+        "Studio Staff/Family Class": 15,
+        "Studio 12 Class Package": 14,
+        "Studio Extended 10 Single Class Pack": 11,
+        "Studio 4 Class Package": 9,
+        "Studio 1 Month Unlimited Membership": 8,
+        "Studio 8 Class Package": 8,
+        "Studio Complimentary Referrer Class": 4,
+        "Studio 6 Month Unlimited Membership": 2,
+        "Studio 3 Month Unlimited Membership": 2,
+        "Studio Flex 5 Class Package": 2,
+        "Barre 1 month Unlimited": 1,
+        "Studio 10 Single Class Pack": 1,
+        "Studio Complimentary Class": 1,
+        "Studio Private Class": 1
+      },
+      "late_cancels": 121
+    }
+  },
+  "cumulative_lapsed_unique": 978,
+  "cumulative_lapsed_byprod": {
+    "Studio 1 Month Unlimited Membership": 221,
+    "Studio 4 Class Package": 174,
+    "Studio 12 Class Package": 168,
+    "Studio 8 Class Package": 131,
+    "Studio 10 Single Class Pack": 55,
+    "Studio Extended 10 Single Class Pack": 51,
+    "Studio 3 Month Unlimited Membership": 45,
+    "Studio 2 Week Unlimited Membership": 44,
+    "Studio 6 Month Unlimited Membership": 22,
+    "Studio 20 Single Class Pack": 12,
+    "Barre 1 month Unlimited": 10,
+    "Studio Newcomers 2 Week Unlimited Membership": 7,
+    "Studio 8 Class Package.": 6,
+    "Barre 2 week Unlimited": 6,
+    "Studio Annual Unlimited Membership": 4,
+    "Studio 1 Month Unlimited.": 4,
+    "Studio 30 Single Class Pack": 3,
+    "Barre 3 months Unlimited": 3,
+    "Studio Private Class X 10": 2,
+    "12 Class Package (Studio).": 2,
+    "Studio Flex 5 Class Package": 2,
+    "Strength Lab 1 month Unlimited": 1,
+    "Studio 3 Month Unlimited.": 1,
+    "Studio Newcomers 2 Week Unlimited.": 1,
+    "Studio Private Class": 1
+  },
+  "payroll": {
+    "2026-05": {
+      "ym": "2026-05",
+      "trainers": [
+        {
+          "name": "Anisha Shah",
+          "sessions": 21,
+          "customers": 154,
+          "paid": 89376.87,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 1,
+          "new": 2
+        },
+        {
+          "name": "Anmol Sharma",
+          "sessions": 12,
+          "customers": 60,
+          "paid": 52989.42,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 5,
+          "new": 6
+        },
+        {
+          "name": "Atulan Purohit",
+          "sessions": 12,
+          "customers": 91,
+          "paid": 62908.86,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 0,
+          "new": 0
+        },
+        {
+          "name": "Bret Saldanha",
+          "sessions": 25,
+          "customers": 97,
+          "paid": 78192.26,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 3,
+          "new": 4
+        },
+        {
+          "name": "Cauveri Vikrant",
+          "sessions": 38,
+          "customers": 261,
+          "paid": 199628.17,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 5,
+          "new": 30
+        },
+        {
+          "name": "Karan Bhatia",
+          "sessions": 12,
+          "customers": 35,
+          "paid": 26008.84,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 3,
+          "new": 5
+        },
+        {
+          "name": "Karanvir Bhatia",
+          "sessions": 9,
+          "customers": 32,
+          "paid": 27648.07,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 0,
+          "new": 2
+        },
+        {
+          "name": "Mrigakshi Jaiswal",
+          "sessions": 29,
+          "customers": 171,
+          "paid": 139545.28,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 0,
+          "new": 1
+        },
+        {
+          "name": "Pranjali Jain",
+          "sessions": 33,
+          "customers": 277,
+          "paid": 218701.02,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 2,
+          "new": 3
+        },
+        {
+          "name": "Raunak Khemuka",
+          "sessions": 17,
+          "customers": 68,
+          "paid": 59732.85,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 1,
+          "new": 5
+        },
+        {
+          "name": "Reshma Sharma",
+          "sessions": 24,
+          "customers": 225,
+          "paid": 178325.27,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 2,
+          "new": 5
+        },
+        {
+          "name": "Richard  D'Costa",
+          "sessions": 19,
+          "customers": 112,
+          "paid": 82806.94,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 2,
+          "new": 4
+        },
+        {
+          "name": "Rohan Dahima",
+          "sessions": 43,
+          "customers": 412,
+          "paid": 330139.65,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 7,
+          "new": 28
+        },
+        {
+          "name": "Simonelle De Vitre",
+          "sessions": 22,
+          "customers": 122,
+          "paid": 113358.39,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 4,
+          "new": 15
+        },
+        {
+          "name": "Simran Dutt",
+          "sessions": 10,
+          "customers": 57,
+          "paid": 49374.52,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 1,
+          "new": 5
+        },
+        {
+          "name": "Vivaran Dhasmana",
+          "sessions": 22,
+          "customers": 133,
+          "paid": 105100.08,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 1,
+          "new": 2
+        }
+      ],
+      "n_trainers": 16
+    },
+    "2026-06": {
+      "ym": "2026-06",
+      "trainers": [
+        {
+          "name": "Anisha Shah",
+          "sessions": 20,
+          "customers": 173,
+          "paid": 111759.04,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 2,
+          "new": 8
+        },
+        {
+          "name": "Anmol Sharma",
+          "sessions": 12,
+          "customers": 77,
+          "paid": 58533.25,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 2,
+          "new": 4
+        },
+        {
+          "name": "Atulan Purohit",
+          "sessions": 18,
+          "customers": 118,
+          "paid": 84108.3,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 1,
+          "new": 1
+        },
+        {
+          "name": "Bret Saldanha",
+          "sessions": 32,
+          "customers": 153,
+          "paid": 117063.42,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 7,
+          "new": 8
+        },
+        {
+          "name": "Cauveri Vikrant",
+          "sessions": 35,
+          "customers": 190,
+          "paid": 166247.24,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 5,
+          "new": 12
+        },
+        {
+          "name": "Karan Bhatia",
+          "sessions": 9,
+          "customers": 38,
+          "paid": 32200.39,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 3,
+          "new": 9
+        },
+        {
+          "name": "Karanvir Bhatia",
+          "sessions": 10,
+          "customers": 34,
+          "paid": 17853.63,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 0,
+          "new": 0
+        },
+        {
+          "name": "Mrigakshi Jaiswal",
+          "sessions": 33,
+          "customers": 175,
+          "paid": 138367.41,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 0,
+          "new": 1
+        },
+        {
+          "name": "Pranjali Jain",
+          "sessions": 33,
+          "customers": 262,
+          "paid": 198671.27,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 0,
+          "new": 20
+        },
+        {
+          "name": "Raunak Khemuka",
+          "sessions": 14,
+          "customers": 46,
+          "paid": 35322.54,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 2,
+          "new": 3
+        },
+        {
+          "name": "Reshma Sharma",
+          "sessions": 26,
+          "customers": 222,
+          "paid": 157685.42,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 6,
+          "new": 12
+        },
+        {
+          "name": "Richard  D'Costa",
+          "sessions": 18,
+          "customers": 104,
+          "paid": 67812.86,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 5,
+          "new": 14
+        },
+        {
+          "name": "Rohan Dahima",
+          "sessions": 42,
+          "customers": 398,
+          "paid": 345683.46,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 7,
+          "new": 23
+        },
+        {
+          "name": "Simonelle De Vitre",
+          "sessions": 27,
+          "customers": 157,
+          "paid": 150915.32,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 7,
+          "new": 11
+        },
+        {
+          "name": "Simran Dutt",
+          "sessions": 8,
+          "customers": 46,
+          "paid": 50863.65,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 0,
+          "new": 1
+        },
+        {
+          "name": "Vivaran Dhasmana",
+          "sessions": 15,
+          "customers": 88,
+          "paid": 52896.15,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 0,
+          "new": 2
+        }
+      ],
+      "n_trainers": 16
+    },
+    "2026-07": {
+      "ym": "2026-07",
+      "trainers": [
+        {
+          "name": "Anisha Shah",
+          "sessions": 11,
+          "customers": 106,
+          "paid": 54907.4,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 1,
+          "new": 10
+        },
+        {
+          "name": "Anmol Sharma",
+          "sessions": 18,
+          "customers": 136,
+          "paid": 118476.01,
+          "converted": 0,
+          "conv_rate": 0.0,
+          "retained": 3,
+          "new": 14
+        }
+      ],
+      "n_trainers": 2
+    }
+  },
+  "active": {
+    "total": 208,
+    "bytype": {
+      "subscription": 185,
+      "package-events": 23
+    },
+    "byname": {
+      "Studio 1 Month Unlimited Membership": 33,
+      "Studio Extended 10 Single Class Pack": 31,
+      "Studio 3 Month Unlimited Membership": 28,
+      "Studio Annual Unlimited Membership": 27,
+      "Studio 12 Class Package": 25,
+      "Studio 8 Class Package": 12,
+      "Studio 20 Single Class Pack": 8,
+      "Studio 4 Class Package": 8,
+      "Studio 30 Single Class Pack": 7,
+      "Studio 6 Month Unlimited Membership": 5,
+      "Newcomers 2 For 1": 4,
+      "Studio 10 Single Class Pack": 4,
+      "Studio Private Class": 4,
+      "Studio Private Class X 10": 4,
+      "Studio Anniversary Big 85 Flex Package": 2
+    }
+  }
+}

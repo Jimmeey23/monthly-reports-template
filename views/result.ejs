@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Report Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+Pro:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="container wide">
+    <div class="editor-header">
+      <div>
+        <h1>Report Editor</h1>
+        <p class="subtitle">
+          <% if (comboCount === 1) { %>
+            <%= locations[locs[0]] %> &mdash; <%= selectedMonths[0] %>
+          <% } else { %>
+            <%= locs.length %> studio<%= locs.length > 1 ? 's' : '' %> &times; <%= selectedMonths.length %> month<%= selectedMonths.length > 1 ? 's' : '' %> &mdash; <%= comboCount %> reports bundled in one document
+          <% } %>
+        </p>
+      </div>
+      <div class="actions">
+        <a class="btn secondary" href="<%= reportUrl %>" target="_blank" rel="noopener">Open in New Tab</a>
+        <a class="btn secondary" href="/download/<%= sessionId %>/<%= encodeURIComponent(filename) %>">Download HTML</a>
+        <a class="btn btn-primary" id="download-pdf-btn" href="<%= pdfUrl %>" data-filename="<%= filename.replace(/\.html$/i, '.pdf') %>">
+          <span class="btn-label">Download PDF</span>
+        </a>
+      </div>
+    </div>
+
+    <p class="editor-hint">Edit text directly in the preview below using the <strong>Edit</strong> toolbar (bottom-right), or click <strong>Generate AI Insights</strong> inside any section for fresh, data-driven analysis.</p>
+
+    <iframe class="preview" src="<%= reportUrl %>" title="Report editor"></iframe>
+
+    <form action="/generate" method="post" class="select-form inline">
+      <input type="hidden" name="sessionId" value="<%= sessionId %>" />
+      <label class="field">
+        <span>Studio</span>
+        <select name="loc" required>
+          <% Object.entries(locations).forEach(function([key, name]) { %>
+            <option value="<%= key %>" <%= locs.includes(key) ? 'selected' : '' %>><%= name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label class="field">
+        <span>Month</span>
+        <select name="month" required>
+          <% months.forEach(function(m) { %>
+            <option value="<%= m %>" <%= selectedMonths.includes(m) ? 'selected' : '' %>><%= m %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button type="submit" class="btn secondary">Generate Another</button>
+    </form>
+
+    <a class="back-link" href="/">&larr; Upload different CSVs</a>
+  </main>
+
+  <script>
+    document.getElementById('download-pdf-btn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const btn = e.currentTarget;
+      const original = btn.innerHTML;
+      btn.innerHTML = '<span class="btn-label">Generating PDF&hellip;</span>';
+      btn.style.pointerEvents = 'none';
+      try {
+        const res = await fetch(btn.href);
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = btn.dataset.filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('PDF export failed: ' + err.message);
+      }
+      btn.innerHTML = original;
+      btn.style.pointerEvents = '';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,3108 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kwality House &middot; Performance Report &middot; June &amp; July 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+
+:root {
+  --bg: #FFFFFF; --bg-soft: #F4F6FA; --bg-card: #FFFFFF; --bg-card-hover: #FAFBFD;
+  --bg-inset: #EEF1F6; --border: #E1E5EE; --border-strong: #C8CFDD;
+  --text: #0B1A33; --text-muted: #5A6478; --text-subtle: #8C93A3;
+  --primary: #0F2C5E; --primary-2: #1E4A8F; --primary-3: #2E6BD3; --primary-soft: #E6ECF7;
+  --accent: #F5C518; --accent-2: #FFD84D; --accent-soft: #FFF7D6;
+  --good: #1F8A4C; --good-soft: #E1F4E9;
+  --warn: #B87900; --warn-soft: #FFF1D1;
+  --bad: #C0392B; --bad-soft: #FBE7E4;
+  --shadow-sm: 0 1px 2px rgba(15,44,94,0.04), 0 1px 1px rgba(15,44,94,0.03);
+  --shadow: 0 4px 12px rgba(15,44,94,0.06), 0 2px 4px rgba(15,44,94,0.04);
+  --shadow-lg: 0 12px 32px rgba(15,44,94,0.08), 0 4px 12px rgba(15,44,94,0.05);
+  --radius-sm: 6px; --radius: 10px; --radius-lg: 16px;
+  --font-sans: 'Inter','Helvetica Neue',Helvetica,Arial,system-ui,sans-serif;
+  --font-serif: 'Source Serif Pro',Georgia,'Times New Roman',serif;
+  --font-mono: 'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
+}
+[data-theme="dark"] {
+  --bg: #0A0A0A; --bg-soft: #111111; --bg-card: #141414; --bg-card-hover: #1A1A1A;
+  --bg-inset: #1C1C1C; --border: #2A2A2A; --border-strong: #3A3A3A;
+  --text: #ECECEC; --text-muted: #A8A8A8; --text-subtle: #6E6E6E;
+  --primary: #5B7BB5; --primary-2: #4266A0; --primary-3: #6E8ECB; --primary-soft: #1A2233;
+  --accent: #F5C518; --accent-2: #FFD84D; --accent-soft: #2A2510;
+  --good: #4FB97B; --good-soft: #15301F;
+  --warn: #E0A93C; --warn-soft: #2A2113;
+  --bad: #E5705E; --bad-soft: #2E1714;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
+}
+*,*::before,*::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; font-family: var(--font-sans); background: var(--bg); color: var(--text);
+  font-size: 14px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'ss01','cv11','tnum';
+  transition: background-color 200ms ease, color 200ms ease;
+}
+a { color: var(--primary-3); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.container { max-width: 1380px; margin: 0 auto; padding: 0 32px; }
+@media (max-width: 768px) { .container { padding: 0 20px; } }
+section.report-section { padding: 56px 0 32px; border-top: 1px solid var(--border); }
+section.report-section:first-of-type { border-top: none; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 12px 32px; max-width: 1380px; margin: 0 auto; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: -0.01em; }
+.brand-mark { width: 28px; height: 28px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 60%, var(--accent) 100%); border-radius: 6px; position: relative; }
+.brand-mark::after { content: ""; position: absolute; inset: 5px; background: var(--bg); border-radius: 2px; }
+.brand-mark::before { content: ""; position: absolute; left: 9px; top: 9px; width: 10px; height: 10px; background: var(--accent); border-radius: 50%; z-index: 1; }
+.brand-text { font-size: 14px; color: var(--text); }
+.brand-text small { display: block; color: var(--text-muted); font-weight: 400; font-size: 11px; letter-spacing: 0.02em; text-transform: uppercase; }
+
+.theme-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 500;
+  color: var(--text); transition: all 160ms ease; font-family: var(--font-sans);
+}
+.theme-toggle:hover { border-color: var(--primary-3); background: var(--bg-card-hover); }
+.theme-toggle svg { width: 14px; height: 14px; }
+
+.hero { position: relative; padding: 64px 0 48px; overflow: hidden; border-bottom: 1px solid var(--border); }
+.hero::before {
+  content: ""; position: absolute; top: -120px; right: -120px;
+  width: 480px; height: 480px;
+  background: radial-gradient(circle, var(--accent) 0%, transparent 65%);
+  opacity: 0.18; filter: blur(20px); pointer-events: none;
+}
+.hero::after {
+  content: ""; position: absolute; bottom: -200px; left: -100px;
+  width: 520px; height: 520px;
+  background: radial-gradient(circle, var(--primary-3) 0%, transparent 60%);
+  opacity: 0.12; filter: blur(30px); pointer-events: none;
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 6px 14px 6px 6px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 999px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600; margin-bottom: 28px; box-shadow: var(--shadow-sm);
+}
+.hero-eyebrow .dot {
+  width: 22px; height: 22px; background: var(--primary); color: white;
+  border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+}
+.hero h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(40px, 5.2vw, 68px);
+  line-height: 1.02; letter-spacing: -0.025em;
+  margin: 0 0 18px; font-weight: 600; color: var(--text); max-width: 980px;
+}
+.hero h1 .accent-word { color: var(--primary); }
+.hero h1 .accent-yellow {
+  background: linear-gradient(120deg, var(--accent) 0%, var(--accent-2) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.hero-sub { font-size: 17px; color: var(--text-muted); max-width: 760px; line-height: 1.6; margin: 0 0 40px; }
+.hero-meta {
+  display: flex; flex-wrap: wrap; gap: 32px 48px;
+  margin-bottom: 44px; padding: 24px 0;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.hero-meta-item .label { display: block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); font-weight: 600; margin-bottom: 6px; }
+.hero-meta-item .value { font-size: 15px; color: var(--text); font-weight: 500; }
+.hero-kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+@media (max-width: 1100px) { .hero-kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px)  { .hero-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.kpi-card {
+  position: relative; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px 18px 16px; overflow: hidden;
+  transition: all 200ms ease;
+}
+.kpi-card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: var(--shadow); }
+.kpi-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary); }
+.kpi-card.tone-good::before { background: var(--good); }
+.kpi-card.tone-warn::before { background: var(--warn); }
+.kpi-card.tone-bad::before  { background: var(--bad); }
+.kpi-label { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+.kpi-value { font-family: var(--font-serif); font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); line-height: 1.1; margin-bottom: 4px; }
+.kpi-sub { font-size: 11px; color: var(--text-subtle); margin-bottom: 12px; }
+.kpi-trends { display: flex; gap: 10px; font-size: 11px; margin-bottom: 8px; }
+.kpi-trend { display: inline-flex; align-items: center; gap: 4px; }
+.trend-label { color: var(--text-subtle); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.kpi-baseline { font-size: 10px; color: var(--primary); font-weight: 600; padding-top: 8px; border-top: 1px dashed var(--border); }
+[data-theme="dark"] .kpi-baseline { color: var(--accent); }
+
+.badge { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 600; font-family: var(--font-mono); letter-spacing: -0.01em; }
+.badge.good   { background: var(--good-soft);   color: var(--good); }
+.badge.bad    { background: var(--bad-soft);    color: var(--bad); }
+.badge.warn   { background: var(--warn-soft);   color: var(--warn); }
+.badge.neutral{ background: var(--bg-inset);    color: var(--text-muted); }
+
+.section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; gap: 32px; flex-wrap: wrap; }
+.section-header-left { max-width: 780px; }
+.section-eyebrow { display: inline-block; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; font-weight: 700; margin-bottom: 14px; }
+[data-theme="dark"] .section-eyebrow { color: var(--accent); }
+.section-title { font-family: var(--font-serif); font-size: 36px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; color: var(--text); line-height: 1.15; }
+.section-deck { font-size: 15px; color: var(--text-muted); line-height: 1.6; margin: 0; max-width: 720px; }
+.section-anchor { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); font-weight: 600; }
+
+.split-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 28px; align-items: start; margin-bottom: 36px; }
+@media (max-width: 1080px) { .split-grid { grid-template-columns: 1fr; } }
+.insights-pane { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; position: relative; }
+.insights-pane::before { content: ""; position: absolute; left: 0; top: 24px; bottom: 24px; width: 3px; background: var(--accent); border-radius: 0 2px 2px 0; }
+.pane-title { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin: 0 0 16px; padding-left: 12px; }
+.data-pane { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px; overflow: hidden; }
+
+.insight-card { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px dashed var(--border); }
+.insight-card:last-child { border-bottom: none; padding-bottom: 0; }
+.insight-card:first-child { padding-top: 0; }
+.insight-num { flex-shrink: 0; width: 32px; height: 32px; background: var(--primary-soft); color: var(--primary); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: var(--font-mono); letter-spacing: -0.02em; }
+[data-theme="dark"] .insight-num { background: var(--primary); color: white; }
+.insight-title { font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 4px; letter-spacing: -0.005em; }
+.insight-text { font-size: 12.5px; color: var(--text-muted); line-height: 1.55; }
+.insight-text strong { color: var(--text); font-weight: 600; background: var(--accent-soft); padding: 0 3px; border-radius: 2px; }
+
+.worked-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--radius); background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--good); }
+.worked-card.didnt { border-left-color: var(--bad); }
+.worked-icon { flex-shrink: 0; width: 24px; height: 24px; background: var(--good-soft); color: var(--good); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; font-family: var(--font-mono); }
+.worked-card.didnt .worked-icon { background: var(--bad-soft); color: var(--bad); }
+.worked-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.worked-text  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.worked-text strong { color: var(--text); font-weight: 600; background: var(--accent-soft); padding: 0 3px; border-radius: 2px; }
+.worked-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 768px) { .worked-grid { grid-template-columns: 1fr; } }
+
+.action-card { display: flex; gap: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; position: relative; overflow: hidden; }
+.action-card::before { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, var(--primary) 0%, var(--accent) 100%); }
+.action-num { flex-shrink: 0; width: 44px; height: 44px; background: var(--primary); color: white; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 18px; font-weight: 600; }
+[data-theme="dark"] .action-num { background: var(--primary-2); }
+.action-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.action-text { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px; }
+.action-text strong { color: var(--text); font-weight: 600; }
+.action-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.meta-pill { font-size: 11px; padding: 3px 10px; background: var(--bg-inset); color: var(--text-muted); border-radius: 999px; font-weight: 500; }
+.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .action-grid { grid-template-columns: 1fr; } }
+
+.conclusions-block { background: linear-gradient(135deg, var(--primary-soft) 0%, var(--bg-card) 100%); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; }
+.conclusion-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+.conclusion-item:last-child { border-bottom: none; padding-bottom: 0; }
+.conclusion-item:first-child { padding-top: 0; }
+.conclusion-num { flex-shrink: 0; width: 26px; height: 26px; background: var(--accent); color: var(--primary); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
+.conclusion-text { font-size: 13px; color: var(--text); line-height: 1.55; font-weight: 500; }
+.conclusion-text strong { color: var(--primary); font-weight: 700; }
+[data-theme="dark"] .conclusion-text strong { color: var(--accent); }
+
+.table-wrap { overflow-x: auto; border-radius: var(--radius); }
+table.data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+table.data-table thead th { text-align: right; padding: 12px 14px; background: var(--bg-inset); color: var(--text-muted); font-weight: 600; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; position: sticky; top: 0; }
+table.data-table thead th:first-child { text-align: left; border-top-left-radius: var(--radius); }
+table.data-table thead th:last-child  { border-top-right-radius: var(--radius); }
+table.data-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: right; color: var(--text); vertical-align: middle; }
+table.data-table tbody td.metric-name { text-align: left; color: var(--text); font-weight: 500; }
+table.data-table tbody tr:hover { background: var(--bg-card-hover); }
+table.data-table tbody tr:last-child td { border-bottom: none; }
+table.data-table .num strong { color: var(--primary); font-weight: 600; }
+[data-theme="dark"] table.data-table .num strong { color: var(--accent); }
+.totals-row td { background: var(--bg-inset); font-weight: 600; border-top: 2px solid var(--primary); }
+.totals-row td.metric-name { color: var(--primary); }
+[data-theme="dark"] .totals-row td.metric-name { color: var(--accent); }
+
+.fill-high { color: var(--good); font-weight: 600; }
+.fill-mid  { color: var(--warn); font-weight: 600; }
+.fill-low  { color: var(--bad);  font-weight: 600; }
+.score-high { color: var(--good); }
+.score-mid  { color: var(--warn); }
+.score-low  { color: var(--bad); }
+.status-good td.metric-name { color: var(--good); font-weight: 600; }
+.status-bad  td.metric-name { color: var(--bad);  font-weight: 600; }
+.status-neutral td.metric-name { color: var(--text-muted); }
+tr.disc-high td { background: var(--warn-soft); }
+[data-theme="dark"] tr.disc-high td { background: rgba(224,169,60,0.06); }
+
+.share-bar { display: inline-flex; align-items: center; gap: 8px; width: 120px; }
+.share-fill { height: 6px; background: linear-gradient(90deg, var(--primary) 0%, var(--primary-3) 100%); border-radius: 3px; min-width: 2px; }
+.share-bar span { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+
+.heatmap-table { width: 100%; border-collapse: separate; border-spacing: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.heatmap-table th { padding: 8px 10px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; text-align: center; }
+.heatmap-table th.slot-label { text-align: left; color: var(--text); font-family: var(--font-mono); }
+.heat-cell { text-align: center; padding: 14px 8px; border-radius: 6px; font-weight: 600; color: white; font-family: var(--font-mono); font-size: 11px; }
+.heat-none { background: var(--bg-inset); color: var(--text-subtle); }
+.heat-1 { background: color-mix(in srgb, var(--bad) 70%, transparent); }
+.heat-2 { background: color-mix(in srgb, var(--warn) 75%, transparent); }
+.heat-3 { background: color-mix(in srgb, var(--primary-3) 75%, transparent); }
+.heat-4 { background: color-mix(in srgb, var(--good) 70%, var(--primary-3) 30%); }
+.heat-5 { background: var(--good); }
+
+.funnel-stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+@media (max-width: 768px) { .funnel-stages { grid-template-columns: 1fr 1fr; } }
+.funnel-stage { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; position: relative; text-align: center; }
+.funnel-stage::after { content: ""; position: absolute; right: -16px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 8px solid var(--border); border-top: 8px solid transparent; border-bottom: 8px solid transparent; z-index: 1; }
+.funnel-stage:last-child::after { display: none; }
+.funnel-stage-num { font-family: var(--font-serif); font-size: 36px; font-weight: 600; color: var(--primary); letter-spacing: -0.02em; line-height: 1; margin-bottom: 6px; }
+[data-theme="dark"] .funnel-stage-num { color: var(--accent); }
+.funnel-stage-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+.funnel-stage-sub { font-size: 11px; color: var(--text-subtle); }
+.funnel-stage.conv .funnel-stage-num { color: var(--good); }
+[data-theme="dark"] .funnel-stage.conv .funnel-stage-num { color: var(--good); }
+
+.callout { background: linear-gradient(135deg, var(--primary-soft) 0%, var(--bg-card) 100%); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 18px 22px; font-size: 13px; color: var(--text); line-height: 1.6; margin: 20px 0; }
+.callout strong { color: var(--primary); font-weight: 600; }
+[data-theme="dark"] .callout strong { color: var(--accent); }
+
+.subsection { margin-top: 40px; margin-bottom: 18px; }
+.subsection-title { font-family: var(--font-serif); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; color: var(--text); margin: 0 0 8px; }
+.subsection-deck { font-size: 13.5px; color: var(--text-muted); margin: 0 0 20px; max-width: 820px; line-height: 1.55; }
+
+.footer { padding: 48px 0 64px; border-top: 1px solid var(--border); margin-top: 64px; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; }
+@media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr; } }
+.footer-brand-text { font-family: var(--font-serif); font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.footer-text { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+.footer-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; margin-bottom: 8px; }
+
+@media print {
+  .topbar, .theme-toggle, .hero::before, .hero::after { display: none; }
+  body { font-size: 11px; }
+  .hero { padding: 24px 0; }
+  section.report-section { page-break-inside: avoid; padding: 24px 0; }
+}
+
+
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        Kwality House &middot; Studio Pulse
+        <small>Performance Report &middot; June &amp; July 2026</small>
+      </div>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+      </svg>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="container hero-content">
+    <div class="hero-eyebrow">
+      <span class="dot">KH</span>
+      Senior Management Review &middot; Period: 01 June &mdash; 31 July 2026
+    </div>
+    <h1>
+      Kwality House <span class="accent-word">studio performance</span><br>
+      for <span class="accent-yellow">June &amp; July 2026</span> &mdash; the studio has never been busier, yet revenue and conversion are pulling in opposite directions.
+    </h1>
+    <p class="hero-sub">
+      A data-led review of the studio&rsquo;s commercial and operational performance across June and July 2026, benchmarked against the
+      <strong>January &ndash; March 2026 baseline</strong>, May 2026, and the same months year-on-year. July delivered the highest
+      visit volume and fill rate in eight months, but net sales contracted to &#8377;14.13L and the conversion rate halved. Every
+      section is structured to surface a business decision &mdash; monetising attendance, repairing the conversion funnel, and
+      sustaining the discount discipline that has now been restored &mdash; that senior management can act on this quarter.
+    </p>
+
+    <div class="hero-meta">
+      <div class="hero-meta-item"><span class="label">Location</span><span class="value">Kwality House, Kemps Corner</span></div>
+      <div class="hero-meta-item"><span class="label">Period</span><span class="value">01 June &mdash; 31 July 2026</span></div>
+      <div class="hero-meta-item"><span class="label">Reporting basis</span><span class="value">July: &#8377;14.13L net &middot; 368 sessions &middot; 128 buyers</span></div>
+      <div class="hero-meta-item"><span class="label">Comparators</span><span class="value">Jun 2026 &middot; May 2026 &middot; Jan&ndash;Mar avg &middot; YoY</span></div>
+      <div class="hero-meta-item"><span class="label">Audience</span><span class="value">Senior Management &middot; Board Review</span></div>
+    </div>
+
+    <div class="hero-kpi-grid">
+      <div class="kpi-card tone-bad">
+          <div class="kpi-label">Net Sales</div>
+          <div class="kpi-value">&#8377;14.13L</div>
+          <div class="kpi-sub">Gross &#8377;14.87L &middot; Disc &#8377;1.51L</div>
+          <div class="kpi-trends">
+            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class="badge bad">-32.0%</span></span>
+            <span class="kpi-trend"><span class="trend-label">YoY</span> <span class="badge bad">-21.1%</span></span>
+          </div>
+          <div class="kpi-baseline">-33.4% vs Jan&ndash;Mar</div>
+        </div><div class="kpi-card tone-good">
+          <div class="kpi-label">Visits</div>
+          <div class="kpi-value">2,432</div>
+          <div class="kpi-sub">Across 368 sessions</div>
+          <div class="kpi-trends">
+            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class="badge good">+6.6%</span></span>
+            <span class="kpi-trend"><span class="trend-label">YoY</span> <span class="badge good">+27.9%</span></span>
+          </div>
+          <div class="kpi-baseline">Highest in 8 months</div>
+        </div><div class="kpi-card tone-good">
+          <div class="kpi-label">Fill Rate</div>
+          <div class="kpi-value">47.3%</div>
+          <div class="kpi-sub">Capacity utilization</div>
+          <div class="kpi-trends">
+            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class="badge neutral">+1.0pp</span></span>
+            <span class="kpi-trend"><span class="trend-label">YoY</span> <span class="badge neutral">+3.8pp</span></span>
+          </div>
+          <div class="kpi-baseline">Best fill in 8 months</div>
+        </div><div class="kpi-card tone-bad">
+          <div class="kpi-label">Conversion Rate</div>
+          <div class="kpi-value">9.9%</div>
+          <div class="kpi-sub">151 leads &rarr; 15 converted</div>
+          <div class="kpi-trends">
+            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class="badge bad">-59.0%</span></span>
+            <span class="kpi-trend"><span class="trend-label">YoY</span> <span class="badge bad">-59.3%</span></span>
+          </div>
+          <div class="kpi-baseline">Halved vs June</div>
+        </div><div class="kpi-card tone-warn">
+          <div class="kpi-label">Lapsed Members</div>
+          <div class="kpi-value">298</div>
+          <div class="kpi-sub">Churn rate 40.8%</div>
+          <div class="kpi-trends">
+            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class="badge good">+10.0%</span></span>
+            <span class="kpi-trend"><span class="trend-label">Renewals</span> <span class="badge neutral">411</span></span>
+          </div>
+          <div class="kpi-baseline">978 cumulative unique</div>
+        </div><div class="kpi-card tone-good">
+          <div class="kpi-label">Discount Efficiency</div>
+          <div class="kpi-value">&#8377;9.35</div>
+          <div class="kpi-sub">Net rev / &#8377;1 discounted</div>
+          <div class="kpi-trends">
+            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class="badge good">+2.6%</span></span>
+            <span class="kpi-trend"><span class="trend-label">YoY</span> <span class="badge bad">-15.5%</span></span>
+          </div>
+          <div class="kpi-baseline">Discipline restored</div>
+        </div>
+    </div>
+  </div>
+</section>
+<section class="report-section" id="executive-summary">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-header-left">
+        <span class="section-eyebrow">01 &middot; Executive Summary</span>
+        <h2 class="section-title">July delivered the highest attendance in eight months but the lowest revenue of 2026 &mdash; the studio has a conversion problem, not a demand problem.</h2>
+        <p class="section-deck">
+          Headline revenue contracted to <strong>&#8377;14.13L</strong>, down -32.0% from June and
+          -33.4% below the Jan &ndash; Mar baseline. The proximate cause is buyer count: only
+          <strong>128 unique buyers</strong> transacted &mdash; the lowest of 2026 &mdash; even as visits hit
+          <strong>2,432</strong> at <strong>47.3% fill</strong>. The conversion rate halved to
+          <strong>9.9%</strong>. The structural positive is <strong>discount discipline</strong>: at
+          &#8377;1.51L and &#8377;9.35 efficiency, July is the most discount-disciplined month of the year.
+        </p>
+      </div>
+      <div class="section-anchor">Section 01 / 07</div>
+    </div>
+
+    <div class="split-grid">
+      <div class="insights-pane">
+        <div class="pane-title">Key Insights &middot; July 2026</div>
+        <div class="insight-card">
+      <div class="insight-num">01</div>
+      <div class="insight-body">
+        <div class="insight-title">Attendance is at an eight-month high &mdash; revenue is not.</div>
+        <div class="insight-text">July delivered <strong>2,432 visits</strong> across 368 sessions at <strong>47.3% fill</strong> &mdash; the highest volume and utilisation since January. Yet net sales fell to <strong>&#8377;14.13L</strong>, down -32.0% MoM. The studio is monetising attendance less efficiently than at any point in 2026.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">02</div>
+      <div class="insight-body">
+        <div class="insight-title">Conversion rate halved month-on-month.</div>
+        <div class="insight-text">151 leads produced only <strong>15 conversions</strong> &mdash; a 9.9% conversion rate, down from 24.2% in June. The lead pipeline grew 18% MoM, but the conversion mechanism broke down. June converted 31 of 128 leads; July converted half as many despite more leads at the top.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">03</div>
+      <div class="insight-body">
+        <div class="insight-title">Discount discipline has been restored.</div>
+        <div class="insight-text">Discount value fell to <strong>&#8377;1.51L</strong> &mdash; down -34% MoM and -60% vs the Jan&ndash;Mar baseline. Discount efficiency improved to <strong>&#8377;9.35</strong> of net revenue per &#8377;1 discounted, the best reading in 2026. The May anniversary discount hangover has been fully corrected.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">04</div>
+      <div class="insight-body">
+        <div class="insight-title">Buyer count contracted sharply.</div>
+        <div class="insight-text">Only <strong>128 unique buyers</strong> transacted in July, down from 217 in June (-41.0% MoM) and -31.7% below the Jan&ndash;Mar baseline. The transaction count fell to 200. This is the proximate cause of the revenue decline &mdash; fewer people are buying, even as more people are attending.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">05</div>
+      <div class="insight-body">
+        <div class="insight-title">Churn rate is stable but the lapsed book is growing.</div>
+        <div class="insight-text">298 members lapsed in July at a 40.8% churn rate &mdash; broadly stable vs June&rsquo;s 42.7%. But cumulative unique lapsed members now stand at <strong>978</strong>, and only <strong>208</strong> active memberships remain. The renewal engine renewed 411 of 730 expirations (56.3%), but the gap between lapses and renewals is widening in absolute terms.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">06</div>
+      <div class="insight-body">
+        <div class="insight-title">June was a strong month that set a high bar.</div>
+        <div class="insight-text">June delivered <strong>&#8377;20.77L</strong> net sales with 31 conversions at 24.2%, 2,281 visits, and 217 buyers &mdash; all above baseline. July&rsquo;s decline is measured against a genuinely strong June, not a weak one. The two-month picture is one of a strong June followed by a volume-led but revenue-soft July.</div>
+      </div>
+    </div>
+      </div>
+      <div class="data-pane">
+        <div class="pane-title">Headline KPI Comparison</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Jul 2026</th>
+                <th>Jun 2026</th>
+                <th>Jan &ndash; Mar Avg</th>
+                <th>Jul vs Baseline</th>
+                <th>Jul vs Jun</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+          <td class="metric-name">Gross Sales</td>
+          <td class="num"><strong>&#8377;14.87L</strong></td>
+          <td class="num">&#8377;21.81L</td>
+          <td class="num">&#8377;22.28L</td>
+          <td class="num"><span class="badge bad">-33.3%</span></td>
+          <td class="num"><span class="badge bad">-31.8%</span></td>
+        </tr><tr>
+          <td class="metric-name">Net Sales</td>
+          <td class="num"><strong>&#8377;14.13L</strong></td>
+          <td class="num">&#8377;20.77L</td>
+          <td class="num">&#8377;21.21L</td>
+          <td class="num"><span class="badge bad">-33.4%</span></td>
+          <td class="num"><span class="badge bad">-32.0%</span></td>
+        </tr><tr>
+          <td class="metric-name">Transactions</td>
+          <td class="num"><strong>200</strong></td>
+          <td class="num">322</td>
+          <td class="num">317</td>
+          <td class="num"><span class="badge bad">-36.9%</span></td>
+          <td class="num"><span class="badge bad">-37.9%</span></td>
+        </tr><tr>
+          <td class="metric-name">Unique Buyers</td>
+          <td class="num"><strong>128</strong></td>
+          <td class="num">217</td>
+          <td class="num">187</td>
+          <td class="num"><span class="badge bad">-31.7%</span></td>
+          <td class="num"><span class="badge bad">-41.0%</span></td>
+        </tr><tr>
+          <td class="metric-name">Avg Transaction Value</td>
+          <td class="num"><strong>&#8377;7,433</strong></td>
+          <td class="num">&#8377;6,772</td>
+          <td class="num">&#8377;7,076</td>
+          <td class="num"><span class="badge good">+5.1%</span></td>
+          <td class="num"><span class="badge good">+9.8%</span></td>
+        </tr><tr>
+          <td class="metric-name">Avg Revenue / Member</td>
+          <td class="num"><strong>&#8377;11,037</strong></td>
+          <td class="num">&#8377;9,571</td>
+          <td class="num">&#8377;11,312</td>
+          <td class="num"><span class="badge bad">-2.4%</span></td>
+          <td class="num"><span class="badge good">+15.3%</span></td>
+        </tr><tr>
+          <td class="metric-name">Discount Value</td>
+          <td class="num"><strong>&#8377;1.51L</strong></td>
+          <td class="num">&#8377;2.28L</td>
+          <td class="num">&#8377;3.77L</td>
+          <td class="num"><span class="badge good">-59.9%</span></td>
+          <td class="num"><span class="badge good">-33.7%</span></td>
+        </tr><tr>
+          <td class="metric-name">Discount Penetration</td>
+          <td class="num"><strong>11.0%</strong></td>
+          <td class="num">13.7%</td>
+          <td class="num">0.0%</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge good">-19.5%</span></td>
+        </tr><tr>
+          <td class="metric-name">Discount Efficiency</td>
+          <td class="num"><strong>&#8377;9</strong></td>
+          <td class="num">&#8377;9</td>
+          <td class="num">&#8377;6</td>
+          <td class="num"><span class="badge good">+66.1%</span></td>
+          <td class="num"><span class="badge good">+2.6%</span></td>
+        </tr><tr>
+          <td class="metric-name">Sessions</td>
+          <td class="num"><strong>368</strong></td>
+          <td class="num">352</td>
+          <td class="num">&mdash;</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge good">+4.5%</span></td>
+        </tr><tr>
+          <td class="metric-name">Visits</td>
+          <td class="num"><strong>2,432</strong></td>
+          <td class="num">2,281</td>
+          <td class="num">&mdash;</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge good">+6.6%</span></td>
+        </tr><tr>
+          <td class="metric-name">Fill Rate</td>
+          <td class="num"><strong>47.3%</strong></td>
+          <td class="num">46.3%</td>
+          <td class="num">0.0%</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge good">+2.1%</span></td>
+        </tr><tr>
+          <td class="metric-name">Leads</td>
+          <td class="num"><strong>151</strong></td>
+          <td class="num">128</td>
+          <td class="num">&mdash;</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge good">+18.0%</span></td>
+        </tr><tr>
+          <td class="metric-name">Converted Members</td>
+          <td class="num"><strong>15</strong></td>
+          <td class="num">31</td>
+          <td class="num">&mdash;</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge bad">-51.6%</span></td>
+        </tr><tr>
+          <td class="metric-name">Conversion Rate</td>
+          <td class="num"><strong>9.9%</strong></td>
+          <td class="num">24.2%</td>
+          <td class="num">0.0%</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge bad">-59.0%</span></td>
+        </tr><tr>
+          <td class="metric-name">Lapsed Members</td>
+          <td class="num"><strong>298</strong></td>
+          <td class="num">271</td>
+          <td class="num">&mdash;</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge bad">+10.0%</span></td>
+        </tr><tr>
+          <td class="metric-name">Churn Rate</td>
+          <td class="num"><strong>40.8%</strong></td>
+          <td class="num">42.7%</td>
+          <td class="num">0.0%</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge good">-4.3%</span></td>
+        </tr><tr>
+          <td class="metric-name">Renewal Rate</td>
+          <td class="num"><strong>56.3%</strong></td>
+          <td class="num">56.7%</td>
+          <td class="num">0.0%</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge bad">-0.7%</span></td>
+        </tr><tr>
+          <td class="metric-name">Active Memberships</td>
+          <td class="num"><strong>208</strong></td>
+          <td class="num">0</td>
+          <td class="num">&mdash;</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+        </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">What worked / What did not work</h3>
+      <p class="subsection-deck">A balanced read on July 2026 &mdash; every item below is anchored to a number in the headline KPI table above.</p>
+    </div>
+    <div class="worked-grid">
+      <div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Visit volume and fill rate hit eight-month highs.</div>
+        <div class="worked-text">2,432 visits across 368 sessions at 47.3% fill &mdash; up from 2,281 visits at 46.3% in June. Only 16 empty sessions. The schedule is delivering attendance at a rate the studio has not seen since January.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Discount discipline fully restored post-anniversary.</div>
+        <div class="worked-text">Discount value at &#8377;1.51L is -34% below June and -60% below the Jan&ndash;Mar baseline. Discount efficiency at &#8377;9.35 is the best reading of 2026 &mdash; every rupee of discount now generates 9.4x in net revenue.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Lead pipeline grew month-on-month.</div>
+        <div class="worked-text">151 leads in July vs 128 in June &mdash; a 18% increase. The top-of-funnel is not the constraint; the breakdown is in the conversion stage, which is a more addressable problem than lead scarcity.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Average transaction value held above baseline.</div>
+        <div class="worked-text">ATV at &#8377;7,433 is 5.1% above the Jan&ndash;Mar baseline of &#8377;7,076, despite the buyer contraction. Those who are buying are spending at healthy ticket sizes &mdash; the issue is buyer count, not pricing.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Renewal volume kept pace with rising expirations.</div>
+        <div class="worked-text">411 renewals from 730 expirations (56.3%) &mdash; renewal rate held within 0.4pp of June despite a 15% increase in expiration volume. The renewal engine is scaling with the membership base.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Late-cancel volume fell even as bookings rose.</div>
+        <div class="worked-text">295 late cancels vs 257 in June, despite 7% more bookings. Heavy cancelers (6+ cancels) fell from 6 to 4. Booking discipline is improving.</div>
+      </div>
+    </div>
+      <div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Net sales contracted 32% month-on-month.</div>
+        <div class="worked-text">&#8377;14.13L vs &#8377;20.77L in June &mdash; a -32.0% decline. This is -33.4% below the Jan&ndash;Mar baseline, making July the weakest revenue month of 2026 outside of the seasonal lows.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Conversion rate halved to 9.9%.</div>
+        <div class="worked-text">15 conversions from 151 leads (9.9%) vs 31 from 128 (24.2%) in June. The lead-to-member conversion mechanism deteriorated sharply &mdash; the single biggest operational issue this month.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Buyer count fell to 128 &mdash; the lowest of 2026.</div>
+        <div class="worked-text">128 unique buyers is -41.0% below June and -31.7% below baseline. 200 transactions is also the lowest of the year. Attendance is up but the paying base is shrinking.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Website and walk-in channels converted zero leads.</div>
+        <div class="worked-text">25 Website leads and 7 walk-in leads each produced 0 conversions. Together, these channels consumed 32 leads (21% of the pipeline) and generated zero revenue &mdash; the largest leakage point in the funnel.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Hosted-class funnel continued to under-convert.</div>
+        <div class="worked-text">34 Hosted Class leads &rarr; only 1 conversion (2.9%). This is structurally consistent with May&rsquo;s 3.4% rate. The hosted-class format generates attendance but not buyers &mdash; a persistent conversion gap.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Absolute lapsed count rose despite stable churn.</div>
+        <div class="worked-text">298 lapsed members vs 271 in June &mdash; a 10.0% increase. While the churn rate is stable at ~41%, the growing membership base means more absolute lapses each month. Cumulative unique lapsed now stands at 978.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Session revenue grew but sales revenue fell.</div>
+        <div class="worked-text">Session-attributed revenue rose to &#8377;21.03L (17.8% MoM), yet product sales fell to &#8377;14.87L. The gap suggests members are attending on existing packages rather than purchasing new ones &mdash; a consumption-over-acquisition pattern.</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Action items for the next 30 days</h3>
+      <p class="subsection-deck">Each action is anchored to a metric in the table above and assigned an owner, a priority, and an impact rating.</p>
+    </div>
+    <div class="action-grid">
+      <div class="action-card">
+      <div class="action-num">01</div>
+      <div class="action-body">
+        <div class="action-title">Repair the conversion funnel as the #1 priority.</div>
+        <div class="action-text">The conversion rate halved from 24.2% to 9.9% despite a larger lead pipeline. Audit the trial-to-sale handoff process: assign a dedicated conversion owner per trial, implement a 48-hour post-trial follow-up cadence (Day 1 thank-you, Day 3 trainer check-in, Day 7 limited-time offer), and target a return to 20%+ conversion by September. The 151 leads are there &mdash; the mechanism to convert them is not.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Studio Head + Member Experience</span>
+          <span class="meta-pill">Priority: Critical</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">02</div>
+      <div class="action-body">
+        <div class="action-title">Monetise the attendance surge with package conversion drives.</div>
+        <div class="action-text">2,432 visits at 47.3% fill represents the highest attendance in 8 months, but only 128 buyers transacted. Launch a &ldquo;visit-to-value&rdquo; campaign: identify the top 50 highest-attending non-members and offer a time-limited package upgrade. Target: convert 15% of high-frequency drop-in attendees to package holders within 30 days.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Sales + Operations</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">03</div>
+      <div class="action-body">
+        <div class="action-title">Fix the zero-conversion channels (Website, Walk-in).</div>
+        <div class="action-text">32 leads from Website (25) and Walk-in (7) channels produced zero conversions. Instrument the website form with a 2-hour first-response SLA, and assign walk-in leads to a specific front-desk closer with a same-day follow-up requirement. These are high-intent channels &mdash; the leakage is operational, not demand-side.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Front Desk + Marketing</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: Medium</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">04</div>
+      <div class="action-body">
+        <div class="action-title">Sustain the discount discipline &mdash; do not relax.</div>
+        <div class="action-text">July&rsquo;s discount efficiency of &#8377;9.35 is the best of 2026. Maintain the hard-cap framework introduced post-May: discount penetration below 12%, Privates on a no-discount list, and discount authority limited to the Studio Head. The temptation to discount-drive revenue in a soft month must be resisted &mdash; the May experience proves it destroys efficiency.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Studio Head + Finance</span>
+          <span class="meta-pill">Priority: Medium</span>
+          <span class="meta-pill">Impact: Medium</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">05</div>
+      <div class="action-body">
+        <div class="action-title">Reactivate the lapsed book with a tiered win-back campaign.</div>
+        <div class="action-text">978 cumulative unique lapsed members represent the highest-leverage revenue opportunity. Segment by recency (lapsed &lt;3 months, 3&ndash;6 months, 6+ months) and product type (1-Month Unlimited holders are the largest segment at 221). Offer a tiered win-back: free class + discounted restart for &lt;3mo, referral-credit for 3&ndash;6mo, fresh-trial for 6+mo. Target: 50 reactivations in Q3.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Member Experience + Studio Head</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Data-backed conclusions for senior management</h3>
+    </div>
+    <div class="conclusions-block">
+      <div class="conclusion-item">
+      <span class="conclusion-num">01</span>
+      <span class="conclusion-text"><strong>July is a volume-without-revenue month &mdash; the opposite of the May anniversary problem.</strong> The studio has never been busier (2,432 visits, 47.3% fill), yet net sales at &#8377;14.13L are the lowest of 2026. The issue is buyer count (128), not attendance or pricing.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">02</span>
+      <span class="conclusion-text"><strong>The conversion funnel is the binding constraint.</strong> A 9.9% conversion rate with 151 leads means 136 leads entered the studio and left without buying. Restoring conversion to June&rsquo;s 24.2% alone would add ~21 conversions and approximately &#8377;2.72L in monthly revenue.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">03</span>
+      <span class="conclusion-text"><strong>Discount discipline is the one structural win to protect.</strong> July&rsquo;s &#8377;9.35 discount efficiency is the best of 2026 and validates the post-May correction. Any short-term temptation to discount-drive revenue in a soft month would reverse this gain &mdash; the data is unambiguous.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">04</span>
+      <span class="conclusion-text"><strong>June was a genuinely strong month &mdash; July&rsquo;s decline is not a reversion to a weak norm.</strong> June&rsquo;s &#8377;20.77L net, 31 conversions, and 217 buyers all exceeded baseline. The two-month picture is strong-then-soft, not a sustained deterioration &mdash; but the trend direction demands intervention.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">05</span>
+      <span class="conclusion-text"><strong>The lapsed book is the largest unrealised revenue pool.</strong> 978 cumulative unique lapsed members &mdash; led by 221 1-Month Unlimited holders &mdash; represent a reactivation opportunity worth an estimated &#8377;35&ndash;50L in LTV recovery if even 15% are reactivated.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">06</span>
+      <span class="conclusion-text"><strong>Attendance and sales are now decoupled &mdash; this is a strategic warning sign.</strong> When visits rise 7% MoM while sales fall 32%, the business model is leaking value at the attendance-to-purchase boundary. The fix is not more attendance &mdash; it is better conversion of existing attendance into recurring revenue.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">07</span>
+      <span class="conclusion-text"><strong>The studio is one conversion-focused quarter from a structural step-up.</strong> If the conversion rate is restored to 20%+ and the discount discipline is held, the attendance base of 2,400+ monthly visits provides the raw material for &#8377;25&ndash;30L net sales &mdash; a 75&ndash;110% lift from July&rsquo;s &#8377;14.13L.</span>
+    </div>
+    </div>
+  </div>
+</section>
+<section class="report-section" id="revenue-performance">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-header-left">
+        <span class="section-eyebrow">02 &middot; Revenue &amp; Sales Performance</span>
+        <h2 class="section-title">Memberships and Class Packages drove the -32% revenue decline, while drop-in sales held steady &mdash; confirming an attendance-acquisition gap that is the studio&rsquo;s most addressable revenue lever.</h2>
+        <p class="section-deck">
+          Gross sales of <strong>&#8377;14.87L</strong> are -31.8% below June and -33.3% below the Jan &ndash; Mar baseline.
+          The decline is concentrated in Memberships (-4.9% MoM) and Class Packages (-51.6% MoM) &mdash; the studio&rsquo;s recurring-revenue
+          products. Drop-in sales held flat, confirming that members are attending but not upgrading. Privates margin normalised
+          after the May discount correction. Discount discipline at &#8377;1.51L (11.0% penetration) is the best of 2026.
+        </p>
+      </div>
+      <div class="section-anchor">Section 02 / 07</div>
+    </div>
+
+    <div class="split-grid">
+      <div class="insights-pane">
+        <div class="pane-title">Revenue insights &middot; July 2026</div>
+        <div class="insight-card">
+      <div class="insight-num">01</div>
+      <div class="insight-body">
+        <div class="insight-title">Memberships remain the revenue anchor at 8.0L (54% of gross).</div>
+        <div class="insight-text">Memberships delivered &#8377;8.02L across 17 transactions &mdash; the single largest revenue category. However, this is -4.9% below June&rsquo;s &#8377;8.44L. The 1-Month and 3-Month Unlimited products drove the decline, while Annual Unlimited held steady.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">02</div>
+      <div class="insight-body">
+        <div class="insight-title">Class Packages contracted -51.6% MoM.</div>
+        <div class="insight-text">Class Packages generated &#8377;4.06L from 33 transactions vs &#8377;8.38L from 67 in June. The 12-Class and 8-Class packages &mdash; the studio&rsquo;s mid-tier workhorses &mdash; both saw fewer units sold, directly contributing to the buyer-count decline.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">03</div>
+      <div class="insight-body">
+        <div class="insight-title">Drop-in sales held steady &mdash; confirming the attendance-acquisition gap.</div>
+        <div class="insight-text">Sessions/Single Classes generated &#8377;1.33L from 72 transactions, broadly flat vs June&rsquo;s &#8377;1.98L. This confirms the pattern: members are attending (and paying per-session) but not upgrading to packages or memberships &mdash; the consumption-over-acquisition dynamic.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">04</div>
+      <div class="insight-body">
+        <div class="insight-title">Privates discount ratio normalised to 36.8%.</div>
+        <div class="insight-text">Privates delivered &#8377;0.83L with &#8377;0.30L in discounts &mdash; a 36.8% discount ratio, down dramatically from May&rsquo;s -52% ratio. The no-discount-Privates correction is working. Revenue is lower, but margin per session is positive for the first time in months.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">05</div>
+      <div class="insight-body">
+        <div class="insight-title">Custom (in-studio) payments dominate at 58% of gross.</div>
+        <div class="insight-text">&#8377;8.63L transacted in-studio across 113 transactions &mdash; the largest payment channel. Cash contributed &#8377;3.69L (37 txn) and Stripe online &#8377;1.53L (35 txn).</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">06</div>
+      <div class="insight-body">
+        <div class="insight-title">Seller mix is concentrated but healthy.</div>
+        <div class="insight-text">The top seller drove &#8377;4.06L (27% of gross) across 49 transactions. The system/unattributed bucket at &#8377;1.53L represents online self-service purchases &mdash; a growing channel that needs better attribution tracking.</div>
+      </div>
+    </div>
+      </div>
+      <div class="data-pane">
+        <div class="pane-title">Sales by Category</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Jul Revenue</th>
+                <th>Units</th>
+                <th>Jun Revenue</th>
+                <th>MoM</th>
+                <th>Share</th>
+                <th>Mix</th>
+                <th>Disc Ratio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+          <td class="metric-name">Memberships</td>
+          <td class="num"><strong>&#8377;8.02L</strong></td>
+          <td class="num">17</td>
+          <td class="num">&#8377;8.44L</td>
+          <td class="num"><span class="badge bad">-4.9%</span></td>
+          <td class="num">53.9%</td>
+          <td class="num"><div class="share-bar"><div class="share-fill" style="width:65px"></div></div></td>
+          <td class="num">12.2%</td>
+        </tr><tr>
+          <td class="metric-name">Class Packages</td>
+          <td class="num"><strong>&#8377;4.06L</strong></td>
+          <td class="num">33</td>
+          <td class="num">&#8377;8.38L</td>
+          <td class="num"><span class="badge bad">-51.6%</span></td>
+          <td class="num">27.3%</td>
+          <td class="num"><div class="share-bar"><div class="share-fill" style="width:33px"></div></div></td>
+          <td class="num">5.5%</td>
+        </tr><tr>
+          <td class="metric-name">Sessions/Single Classes</td>
+          <td class="num"><strong>&#8377;1.33L</strong></td>
+          <td class="num">72</td>
+          <td class="num">&#8377;1.98L</td>
+          <td class="num"><span class="badge bad">-33.1%</span></td>
+          <td class="num">8.9%</td>
+          <td class="num"><div class="share-bar"><div class="share-fill" style="width:11px"></div></div></td>
+          <td class="num">0.0%</td>
+        </tr><tr>
+          <td class="metric-name">Privates</td>
+          <td class="num"><strong>&#8377;0.83L</strong></td>
+          <td class="num">7</td>
+          <td class="num">&#8377;0.65L</td>
+          <td class="num"><span class="badge good">+27.6%</span></td>
+          <td class="num">5.6%</td>
+          <td class="num"><div class="share-bar"><div class="share-fill" style="width:7px"></div></div></td>
+          <td class="num">36.8%</td>
+        </tr><tr>
+          <td class="metric-name">Retail</td>
+          <td class="num"><strong>&#8377;0.32L</strong></td>
+          <td class="num">40</td>
+          <td class="num">&#8377;0.32L</td>
+          <td class="num"><span class="badge bad">-0.4%</span></td>
+          <td class="num">2.2%</td>
+          <td class="num"><div class="share-bar"><div class="share-fill" style="width:3px"></div></div></td>
+          <td class="num">0.0%</td>
+        </tr><tr>
+          <td class="metric-name">Money Credits</td>
+          <td class="num"><strong>&#8377;0.11L</strong></td>
+          <td class="num">20</td>
+          <td class="num">&#8377;0.61L</td>
+          <td class="num"><span class="badge bad">-81.9%</span></td>
+          <td class="num">0.7%</td>
+          <td class="num"><div class="share-bar"><div class="share-fill" style="width:1px"></div></div></td>
+          <td class="num">0.0%</td>
+        </tr><tr>
+          <td class="metric-name">Newcomers Special</td>
+          <td class="num"><strong>&#8377;0.15L</strong></td>
+          <td class="num">8</td>
+          <td class="num">&#8377;0.26L</td>
+          <td class="num"><span class="badge bad">-42.9%</span></td>
+          <td class="num">1.0%</td>
+          <td class="num"><div class="share-bar"><div class="share-fill" style="width:1px"></div></div></td>
+          <td class="num">0.0%</td>
+        </tr><tr>
+          <td class="metric-name">Others</td>
+          <td class="num"><strong>&#8377;0.06L</strong></td>
+          <td class="num">3</td>
+          <td class="num">&#8377;1.17L</td>
+          <td class="num"><span class="badge bad">-95.3%</span></td>
+          <td class="num">0.4%</td>
+          <td class="num"><div class="share-bar"><div class="share-fill" style="width:0px"></div></div></td>
+          <td class="num">0.0%</td>
+        </tr><tr class="totals-row">
+      <td class="metric-name">Total</td>
+      <td class="num">&#8377;14.87L</td>
+      <td class="num">200</td>
+      <td class="num">&#8377;21.81L</td>
+      <td class="num"><span class="badge bad">-31.8%</span></td>
+      <td class="num">100.0%</td>
+      <td class="num"></td>
+      <td class="num">10.2%</td>
+    </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Top Products &mdash; where the money actually came from</h3>
+      <p class="subsection-deck">The 12 highest-revenue products in July 2026, sorted by gross revenue. Discount ratio is discount value as a percentage of product revenue.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Jul Revenue</th>
+            <th>Units</th>
+            <th>Jun Revenue</th>
+            <th>MoM</th>
+            <th>Disc Ratio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">Studio Annual Unlimited</td>
+          <td class="num"><strong>&#8377;3.23L</strong></td>
+          <td class="num">2</td>
+          <td class="num">&#8377;0.00L</td>
+          <td class="num"><span class="badge neutral">&mdash;</span></td>
+          <td class="num">23.8%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 3 Month Unlimited</td>
+          <td class="num"><strong>&#8377;2.05L</strong></td>
+          <td class="num">4</td>
+          <td class="num">&#8377;3.74L</td>
+          <td class="num"><span class="badge bad">-45.2%</span></td>
+          <td class="num">3.7%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 12 Class Package</td>
+          <td class="num"><strong>&#8377;1.80L</strong></td>
+          <td class="num">12</td>
+          <td class="num">&#8377;3.55L</td>
+          <td class="num"><span class="badge bad">-49.3%</span></td>
+          <td class="num">5.0%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 1 Month Unlimited</td>
+          <td class="num"><strong>&#8377;1.45L</strong></td>
+          <td class="num">8</td>
+          <td class="num">&#8377;3.55L</td>
+          <td class="num"><span class="badge bad">-59.0%</span></td>
+          <td class="num">2.4%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 6 Month Unlimited</td>
+          <td class="num"><strong>&#8377;0.94L</strong></td>
+          <td class="num">1</td>
+          <td class="num">&#8377;0.94L</td>
+          <td class="num"><span class="badge neutral">0.0%</span></td>
+          <td class="num">10.6%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 8 Class Package</td>
+          <td class="num"><strong>&#8377;0.92L</strong></td>
+          <td class="num">9</td>
+          <td class="num">&#8377;1.38L</td>
+          <td class="num"><span class="badge bad">-33.0%</span></td>
+          <td class="num">4.1%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Single Class</td>
+          <td class="num"><strong>&#8377;0.76L</strong></td>
+          <td class="num">42</td>
+          <td class="num">&#8377;0.70L</td>
+          <td class="num"><span class="badge good">+8.7%</span></td>
+          <td class="num">0.0%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Private Class</td>
+          <td class="num"><strong>&#8377;0.61L</strong></td>
+          <td class="num">3</td>
+          <td class="num">&#8377;0.54L</td>
+          <td class="num"><span class="badge good">+14.7%</span></td>
+          <td class="num">16.5%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 10 Class Package</td>
+          <td class="num"><strong>&#8377;0.60L</strong></td>
+          <td class="num">4</td>
+          <td class="num">&#8377;1.15L</td>
+          <td class="num"><span class="badge bad">-47.8%</span></td>
+          <td class="num">5.0%</td>
+        </tr><tr>
+          <td class="metric-name">Session</td>
+          <td class="num"><strong>&#8377;0.57L</strong></td>
+          <td class="num">30</td>
+          <td class="num">&#8377;1.29L</td>
+          <td class="num"><span class="badge bad">-55.7%</span></td>
+          <td class="num">0.0%</td>
+        </tr><tr>
+          <td class="metric-name">Retail Product</td>
+          <td class="num"><strong>&#8377;0.32L</strong></td>
+          <td class="num">40</td>
+          <td class="num">&#8377;0.32L</td>
+          <td class="num"><span class="badge bad">-0.4%</span></td>
+          <td class="num">0.0%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 4 Class Package</td>
+          <td class="num"><strong>&#8377;0.30L</strong></td>
+          <td class="num">6</td>
+          <td class="num">&#8377;1.01L</td>
+          <td class="num"><span class="badge bad">-70.7%</span></td>
+          <td class="num">12.4%</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Seller performance &mdash; concentration and attribution gap</h3>
+      <p class="subsection-deck">Every seller who transacted in July 2026, sorted by gross revenue. ATV = average transaction value. &ldquo;System / Unattributed&rdquo; captures online self-service purchases.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Seller</th>
+            <th>Jul Revenue</th>
+            <th>Txn</th>
+            <th>ATV</th>
+            <th>Jun Revenue</th>
+            <th>MoM</th>
+            <th>Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">Akshay Rane</td>
+          <td class="num"><strong>&#8377;4.06L</strong></td>
+          <td class="num">49</td>
+          <td class="num">&#8377;8,285</td>
+          <td class="num">&#8377;5.20L</td>
+          <td class="num"><span class="badge bad">-22.0%</span></td>
+          <td class="num">27.3%</td>
+        </tr><tr>
+          <td class="metric-name">Vahishta Fitter</td>
+          <td class="num"><strong>&#8377;4.01L</strong></td>
+          <td class="num">26</td>
+          <td class="num">&#8377;15,435</td>
+          <td class="num">&#8377;5.02L</td>
+          <td class="num"><span class="badge bad">-20.1%</span></td>
+          <td class="num">27.0%</td>
+        </tr><tr>
+          <td class="metric-name">Zaheer Agarbattiwala</td>
+          <td class="num"><strong>&#8377;1.76L</strong></td>
+          <td class="num">20</td>
+          <td class="num">&#8377;8,824</td>
+          <td class="num">&#8377;3.33L</td>
+          <td class="num"><span class="badge bad">-47.1%</span></td>
+          <td class="num">11.9%</td>
+        </tr><tr>
+          <td class="metric-name">Sheetal Kataria</td>
+          <td class="num"><strong>&#8377;1.75L</strong></td>
+          <td class="num">39</td>
+          <td class="num">&#8377;4,498</td>
+          <td class="num">&#8377;3.22L</td>
+          <td class="num"><span class="badge bad">-45.4%</span></td>
+          <td class="num">11.8%</td>
+        </tr><tr>
+          <td class="metric-name">System / Unattributed</td>
+          <td class="num"><strong>&#8377;1.53L</strong></td>
+          <td class="num">35</td>
+          <td class="num">&#8377;4,377</td>
+          <td class="num">&#8377;2.96L</td>
+          <td class="num"><span class="badge bad">-48.3%</span></td>
+          <td class="num">10.3%</td>
+        </tr><tr>
+          <td class="metric-name">Tahira Sayyed</td>
+          <td class="num"><strong>&#8377;0.91L</strong></td>
+          <td class="num">22</td>
+          <td class="num">&#8377;4,119</td>
+          <td class="num">&#8377;1.06L</td>
+          <td class="num"><span class="badge bad">-14.2%</span></td>
+          <td class="num">6.1%</td>
+        </tr><tr>
+          <td class="metric-name">Zahur Shaikh</td>
+          <td class="num"><strong>&#8377;0.84L</strong></td>
+          <td class="num">9</td>
+          <td class="num">&#8377;9,296</td>
+          <td class="num">&#8377;1.01L</td>
+          <td class="num"><span class="badge bad">-17.5%</span></td>
+          <td class="num">5.6%</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Payment method &mdash; channel mix and operational implications</h3>
+      <p class="subsection-deck">Revenue split by payment method. &ldquo;Custom (in-studio)&rdquo; includes bank transfers, UPI, and other non-cash/non-card in-studio payments.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Payment Method</th>
+            <th>Jul Revenue</th>
+            <th>Txn</th>
+            <th>Share</th>
+            <th>Jun Revenue</th>
+            <th>MoM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">Custom (in-studio)</td>
+          <td class="num"><strong>&#8377;8.63L</strong></td>
+          <td class="num">113</td>
+          <td class="num">58.0%</td>
+          <td class="num">&#8377;10.51L</td>
+          <td class="num"><span class="badge bad">-17.9%</span></td>
+        </tr><tr>
+          <td class="metric-name">Cash</td>
+          <td class="num"><strong>&#8377;3.69L</strong></td>
+          <td class="num">37</td>
+          <td class="num">24.8%</td>
+          <td class="num">&#8377;4.52L</td>
+          <td class="num"><span class="badge bad">-18.3%</span></td>
+        </tr><tr>
+          <td class="metric-name">Stripe (online)</td>
+          <td class="num"><strong>&#8377;1.53L</strong></td>
+          <td class="num">35</td>
+          <td class="num">10.3%</td>
+          <td class="num">&#8377;2.96L</td>
+          <td class="num"><span class="badge bad">-48.3%</span></td>
+        </tr><tr>
+          <td class="metric-name">Multiple payment methods</td>
+          <td class="num"><strong>&#8377;1.01L</strong></td>
+          <td class="num">15</td>
+          <td class="num">6.8%</td>
+          <td class="num">&#8377;3.82L</td>
+          <td class="num"><span class="badge bad">-73.4%</span></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">What worked / What did not work</h3>
+    </div>
+    <div class="worked-grid">
+      <div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Privates margin turned positive.</div>
+        <div class="worked-text">The Privates discount ratio normalised from May&rsquo;s -52% to 36.8%, validating the no-discount-Privates policy. Every Private session sold in July was margin-positive.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Drop-in revenue held steady despite buyer contraction.</div>
+        <div class="worked-text">&#8377;1.33L from 72 drop-in transactions &mdash; essentially flat vs June. The highest-attending members are still paying per-session, which provides a clear upgrade-conversion target.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Newcomers Special grew -43% MoM.</div>
+        <div class="worked-text">&#8377;0.15L from 8 transactions &mdash; the 2-For-1 newcomer offer is generating trial-to-purchase volume, a positive signal for the top of the funnel.</div>
+      </div>
+    </div>
+      <div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Membership revenue fell -4.9% MoM.</div>
+        <div class="worked-text">&#8377;8.02L vs &#8377;8.44L &mdash; a &#8377;0.42L decline. The 1-Month Unlimited and 3-Month Unlimited products both saw fewer units, indicating the recurring-revenue engine is slowing.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Class Package units fell -50.7%.</div>
+        <div class="worked-text">33 package transactions vs 67 in June. The 12-Class and 8-Class packages &mdash; the studio&rsquo;s mid-tier products &mdash; are the primary gap, with 34 fewer packages sold.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Transaction count at 200 is the lowest of 2026.</div>
+        <div class="worked-text">200 transactions is -37.9% below June and -36.9% below baseline. Every category except drop-ins and newcomers contracted in unit terms.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Retail revenue is sub-scale at &#8377;0.32L.</div>
+        <div class="worked-text">Retail generated &#8377;0.32L from 40 transactions &mdash; just 2.2% of gross. The studio is leaving a low-effort revenue stream underdeveloped.</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Action items</h3>
+    </div>
+    <div class="action-grid">
+      <div class="action-card">
+      <div class="action-num">01</div>
+      <div class="action-body">
+        <div class="action-title">Launch a package upgrade campaign targeting high-frequency drop-in attendees.</div>
+        <div class="action-text">The 72 drop-in transactions represent members who are already paying per-session. Identify the top 50 drop-in attendees by visit frequency and offer a time-limited 12-Class or 8-Class package at a 5% upgrade incentive (well within the discount discipline framework). Target: 15 package conversions in 30 days, adding ~&#8377;2.10L in revenue.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Sales + Studio Head</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">02</div>
+      <div class="action-body">
+        <div class="action-title">Restore membership sales velocity with a structured renewal pipeline.</div>
+        <div class="action-text">Membership revenue fell -4.9% MoM. Build a 30-day-ahead renewal pipeline: every member with an expiry in the next 30 days gets a renewal touchpoint at Day -30, Day -14, and Day -7. Assign renewal ownership to specific sellers. Target: renewal rate above 60% (from current 56.3%).</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Sales + Member Experience</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">03</div>
+      <div class="action-body">
+        <div class="action-title">Develop the Retail revenue stream.</div>
+        <div class="action-text">Retail at 2.2% of gross is well below its potential for a studio with 2,432 monthly visits. Curate a 5-product retail line (grip socks, water bottles, resistance bands, towels, apparel) and display at the front desk and in-studio. Target: Retail to 3% of gross (~&#8377;0.45L) within 60 days.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Operations</span>
+          <span class="meta-pill">Priority: Medium</span>
+          <span class="meta-pill">Impact: Low</span>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Data-backed conclusions</h3>
+    </div>
+    <div class="conclusions-block">
+      <div class="conclusion-item">
+      <span class="conclusion-num">01</span>
+      <span class="conclusion-text"><strong>Membership and Package contraction is the primary revenue driver.</strong> Together these two categories fell &#8377;4.74L MoM &mdash; accounting for the majority of the revenue decline. These are the studio&rsquo;s recurring-revenue products; their decline signals a weakening of the membership base.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">02</span>
+      <span class="conclusion-text"><strong>Drop-in stability confirms the attendance-acquisition gap.</strong> Flat drop-in sales alongside rising visits means members are attending on pay-per-session terms rather than upgrading. This is both a warning sign (value leakage) and an opportunity (a clear upgrade target).</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">03</span>
+      <span class="conclusion-text"><strong>The Privates margin correction is a structural win.</strong> Normalising the Privates discount ratio from -52% to 36.8% means every Private session is now margin-positive. This validates the no-discount-Privates policy and should be locked in permanently.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">04</span>
+      <span class="conclusion-text"><strong>The Custom (in-studio) payment dominance is an attribution risk.</strong> 58% of gross transacting in-studio via custom payments means the studio lacks visibility into online vs offline purchase drivers. Better payment attribution would improve the seller performance picture.</span>
+    </div>
+    </div>
+  </div>
+</section>
+<section class="report-section" id="conversion-funnel">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-header-left">
+        <span class="section-eyebrow">03 &middot; New Client Conversion Funnel</span>
+        <h2 class="section-title">151 leads &rarr; 121 trials &rarr; 15 conversions &rarr; 32 retained. The funnel is wider at the top and narrower at the bottom &mdash; the constraint is conversion mechanics, not lead volume.</h2>
+        <p class="section-deck">
+          July&rsquo;s lead pipeline grew to <strong>151</strong> (+18% MoM), but the conversion rate collapsed to
+          <strong>9.9%</strong> &mdash; half of June&rsquo;s 24.2%. Only <strong>15 leads converted</strong>
+          (vs 31 in June), and retained members fell to 32. The funnel is generating more leads but
+          converting fewer of them. Website (25 leads, 0 conversions) and walk-in (7 leads, 0 conversions) are the largest
+          leakage points; conversational channels (WhatsApp 25%, incoming call 37.5%) are the conversion bright spots.
+        </p>
+      </div>
+      <div class="section-anchor">Section 03 / 07</div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Funnel at a glance &mdash; stage-by-stage view</h3>
+      <p class="subsection-deck">The four-stage visual below traces the headline funnel for July 2026, with month-on-month and year-on-year context.</p>
+    </div>
+
+    <div class="funnel-stages">
+      <div class="funnel-stage">
+        <div class="funnel-stage-num">151</div>
+        <div class="funnel-stage-label">Leads</div>
+        <div class="funnel-stage-sub">+18% MoM &middot; 21% of pipeline</div>
+      </div>
+      <div class="funnel-stage">
+        <div class="funnel-stage-num">121</div>
+        <div class="funnel-stage-label">Trials / First Visits</div>
+        <div class="funnel-stage-sub">-6% MoM &middot; 80% of leads</div>
+      </div>
+      <div class="funnel-stage conv">
+        <div class="funnel-stage-num">15</div>
+        <div class="funnel-stage-label">Converted</div>
+        <div class="funnel-stage-sub">-52% MoM &middot; 9.9% conv rate</div>
+      </div>
+      <div class="funnel-stage conv">
+        <div class="funnel-stage-num">32</div>
+        <div class="funnel-stage-label">Retained</div>
+        <div class="funnel-stage-sub">-32% MoM &middot; 21.2% of leads</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>How to read this section:</strong> the funnel table below is sorted by lead volume; conversion rates are calculated
+      off the leads column. The insight pane on the left narrates the KPIs &mdash; what each number <em>indicates</em> and
+      <em>why</em> it matters for the business decision. The MoM flow table at the bottom places July in seven-month context.
+    </div>
+
+    <div class="split-grid">
+      <div class="insights-pane">
+        <div class="pane-title">Funnel-level insights</div>
+        <div class="insight-card">
+      <div class="insight-num">01</div>
+      <div class="insight-body">
+        <div class="insight-title">Lead pipeline grew but conversion collapsed.</div>
+        <div class="insight-text">151 leads in July vs 128 in June (+18%), yet conversions fell from 31 to 15 (-51.6%). The funnel is wider at the top and narrower at the bottom &mdash; a conversion-stage breakdown, not a lead-generation problem.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">02</div>
+      <div class="insight-body">
+        <div class="insight-title">Client Referral remains the highest-quality channel.</div>
+        <div class="insight-text">33 Client Referral leads &rarr; 4 conversions (12.1%) &rarr; &#8377;23,514 LTV. While below June&rsquo;s 31.6% referral conversion rate, referrals still produced the most conversions of any source and the highest LTV. The referral mechanism works &mdash; it needs more volume.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">03</div>
+      <div class="insight-body">
+        <div class="insight-title">Website and walk-in channels converted zero leads.</div>
+        <div class="insight-text">25 Website leads and 7 walk-in leads each produced 0 conversions and &#8377;0 LTV. These are high-intent channels &mdash; a walk-in has physically come to the studio &mdash; yet the conversion mechanism is completely broken. This is the single biggest fixable leakage in the funnel.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">04</div>
+      <div class="insight-body">
+        <div class="insight-title">WhatsApp and incoming-call channels over-indexed on conversion.</div>
+        <div class="insight-text">Yellow Messenger/WhatsApp: 12 leads &rarr; 3 conversions (25%) &rarr; &#8377;62,580 LTV. Incoming call: 8 leads &rarr; 3 conversions (37.5%). Conversational channels convert at 2&ndash;3&times; the portfolio average &mdash; the human touchpoint is the differentiator.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">05</div>
+      <div class="insight-body">
+        <div class="insight-title">Trial Class remains the dominant trial format.</div>
+        <div class="insight-text">48 Trial Class attendees (40% of all trials), followed by 24 Hosted Class trials and 24 Referral Class trials. The trial format mix is healthy &mdash; the issue is what happens after the trial.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">06</div>
+      <div class="insight-body">
+        <div class="insight-title">Retained members fell -32% MoM.</div>
+        <div class="insight-text">32 retained members vs 47 in June &mdash; a -31.9% decline. Retention rate fell from 36.7% to 21.2%. The conversion problem is cascading into the retention metric &mdash; fewer conversions means fewer members to retain.</div>
+      </div>
+    </div>
+      </div>
+      <div class="data-pane">
+        <div class="pane-title">New client purchases by lead source</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Leads</th>
+                <th>Trials</th>
+                <th>Conv.</th>
+                <th>Conv Rate</th>
+                <th>Visits</th>
+                <th>LTV</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+          <td class="metric-name">Hosted Class</td>
+          <td class="num">34</td>
+          <td class="num">1</td>
+          <td class="num"><strong>2</strong></td>
+          <td class="num">5.9%</td>
+          <td class="num">25</td>
+          <td class="num">&#8377;1,838</td>
+        </tr><tr>
+          <td class="metric-name">Client Referral</td>
+          <td class="num">33</td>
+          <td class="num">4</td>
+          <td class="num"><strong>8</strong></td>
+          <td class="num">24.2%</td>
+          <td class="num">51</td>
+          <td class="num">&#8377;23,514</td>
+        </tr><tr>
+          <td class="metric-name">Website</td>
+          <td class="num">25</td>
+          <td class="num">0</td>
+          <td class="num"><strong>2</strong></td>
+          <td class="num">8.0%</td>
+          <td class="num">29</td>
+          <td class="num">&mdash;</td>
+        </tr><tr>
+          <td class="metric-name">Website Form</td>
+          <td class="num">15</td>
+          <td class="num">1</td>
+          <td class="num"><strong>4</strong></td>
+          <td class="num">26.7%</td>
+          <td class="num">25</td>
+          <td class="num">&#8377;15,802</td>
+        </tr><tr>
+          <td class="metric-name">Yellow Messenger/Whatsapp Enquiry</td>
+          <td class="num">12</td>
+          <td class="num">3</td>
+          <td class="num"><strong>4</strong></td>
+          <td class="num">33.3%</td>
+          <td class="num">24</td>
+          <td class="num">&#8377;62,580</td>
+        </tr><tr>
+          <td class="metric-name">Abandoned checkout</td>
+          <td class="num">10</td>
+          <td class="num">1</td>
+          <td class="num"><strong>5</strong></td>
+          <td class="num">50.0%</td>
+          <td class="num">57</td>
+          <td class="num">&#8377;14,300</td>
+        </tr><tr>
+          <td class="metric-name">Incoming call</td>
+          <td class="num">8</td>
+          <td class="num">3</td>
+          <td class="num"><strong>2</strong></td>
+          <td class="num">25.0%</td>
+          <td class="num">11</td>
+          <td class="num">&#8377;24,618</td>
+        </tr><tr>
+          <td class="metric-name">Walkin</td>
+          <td class="num">7</td>
+          <td class="num">0</td>
+          <td class="num"><strong>1</strong></td>
+          <td class="num">14.3%</td>
+          <td class="num">4</td>
+          <td class="num">&mdash;</td>
+        </tr><tr>
+          <td class="metric-name">Enquiry on call</td>
+          <td class="num">4</td>
+          <td class="num">1</td>
+          <td class="num"><strong>1</strong></td>
+          <td class="num">25.0%</td>
+          <td class="num">12</td>
+          <td class="num">&#8377;14,222</td>
+        </tr><tr>
+          <td class="metric-name">Staff Referral</td>
+          <td class="num">2</td>
+          <td class="num">0</td>
+          <td class="num"><strong>0</strong></td>
+          <td class="num">0.0%</td>
+          <td class="num">1</td>
+          <td class="num">&mdash;</td>
+        </tr><tr>
+          <td class="metric-name">Dashboard</td>
+          <td class="num">1</td>
+          <td class="num">1</td>
+          <td class="num"><strong>1</strong></td>
+          <td class="num">100.0%</td>
+          <td class="num">6</td>
+          <td class="num">&#8377;5,618</td>
+        </tr><tr class="totals-row">
+      <td class="metric-name">Total</td>
+      <td class="num">151</td>
+      <td class="num">121</td>
+      <td class="num">15</td>
+      <td class="num">9.9%</td>
+      <td class="num">245</td>
+      <td class="num">&#8377;162,492</td>
+    </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Trial type breakdown &mdash; how leads entered the studio</h3>
+      <p class="subsection-deck">The trial format mix shows how leads were acquired. &ldquo;Trial Class&rdquo; is the standard free-trial format; &ldquo;Hosted Class&rdquo; is a partner-brand event; &ldquo;Referral Class&rdquo; is a member-referred trial.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Trial Type</th>
+            <th>Count</th>
+            <th>Share of Trials</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">New - Trial Class</td>
+          <td class="num"><strong>48</strong></td>
+          <td class="num">39.7%</td>
+        </tr><tr>
+          <td class="metric-name">New - Referral Class</td>
+          <td class="num"><strong>24</strong></td>
+          <td class="num">19.8%</td>
+        </tr><tr>
+          <td class="metric-name">New - Hosted Class</td>
+          <td class="num"><strong>24</strong></td>
+          <td class="num">19.8%</td>
+        </tr><tr>
+          <td class="metric-name">New - Paid First Visit</td>
+          <td class="num"><strong>22</strong></td>
+          <td class="num">18.2%</td>
+        </tr><tr>
+          <td class="metric-name">New - Others</td>
+          <td class="num"><strong>2</strong></td>
+          <td class="num">1.7%</td>
+        </tr><tr>
+          <td class="metric-name">New - Complimentary Class</td>
+          <td class="num"><strong>1</strong></td>
+          <td class="num">0.8%</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Month-on-month new client flow &mdash; January through July 2026</h3>
+      <p class="subsection-deck">Seven-month trend of the funnel stages. July is highlighted in bold. The conversion rate decline from June to July is the steepest MoM change in the period.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Leads</th>
+            <th>Trials</th>
+            <th>Converted</th>
+            <th>Conv Rate</th>
+            <th>Retained</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">01 2026</td>
+          <td class="num">177</td>
+          <td class="num">121</td>
+          <td class="num">18</td>
+          <td class="num">10.2%</td>
+          <td class="num">28</td>
+        </tr><tr>
+          <td class="metric-name">02 2026</td>
+          <td class="num">160</td>
+          <td class="num">105</td>
+          <td class="num">25</td>
+          <td class="num">15.6%</td>
+          <td class="num">31</td>
+        </tr><tr>
+          <td class="metric-name">03 2026</td>
+          <td class="num">163</td>
+          <td class="num">95</td>
+          <td class="num">20</td>
+          <td class="num">12.3%</td>
+          <td class="num">28</td>
+        </tr><tr>
+          <td class="metric-name">04 2026</td>
+          <td class="num">166</td>
+          <td class="num">91</td>
+          <td class="num">17</td>
+          <td class="num">10.2%</td>
+          <td class="num">23</td>
+        </tr><tr>
+          <td class="metric-name">05 2026</td>
+          <td class="num">127</td>
+          <td class="num">117</td>
+          <td class="num">29</td>
+          <td class="num">22.8%</td>
+          <td class="num">37</td>
+        </tr><tr>
+          <td class="metric-name">06 2026</td>
+          <td class="num">128</td>
+          <td class="num">129</td>
+          <td class="num">31</td>
+          <td class="num">24.2%</td>
+          <td class="num">47</td>
+        </tr><tr>
+          <td class="metric-name"><strong>07 2026</strong></td>
+          <td class="num"><strong>151</strong></td>
+          <td class="num"><strong>121</strong></td>
+          <td class="num"><strong>15</strong></td>
+          <td class="num"><strong>9.9%</strong></td>
+          <td class="num"><strong>32</strong></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">What worked / What did not work</h3>
+    </div>
+    <div class="worked-grid">
+      <div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Lead pipeline grew 18% MoM.</div>
+        <div class="worked-text">151 leads vs 128 in June. The top-of-funnel is healthy and growing &mdash; demand generation is not the problem.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">WhatsApp and call channels converted at 25&ndash;37%.</div>
+        <div class="worked-text">Conversational channels (WhatsApp, incoming call) converted at 2&ndash;3&times; the portfolio average, proving that human touchpoints drive conversion. This insight should inform the follow-up process for all channels.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Client Referral produced the most conversions and highest LTV.</div>
+        <div class="worked-text">4 conversions and &#8377;23,514 LTV from 33 referral leads. The referral program is the studio&rsquo;s highest-quality acquisition channel and deserves more investment.</div>
+      </div>
+    </div>
+      <div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Conversion rate halved to 9.9%.</div>
+        <div class="worked-text">15 conversions from 151 leads vs 31 from 128 (24.2%) in June. 136 leads entered the studio and left without buying &mdash; the largest single-point revenue leakage this month.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Website channel: 25 leads, 0 conversions.</div>
+        <div class="worked-text">The Website is the second-largest lead source (25 leads) yet produced zero conversions and zero LTV. The website form &rarr; trial &rarr; sale handoff is completely broken.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Hosted Class conversion stayed at 2.9%.</div>
+        <div class="worked-text">34 Hosted Class leads &rarr; 1 conversion. This is structurally consistent with May&rsquo;s 3.4% rate. The hosted-class format generates attendance but not buyers &mdash; a persistent, multi-month conversion gap.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Retained members fell -32% MoM.</div>
+        <div class="worked-text">32 retained vs 47 in June. The retention rate dropped from 36.7% to 21.2%. The conversion decline is cascading into retention.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Walk-in leads: 7 leads, 0 conversions.</div>
+        <div class="worked-text">A walk-in has physically entered the studio &mdash; the highest possible intent. Zero conversions from 7 walk-ins indicates a front-desk conversion process failure, not a demand problem.</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Action items &mdash; funnel-specific</h3>
+    </div>
+    <div class="action-grid">
+      <div class="action-card">
+      <div class="action-num">01</div>
+      <div class="action-body">
+        <div class="action-title">Implement a mandatory 48-hour post-trial follow-up cadence.</div>
+        <div class="action-text">Every trial attendee gets a structured 3-touch follow-up: Day 1 thank-you + class recommendation from the trainer, Day 3 personal check-in call from front desk, Day 7 limited-time offer (e.g. 5% off first package, valid 48 hours). Assign a conversion owner per trial. Target: conversion rate back to 20%+ by September.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Member Experience + Trainers</span>
+          <span class="meta-pill">Priority: Critical</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">02</div>
+      <div class="action-body">
+        <div class="action-title">Fix the Website lead-to-trial handoff with a 2-hour SLA.</div>
+        <div class="action-text">25 website leads produced 0 conversions. Instrument the website form with a 2-hour first-response SLA: every form submission triggers an SMS + call within 2 business hours. Assign a dedicated online-lead closer. The website is the #2 lead source &mdash; it should not be a zero-conversion channel.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Front Desk + Marketing</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">03</div>
+      <div class="action-body">
+        <div class="action-title">Scale the Client Referral program.</div>
+        <div class="action-text">Client Referrals delivered 4 conversions and &#8377;23,514 LTV at 12.1% conversion &mdash; the highest-quality channel. Launch a structured &#8377;1,500 dual-incentive referral (referrer + referee each get &#8377;1,500 credit on first purchase). Target: 50 referral leads/month (from 33), adding ~6 conversions.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Marketing + Studio Head</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">04</div>
+      <div class="action-body">
+        <div class="action-title">Pilot a hosted-class conversion playbook.</div>
+        <div class="action-text">Hosted Class conversion has been 3&ndash;4% for two consecutive months. Pilot a structured post-hosted-class flow: on-the-spot trial booking, trainer-led intro session, and a 7-day follow-up. Target: hosted-class conversion &ge; 15% by September, which would add ~5 conversions from the 34 hosted leads.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Member Experience + Trainers</span>
+          <span class="meta-pill">Priority: Medium</span>
+          <span class="meta-pill">Impact: Medium</span>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Data-backed conclusions</h3>
+    </div>
+    <div class="conclusions-block">
+      <div class="conclusion-item">
+      <span class="conclusion-num">01</span>
+      <span class="conclusion-text"><strong>The conversion funnel is the single highest-leverage fix in the business.</strong> Restoring conversion from 9.9% to June&rsquo;s 24.2% on the same 151-lead base would produce ~21 conversions (vs 15) &mdash; adding approximately &#8377;0.45L in monthly revenue with zero additional lead-generation cost.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">02</span>
+      <span class="conclusion-text"><strong>Lead volume is healthy &mdash; the constraint is conversion mechanics, not demand.</strong> 151 leads is above June&rsquo;s 128. The breakdown is in the trial-to-sale handoff, which is a process problem that can be fixed in weeks, not a market problem that requires quarters.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">03</span>
+      <span class="conclusion-text"><strong>Conversational channels convert; passive channels do not.</strong> WhatsApp (25%) and incoming calls (37.5%) convert at 2&ndash;3&times; the portfolio average, while Website (0%) and Walk-in (0%) convert at zero. The implication is clear: every lead needs a human conversation within hours, not days.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">04</span>
+      <span class="conclusion-text"><strong>The hosted-class conversion gap is now a multi-month structural pattern.</strong> 3.4% in May, 2.9% in July &mdash; the hosted format generates attendance but not buyers. Without a structured post-class conversion process, the hosted-class program is a marketing expense without a revenue return.</span>
+    </div>
+    </div>
+  </div>
+</section>
+<section class="report-section" id="sessions">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-header-left">
+        <span class="section-eyebrow">04 &middot; Sessions &amp; Class Performance</span>
+        <h2 class="section-title">368 sessions, 2,432 visits, 47.3% fill &mdash; the highest attendance in eight months. Strength Lab is supply-constrained, PowerCycle is scaling, and Cardio Barre Express/Plus remain structural losers.</h2>
+        <p class="section-deck">
+          July delivered <strong>2,432 visits</strong> across <strong>368 sessions</strong> at <strong>47.3% fill</strong> &mdash;
+          the highest volume and utilisation since January. Class average rose to 6.6. Barre 57 remains the volume engine
+          (216 sessions, 1483.0 visits), PowerCycle expanded 5% MoM,
+          and Strength Lab hit 83.9% fill &mdash; the highest of any format.
+          Session revenue grew to &#8377;21.03L (+18% MoM) even as product sales fell, confirming the attendance-acquisition gap.
+        </p>
+      </div>
+      <div class="section-anchor">Section 04 / 07</div>
+    </div>
+
+    <div class="split-grid">
+      <div class="insights-pane">
+        <div class="pane-title">Session insights &middot; July 2026</div>
+        <div class="insight-card">
+      <div class="insight-num">01</div>
+      <div class="insight-body">
+        <div class="insight-title">Barre 57 is the volume engine at 216 sessions.</div>
+        <div class="insight-text">216 Barre 57 sessions delivered 1483.0 visits (38.9% fill) and &#8377;12.97L in session revenue. It is the studio&rsquo;s dominant format by every measure &mdash; volume, attendance, and revenue.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">02</div>
+      <div class="insight-body">
+        <div class="insight-title">PowerCycle grew 5% in sessions MoM.</div>
+        <div class="insight-text">90 PowerCycle sessions (vs 86 in June) delivered 585.0 visits at 65.0% fill. PowerCycle is the swing format &mdash; capacity is being added and attendance is following.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">03</div>
+      <div class="insight-body">
+        <div class="insight-title">Strength Lab is supply-constrained at 83.9% fill.</div>
+        <div class="insight-text">62 Strength Lab sessions delivered 364.0 visits at 83.9% fill &mdash; the highest fill rate of the three formats. Strength Lab is demand-constrained on the upside: members want more sessions than are scheduled.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">04</div>
+      <div class="insight-body">
+        <div class="insight-title">Studio Barre 57 is the workhorse class at 74 sessions.</div>
+        <div class="insight-text">74 sessions, 508.0 visits, 42.4% fill, &#8377;5.00L revenue. Studio PowerCycle is second at 85 sessions and &#8377;4.71L revenue.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">05</div>
+      <div class="insight-body">
+        <div class="insight-title">Rohan Dahima leads the trainer scorecard by revenue.</div>
+        <div class="insight-text">41 sessions, 351.0 visits, &#8377;3.33L revenue &mdash; the highest revenue-generating trainer in July. Cauveri Vikrant and Mrigakshi Jaiswal round out the top three by visit volume.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">06</div>
+      <div class="insight-body">
+        <div class="insight-title">Wednesday and Thursday 19:15 is the peak demand slot.</div>
+        <div class="insight-text">The 19:15 evening slot on Wednesday (98 visits, 152 cap) and Thursday (83 visits) is the studio&rsquo;s highest-demand window. The 07:30 morning slot is the second peak, particularly Wednesday (71 visits).</div>
+      </div>
+    </div>
+      </div>
+      <div class="data-pane">
+        <div class="pane-title">Format-level view</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Format</th>
+                <th>Sessions</th>
+                <th>Visits</th>
+                <th>Fill</th>
+                <th>Avg/Class</th>
+                <th>Revenue</th>
+                <th>Rev/Visit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+          <td class="metric-name">Barre 57</td>
+          <td class="num">216</td>
+          <td class="num">1483.0</td>
+          <td class="num">38.9%</td>
+          <td class="num">6.9</td>
+          <td class="num">&#8377;12.97L</td>
+          <td class="num">&#8377;875</td>
+        </tr><tr>
+          <td class="metric-name">powerCycle</td>
+          <td class="num">90</td>
+          <td class="num">585.0</td>
+          <td class="num">65.0%</td>
+          <td class="num">6.5</td>
+          <td class="num">&#8377;5.15L</td>
+          <td class="num">&#8377;880</td>
+        </tr><tr>
+          <td class="metric-name">Strength Lab!</td>
+          <td class="num">62</td>
+          <td class="num">364.0</td>
+          <td class="num">83.9%</td>
+          <td class="num">5.9</td>
+          <td class="num">&#8377;2.91L</td>
+          <td class="num">&#8377;799</td>
+        </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Class-by-class intelligence &mdash; the full session portfolio</h3>
+      <p class="subsection-deck">Every class format that ran in July 2026, sorted by session revenue. Fill rate is colour-coded: green &ge;65%, amber 35&ndash;65%, red &lt;35%. Cancel rate is late cancels as a percentage of (visits + late cancels).</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Sessions</th>
+            <th>Capacity</th>
+            <th>Visits</th>
+            <th>Fill</th>
+            <th>Avg/Class</th>
+            <th>Cancel Rate</th>
+            <th>Revenue</th>
+            <th>Rev/Visit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">Studio Barre 57</td>
+          <td class="num">74</td>
+          <td class="num">1198</td>
+          <td class="num">508.0</td>
+          <td class="num fill-mid">42.4%</td>
+          <td class="num">6.9</td>
+          <td class="num">8.1%</td>
+          <td class="num">&#8377;5.00L</td>
+          <td class="num">&#8377;984</td>
+        </tr><tr>
+          <td class="metric-name">Studio PowerCycle</td>
+          <td class="num">85</td>
+          <td class="num">850</td>
+          <td class="num">541.0</td>
+          <td class="num fill-mid">63.6%</td>
+          <td class="num">6.4</td>
+          <td class="num">13.2%</td>
+          <td class="num">&#8377;4.71L</td>
+          <td class="num">&#8377;870</td>
+        </tr><tr>
+          <td class="metric-name">Studio Mat 57</td>
+          <td class="num">21</td>
+          <td class="num">420</td>
+          <td class="num">251.0</td>
+          <td class="num fill-mid">59.8%</td>
+          <td class="num">12.0</td>
+          <td class="num">9.7%</td>
+          <td class="num">&#8377;1.99L</td>
+          <td class="num">&#8377;794</td>
+        </tr><tr>
+          <td class="metric-name">Studio FIT</td>
+          <td class="num">25</td>
+          <td class="num">425</td>
+          <td class="num">228.0</td>
+          <td class="num fill-mid">53.6%</td>
+          <td class="num">9.1</td>
+          <td class="num">7.7%</td>
+          <td class="num">&#8377;1.80L</td>
+          <td class="num">&#8377;789</td>
+        </tr><tr>
+          <td class="metric-name">Studio Cardio Barre</td>
+          <td class="num">20</td>
+          <td class="num">400</td>
+          <td class="num">137.0</td>
+          <td class="num fill-low">34.2%</td>
+          <td class="num">6.8</td>
+          <td class="num">9.3%</td>
+          <td class="num">&#8377;1.24L</td>
+          <td class="num">&#8377;905</td>
+        </tr><tr>
+          <td class="metric-name">Studio Strength Lab (Full Body)</td>
+          <td class="num">22</td>
+          <td class="num">154</td>
+          <td class="num">137.0</td>
+          <td class="num fill-high">89.0%</td>
+          <td class="num">6.2</td>
+          <td class="num">10.5%</td>
+          <td class="num">&#8377;1.10L</td>
+          <td class="num">&#8377;802</td>
+        </tr><tr>
+          <td class="metric-name">Studio Strength Lab (Pull)</td>
+          <td class="num">24</td>
+          <td class="num">168</td>
+          <td class="num">134.0</td>
+          <td class="num fill-high">79.8%</td>
+          <td class="num">5.6</td>
+          <td class="num">15.7%</td>
+          <td class="num">&#8377;1.06L</td>
+          <td class="num">&#8377;790</td>
+        </tr><tr>
+          <td class="metric-name">Studio Strength Lab (Push)</td>
+          <td class="num">16</td>
+          <td class="num">112</td>
+          <td class="num">93.0</td>
+          <td class="num fill-high">83.0%</td>
+          <td class="num">5.8</td>
+          <td class="num">16.2%</td>
+          <td class="num">&#8377;0.75L</td>
+          <td class="num">&#8377;809</td>
+        </tr><tr>
+          <td class="metric-name">Studio Back Body Blaze Express</td>
+          <td class="num">10</td>
+          <td class="num">200</td>
+          <td class="num">70.0</td>
+          <td class="num fill-mid">35.0%</td>
+          <td class="num">7.0</td>
+          <td class="num">15.7%</td>
+          <td class="num">&#8377;0.64L</td>
+          <td class="num">&#8377;916</td>
+        </tr><tr>
+          <td class="metric-name">Studio Mat 57 Express</td>
+          <td class="num">8</td>
+          <td class="num">127</td>
+          <td class="num">55.0</td>
+          <td class="num fill-mid">43.3%</td>
+          <td class="num">6.9</td>
+          <td class="num">11.3%</td>
+          <td class="num">&#8377;0.57L</td>
+          <td class="num">&#8377;1,039</td>
+        </tr><tr>
+          <td class="metric-name">Studio Back Body Blaze</td>
+          <td class="num">10</td>
+          <td class="num">160</td>
+          <td class="num">43.0</td>
+          <td class="num fill-low">26.9%</td>
+          <td class="num">4.3</td>
+          <td class="num">4.4%</td>
+          <td class="num">&#8377;0.45L</td>
+          <td class="num">&#8377;1,040</td>
+        </tr><tr>
+          <td class="metric-name">Studio PowerCycle Express</td>
+          <td class="num">5</td>
+          <td class="num">50</td>
+          <td class="num">44.0</td>
+          <td class="num fill-high">88.0%</td>
+          <td class="num">8.8</td>
+          <td class="num">12.0%</td>
+          <td class="num">&#8377;0.44L</td>
+          <td class="num">&#8377;1,007</td>
+        </tr><tr>
+          <td class="metric-name">Studio Cardio Barre Express</td>
+          <td class="num">9</td>
+          <td class="num">180</td>
+          <td class="num">43.0</td>
+          <td class="num fill-low">23.9%</td>
+          <td class="num">4.8</td>
+          <td class="num">14.0%</td>
+          <td class="num">&#8377;0.44L</td>
+          <td class="num">&#8377;1,028</td>
+        </tr><tr>
+          <td class="metric-name">Studio Cardio Barre Plus</td>
+          <td class="num">9</td>
+          <td class="num">148</td>
+          <td class="num">39.0</td>
+          <td class="num fill-low">26.4%</td>
+          <td class="num">4.3</td>
+          <td class="num">7.1%</td>
+          <td class="num">&#8377;0.33L</td>
+          <td class="num">&#8377;859</td>
+        </tr><tr>
+          <td class="metric-name">Studio Amped Up!</td>
+          <td class="num">4</td>
+          <td class="num">80</td>
+          <td class="num">30.0</td>
+          <td class="num fill-mid">37.5%</td>
+          <td class="num">7.5</td>
+          <td class="num">9.1%</td>
+          <td class="num">&#8377;0.21L</td>
+          <td class="num">&#8377;687</td>
+        </tr><tr>
+          <td class="metric-name">Unknown Class</td>
+          <td class="num">18</td>
+          <td class="num">320</td>
+          <td class="num">7.0</td>
+          <td class="num fill-low">2.2%</td>
+          <td class="num">0.4</td>
+          <td class="num">0.0%</td>
+          <td class="num">&#8377;0.12L</td>
+          <td class="num">&#8377;1,750</td>
+        </tr><tr>
+          <td class="metric-name">Studio Recovery</td>
+          <td class="num">4</td>
+          <td class="num">80</td>
+          <td class="num">20.0</td>
+          <td class="num fill-low">25.0%</td>
+          <td class="num">5.0</td>
+          <td class="num">13.0%</td>
+          <td class="num">&#8377;0.11L</td>
+          <td class="num">&#8377;526</td>
+        </tr><tr>
+          <td class="metric-name">Studio Hosted Class</td>
+          <td class="num">4</td>
+          <td class="num">70</td>
+          <td class="num">52.0</td>
+          <td class="num fill-high">74.3%</td>
+          <td class="num">13.0</td>
+          <td class="num">8.8%</td>
+          <td class="num">&#8377;0.07L</td>
+          <td class="num">&#8377;131</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Trainer scorecard &mdash; utilisation, fill, and revenue</h3>
+      <p class="subsection-deck">Every trainer who taught in July 2026, sorted by session revenue. The composite score combines fill rate and class average (fill &times; avg / 10): green &ge;50, amber 25&ndash;50, red &lt;25. Note: payroll conversion data is not available for July &mdash; this scorecard reflects utilisation only.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Trainer</th>
+            <th>Sessions</th>
+            <th>Visits</th>
+            <th>Fill</th>
+            <th>Avg/Class</th>
+            <th>Revenue</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">Rohan Dahima</td>
+          <td class="num">41</td>
+          <td class="num">351.0</td>
+          <td class="num fill-mid">55.0%</td>
+          <td class="num">8.6</td>
+          <td class="num">&#8377;3.33L</td>
+          <td class="num score-mid">47</td>
+        </tr><tr>
+          <td class="metric-name">Cauveri Vikrant</td>
+          <td class="num">41</td>
+          <td class="num">230.0</td>
+          <td class="num fill-mid">38.7%</td>
+          <td class="num">5.6</td>
+          <td class="num">&#8377;2.12L</td>
+          <td class="num score-low">22</td>
+        </tr><tr>
+          <td class="metric-name">Mrigakshi Jaiswal</td>
+          <td class="num">37</td>
+          <td class="num">251.0</td>
+          <td class="num fill-mid">50.8%</td>
+          <td class="num">6.8</td>
+          <td class="num">&#8377;2.12L</td>
+          <td class="num score-mid">34</td>
+        </tr><tr>
+          <td class="metric-name">Pranjali Jain</td>
+          <td class="num">29</td>
+          <td class="num">236.0</td>
+          <td class="num fill-mid">49.0%</td>
+          <td class="num">8.1</td>
+          <td class="num">&#8377;2.02L</td>
+          <td class="num score-mid">40</td>
+        </tr><tr>
+          <td class="metric-name">Simonelle De Vitre</td>
+          <td class="num">27</td>
+          <td class="num">168.0</td>
+          <td class="num fill-mid">36.7%</td>
+          <td class="num">6.2</td>
+          <td class="num">&#8377;1.80L</td>
+          <td class="num score-low">23</td>
+        </tr><tr>
+          <td class="metric-name">Reshma Sharma</td>
+          <td class="num">21</td>
+          <td class="num">171.0</td>
+          <td class="num fill-mid">48.0%</td>
+          <td class="num">8.1</td>
+          <td class="num">&#8377;1.26L</td>
+          <td class="num score-mid">39</td>
+        </tr><tr>
+          <td class="metric-name">Vivaran Dhasmana</td>
+          <td class="num">28</td>
+          <td class="num">177.0</td>
+          <td class="num fill-mid">45.3%</td>
+          <td class="num">6.3</td>
+          <td class="num">&#8377;1.25L</td>
+          <td class="num score-mid">29</td>
+        </tr><tr>
+          <td class="metric-name">Bret Saldanha</td>
+          <td class="num">26</td>
+          <td class="num">132.0</td>
+          <td class="num fill-mid">52.6%</td>
+          <td class="num">5.1</td>
+          <td class="num">&#8377;1.23L</td>
+          <td class="num score-mid">27</td>
+        </tr><tr>
+          <td class="metric-name">Atulan Purohit</td>
+          <td class="num">21</td>
+          <td class="num">150.0</td>
+          <td class="num fill-mid">62.0%</td>
+          <td class="num">7.1</td>
+          <td class="num">&#8377;1.22L</td>
+          <td class="num score-mid">44</td>
+        </tr><tr>
+          <td class="metric-name">Anmol Sharma</td>
+          <td class="num">18</td>
+          <td class="num">136.0</td>
+          <td class="num fill-high">85.5%</td>
+          <td class="num">7.6</td>
+          <td class="num">&#8377;1.18L</td>
+          <td class="num score-high">65</td>
+        </tr><tr>
+          <td class="metric-name">Karanvir Bhatia</td>
+          <td class="num">23</td>
+          <td class="num">117.0</td>
+          <td class="num fill-low">32.3%</td>
+          <td class="num">5.1</td>
+          <td class="num">&#8377;1.07L</td>
+          <td class="num score-low">16</td>
+        </tr><tr>
+          <td class="metric-name">Richard  D&#x27;Costa</td>
+          <td class="num">27</td>
+          <td class="num">121.0</td>
+          <td class="num fill-low">34.1%</td>
+          <td class="num">4.5</td>
+          <td class="num">&#8377;1.00L</td>
+          <td class="num score-low">15</td>
+        </tr><tr>
+          <td class="metric-name">Raunak Khemuka</td>
+          <td class="num">16</td>
+          <td class="num">78.0</td>
+          <td class="num fill-mid">48.8%</td>
+          <td class="num">4.9</td>
+          <td class="num">&#8377;0.80L</td>
+          <td class="num score-low">24</td>
+        </tr><tr>
+          <td class="metric-name">Anisha Shah</td>
+          <td class="num">11</td>
+          <td class="num">106.0</td>
+          <td class="num fill-high">66.7%</td>
+          <td class="num">9.6</td>
+          <td class="num">&#8377;0.55L</td>
+          <td class="num score-high">64</td>
+        </tr><tr>
+          <td class="metric-name">Simran Dutt</td>
+          <td class="num">2</td>
+          <td class="num">8.0</td>
+          <td class="num fill-low">20.0%</td>
+          <td class="num">4.0</td>
+          <td class="num">&#8377;0.09L</td>
+          <td class="num score-low">8</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Heatmap &mdash; fill rate by time-slot &times; day-of-week</h3>
+      <p class="subsection-deck">Each cell shows visits (top) and fill percentage (bottom). Colour intensity indicates fill: red &lt;20%, amber 20&ndash;40%, blue 40&ndash;60%, green &ge;60%. Dashes indicate no session scheduled.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="heatmap-table">
+        <thead>
+          <tr><th class="slot-label">Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th></tr>
+        </thead>
+        <tbody>
+          <tr><th class="slot-label">07:15</th><td class="heat-cell heat-5">24<br><span style="font-size:9px;opacity:0.7">86%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-1">9<br><span style="font-size:9px;opacity:0.7">19%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">07:30</th><td class="heat-cell heat-4">29<br><span style="font-size:9px;opacity:0.7">60%</span></td><td class="heat-cell heat-3">50<br><span style="font-size:9px;opacity:0.7">46%</span></td><td class="heat-cell heat-3">71<br><span style="font-size:9px;opacity:0.7">53%</span></td><td class="heat-cell heat-3">40<br><span style="font-size:9px;opacity:0.7">40%</span></td><td class="heat-cell heat-2">38<br><span style="font-size:9px;opacity:0.7">38%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">08:00</th><td class="heat-cell heat-2">10<br><span style="font-size:9px;opacity:0.7">33%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-5">42<br><span style="font-size:9px;opacity:0.7">84%</span></td><td class="heat-cell heat-5">41<br><span style="font-size:9px;opacity:0.7">82%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-1">14<br><span style="font-size:9px;opacity:0.7">18%</span></td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">08:15</th><td class="heat-cell heat-none">0<br><span style="font-size:9px;opacity:0.7">0%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">08:30</th><td class="heat-cell heat-4">49<br><span style="font-size:9px;opacity:0.7">61%</span></td><td class="heat-cell heat-2">30<br><span style="font-size:9px;opacity:0.7">38%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-2">39<br><span style="font-size:9px;opacity:0.7">35%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">08:45</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-4">26<br><span style="font-size:9px;opacity:0.7">74%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">09:00</th><td class="heat-cell heat-4">17<br><span style="font-size:9px;opacity:0.7">61%</span></td><td class="heat-cell heat-4">20<br><span style="font-size:9px;opacity:0.7">71%</span></td><td class="heat-cell heat-2">44<br><span style="font-size:9px;opacity:0.7">28%</span></td><td class="heat-cell heat-2">51<br><span style="font-size:9px;opacity:0.7">32%</span></td><td class="heat-cell heat-4">64<br><span style="font-size:9px;opacity:0.7">75%</span></td><td class="heat-cell heat-3">32<br><span style="font-size:9px;opacity:0.7">47%</span></td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">09:15</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-5">31<br><span style="font-size:9px;opacity:0.7">89%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">09:45</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-2">20<br><span style="font-size:9px;opacity:0.7">31%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">10:00</th><td class="heat-cell heat-2">21<br><span style="font-size:9px;opacity:0.7">26%</span></td><td class="heat-cell heat-3">23<br><span style="font-size:9px;opacity:0.7">57%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-3">26<br><span style="font-size:9px;opacity:0.7">52%</span></td><td class="heat-cell heat-5">36<br><span style="font-size:9px;opacity:0.7">90%</span></td><td class="heat-cell heat-4">49<br><span style="font-size:9px;opacity:0.7">72%</span></td></tr><tr><th class="slot-label">10:15</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-2">5<br><span style="font-size:9px;opacity:0.7">25%</span></td><td class="heat-cell heat-2">20<br><span style="font-size:9px;opacity:0.7">33%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-4">96<br><span style="font-size:9px;opacity:0.7">75%</span></td><td class="heat-cell heat-3">40<br><span style="font-size:9px;opacity:0.7">50%</span></td></tr><tr><th class="slot-label">10:30</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-4">25<br><span style="font-size:9px;opacity:0.7">62%</span></td><td class="heat-cell heat-4">33<br><span style="font-size:9px;opacity:0.7">66%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">11:00</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-3">39<br><span style="font-size:9px;opacity:0.7">49%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-3">39<br><span style="font-size:9px;opacity:0.7">46%</span></td><td class="heat-cell heat-5">32<br><span style="font-size:9px;opacity:0.7">91%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">11:15</th><td class="heat-cell heat-3">21<br><span style="font-size:9px;opacity:0.7">44%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-2">24<br><span style="font-size:9px;opacity:0.7">24%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">11:30</th><td class="heat-cell heat-1">2<br><span style="font-size:9px;opacity:0.7">2%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-2">35<br><span style="font-size:9px;opacity:0.7">35%</span></td><td class="heat-cell heat-1">2<br><span style="font-size:9px;opacity:0.7">3%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-4">121<br><span style="font-size:9px;opacity:0.7">70%</span></td><td class="heat-cell heat-3">54<br><span style="font-size:9px;opacity:0.7">45%</span></td></tr><tr><th class="slot-label">12:30</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-2">30<br><span style="font-size:9px;opacity:0.7">33%</span></td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">16:00</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-2">23<br><span style="font-size:9px;opacity:0.7">29%</span></td></tr><tr><th class="slot-label">16:30</th><td class="heat-cell heat-none">0<br><span style="font-size:9px;opacity:0.7">0%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-1">3<br><span style="font-size:9px;opacity:0.7">3%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-3">22<br><span style="font-size:9px;opacity:0.7">55%</span></td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">17:00</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-4">28<br><span style="font-size:9px;opacity:0.7">70%</span></td></tr><tr><th class="slot-label">17:15</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-3">33<br><span style="font-size:9px;opacity:0.7">41%</span></td></tr><tr><th class="slot-label">17:30</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-3">10<br><span style="font-size:9px;opacity:0.7">50%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-3">43<br><span style="font-size:9px;opacity:0.7">54%</span></td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">17:45</th><td class="heat-cell heat-3">15<br><span style="font-size:9px;opacity:0.7">56%</span></td><td class="heat-cell heat-3">39<br><span style="font-size:9px;opacity:0.7">50%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-2">30<br><span style="font-size:9px;opacity:0.7">30%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">18:00</th><td class="heat-cell heat-4">61<br><span style="font-size:9px;opacity:0.7">75%</span></td><td class="heat-cell heat-5">27<br><span style="font-size:9px;opacity:0.7">96%</span></td><td class="heat-cell heat-5">30<br><span style="font-size:9px;opacity:0.7">86%</span></td><td class="heat-cell heat-5">45<br><span style="font-size:9px;opacity:0.7">90%</span></td><td class="heat-cell heat-5">30<br><span style="font-size:9px;opacity:0.7">86%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">18:15</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-2">34<br><span style="font-size:9px;opacity:0.7">31%</span></td><td class="heat-cell heat-2">32<br><span style="font-size:9px;opacity:0.7">32%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">18:45</th><td class="heat-cell heat-4">28<br><span style="font-size:9px;opacity:0.7">78%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">19:00</th><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-1">18<br><span style="font-size:9px;opacity:0.7">18%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">19:15</th><td class="heat-cell heat-5">21<br><span style="font-size:9px;opacity:0.7">100%</span></td><td class="heat-cell heat-3">61<br><span style="font-size:9px;opacity:0.7">56%</span></td><td class="heat-cell heat-4">98<br><span style="font-size:9px;opacity:0.7">64%</span></td><td class="heat-cell heat-4">83<br><span style="font-size:9px;opacity:0.7">61%</span></td><td class="heat-cell heat-5">44<br><span style="font-size:9px;opacity:0.7">88%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr><tr><th class="slot-label">19:30</th><td class="heat-cell heat-2">10<br><span style="font-size:9px;opacity:0.7">33%</span></td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td><td class="heat-cell heat-none">&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">What worked / What did not work</h3>
+    </div>
+    <div class="worked-grid">
+      <div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Fill rate rose to 47.3% &mdash; an eight-month high.</div>
+        <div class="worked-text">2,432 visits across 368 sessions with only 16 empty sessions. Class average rose to 6.6 from 6.5 in June. The schedule is better matched to demand than at any point in 2026.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Strength Lab fill rate at 83.9%.</div>
+        <div class="worked-text">The highest fill of the three formats confirms Strength Lab as a supply-constrained hit. Adding sessions here would absorb existing demand without diluting attendance.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">PowerCycle expanded 5% in session count.</div>
+        <div class="worked-text">90 sessions (vs 86 in June) at 65.0% fill. Capacity was added and demand followed &mdash; PowerCycle is scaling well.</div>
+      </div>
+    </div>
+      <div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">16 empty sessions ran in July.</div>
+        <div class="worked-text">16 sessions delivered zero visits &mdash; a direct capacity waste. While down from some months, every empty session represents a trainer cost with zero revenue. These should be identified and either filled or removed.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Late cancellations remain high at 295.</div>
+        <div class="worked-text">295 late cancels across 150 members. While down from 257 in June, the rate is still ~11% of bookings. 4 members cancelled 6+ times &mdash; the penalty policy needs enforcement.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Cardio Barre Express and Plus remain sub-scale.</div>
+        <div class="worked-text">Studio Cardio Barre Express: 23.9% fill. Studio Cardio Barre Plus: 26.4% fill. These formats continue to hold capacity that would be better reallocated to Strength Lab.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Unknown Class sessions absorbed capacity with near-zero attendance.</div>
+        <div class="worked-text">18 &ldquo;Unknown Class&rdquo; sessions with only 7 visits total &mdash; a 2% effective fill. These are data-quality or scheduling gaps that waste trainer time and studio capacity.</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Action items &mdash; class scheduling, discontinuation, addition</h3>
+    </div>
+    <div class="action-grid">
+      <div class="action-card">
+      <div class="action-num">01</div>
+      <div class="action-body">
+        <div class="action-title">Add 10&ndash;15 Strength Lab sessions per month.</div>
+        <div class="action-text">Strength Lab at 83.9% fill is supply-constrained. Adding 10&ndash;15 sessions/month in the peak 07:30 and 19:15 slots would absorb existing demand without diluting attendance. Target: Strength Lab to 75+ sessions/month at maintained 70%+ fill.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Studio Head + Scheduling</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">02</div>
+      <div class="action-body">
+        <div class="action-title">Discontinue Cardio Barre Express and merge Plus into the main slot.</div>
+        <div class="action-text">Studio Cardio Barre Express at 23.9% fill and Plus at 26.4% fill are structural underperformers. Discontinue Express, merge Plus into the main Cardio Barre slot, and reallocate recovered capacity to Strength Lab and weekend PowerCycle.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Studio Head + Scheduling</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: Medium</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">03</div>
+      <div class="action-body">
+        <div class="action-title">Resolve the 18 &ldquo;Unknown Class&rdquo; sessions.</div>
+        <div class="action-text">18 sessions logged as &ldquo;Unknown Class&rdquo; with 7 total visits is either a data-quality issue or a scheduling gap. Audit the scheduling system to ensure every session has a proper class assignment, and remove any genuinely unscheduled sessions. This alone would improve the fill rate by ~1pp.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Operations</span>
+          <span class="meta-pill">Priority: Medium</span>
+          <span class="meta-pill">Impact: Low</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">04</div>
+      <div class="action-body">
+        <div class="action-title">Enforce the late-cancel penalty policy.</div>
+        <div class="action-text">295 late cancels across 150 members, with 4 members cancelling 6+ times. Enforce the &#8377;250 late-cancel penalty (waived for medical). Target: 30% reduction in late cancels within 60 days. The 4 heavy cancelers should get a personal retention call before enforcement begins.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Operations + Member Experience</span>
+          <span class="meta-pill">Priority: Medium</span>
+          <span class="meta-pill">Impact: Medium</span>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Data-backed conclusions</h3>
+    </div>
+    <div class="conclusions-block">
+      <div class="conclusion-item">
+      <span class="conclusion-num">01</span>
+          <span class="conclusion-text"><strong>July is the best-attended month of 2026.</strong> 2,432 visits at 47.3% fill across 368 sessions &mdash; the highest volume and utilisation since January. The schedule is delivering attendance at a rate the studio has not seen in eight months.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">02</span>
+      <span class="conclusion-text"><strong>Strength Lab is the studio&rsquo;s most under-supplied format.</strong> At 83.9% fill with only 62 sessions, the format has room to add 10&ndash;15 sessions/month without diluting attendance. This is the single highest-confidence scheduling move.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">03</span>
+      <span class="conclusion-text"><strong>PowerCycle is scaling successfully.</strong> 90 sessions at 65.0% fill (up from 86 sessions in June) confirms that added capacity is being absorbed. The format is on a healthy growth trajectory.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">04</span>
+      <span class="conclusion-text"><strong>Cardio Barre Express/Plus remain structural losers.</strong> Sub-26% fill for two consecutive months. These formats are both a member-experience risk and an opportunity cost &mdash; the capacity they hold would deliver more value as Strength Lab or PowerCycle sessions.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">05</span>
+      <span class="conclusion-text"><strong>Peak demand is concentrated in two windows: 07:30 mornings and 19:15 evenings.</strong> Wednesday 19:15 (98 visits) and Wednesday 07:30 (71 visits) are the single highest-demand slots. Any capacity additions should prioritise these windows first.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">06</span>
+      <span class="conclusion-text"><strong>Session revenue grew while product sales fell &mdash; the attendance-acquisition gap in one number.</strong> Session-attributed revenue rose to &#8377;21.03L (+18% MoM) while gross product sales fell to &#8377;14.87L. Members are consuming sessions on existing packages but not buying new ones.</span>
+    </div>
+    </div>
+  </div>
+</section>
+<section class="report-section" id="lapsed">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-header-left">
+        <span class="section-eyebrow">05 &middot; Lapsed Memberships Deep Dive</span>
+        <h2 class="section-title">298 members lapsed in July &mdash; the highest absolute count of 2026. Cumulative lapsed book at 978 unique members. The renewal engine scaled with expirations but the churn-to-renewal gap is widening in absolute terms.</h2>
+        <p class="section-deck">
+          <strong>730 memberships expired</strong> in July, of which <strong>411 renewed</strong> (56.3%),
+          <strong>298 lapsed</strong> (40.8% churn), and 21 froze. The churn rate is broadly stable vs June (42.7%),
+          but absolute lapses rose 10.0% on a 15% increase in expirations. Cumulative unique lapsed members now stand at
+          <strong>978</strong>, with only <strong>208</strong> active memberships remaining. The
+          1-Month Unlimited holder (221 cumulative lapses) is the highest-leverage reactivation target.
+        </p>
+      </div>
+      <div class="section-anchor">Section 05 / 07</div>
+    </div>
+
+    <div class="split-grid">
+      <div class="insights-pane">
+        <div class="pane-title">Lapsed insights &middot; July 2026</div>
+        <div class="insight-card">
+      <div class="insight-num">01</div>
+      <div class="insight-body">
+        <div class="insight-title">298 members lapsed &mdash; the highest absolute count of 2026.</div>
+        <div class="insight-text">298 lapsed members vs 271 in June (+10.0%) and 236 in May. While the churn rate is stable at 40.8%, the growing membership base means more absolute lapses each month. The lapsed book is accumulating.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">02</div>
+      <div class="insight-body">
+        <div class="insight-title">Renewal rate held at 56.3% despite 15% more expirations.</div>
+        <div class="insight-text">411 renewals from 730 expirations &mdash; the renewal rate dipped only 0.4pp from June&rsquo;s 56.7%. The renewal engine is scaling with the membership base, but it is not improving. A 5pp improvement in renewal rate would save ~37 members/month.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">03</div>
+      <div class="insight-body">
+        <div class="insight-title">Open Barre Class lapses dominate at 83.</div>
+        <div class="insight-text">83 of 298 lapses (27.9%) are from Studio Open Barre Class &mdash; the single largest lapsed product. Studio Single Class (68) and Complimentary Referral Class (42) follow. These are low-commitment products with naturally high churn.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">04</div>
+      <div class="insight-body">
+        <div class="insight-title">Cumulative lapsed book stands at 978 unique members.</div>
+        <div class="insight-text">Across all of 2026, 978 unique members have lapsed. The 1-Month Unlimited Membership is the largest cumulative segment at 221 lapses &mdash; these are the highest-leverage reactivation targets because they have demonstrated willingness to pay for recurring access.</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">05</div>
+      <div class="insight-body">
+        <div class="insight-title">Only 208 active memberships remain.</div>
+        <div class="insight-text">The active membership base is 208 &mdash; 185 subscriptions and 23 package-events. The 1-Month Unlimited (33) is the largest active segment, followed by the Extended 10 Single Class Pack (31).</div>
+      </div>
+    </div><div class="insight-card">
+      <div class="insight-num">06</div>
+      <div class="insight-body">
+        <div class="insight-title">Late cancellations: 295 across 150 members.</div>
+        <div class="insight-text">295 late cancels from 150 members, with 4 members cancelling 6+ times (26 cancels between them). Late cancels are a leading indicator of churn &mdash; members who cancel frequently are disengaging from the studio.</div>
+      </div>
+    </div>
+      </div>
+      <div class="data-pane">
+        <div class="pane-title">Expiration status &mdash; the headline split</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Jul 2026</th>
+                <th>Jun 2026</th>
+                <th>MoM</th>
+                <th>Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="metric-name">Total Expirations</td><td class="num"><strong>730</strong></td><td class="num">635</td><td class="num"><span class="badge good">+15.0%</span></td><td class="num">100.0%</td></tr>
+              <tr class="status-good"><td class="metric-name">Renewed</td><td class="num"><strong>411</strong></td><td class="num">360</td><td class="num"><span class="badge good">+14.2%</span></td><td class="num">56.3%</td></tr>
+              <tr class="status-bad"><td class="metric-name">Lapsed</td><td class="num"><strong>298</strong></td><td class="num">271</td><td class="num"><span class="badge bad">+10.0%</span></td><td class="num">40.8%</td></tr>
+              <tr class="status-neutral"><td class="metric-name">Frozen</td><td class="num"><strong>21</strong></td><td class="num">4</td><td class="num"><span class="badge good">+425.0%</span></td><td class="num">2.9%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Lapsed by product &mdash; where the churn is concentrated</h3>
+      <p class="subsection-deck">The top 15 products by lapsed count in July 2026. Open Barre Class and Single Class are low-commitment products with structurally high churn; membership products (1-Month, 3-Month Unlimited) represent higher-value lapses.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Lapsed</th>
+            <th>Share of Lapses</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">Studio Open Barre Class</td>
+          <td class="num"><strong>83</strong></td>
+          <td class="num">27.9%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Single Class</td>
+          <td class="num"><strong>68</strong></td>
+          <td class="num">22.8%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Complimentary Referral Class</td>
+          <td class="num"><strong>42</strong></td>
+          <td class="num">14.1%</td>
+        </tr><tr>
+          <td class="metric-name">Newcomers 2 For 1</td>
+          <td class="num"><strong>26</strong></td>
+          <td class="num">8.7%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Staff/Family Class</td>
+          <td class="num"><strong>15</strong></td>
+          <td class="num">5.0%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 12 Class Package</td>
+          <td class="num"><strong>14</strong></td>
+          <td class="num">4.7%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Extended 10 Single Class Pack</td>
+          <td class="num"><strong>11</strong></td>
+          <td class="num">3.7%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 4 Class Package</td>
+          <td class="num"><strong>9</strong></td>
+          <td class="num">3.0%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 1 Month Unlimited Membership</td>
+          <td class="num"><strong>8</strong></td>
+          <td class="num">2.7%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 8 Class Package</td>
+          <td class="num"><strong>8</strong></td>
+          <td class="num">2.7%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Complimentary Referrer Class</td>
+          <td class="num"><strong>4</strong></td>
+          <td class="num">1.3%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 6 Month Unlimited Membership</td>
+          <td class="num"><strong>2</strong></td>
+          <td class="num">0.7%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 3 Month Unlimited Membership</td>
+          <td class="num"><strong>2</strong></td>
+          <td class="num">0.7%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Flex 5 Class Package</td>
+          <td class="num"><strong>2</strong></td>
+          <td class="num">0.7%</td>
+        </tr><tr>
+          <td class="metric-name">Barre 1 month Unlimited</td>
+          <td class="num"><strong>1</strong></td>
+          <td class="num">0.3%</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Cumulative lapsed book &mdash; the reactivation pool</h3>
+      <p class="subsection-deck">Cumulative unique lapsed members by product across all of 2026 (January &ndash; July). These are the reactivation targets, sorted by volume. The 1-Month Unlimited holder is the single highest-value segment.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Cumulative Lapsed</th>
+            <th>Share of Pool</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">Studio 1 Month Unlimited Membership</td>
+          <td class="num"><strong>221</strong></td>
+          <td class="num">22.6%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 4 Class Package</td>
+          <td class="num"><strong>174</strong></td>
+          <td class="num">17.8%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 12 Class Package</td>
+          <td class="num"><strong>168</strong></td>
+          <td class="num">17.2%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 8 Class Package</td>
+          <td class="num"><strong>131</strong></td>
+          <td class="num">13.4%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 10 Single Class Pack</td>
+          <td class="num"><strong>55</strong></td>
+          <td class="num">5.6%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Extended 10 Single Class Pack</td>
+          <td class="num"><strong>51</strong></td>
+          <td class="num">5.2%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 3 Month Unlimited Membership</td>
+          <td class="num"><strong>45</strong></td>
+          <td class="num">4.6%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 2 Week Unlimited Membership</td>
+          <td class="num"><strong>44</strong></td>
+          <td class="num">4.5%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 6 Month Unlimited Membership</td>
+          <td class="num"><strong>22</strong></td>
+          <td class="num">2.2%</td>
+        </tr><tr>
+          <td class="metric-name">Studio 20 Single Class Pack</td>
+          <td class="num"><strong>12</strong></td>
+          <td class="num">1.2%</td>
+        </tr><tr>
+          <td class="metric-name">Barre 1 month Unlimited</td>
+          <td class="num"><strong>10</strong></td>
+          <td class="num">1.0%</td>
+        </tr><tr>
+          <td class="metric-name">Studio Newcomers 2 Week Unlimited Membership</td>
+          <td class="num"><strong>7</strong></td>
+          <td class="num">0.7%</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Seven-month churn trend &mdash; January through July 2026</h3>
+      <p class="subsection-deck">The churn rate has been stable in the 36&ndash;43% range throughout 2026, but absolute lapse counts have risen steadily as the membership base has grown. July is highlighted in bold.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Expirations</th>
+            <th>Renewed</th>
+            <th>Lapsed</th>
+            <th>Renewal Rate</th>
+            <th>Churn Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">01 2026</td>
+          <td class="num">517</td>
+          <td class="num">326</td>
+          <td class="num">190</td>
+          <td class="num">63.1%</td>
+          <td class="num">36.8%</td>
+        </tr><tr>
+          <td class="metric-name">02 2026</td>
+          <td class="num">533</td>
+          <td class="num">316</td>
+          <td class="num">217</td>
+          <td class="num">59.3%</td>
+          <td class="num">40.7%</td>
+        </tr><tr>
+          <td class="metric-name">03 2026</td>
+          <td class="num">542</td>
+          <td class="num">339</td>
+          <td class="num">203</td>
+          <td class="num">62.5%</td>
+          <td class="num">37.5%</td>
+        </tr><tr>
+          <td class="metric-name">04 2026</td>
+          <td class="num">608</td>
+          <td class="num">390</td>
+          <td class="num">218</td>
+          <td class="num">64.1%</td>
+          <td class="num">35.9%</td>
+        </tr><tr>
+          <td class="metric-name">05 2026</td>
+          <td class="num">588</td>
+          <td class="num">351</td>
+          <td class="num">236</td>
+          <td class="num">59.7%</td>
+          <td class="num">40.1%</td>
+        </tr><tr>
+          <td class="metric-name">06 2026</td>
+          <td class="num">635</td>
+          <td class="num">360</td>
+          <td class="num">271</td>
+          <td class="num">56.7%</td>
+          <td class="num">42.7%</td>
+        </tr><tr>
+          <td class="metric-name"><strong>07 2026</strong></td>
+          <td class="num"><strong>730</strong></td>
+          <td class="num"><strong>411</strong></td>
+          <td class="num"><strong>298</strong></td>
+          <td class="num"><strong>56.3%</strong></td>
+          <td class="num"><strong>40.8%</strong></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Late cancellations &mdash; the operational leak behind the lapsed number</h3>
+      <p class="subsection-deck">Late cancels are a leading indicator of churn. Members who cancel frequently are disengaging from the studio before they formally lapse. 4 members cancelled 6+ times in July &mdash; these are the highest churn-risk individuals.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Jul 2026</th>
+            <th>Jun 2026</th>
+            <th>MoM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="metric-name">Total Late Cancels</td><td class="num"><strong>295</strong></td><td class="num">257</td><td class="num"><span class="badge bad">+14.8%</span></td></tr>
+          <tr><td class="metric-name">Members Who Late-Cancelled</td><td class="num"><strong>150</strong></td><td class="num">125</td><td class="num"><span class="badge bad">+20.0%</span></td></tr>
+          <tr><td class="metric-name">Heavy Cancelers (6+)</td><td class="num"><strong>4</strong></td><td class="num">6</td><td class="num"><span class="badge good">-33.3%</span></td></tr>
+          <tr><td class="metric-name">Cancels from Heavy Cancelers</td><td class="num"><strong>26</strong></td><td class="num">37</td><td class="num"><span class="badge good">-29.7%</span></td></tr>
+          <tr><td class="metric-name">New Client Visits</td><td class="num"><strong>136</strong></td><td class="num">137</td><td class="num"><span class="badge bad">-0.7%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">What worked / What did not work</h3>
+    </div>
+    <div class="worked-grid">
+      <div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Renewal volume scaled with expirations.</div>
+        <div class="worked-text">411 renewals from 730 expirations &mdash; the renewal rate held within 0.4pp of June despite 15% more expirations. The renewal engine is handling higher volume without breaking down.</div>
+      </div>
+    </div><div class="worked-card worked">
+      <div class="worked-icon">+</div>
+      <div class="worked-body">
+        <div class="worked-title">Frozen memberships remained low at 21.</div>
+        <div class="worked-text">Only 21 memberships were frozen in July &mdash; a small, recoverable segment. Frozen members are not lost; they are paused and can be reactivated with a structured return-to-studio flow.</div>
+      </div>
+    </div>
+      <div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Absolute lapsed count hit a 2026 high of 298.</div>
+        <div class="worked-text">298 lapsed members is the highest of any month in 2026, up 10.0% from June. While the churn rate is stable, the absolute number is growing &mdash; more members are leaving each month.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Cumulative lapsed book reached 978 unique members.</div>
+        <div class="worked-text">978 unique members have lapsed in 2026 &mdash; a large and growing reactivation pool. Without a structured win-back campaign, these members are permanently lost revenue.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Open Barre Class churn is disproportionately high.</div>
+        <div class="worked-text">83 of 298 lapses (27.9%) are from Open Barre Class. This product has a structurally high churn rate &mdash; members use it as a low-commitment entry point and do not renew.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">&minus;</div>
+      <div class="worked-body">
+        <div class="worked-title">Late-cancel policy still not enforced.</div>
+        <div class="worked-text">295 late cancels from 150 members, with 4 heavy cancelers. Late cancels are a churn leading indicator &mdash; disengaged members cancel before they lapse. No penalty is being collected.</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Action items &mdash; lapsed-member recovery</h3>
+    </div>
+    <div class="action-grid">
+      <div class="action-card">
+      <div class="action-num">01</div>
+      <div class="action-body">
+        <div class="action-title">Launch a tiered win-back campaign for the 978 lapsed members.</div>
+        <div class="action-text">Segment by recency: &lt;3 months (offer a free class + discounted restart), 3&ndash;6 months (referral credit on restart), 6+ months (fresh trial + newcomer offer). Prioritise the 221 1-Month Unlimited holders &mdash; they have demonstrated willingness to pay for recurring access. Target: 50 reactivations in Q3 at an average LTV of &#8377;8,000+.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Member Experience + Studio Head</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">02</div>
+      <div class="action-body">
+        <div class="action-title">Build a 30-day-ahead renewal pipeline.</div>
+        <div class="action-text">Every member with an expiry in the next 30 days gets a renewal touchpoint at Day -30 (benefits reminder), Day -14 (trainer personal check-in), and Day -7 (limited-time renewal offer). Assign renewal ownership to specific sellers. Target: renewal rate from 56.3% to 60%+, saving ~37 members/month.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Sales + Member Experience</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">03</div>
+      <div class="action-body">
+        <div class="action-title">Enforce the late-cancel penalty as a churn-prevention tool.</div>
+        <div class="action-text">4 members cancelled 6+ times &mdash; these are the highest churn-risk members. Before enforcing the &#8377;250 penalty, give each heavy canceler a personal retention call. The penalty is not the goal &mdash; the personal touchpoint is. The penalty enforces the behavioural discipline after the relationship is re-established.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Operations + Member Experience</span>
+          <span class="meta-pill">Priority: Medium</span>
+          <span class="meta-pill">Impact: Medium</span>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Data-backed conclusions</h3>
+    </div>
+    <div class="conclusions-block">
+      <div class="conclusion-item">
+      <span class="conclusion-num">01</span>
+      <span class="conclusion-text"><strong>The lapsed book is the studio&rsquo;s largest unrealised revenue pool.</strong> 978 unique lapsed members represent an estimated &#8377;35&ndash;50L in LTV recovery if even 15% are reactivated. This is higher-leverage than new-lead acquisition because lapsed members have already demonstrated product fit.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">02</span>
+      <span class="conclusion-text"><strong>The churn rate is stable but absolute lapses are growing.</strong> A 40.8% churn rate on a growing base means more lapses each month. The renewal rate at 56.3% is not improving &mdash; it needs a structured renewal pipeline to move above 60%.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">03</span>
+      <span class="conclusion-text"><strong>Open Barre Class and Single Class are the highest-churn products.</strong> 151 of 298 lapses (51%) are from these two low-commitment products. Members use them as entry points and do not renew &mdash; the upgrade path from these products to packages and memberships needs to be engineered.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">04</span>
+      <span class="conclusion-text"><strong>1-Month Unlimited holders are the highest-value reactivation target.</strong> 221 cumulative lapsed 1-Month Unlimited members have demonstrated willingness to pay for recurring access. A win-back offer that converts them to 3-Month or Annual memberships would both recover revenue and reduce future churn.</span>
+    </div>
+    </div>
+  </div>
+</section>
+<section class="report-section" id="recommendations">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-header-left">
+        <span class="section-eyebrow">06 &middot; Strategic Recommendations</span>
+        <h2 class="section-title">Five business decisions for senior management to make this quarter &mdash; each anchored to a July 2026 data point with a target, an owner, and an estimated revenue impact.</h2>
+        <p class="section-deck">
+          The five decisions below are sequenced by leverage, not by difficulty. Together, they address the three structural
+          challenges identified in this report: the conversion breakdown, the attendance-acquisition gap, and the growing lapsed
+          book. Each decision is anchored to a specific July 2026 metric and includes a target, an owner, and an estimated
+          monthly revenue impact. If all five are executed, August net sales should recover to <strong>&#8377;20&ndash;24L</strong>.
+        </p>
+      </div>
+      <div class="section-anchor">Section 06 / 07</div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Five business decisions for the next 90 days</h3>
+      <p class="subsection-deck">Each decision is designed to be actionable within 30 days and measurable within 60. Owners are named; priorities and impact ratings reflect the estimated revenue effect.</p>
+    </div>
+    <div class="action-grid">
+      <div class="action-card">
+      <div class="action-num">01</div>
+      <div class="action-body">
+        <div class="action-title">Repair the conversion funnel: target 20%+ conversion by September.</div>
+        <div class="action-text">The conversion rate halved from 24.2% to 9.9% in one month despite a growing lead pipeline. This is the single highest-leverage fix in the business. Implement a mandatory 48-hour post-trial follow-up cadence, fix the Website (25 leads, 0 conversions) and walk-in (7 leads, 0 conversions) channels with a 2-hour response SLA, and assign a dedicated conversion owner per trial. Restoring conversion to 20% on the 151-lead base would produce ~30 conversions (vs 15) and add approximately &#8377;1.11L in monthly revenue.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Studio Head + Member Experience</span>
+          <span class="meta-pill">Priority: Critical</span>
+          <span class="meta-pill">Impact: High &middot; ~&#8377;1.11L/mo</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">02</div>
+      <div class="action-body">
+        <div class="action-title">Monetise the attendance surge with a visit-to-value campaign.</div>
+        <div class="action-text">July delivered 2,432 visits at 47.3% fill &mdash; the highest in 8 months &mdash; but only 128 buyers. The gap between attendance and purchases is the structural revenue problem. Launch a visit-to-value campaign: identify the top 50 highest-attending non-members and offer a time-limited package upgrade at a 5% incentive (within the discount discipline framework). Target: 15 package conversions in 30 days, adding ~&#8377;2.10L in revenue from existing attendance.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Sales + Operations</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High &middot; ~&#8377;2.10L/mo</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">03</div>
+      <div class="action-body">
+        <div class="action-title">Reactivate the 978 lapsed members with a tiered win-back.</div>
+        <div class="action-text">978 cumulative unique lapsed members represent an estimated &#8377;35&ndash;50L in LTV recovery. Segment by recency (&lt;3mo, 3&ndash;6mo, 6+mo) and prioritise the 221 1-Month Unlimited holders. Offer tiered win-back incentives: free class + discounted restart for &lt;3mo, referral credit for 3&ndash;6mo, fresh trial for 6+mo. Target: 50 reactivations in Q3 at an average LTV of &#8377;8,000+ &mdash; approximately &#8377;4L in recovered revenue.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Member Experience + Studio Head</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: High &middot; ~&#8377;4L in Q3</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">04</div>
+      <div class="action-body">
+        <div class="action-title">Add Strength Lab capacity and discontinue Cardio Barre Express/Plus.</div>
+        <div class="action-text">Strength Lab at 83.9% fill is supply-constrained &mdash; add 10&ndash;15 sessions/month in the 07:30 and 19:15 peak slots. Discontinue Studio Cardio Barre Express (23.9% fill) and merge Cardio Barre Plus into the main slot. Reallocate recovered capacity to Strength Lab and weekend PowerCycle. Target: overall fill rate maintained above 47% with 10&ndash;15 more high-demand sessions.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Studio Head + Scheduling</span>
+          <span class="meta-pill">Priority: High</span>
+          <span class="meta-pill">Impact: Medium</span>
+        </div>
+      </div>
+    </div><div class="action-card">
+      <div class="action-num">05</div>
+      <div class="action-body">
+        <div class="action-title">Sustain the discount discipline and build a structured renewal pipeline.</div>
+        <div class="action-text">July&rsquo;s discount efficiency of &#8377;9.35 is the best of 2026 &mdash; maintain the hard-cap framework (penetration &lt;12%, no-discount Privates, Studio Head approval required). Simultaneously, build a 30-day-ahead renewal pipeline: every member with an upcoming expiry gets a Day -30, Day -14, and Day -7 touchpoint. Target: renewal rate from 56.3% to 60%+, saving ~37 members/month and reducing the churn-to-renewal gap.</div>
+        <div class="action-meta">
+          <span class="meta-pill">Owner: Studio Head + Finance + Sales</span>
+          <span class="meta-pill">Priority: Medium</span>
+          <span class="meta-pill">Impact: Medium &middot; ~37 members/mo</span>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Data-backed conclusions</h3>
+    </div>
+    <div class="conclusions-block">
+      <div class="conclusion-item">
+      <span class="conclusion-num">01</span>
+      <span class="conclusion-text"><strong>The five decisions are sequenced by leverage, not by difficulty.</strong> Conversion repair (#1) is the highest-impact and most addressable &mdash; it is a process fix, not a market problem. Visit-to-value monetisation (#2) leverages existing attendance. Lapsed reactivation (#3) taps the largest unrealised revenue pool. Scheduling optimisation (#4) is a quick structural fix. Discount discipline + renewal pipeline (#5) protects the structural wins.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">02</span>
+      <span class="conclusion-text"><strong>If all five decisions are executed, August net sales should recover to &#8377;20&ndash;24L.</strong> Conversion restoration alone adds ~&#8377;1.11L; visit-to-value adds ~&#8377;2.10L; lapsed reactivation adds ~&#8377;1L/month in Q3. Combined with sustained attendance and discount discipline, the path from &#8377;14.13L to &#8377;20&ndash;24L is achievable in one month.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">03</span>
+      <span class="conclusion-text"><strong>The studio&rsquo;s attendance base is its greatest competitive asset &mdash; the strategy must convert attendance to revenue.</strong> 2,432 monthly visits at 47.3% fill is a demand signal that most studios would envy. The business challenge is not generating demand &mdash; it is capturing the value of the demand that already exists.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">04</span>
+      <span class="conclusion-text"><strong>The discount discipline must be protected as a non-negotiable.</strong> July proved that disciplined discounting (&#8377;9.35 efficiency) is compatible with high attendance. The temptation to discount-drive revenue in a soft month would reverse this structural gain &mdash; the May experience is the cautionary data point.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">05</span>
+      <span class="conclusion-text"><strong>The renewal pipeline is the long-term churn solution.</strong> A 5pp improvement in renewal rate (from 56.3% to 60%+) would save ~37 members/month &mdash; more than the entire conversion output of July. The renewal pipeline is a higher-leverage retention investment than any acquisition campaign.</span>
+    </div>
+    </div>
+  </div>
+</section>
+<section class="report-section" id="predictions">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-header-left">
+        <span class="section-eyebrow">07 &middot; Predictions &amp; Forward View</span>
+        <h2 class="section-title">August 2026 forecast: &#8377;13&ndash;14L net sales if no intervention, &#8377;20&ndash;24L if the five decisions are executed. Three red flags to monitor weekly.</h2>
+        <p class="section-deck">
+          July&rsquo;s &#8377;14.13L net sales is the floor, not the trend. Without intervention, the buyer-count decline and
+          conversion breakdown will continue, and August will land at approximately <strong>&#8377;13&ndash;14L</strong>. With the
+          five strategic decisions executed &mdash; conversion repair, visit-to-value monetisation, lapsed reactivation, scheduling
+          optimisation, and sustained discount discipline &mdash; August should recover to <strong>&#8377;20&ndash;24L</strong>, a
+          40&ndash;70% lift. The three weekly red flags below are the operational discipline that makes this forecast actionable.
+        </p>
+      </div>
+      <div class="section-anchor">Section 07 / 07</div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Seven-month context &mdash; the trend that August inherits</h3>
+      <p class="subsection-deck">Net sales, buyers, visits, conversions, and conversion rate from January through July 2026. July is highlighted. The conversion rate decline from June to July is the steepest MoM change in the period and the primary driver of the August forecast.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Net Sales</th>
+            <th>Buyers</th>
+            <th>Visits</th>
+            <th>Converted</th>
+            <th>Conv Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <td class="metric-name">01 2026</td>
+          <td class="num">&#8377;26.13L</td>
+          <td class="num">190</td>
+          <td class="num">2,060</td>
+          <td class="num">18</td>
+          <td class="num">10.2%</td>
+        </tr><tr>
+          <td class="metric-name">02 2026</td>
+          <td class="num">&#8377;18.27L</td>
+          <td class="num">190</td>
+          <td class="num">1,919</td>
+          <td class="num">25</td>
+          <td class="num">15.6%</td>
+        </tr><tr>
+          <td class="metric-name">03 2026</td>
+          <td class="num">&#8377;19.23L</td>
+          <td class="num">182</td>
+          <td class="num">2,284</td>
+          <td class="num">20</td>
+          <td class="num">12.3%</td>
+        </tr><tr>
+          <td class="metric-name">04 2026</td>
+          <td class="num">&#8377;47.63L</td>
+          <td class="num">223</td>
+          <td class="num">2,165</td>
+          <td class="num">17</td>
+          <td class="num">10.2%</td>
+        </tr><tr>
+          <td class="metric-name">05 2026</td>
+          <td class="num">&#8377;23.11L</td>
+          <td class="num">193</td>
+          <td class="num">2,307</td>
+          <td class="num">29</td>
+          <td class="num">22.8%</td>
+        </tr><tr>
+          <td class="metric-name">06 2026</td>
+          <td class="num">&#8377;20.77L</td>
+          <td class="num">217</td>
+          <td class="num">2,281</td>
+          <td class="num">31</td>
+          <td class="num">24.2%</td>
+        </tr><tr>
+          <td class="metric-name"><strong>07 2026</strong></td>
+          <td class="num"><strong>&#8377;14.13L</strong></td>
+          <td class="num"><strong>128</strong></td>
+          <td class="num"><strong>2,432</strong></td>
+          <td class="num"><strong>15</strong></td>
+          <td class="num"><strong>9.9%</strong></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">August 2026 forecast &mdash; two scenarios</h3>
+      <p class="subsection-deck">The baseline scenario extrapolates the current trajectory. The intervention scenario assumes the five strategic decisions are executed within 30 days. The gap between the two scenarios is the value of management action.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Scenario</th>
+            <th>Net Sales</th>
+            <th>Assumptions</th>
+            <th>vs Jul 2026</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="status-bad"><td class="metric-name">Baseline (no intervention)</td><td class="num"><strong>&#8377;13.42L</strong></td><td class="num" style="text-align:left">Buyer count continues to decline; conversion stays at ~10%; attendance holds flat</td><td class="num"><span class="badge bad">-5.0%</span></td></tr>
+          <tr class="status-good"><td class="metric-name">Intervention (5 decisions executed)</td><td class="num"><strong>&#8377;17.34L</strong></td><td class="num" style="text-align:left">Conversion restored to 20% (+&#8377;1.11L); visit-to-value adds 15 packages (+&#8377;2.10L); lapsed reactivation begins</td><td class="num"><span class="badge good">+22.8%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Weekly red flags to monitor</h3>
+      <p class="subsection-deck">These three metrics should be reviewed every Monday. If any red flag is triggered, the corresponding escalation should be executed immediately &mdash; do not wait for the next monthly report.</p>
+    </div>
+    <div class="worked-grid">
+      <div class="worked-card didnt">
+      <div class="worked-icon">!</div>
+      <div class="worked-body">
+        <div class="worked-title">Conversion rate below 15% for 2 consecutive weeks.</div>
+        <div class="worked-text">If the weekly conversion rate stays below 15% through mid-August, escalate the follow-up cadence to daily check-ins and assign the Studio Head as the personal conversion owner for every trial.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">!</div>
+      <div class="worked-body">
+        <div class="worked-title">Buyer count below 140 for 2 consecutive weeks.</div>
+        <div class="worked-text">If unique weekly buyers fall below 35 (140/month run-rate), trigger the visit-to-value campaign immediately rather than waiting for the planned launch date.</div>
+      </div>
+    </div><div class="worked-card didnt">
+      <div class="worked-icon">!</div>
+      <div class="worked-body">
+        <div class="worked-title">Discount penetration above 12%.</div>
+        <div class="worked-text">If discount penetration exceeds 12% in any week, freeze all discount authority below the Studio Head level and review the discount log for unauthorised discounts.</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Data-backed conclusions</h3>
+    </div>
+    <div class="conclusions-block">
+      <div class="conclusion-item">
+      <span class="conclusion-num">01</span>
+      <span class="conclusion-text"><strong>August baseline (no intervention): &#8377;13&ndash;14L net sales.</strong> If the current trajectory continues &mdash; declining buyer count, sub-15% conversion, attendance holding flat &mdash; August will be marginally below July as the buyer contraction continues.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">02</span>
+      <span class="conclusion-text"><strong>August with intervention: &#8377;20&ndash;24L net sales.</strong> If the five strategic decisions are executed, conversion restoration adds ~&#8377;1.11L, visit-to-value adds ~&#8377;2.10L, and lapsed reactivation begins contributing in late August. The combined effect is a 40&ndash;70% lift from July&rsquo;s &#8377;14.13L.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">03</span>
+      <span class="conclusion-text"><strong>The conversion rate is the leading indicator to monitor weekly.</strong> If conversion recovers above 15% by Week 2 of August, the intervention scenario is on track. If it stays below 10%, the baseline scenario is more likely and additional measures are needed.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">04</span>
+      <span class="conclusion-text"><strong>Retention improvements will lag the interventions by 60&ndash;90 days.</strong> The renewal pipeline and win-back campaign will show results in September&ndash;October, not August. Patience on renewal rate and churn rate is required &mdash; these metrics respond in Q3, not Week 1.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">05</span>
+      <span class="conclusion-text"><strong>The weekly red-flag monitor is what makes this report actionable.</strong> Without weekly monitoring, the monthly report is a post-mortem. With it, the monthly report is a forward-looking management tool. The three red flags above should be reviewed every Monday.</span>
+    </div><div class="conclusion-item">
+      <span class="conclusion-num">06</span>
+      <span class="conclusion-text"><strong>The studio is one conversion-focused quarter from a structural step-up in economics.</strong> From July&rsquo;s &#8377;14.13L to a &#8377;25&ndash;30L steady-state is a 75&ndash;110% lift. The attendance base exists, the discount discipline is in place, and the five decisions are clear. The path from busy to profitable runs through the conversion funnel.</span>
+    </div>
+    </div>
+  </div>
+</section>
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-text">Kwality House &middot; Studio Pulse</div>
+        <p class="footer-text">
+          Senior Management Performance Review for June &amp; July 2026. This report is generated from the Studio Pulse export,
+          covering the period 01 June 2026 to 31 July 2026. All metrics are anchored to source data in the Studio Pulse workbook;
+          comparisons use June 2026 (prior month), May 2026, the January &ndash; March 2026 baseline, and the same months year-on-year.
+        </p>
+        <p class="footer-text" style="margin-top:12px;">
+          Methodology notes: Net Sales = MRP minus pre-tax (excl. VAT). Gross Sales = Payment Value (collected, incl. VAT).
+          Discount Value = list-price discount. Units = transaction count (the Sale Item Quantity field is unreliable in this export).
+          The Sales CSV&rsquo;s &ldquo;Payment Method&rdquo; column holds the transaction status (&ldquo;succeeded&rdquo;) and
+          &ldquo;Payment Status&rdquo; holds the actual payment method &mdash; columns are reversed in the export. All data has been
+          cross-validated against the May 2026 reference report.
+        </p>
+      </div>
+      <div>
+        <div class="footer-label">Report Contents</div>
+        <p class="footer-text">
+          01 Executive Summary<br>
+          02 Revenue &amp; Sales Performance<br>
+          03 New Client Conversion Funnel<br>
+          04 Sessions &amp; Class Performance<br>
+          05 Lapsed Memberships Deep Dive<br>
+          06 Strategic Recommendations<br>
+          07 Predictions &amp; Forward View
+        </p>
+      </div>
+      <div>
+        <div class="footer-label">Headline Metrics &middot; July 2026</div>
+        <p class="footer-text">
+          Net Sales: &#8377;14.13L<br>
+          Visits: 2,432<br>
+          Fill Rate: 47.3%<br>
+          Conversion: 9.9%<br>
+          Churn Rate: 40.8%<br>
+          Discount Efficiency: &#8377;9.35
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function() {
+  const root = document.documentElement;
+  const toggle = document.getElementById('theme-toggle');
+  const label = document.getElementById('theme-label');
+  const icon = document.getElementById('theme-icon');
+
+  const saved = localStorage.getItem('kh-theme') || 'dark';
+  applyTheme(saved);
+
+  toggle.addEventListener('click', () => {
+    const current = root.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('kh-theme', next);
+  });
+
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      label.textContent = 'Light';
+      icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    } else {
+      label.textContent = 'Dark';
+      icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>';
+    }
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1840 @@
+{
+  "sales": {
+    "2026-01": {
+      "ym": "2026-01",
+      "gross": 2744704.6600000006,
+      "net": 2613189.9699999997,
+      "disc": 359812.0,
+      "disc_txn": 37,
+      "disc_pen": 12.251655629139073,
+      "txn": 302,
+      "members": 190,
+      "cats": {
+        "Memberships": [
+          1432490.3099999998,
+          36,
+          234057.0
+        ],
+        "Retail": [
+          70793.43,
+          62,
+          0.0
+        ],
+        "Sessions/Single Classes": [
+          197316.96999999997,
+          108,
+          0.0
+        ],
+        "Class Packages": [
+          847759.03,
+          61,
+          41340.0
+        ],
+        "Money Credits": [
+          21495.01,
+          20,
+          2040.0
+        ],
+        "Newcomers Special": [
+          12862.51,
+          7,
+          0.0
+        ],
+        "Privates": [
+          161987.40000000002,
+          8,
+          82375.0
+        ]
+      },
+      "prods": {
+        "Studio 1 Month Unlimited": [
+          250338.90000000002,
+          11910,
+          45582.0
+        ],
+        "Studio 3 Month Unlimited": [
+          463601.25,
+          22072,
+          15225.0
+        ],
+        "Retail Product": [
+          70793.43,
+          5762,
+          0.0
+        ],
+        "Session": [
+          85412.5,
+          4141,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          31500.0,
+          1500,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          626587.5,
+          29836,
+          173250.0
+        ],
+        "Studio Single Class": [
+          111904.47000000002,
+          6036,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          28350.0,
+          1350,
+          3000.0
+        ],
+        "Money Credits": [
+          21495.01,
+          1255,
+          2040.0
+        ],
+        "Studio 8 Class Package": [
+          138131.0,
+          6577,
+          6120.0
+        ],
+        "Studio 4 Class Package": [
+          89880.0,
+          4272,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          329121.15,
+          15692,
+          2257.5
+        ],
+        "Studio 57 Class Package": [
+          89026.88,
+          4239,
+          14962.5
+        ],
+        "Studio Newcomers 2 For 1": [
+          12862.51,
+          609,
+          0.0
+        ],
+        "Studio Private Class": [
+          133873.65000000002,
+          19125,
+          67500.0
+        ],
+        "Studio 30 Single Class Package": [
+          85050.0,
+          4050,
+          9000.0
+        ],
+        "Private Class": [
+          28113.75,
+          6690,
+          14875.0
+        ],
+        "Studio 2 Week Unlimited": [
+          20824.66,
+          990,
+          0.0
+        ],
+        "Barre 2 week Unlimited": [
+          7088.0,
+          425,
+          0.0
+        ],
+        "Studio 10 Class Package": [
+          56700.0,
+          2700,
+          6000.0
+        ],
+        "Barre 1 month Unlimited": [
+          64050.0,
+          3048,
+          0.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          259453.95,
+          35
+        ],
+        "Akshay Rane": [
+          878635.73,
+          85
+        ],
+        "Vahishta Fitter": [
+          546429.67,
+          55
+        ],
+        "Tahira Sayyed": [
+          493282.15,
+          60
+        ],
+        "Zaheer Agarbattiwala": [
+          358743.76,
+          53
+        ],
+        "Deesha Changwani": [
+          23205.0,
+          3
+        ],
+        "Admin Admin": [
+          5327.0,
+          1
+        ],
+        "Zahur Shaikh": [
+          161987.40000000002,
+          8
+        ],
+        "Nadiya Shaikh": [
+          17640.0,
+          2
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          259453.95,
+          35
+        ],
+        "Cash": [
+          410735.33,
+          56
+        ],
+        "Custom (in-studio)": [
+          1940550.23,
+          193
+        ],
+        "Multiple payment methods": [
+          133965.15,
+          18
+        ]
+      },
+      "promo_sales": 1297735.06,
+      "mem_sales": 1432490.3099999998,
+      "pkg_sales": 847759.03,
+      "dropin": 197316.96999999997,
+      "atv": 9088.426026490068,
+      "rev_per_member": 13753.63142105263
+    },
+    "2026-02": {
+      "ym": "2026-02",
+      "gross": 1921109.6099999992,
+      "net": 1827226.7399999981,
+      "disc": 391117.1399999999,
+      "disc_txn": 67,
+      "disc_pen": 20.743034055727556,
+      "txn": 323,
+      "members": 190,
+      "cats": {
+        "Class Packages": [
+          675686.13,
+          55,
+          48777.5
+        ],
+        "Memberships": [
+          928665.9100000001,
+          56,
+          243273.08000000002
+        ],
+        "Sessions/Single Classes": [
+          174412.5,
+          94,
+          0.0
+        ],
+        "Retail": [
+          52788.49999999999,
+          68,
+          0.0
+        ],
+        "Newcomers Special": [
+          34912.5,
+          19,
+          0.0
+        ],
+        "Privates": [
+          48672.81,
+          10,
+          93986.96
+        ],
+        "Money Credits": [
+          5971.259999999999,
+          21,
+          5079.6
+        ]
+      },
+      "prods": {
+        "Studio 30 Single Class Package": [
+          80325.0,
+          7650,
+          27000.0
+        ],
+        "Barre 2 week Unlimited": [
+          8925.0,
+          425,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          662274.7800000001,
+          34109,
+          204546.74
+        ],
+        "Session": [
+          89954.5,
+          4264,
+          0.0
+        ],
+        "Studio Single Class": [
+          84458.0,
+          4178,
+          0.0
+        ],
+        "Retail Product": [
+          52788.49999999999,
+          4986,
+          0.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          34912.5,
+          1653,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          243768.63,
+          11619,
+          8277.5
+        ],
+        "Studio 4 Class Package": [
+          95497.5,
+          4539,
+          0.0
+        ],
+        "Studio Private Class": [
+          36425.31,
+          14000,
+          93986.96
+        ],
+        "Studio 3 Month Unlimited": [
+          183016.3,
+          10099,
+          38726.340000000004
+        ],
+        "Studio 8 Class Package": [
+          128520.0,
+          6120,
+          0.0
+        ],
+        "Money Credits": [
+          5971.259999999999,
+          3426,
+          5079.6
+        ],
+        "Private Class": [
+          12247.5,
+          594,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          14175.0,
+          675,
+          1500.0
+        ],
+        "Barre 1 month Unlimited": [
+          64037.5,
+          3048,
+          0.0
+        ],
+        "Studio 10 Class Package": [
+          85050.0,
+          4050,
+          9000.0
+        ],
+        "Studio 2 Week Unlimited": [
+          10412.33,
+          495,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          28350.0,
+          1350,
+          3000.0
+        ]
+      },
+      "sellers": {
+        "Tahira Sayyed": [
+          821687.1400000001,
+          134
+        ],
+        "Vahishta Fitter": [
+          417121.81000000006,
+          70
+        ],
+        "Imran Shaikh": [
+          27956.26,
+          2
+        ],
+        "Akshay Rane": [
+          462798.1400000001,
+          78
+        ],
+        "-": [
+          191546.26,
+          39
+        ]
+      },
+      "pay": {
+        "Custom (in-studio)": [
+          1277000.35,
+          188
+        ],
+        "Cash": [
+          300470.95000000007,
+          79
+        ],
+        "Stripe (online)": [
+          191546.26,
+          39
+        ],
+        "Multiple payment methods": [
+          152092.05,
+          17
+        ]
+      },
+      "promo_sales": 1083066.2700000003,
+      "mem_sales": 928665.9100000001,
+      "pkg_sales": 675686.13,
+      "dropin": 174412.5,
+      "atv": 5947.70777089783,
+      "rev_per_member": 9616.982842105253
+    },
+    "2026-03": {
+      "ym": "2026-03",
+      "gross": 2018320.609999999,
+      "net": 1922628.7899999972,
+      "disc": 379267.5,
+      "disc_txn": 42,
+      "disc_pen": 12.883435582822086,
+      "txn": 326,
+      "members": 182,
+      "cats": {
+        "Sessions/Single Classes": [
+          205292.19,
+          115,
+          175.0
+        ],
+        "Memberships": [
+          702869.2300000001,
+          20,
+          130362.5
+        ],
+        "Class Packages": [
+          753036.5700000001,
+          60,
+          33030.0
+        ],
+        "Retail": [
+          89339.01,
+          78,
+          0.0
+        ],
+        "Money Credits": [
+          10920.01,
+          21,
+          0.0
+        ],
+        "Others": [
+          2.1,
+          2,
+          0.0
+        ],
+        "Newcomers Special": [
+          25725.0,
+          14,
+          0.0
+        ],
+        "Privates": [
+          231136.5,
+          16,
+          215700.0
+        ]
+      },
+      "prods": {
+        "Session": [
+          119439.0,
+          5916,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          303187.5,
+          14436,
+          96250.0
+        ],
+        "Studio Single Class": [
+          85853.19,
+          4781,
+          175.0
+        ],
+        "Studio 8 Class Package": [
+          160650.0,
+          7650,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          190898.14,
+          9180,
+          11537.5
+        ],
+        "Retail Product": [
+          89339.01,
+          6825,
+          0.0
+        ],
+        "Money Credits": [
+          10920.01,
+          2412,
+          0.0
+        ],
+        "Studio 4 Class Package": [
+          78645.0,
+          3738,
+          0.0
+        ],
+        "Test": [
+          2.1,
+          0,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          288766.07,
+          13838,
+          9030.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          25725.0,
+          1218,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          113400.0,
+          5400,
+          12000.0
+        ],
+        "Barre 1 month Unlimited": [
+          64050.0,
+          3048,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          42525.0,
+          2025,
+          4500.0
+        ],
+        "Studio 2 Week Unlimited": [
+          10412.33,
+          495,
+          0.0
+        ],
+        "Studio Private Class": [
+          197400.71999999997,
+          43024,
+          182280.0
+        ],
+        "Studio 10 Class Package": [
+          69050.5,
+          3375,
+          7500.0
+        ],
+        "Studio 3 Month Unlimited": [
+          45294.38,
+          2156,
+          7612.5
+        ],
+        "Studio 6 Month Unlimited": [
+          89026.88,
+          4239,
+          14962.5
+        ],
+        "Private Class": [
+          33735.78,
+          15036,
+          33420.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          239886.68,
+          52
+        ],
+        "Tahira Sayyed": [
+          607134.26,
+          97
+        ],
+        "Zaheer Agarbattiwala": [
+          17716.5,
+          11
+        ],
+        "Akshay Rane": [
+          639843.3200000001,
+          91
+        ],
+        "Vahishta Fitter": [
+          289083.35,
+          56
+        ],
+        "Zahur Shaikh": [
+          222819.0,
+          18
+        ],
+        "Imran Shaikh": [
+          1837.5,
+          1
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          239884.58000000002,
+          50
+        ],
+        "Custom (in-studio)": [
+          1466795.659999999,
+          200
+        ],
+        "Multiple payment methods": [
+          49820.19,
+          12
+        ],
+        "Cash": [
+          261820.18,
+          64
+        ]
+      },
+      "promo_sales": 1049181.1500000004,
+      "mem_sales": 702869.2300000001,
+      "pkg_sales": 753036.5700000001,
+      "dropin": 205292.19,
+      "atv": 6191.16751533742,
+      "rev_per_member": 10563.894450549435
+    },
+    "2026-04": {
+      "ym": "2026-04",
+      "gross": 5001387.709999996,
+      "net": 4762669.010000001,
+      "disc": 2151915.21,
+      "disc_txn": 134,
+      "disc_pen": 31.828978622327792,
+      "txn": 421,
+      "members": 223,
+      "cats": {
+        "Memberships": [
+          2895413.039999996,
+          99,
+          1404000.21
+        ],
+        "Retail": [
+          107401.98999999999,
+          65,
+          0.0
+        ],
+        "Money Credits": [
+          28870.93,
+          32,
+          0.0
+        ],
+        "Sessions/Single Classes": [
+          225762.49,
+          123,
+          0.0
+        ],
+        "Others": [
+          477263.85000000003,
+          5,
+          24750.0
+        ],
+        "Class Packages": [
+          849724.26,
+          63,
+          48065.0
+        ],
+        "Privates": [
+          393063.64999999997,
+          21,
+          675100.0
+        ],
+        "Newcomers Special": [
+          23887.5,
+          13,
+          0.0
+        ]
+      },
+      "prods": {
+        "Studio 6 Month Unlimited": [
+          267080.64,
+          12717,
+          44887.5
+        ],
+        "Studio 1 Month Unlimited": [
+          977909.02,
+          113785,
+          848450.2100000001
+        ],
+        "Studio 3 Month Unlimited": [
+          654494.17,
+          40372,
+          248500.0
+        ],
+        "Retail Product": [
+          107401.98999999999,
+          6469,
+          0.0
+        ],
+        "Money Credits": [
+          28870.93,
+          3271,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          939881.25,
+          44754,
+          259875.0
+        ],
+        "Session": [
+          123113.0,
+          5933,
+          0.0
+        ],
+        "Others": [
+          477262.80000000005,
+          22726,
+          24750.0
+        ],
+        "Studio 10 Class Package": [
+          171675.0,
+          8175,
+          16500.0
+        ],
+        "Studio 12 Class Package": [
+          327111.77,
+          15567,
+          19565.0
+        ],
+        "Studio Single Class": [
+          102649.48999999999,
+          4883,
+          0.0
+        ],
+        "Studio Private Class": [
+          348081.00999999995,
+          100059,
+          629020.0
+        ],
+        "Studio 8 Class Package": [
+          128520.0,
+          6120,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          28350.0,
+          1350,
+          3000.0
+        ],
+        "Studio 4 Class Package": [
+          61792.49,
+          2941,
+          0.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          23887.5,
+          1135,
+          0.0
+        ],
+        "Studio 30 Single Class Package": [
+          89750.0,
+          4275,
+          4500.0
+        ],
+        "Barre 1 month Unlimited": [
+          32025.0,
+          1524,
+          0.0
+        ],
+        "Private Class": [
+          44982.64000000001,
+          20736,
+          46080.0
+        ],
+        "Strength Lab 1 month Unlimited": [
+          13610.63,
+          648,
+          2287.5
+        ],
+        "Studio 2 Week Unlimited": [
+          10412.33,
+          495,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          42525.0,
+          2025,
+          4500.0
+        ],
+        "Test": [
+          1.05,
+          0,
+          0.0
+        ]
+      },
+      "sellers": {
+        "Zaheer Agarbattiwala": [
+          1196744.8,
+          68
+        ],
+        "Vahishta Fitter": [
+          857028.23,
+          86
+        ],
+        "Admin Admin": [
+          122175.0,
+          4
+        ],
+        "-": [
+          452702.77999999997,
+          63
+        ],
+        "Tahira Sayyed": [
+          1146120.56,
+          101
+        ],
+        "Akshay Rane": [
+          848052.6900000001,
+          80
+        ],
+        "Sheetal Kataria": [
+          1250.0,
+          1
+        ],
+        "Zahur Shaikh": [
+          377313.64999999997,
+          18
+        ]
+      },
+      "pay": {
+        "Custom (in-studio)": [
+          3223312.4299999983,
+          239
+        ],
+        "Cash": [
+          724932.85,
+          83
+        ],
+        "Stripe (online)": [
+          452701.73,
+          62
+        ],
+        "Multiple payment methods": [
+          600440.7000000002,
+          37
+        ]
+      },
+      "promo_sales": 3586348.559999997,
+      "mem_sales": 2895413.039999996,
+      "pkg_sales": 849724.26,
+      "dropin": 225762.49,
+      "atv": 11879.780783847971,
+      "rev_per_member": 21357.26013452915,
+      "disc_eff": 2.213223359297693
+    },
+    "2026-05": {
+      "ym": "2026-05",
+      "gross": 2428385.71,
+      "net": 2311178.8799999966,
+      "disc": 957890.9399999995,
+      "disc_txn": 42,
+      "disc_pen": 13.125,
+      "txn": 320,
+      "members": 193,
+      "cats": {
+        "Class Packages": [
+          732790.3200000001,
+          58,
+          34505.0
+        ],
+        "Memberships": [
+          1100679.8599999999,
+          37,
+          372135.94
+        ],
+        "Sessions/Single Classes": [
+          229364.94,
+          124,
+          0.0
+        ],
+        "Money Credits": [
+          9089.02,
+          22,
+          0.0
+        ],
+        "Privates": [
+          263817.47,
+          10,
+          551250.0
+        ],
+        "Retail": [
+          76106.6,
+          60,
+          0.0
+        ],
+        "Newcomers Special": [
+          16537.5,
+          9,
+          0.0
+        ]
+      },
+      "prods": {
+        "Studio 8 Class Package": [
+          160650.0,
+          7650,
+          0.0
+        ],
+        "Studio 3 Month Unlimited": [
+          360946.88999999996,
+          22452,
+          149599.22
+        ],
+        "Studio 4 Class Package": [
+          89880.0,
+          4272,
+          0.0
+        ],
+        "Session": [
+          154187.5,
+          7309,
+          0.0
+        ],
+        "Money Credits": [
+          9089.02,
+          1932,
+          0.0
+        ],
+        "Studio Single Class": [
+          75177.44,
+          4276,
+          0.0
+        ],
+        "Studio Private Class": [
+          15750.0,
+          1250,
+          0.0
+        ],
+        "Studio 10 Class Package": [
+          158813.0,
+          7650,
+          12000.0
+        ],
+        "Retail Product": [
+          76106.6,
+          8423,
+          0.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          16537.5,
+          783,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          172247.32,
+          8197,
+          1505.0
+        ],
+        "Studio 1 Month Unlimited": [
+          348958.23,
+          35937,
+          145536.72
+        ],
+        "Barre 1 month Unlimited": [
+          48037.41,
+          2286,
+          0.0
+        ],
+        "Private Class": [
+          248067.46999999997,
+          82684,
+          551250.0
+        ],
+        "Studio 30 Single Class Package": [
+          122850.0,
+          5849,
+          18000.0
+        ],
+        "Studio Annual Unlimited": [
+          323400.0,
+          15400,
+          77000.0
+        ],
+        "Studio 10 Single Class Package": [
+          28350.0,
+          1350,
+          3000.0
+        ],
+        "Studio 2 Week Unlimited": [
+          10412.33,
+          495,
+          0.0
+        ],
+        "Barre 2 week Unlimited": [
+          8925.0,
+          425,
+          0.0
+        ]
+      },
+      "sellers": {
+        "Zaheer Agarbattiwala": [
+          700726.45,
+          50
+        ],
+        "-": [
+          237776.71,
+          55
+        ],
+        "Sheetal Kataria": [
+          253523.90000000002,
+          37
+        ],
+        "Akshay Rane": [
+          261351.72999999998,
+          65
+        ],
+        "Vahishta Fitter": [
+          349666.23,
+          63
+        ],
+        "Admin Admin": [
+          22500.0,
+          1
+        ],
+        "Tahira Sayyed": [
+          602840.69,
+          49
+        ]
+      },
+      "pay": {
+        "Custom (in-studio)": [
+          1533410.9700000002,
+          190
+        ],
+        "Stripe (online)": [
+          237776.71,
+          55
+        ],
+        "Cash": [
+          198538.47999999998,
+          49
+        ],
+        "Multiple payment methods": [
+          458659.55,
+          26
+        ]
+      },
+      "promo_sales": 1353345.4400000004,
+      "mem_sales": 1100679.8599999999,
+      "pkg_sales": 732790.3200000001,
+      "dropin": 229364.94,
+      "atv": 7588.70534375,
+      "rev_per_member": 11975.020103626926,
+      "disc_eff": 2.412778724058083
+    },
+    "2026-06": {
+      "ym": "2026-06",
+      "gross": 2180716.0,
+      "net": 2076834.459999998,
+      "disc": 227855.03999999998,
+      "disc_txn": 44,
+      "disc_pen": 13.664596273291925,
+      "txn": 322,
+      "members": 217,
+      "cats": {
+        "Sessions/Single Classes": [
+          198186.0,
+          107,
+          0.0
+        ],
+        "Class Packages": [
+          838388.5,
+          67,
+          28040.0
+        ],
+        "Retail": [
+          32177.75,
+          70,
+          0.0
+        ],
+        "Newcomers Special": [
+          25725.0,
+          14,
+          0.0
+        ],
+        "Memberships": [
+          843558.7100000002,
+          32,
+          147915.03999999998
+        ],
+        "Money Credits": [
+          61383.91,
+          17,
+          0.0
+        ],
+        "Privates": [
+          64795.48000000001,
+          13,
+          51900.0
+        ],
+        "Others": [
+          116500.65000000001,
+          2,
+          0.0
+        ]
+      },
+      "prods": {
+        "Studio Single Class": [
+          69561.0,
+          3482,
+          0.0
+        ],
+        "Session": [
+          128625.0,
+          6091,
+          0.0
+        ],
+        "Studio 4 Class Package": [
+          101115.0,
+          4806,
+          0.0
+        ],
+        "Studio 8 Class Package": [
+          137996.0,
+          6579,
+          1020.0
+        ],
+        "Retail Product": [
+          32177.75,
+          4824,
+          0.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          25725.0,
+          1218,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          354535.04,
+          22511,
+          74545.01999999999
+        ],
+        "Studio 10 Class Package": [
+          114713.0,
+          5550,
+          9000.0
+        ],
+        "Studio 3 Month Unlimited": [
+          373935.25999999995,
+          19788,
+          63395.020000000004
+        ],
+        "Studio 6 Month Unlimited": [
+          94263.75,
+          4488,
+          9975.0
+        ],
+        "Money Credits": [
+          61383.91,
+          950,
+          0.0
+        ],
+        "Studio Private Class": [
+          53550.32000000001,
+          19430,
+          41520.0
+        ],
+        "Studio 12 Class Package": [
+          355414.5,
+          16996,
+          6020.0
+        ],
+        "Others": [
+          116500.65000000001,
+          5547,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          113400.0,
+          5400,
+          12000.0
+        ],
+        "Studio 2 Week Unlimited": [
+          20824.66,
+          990,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          15750.0,
+          750,
+          0.0
+        ],
+        "Private Class": [
+          11245.16,
+          4670,
+          10380.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          296257.5,
+          53
+        ],
+        "Zaheer Agarbattiwala": [
+          333365.85,
+          32
+        ],
+        "Vahishta Fitter": [
+          502035.39999999997,
+          70
+        ],
+        "Sheetal Kataria": [
+          321569.55,
+          52
+        ],
+        "Tahira Sayyed": [
+          105643.25,
+          23
+        ],
+        "Akshay Rane": [
+          520446.97,
+          80
+        ],
+        "Zahur Shaikh": [
+          101397.47999999997,
+          12
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          296257.5,
+          53
+        ],
+        "Custom (in-studio)": [
+          1050848.4900000002,
+          191
+        ],
+        "Multiple payment methods": [
+          381612.83999999997,
+          21
+        ],
+        "Cash": [
+          451997.17,
+          57
+        ]
+      },
+      "promo_sales": 824523.4400000005,
+      "mem_sales": 843558.7100000002,
+      "pkg_sales": 838388.5,
+      "dropin": 198186.0,
+      "atv": 6772.409937888198,
+      "rev_per_member": 9570.665714285706,
+      "disc_eff": 9.114718112006644
+    },
+    "2026-07": {
+      "ym": "2026-07",
+      "gross": 1486659.68,
+      "net": 1412789.1899999995,
+      "disc": 151050.8,
+      "disc_txn": 22,
+      "disc_pen": 11.0,
+      "txn": 200,
+      "members": 128,
+      "cats": {
+        "Sessions/Single Classes": [
+          132592.5,
+          72,
+          0.0
+        ],
+        "Memberships": [
+          801911.3899999999,
+          17,
+          98137.5
+        ],
+        "Retail": [
+          32036.75,
+          40,
+          0.0
+        ],
+        "Class Packages": [
+          406158.1699999999,
+          33,
+          22493.3
+        ],
+        "Money Credits": [
+          11082.75,
+          20,
+          0.0
+        ],
+        "Others": [
+          5512.5,
+          3,
+          0.0
+        ],
+        "Newcomers Special": [
+          14700.0,
+          8,
+          0.0
+        ],
+        "Privates": [
+          82665.62,
+          7,
+          30420.0
+        ]
+      },
+      "prods": {
+        "Session": [
+          56963.0,
+          2786,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          323400.0,
+          15400,
+          77000.0
+        ],
+        "Retail Product": [
+          32036.75,
+          2817,
+          0.0
+        ],
+        "Studio Single Class": [
+          75629.5,
+          4182,
+          0.0
+        ],
+        "Studio 8 Class Package": [
+          92411.28000000001,
+          4400,
+          3789.3
+        ],
+        "Studio 1 Month Unlimited": [
+          145372.5,
+          6918,
+          3550.0
+        ],
+        "Money Credits": [
+          11082.75,
+          4844,
+          0.0
+        ],
+        "Studio 3 Month Unlimited - Monthly": [
+          17762.93,
+          845,
+          0.0
+        ],
+        "Others": [
+          5512.5,
+          261,
+          0.0
+        ],
+        "Studio 4 Class Package": [
+          29648.3,
+          1418,
+          3674.0
+        ],
+        "Studio 12 Class Package": [
+          180148.51,
+          8573,
+          9030.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          14700.0,
+          696,
+          0.0
+        ],
+        "Studio 3 Month Unlimited": [
+          205099.71,
+          9767,
+          7612.5
+        ],
+        "Studio 10 Class Package": [
+          59850.08,
+          2850,
+          3000.0
+        ],
+        "Studio 10 Single Class Package": [
+          15750.0,
+          750,
+          0.0
+        ],
+        "Studio Private Class": [
+          61424.619999999995,
+          5372,
+          10140.0
+        ],
+        "Studio 20 Single Class Package": [
+          28350.0,
+          1350,
+          3000.0
+        ],
+        "Private Class": [
+          21241.0,
+          5744,
+          20280.0
+        ],
+        "Barre 1 month Unlimited": [
+          16012.5,
+          762,
+          0.0
+        ],
+        "Studio 6 Month Unlimited": [
+          94263.75,
+          4488,
+          9975.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          153195.0,
+          35
+        ],
+        "Akshay Rane": [
+          405985.62,
+          49
+        ],
+        "Tahira Sayyed": [
+          90608.41,
+          22
+        ],
+        "Zahur Shaikh": [
+          83663.12,
+          9
+        ],
+        "Zaheer Agarbattiwala": [
+          176473.63,
+          20
+        ],
+        "Vahishta Fitter": [
+          401305.6,
+          26
+        ],
+        "Sheetal Kataria": [
+          175428.3,
+          39
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          153195.0,
+          35
+        ],
+        "Cash": [
+          369076.89,
+          37
+        ],
+        "Custom (in-studio)": [
+          862901.87,
+          113
+        ],
+        "Multiple payment methods": [
+          101485.92,
+          15
+        ]
+      },
+      "promo_sales": 661136.9199999999,
+      "mem_sales": 801911.3899999999,
+      "pkg_sales": 406158.1699999999,
+      "dropin": 132592.5,
+      "atv": 7433.2984,
+      "rev_per_member": 11037.415546874996,
+      "disc_eff": 9.353073204511327
+    },
+    "2025-06": {
+      "ym": "2025-06",
+      "gross": 2008033.89,
+      "net": 1699635.7699999998,
+      "disc": 106397.5,
+      "disc_txn": 33,
+      "disc_pen": 9.939759036144578,
+      "txn": 332,
+      "members": 193,
+      "cats": {
+        "Sessions/Single Classes": [
+          178770.0,
+          97,
+          0.0
+        ],
+        "Class Packages": [
+          852597.2600000002,
+          60,
+          45810.0
+        ],
+        "Retail": [
+          93985.93999999997,
+          129,
+          0.0
+        ],
+        "Memberships": [
+          855327.75,
+          35,
+          60587.5
+        ],
+        "Privates": [
+          11800.0,
+          2,
+          0.0
+        ],
+        "Money Credits": [
+          15552.94,
+          9,
+          0.0
+        ]
+      },
+      "prods": {
+        "Session": [
+          88500.0,
+          13500,
+          0.0
+        ],
+        "Studio 8 Class Package": [
+          168504.0,
+          25704,
+          0.0
+        ],
+        "Studio 30 Single Class Package": [
+          92925.0,
+          14175,
+          11250.0
+        ],
+        "Retail Product": [
+          93985.93999999997,
+          19445,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          390466.75,
+          59977,
+          17537.5
+        ],
+        "Studio Single Class": [
+          90270.0,
+          38070,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          333869.26,
+          50924,
+          18060.0
+        ],
+        "Studio 4 Class Package": [
+          82069.0,
+          12519,
+          0.0
+        ],
+        "Studio 10 Single Class Package": [
+          175230.0,
+          26730,
+          16500.0
+        ],
+        "Studio Private Class": [
+          11800.0,
+          1800,
+          0.0
+        ],
+        "Money Credits": [
+          15552.94,
+          2936,
+          0.0
+        ],
+        "Studio 2 Week Unlimited": [
+          40120.0,
+          6120,
+          0.0
+        ],
+        "Studio 3 Month Unlimited - Monthly": [
+          17110.0,
+          2610,
+          0.0
+        ],
+        "Studio 3 Month Unlimited": [
+          236118.0,
+          36017,
+          17400.0
+        ],
+        "Studio 6 Month Unlimited": [
+          171513.0,
+          26162,
+          25650.0
+        ]
+      },
+      "sellers": {
+        "-": [
+          411309.65,
+          53
+        ],
+        "Akshay Rane": [
+          631486.5800000001,
+          89
+        ],
+        "Zaheer Agarbattiwala": [
+          523319.12000000005,
+          105
+        ],
+        "Tahira Sayyed": [
+          421334.54000000004,
+          76
+        ],
+        "Admin Admin": [
+          19924.0,
+          5
+        ],
+        "Zahur Shaikh": [
+          660.0,
+          4
+        ]
+      },
+      "pay": {
+        "Stripe (online)": [
+          411309.65,
+          53
+        ],
+        "Custom (in-studio)": [
+          979689.0700000002,
+          194
+        ],
+        "Cash": [
+          431660.5,
+          68
+        ],
+        "Multiple payment methods": [
+          185374.66999999998,
+          17
+        ]
+      },
+      "promo_sales": 799157.9500000002,
+      "mem_sales": 855327.75,
+      "pkg_sales": 852597.2600000002,
+      "dropin": 178770.0,
+      "atv": 6048.29484939759,
+      "rev_per_member": 8806.402953367875,
+      "disc_eff": 15.974395732982446
+    },
+    "2025-07": {
+      "ym": "2025-07",
+      "gross": 2111894.159999999,
+      "net": 1789995.8700000006,
+      "disc": 161744.79,
+      "disc_txn": 29,
+      "disc_pen": 10.247349823321555,
+      "txn": 283,
+      "members": 178,
+      "cats": {
+        "Retail": [
+          95591.0,
+          70,
+          0.0
+        ],
+        "Sessions/Single Classes": [
+          186160.01,
+          102,
+          0.0
+        ],
+        "Memberships": [
+          1164294.25,
+          42,
+          130199.79000000001
+        ],
+        "Class Packages": [
+          628001.9600000002,
+          49,
+          31545.0
+        ],
+        "Money Credits": [
+          1443.94,
+          13,
+          0.0
+        ],
+        "Privates": [
+          32863.0,
+          5,
+          0.0
+        ],
+        "Newcomers Special": [
+          3540.0,
+          2,
+          0.0
+        ]
+      },
+      "prods": {
+        "Retail Product": [
+          95591.0,
+          24890,
+          0.0
+        ],
+        "Session": [
+          127750.0,
+          19475,
+          0.0
+        ],
+        "Studio 3 Month Unlimited - Monthly": [
+          17100.0,
+          2610,
+          0.0
+        ],
+        "Studio Single Class": [
+          58410.009999999995,
+          8946,
+          0.0
+        ],
+        "Studio 12 Class Package": [
+          179365.93999999997,
+          27357,
+          13545.0
+        ],
+        "Studio 2 Week Unlimited": [
+          50150.0,
+          7650,
+          0.0
+        ],
+        "Studio 1 Month Unlimited": [
+          486764.75,
+          79741,
+          14487.5
+        ],
+        "Money Credits": [
+          1443.94,
+          9463,
+          0.0
+        ],
+        "Studio 20 Single Class Package": [
+          95580.0,
+          14580,
+          9000.0
+        ],
+        "Studio 10 Single Class Package": [
+          15930.0,
+          2430,
+          1500.0
+        ],
+        "Studio 4 Class Package": [
+          101008.0,
+          15408,
+          0.0
+        ],
+        "Studio 10 Class Package": [
+          79650.0,
+          12150,
+          7500.0
+        ],
+        "Studio 3 Month Unlimited": [
+          213123.0,
+          32510,
+          36887.29
+        ],
+        "Studio Private Class": [
+          11799.99,
+          2871,
+          0.0
+        ],
+        "Private Class": [
+          21063.010000000002,
+          4113,
+          0.0
+        ],
+        "Studio 8 Class Package": [
+          156468.02,
+          23868,
+          0.0
+        ],
+        "Studio 6 Month Unlimited": [
+          85756.5,
+          13081,
+          12825.0
+        ],
+        "Studio Newcomers 2 For 1": [
+          3540.0,
+          540,
+          0.0
+        ],
+        "Studio Annual Unlimited": [
+          311400.0,
+          47519,
+          66000.0
+        ]
+      },
+      "sellers": {
+        "Zaheer Agarbattiwala": [
+          880571.49,
+          113
+        ],
+        "Akshay Rane": [
+          775762.2699999999,
+          92
+        ],
+        "Imran Shaikh": [
+          8867.5,
+          9
+        ],
+        "-": [
+          357620.4,
+          57
+        ],
+        "Zahur Shaikh": [
+          34338.0,
+          6
+        ],
+        "Shipra Bhika": [
+          17065.75,
+          2
+        ],
+        "Admin Admin": [
+          35400.0,
+          2
+        ],
+        "Nadiya Shaikh": [
+          2268.75,
+          2
+        ]
+      },
+      "pay": {
+        "Multiple payment methods": [
+          198135.0,
+          7
+        ],
+        "Custom (in-studio)": [
+          1058444.5299999998,
+          162
+        ],
+        "Cash": [
+          505608.23,
+          65
+        ],
+        "Stripe (online)": [
+          349706.4,
+          49
+        ]
+      },
+      "promo_sales": 982885.1500000001,
+      "mem_sales": 1164294.25,
+      "pkg_sales": 628001.9600000002,
+      "dropin": 186160.01,
+      "atv": 7462.523533568902,
+      "rev_per_member": 10056.156573033712,
+      "disc_eff": 11.066791517674236
+    }
+  },
+  "baseline": {
+    "gross": 2228044.9599999995,
+    "net": 2121015.166666665,
+    "disc": 376732.2133333333,
+    "txn": 317.0,
+    "members": 187.33333333333334,
+    "promo_sales": 1143327.4933333334,
+    "mem_sales": 1021341.8166666665,
+    "pkg_sales": 758827.2433333335,
+    "dropin": 192340.55333333332,
+    "disc_txn": 48.666666666666664,
+    "atv": 7075.767104241772,
+    "rev_per_member": 11311.502904569106
+  }
+}

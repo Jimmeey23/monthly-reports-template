@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio Performance Reports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+Pro:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="upload-page">
+  <div class="bg-orbs" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+  </div>
+
+  <main class="container upload-shell">
+    <div class="upload-hero">
+      <span class="eyebrow">Studio Pulse</span>
+      <h1>Performance Report <span class="accent">Generator</span></h1>
+      <p class="subtitle">Drop your 7 CSV exports below. We'll analyze them and auto-generate a studio &amp; month performance report.</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="error" role="alert"><%= error %></div>
+    <% } %>
+
+    <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" novalidate>
+      <div class="dropzones" id="dropzones">
+        <% const icons = { sales: '💳', sessions: '🗓️', checkins: '✅', leads: '📞', new: '✨', lapsed: '📉', active: '👥' };
+           slots.forEach(function(slot, i) { %>
+          <label class="dropzone" data-field="<%= slot.field %>" style="--i: <%= i %>" tabindex="0">
+            <div class="dz-icon"><%= icons[slot.field] || '📄' %></div>
+            <div class="dz-body">
+              <span class="dz-label"><%= slot.label %></span>
+              <span class="dz-file">CSV file &middot; drag or click</span>
+            </div>
+            <div class="dz-check" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <input type="file" name="<%= slot.field %>" accept=".csv" required />
+          </label>
+        <% }) %>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn btn-primary" disabled>
+        <span class="btn-label">Upload &amp; Analyze</span>
+        <span class="btn-count"><span id="filled-count">0</span>/<%= slots.length %></span>
+      </button>
+    </form>
+  </main>
+
+  <div id="loading-overlay" class="loading-overlay" hidden>
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div class="loading-title">Analyzing your data&hellip;</div>
+      <div class="loading-sub">Parsing CSVs and detecting studios &amp; months. This can take a moment for large files.</div>
+      <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('upload-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const filledCountEl = document.getElementById('filled-count');
+    const dropzones = Array.from(document.querySelectorAll('.dropzone'));
+    const total = dropzones.length;
+
+    function truncate(name, max) {
+      if (name.length <= max) return name;
+      return name.slice(0, max - 1) + '…';
+    }
+
+    function updateZone(zone) {
+      const input = zone.querySelector('input[type=file]');
+      const fileEl = zone.querySelector('.dz-file');
+      if (input.files && input.files[0]) {
+        zone.classList.add('filled');
+        fileEl.textContent = truncate(input.files[0].name, 28);
+      } else {
+        zone.classList.remove('filled');
+        fileEl.textContent = 'CSV file · drag or click';
+      }
+      refreshCount();
+    }
+
+    function refreshCount() {
+      const filled = dropzones.filter((z) => z.classList.contains('filled')).length;
+      filledCountEl.textContent = filled;
+      submitBtn.disabled = filled < total;
+    }
+
+    dropzones.forEach((zone) => {
+      const input = zone.querySelector('input[type=file]');
+
+      input.addEventListener('change', () => updateZone(zone));
+
+      zone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+      });
+
+      ['dragenter', 'dragover'].forEach((evt) =>
+        zone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          zone.classList.add('drag-over');
+        })
+      );
+      ['dragleave', 'dragend', 'drop'].forEach((evt) =>
+        zone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          zone.classList.remove('drag-over');
+        })
+      );
+      zone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) {
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          input.files = dt.files;
+          updateZone(zone);
+        }
+      });
+    });
+
+    form.addEventListener('submit', () => {
+      submitBtn.disabled = true;
+      document.getElementById('loading-overlay').hidden = false;
+    });
+  </script>
+</body>
+</html>

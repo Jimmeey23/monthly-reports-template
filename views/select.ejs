@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Select Studio &amp; Month</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+Pro:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="upload-page">
+  <div class="bg-orbs" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+  </div>
+
+  <main class="container upload-shell">
+    <div class="upload-hero">
+      <span class="eyebrow">Studio Pulse</span>
+      <h1>Pick Your <span class="accent">Scope</span></h1>
+      <p class="subtitle">CSVs analyzed. Select one or more studios and months — pick several of either to bundle them into a single report.</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="error" role="alert"><%= error %></div>
+    <% } %>
+
+    <form action="/generate" method="post" id="scope-form">
+      <input type="hidden" name="sessionId" value="<%= sessionId %>" />
+
+      <div class="scope-group">
+        <div class="scope-label">Studio<span class="scope-hint">select one or more</span></div>
+        <div class="chip-grid">
+          <% Object.entries(locations).forEach(function([key, name], i) { %>
+            <label class="chip" style="--i: <%= i %>">
+              <input type="checkbox" name="loc" value="<%= key %>" />
+              <span class="chip-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </span>
+              <span class="chip-label"><%= name %></span>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="scope-group">
+        <div class="scope-label">Month<span class="scope-hint">select one or more</span></div>
+        <div class="chip-grid chip-grid-months">
+          <% months.forEach(function(m, i) { %>
+            <label class="chip" style="--i: <%= i %>">
+              <input type="checkbox" name="month" value="<%= m %>" />
+              <span class="chip-check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </span>
+              <span class="chip-label"><%= m %></span>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+
+      <button type="submit" id="generate-btn" class="btn btn-primary" disabled>
+        <span class="btn-label">Generate Report</span>
+        <span class="btn-count" id="combo-count">0 combos</span>
+      </button>
+    </form>
+
+    <a class="back-link" href="/">&larr; Upload different CSVs</a>
+  </main>
+
+  <div id="loading-overlay" class="loading-overlay" hidden>
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div class="loading-title">Generating your report&hellip;</div>
+      <div class="loading-sub">Building sections and computing insights. This can take a moment for multi-studio or multi-month bundles.</div>
+      <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('scope-form');
+    const generateBtn = document.getElementById('generate-btn');
+    const comboCountEl = document.getElementById('combo-count');
+
+    function refresh() {
+      const locs = document.querySelectorAll('input[name=loc]:checked').length;
+      const months = document.querySelectorAll('input[name=month]:checked').length;
+      const combos = locs * months;
+      comboCountEl.textContent = combos === 1 ? '1 combo' : `${combos} combos`;
+      generateBtn.disabled = combos === 0;
+    }
+
+    form.addEventListener('change', refresh);
+    refresh();
+
+    form.addEventListener('submit', () => {
+      generateBtn.disabled = true;
+      document.getElementById('loading-overlay').hidden = false;
+    });
+  </script>
+</body>
+</html>

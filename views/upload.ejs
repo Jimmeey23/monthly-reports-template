@@ -131,26 +131,30 @@
     });
 
     async function trimCsvFile(file) {
-      if (file.size <= 2 * 1024 * 1024) return file;
+      const MAX_BYTES = 2.5 * 1024 * 1024; // Strict 2.5 MB cap to stay under Vercel's 4.5 MB limit
+      if (file.size <= MAX_BYTES) return file;
       try {
         const text = await file.text();
         const lines = text.split('\n');
         if (lines.length <= 1) return file;
 
         const header = lines[0];
-        const keepYears = ['2026', '2025', '2024'];
-        const startIdx = Math.max(1, lines.length - 60000);
-        const trimmed = [header];
+        let currentBytes = header.length + 1;
+        const keptLines = [];
 
-        for (let i = startIdx; i < lines.length; i++) {
+        // Loop backwards from end of file (newest rows) to collect up to 2.5 MB of recent records
+        for (let i = lines.length - 1; i >= 1; i--) {
           const line = lines[i];
           if (!line.trim()) continue;
-          if (keepYears.some((y) => line.includes(y))) {
-            trimmed.push(line);
-          }
+          const lineLen = line.length + 1;
+          if (currentBytes + lineLen > MAX_BYTES) break;
+          keptLines.push(line);
+          currentBytes += lineLen;
         }
 
-        const blob = new Blob([trimmed.join('\n')], { type: 'text/csv' });
+        keptLines.reverse();
+        const resultText = header + '\n' + keptLines.join('\n');
+        const blob = new Blob([resultText], { type: 'text/csv' });
         return new File([blob], file.name, { type: 'text/csv' });
       } catch (e) {
         return file;

@@ -103,21 +103,24 @@
       })
       .join('');
 
-    const actions = result.actions || [];
+    const actions = (result.actions || []).filter(
+      (a) => a && typeof a === 'object' && a.action && a.action !== 'undefined'
+    );
+    const safeVal = (v) => (v != null && v !== 'undefined' && String(v).trim() !== '') ? String(v) : '—';
     const actionRows = actions
       .map((a) => {
-        const pri = (a.priority || '').toLowerCase();
+        const pri = safeVal(a.priority).toLowerCase();
         const priColor = PRIORITY_COLORS[pri] || '#6b7280';
-        const priBadge = pri
+        const priBadge = pri && pri !== '—'
           ? `<span class="insight-badge" style="background:${priColor}22;color:${priColor};border:1px solid ${priColor}55;font-size:10px;">${pri.toUpperCase()}</span>`
           : '';
         return `
       <tr>
-        <td>${escapeHtml(a.action)}</td>
-        <td>${escapeHtml(a.rationale)}</td>
-        <td>${escapeHtml(a.impact)}</td>
-        <td>${escapeHtml(a.timeline)}</td>
-        <td>${escapeHtml(a.owner)}</td>
+        <td>${escapeHtml(safeVal(a.action))}</td>
+        <td>${escapeHtml(safeVal(a.rationale))}</td>
+        <td>${escapeHtml(safeVal(a.impact))}</td>
+        <td>${escapeHtml(safeVal(a.timeline))}</td>
+        <td>${escapeHtml(safeVal(a.owner))}</td>
         <td style="text-align:center">${priBadge}</td>
       </tr>`;
       })

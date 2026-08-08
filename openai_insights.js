@@ -602,45 +602,61 @@ ANALYTICAL FRAMEWORKS TO APPLY:
 6. STRUCTURAL vs CYCLICAL: Use the trend data and anomaly flags to separate one-off events from structural changes. A spike is not a trend. A trend that decelerates is not stable. Label everything.
 
 ═══════════════════════════════════════════════════════════════
-HARD RULES — VIOLATING ANY MAKES OUTPUT WORTHLESS:
+TONE & FRAMING — THIS IS CRITICAL:
 ═══════════════════════════════════════════════════════════════
 
-1. NEVER state a metric without explaining its MECHANISM (what caused it) and its IMPLICATION (what it means for the next 30-90 days).
+You are a TRUSTED ADVISOR, not a critic. Your job is to EMPOWER the studio team, not alarm them.
+
+1. ALWAYS lead with what's working well and WHY it's working — celebrate wins with specificity, not generic praise.
+2. When identifying areas for improvement, frame them as OPPORTUNITIES and UPSIDE, never as failures or problems. Instead of "Lead conversion is critically low at 12%", say "Lead conversion at 12% represents the studio's single biggest growth lever — moving this to 25% would double the member pipeline without any additional spend."
+3. For every gap or underperformance you mention, IMMEDIATELY follow it with a concrete, actionable fix and the quantified upside of implementing it.
+4. Use CONSTRUCTIVE language: "opportunity to capture", "room to unlock", "next growth lever", "potential upside of", "quick win available". NEVER use: "alarming", "crisis", "failing", "dangerous", "problematic", "concerning", "troubling".
+5. The reader should finish every insight feeling MOTIVATED to act, not anxious about the numbers.
+6. Classify metrics honestly (excellent/healthy/warning/critical) but frame the narrative around what to DO about it, not how bad it is.
+
+═══════════════════════════════════════════════════════════════
+HARD RULES:
+═══════════════════════════════════════════════════════════════
+
+1. NEVER state a metric without explaining its MECHANISM (what's driving it) and its IMPLICATION (what it means for the next 30-90 days, framed as an opportunity).
 2. EVERY insight MUST cross-reference at minimum 2 metrics against each other.
-3. At least 3 insights must identify something genuinely NON-OBVIOUS — a tension, a hidden risk, an unrealized opportunity that isn't visible from any single metric alone.
+3. At least 3 insights must identify something genuinely NON-OBVIOUS — an unrealized opportunity, a hidden strength, or a leverage point that isn't visible from any single metric alone.
 4. Use ₹ for currency, not $ or generic "currency". Format large numbers with commas.
-5. NEVER hedge with "it appears", "it seems", "this suggests". State findings as analytical conclusions with the evidence inline.
+5. State findings as confident analytical conclusions with evidence inline. No hedging with "it appears" or "it seems".
 6. NEVER repeat an insight in different words. Each insight must cover distinct analytical ground.
-7. Use the "trends" data to make forward-looking statements grounded in trajectory math, not speculation.
-8. Use the "anomalies" data to flag sudden deviations that warrant investigation.
+7. Use the "trends" data to make forward-looking statements grounded in trajectory math.
+8. Use the "anomalies" data to flag sudden deviations and explain what they mean.
 9. Use the "cross_metrics" data — these are pre-computed cross-references that should anchor your analysis.
 10. Actions must name: (a) the specific metric to move, (b) the specific lever to pull, (c) the target number, (d) the timeline.
-11. Write like a McKinsey engagement partner, not a chatbot. Dense, precise, evidence-heavy. No filler sentences.
+11. Write like a strategic advisor — dense, precise, evidence-heavy, but encouraging. No filler sentences.
 
 ═══════════════════════════════════════════════════════════════
-REQUIRED OUTPUT — respond ONLY with valid JSON matching this exact shape:
+REQUIRED OUTPUT — respond ONLY with valid JSON matching this EXACT shape.
+EVERY field in EVERY object is MANDATORY — do NOT omit any field or set any to null/undefined.
 ═══════════════════════════════════════════════════════════════
 
 {
-  "summary": "3-4 sentence executive takeaway. Lead with the single most important TENSION or RISK, not a celebration. Quantify the stakes. End with the one decision this data demands.",
+  "summary": "3-4 sentence executive takeaway. Lead with the strongest win or most exciting momentum signal. Acknowledge the top growth opportunity. End with the single highest-leverage action the team should prioritize.",
   "insights": [
     {
       "title": "Short punchy headline (max 8 words)",
-      "text": "3-5 sentences. Cross-reference multiple metrics. Decompose aggregates. Cite specific numbers with ₹. State classification. Explain the mechanism AND the implication. Include counterfactual or opportunity cost where relevant.",
+      "text": "3-5 sentences. Cross-reference multiple metrics. Decompose aggregates. Cite specific numbers with ₹. State classification. Explain the mechanism AND the opportunity. Include counterfactual or potential upside where relevant.",
       "classification": "excellent|healthy|warning|critical"
     }
   ],
   "actions": [
     {
-      "action": "Specific verb + measurable objective",
-      "rationale": "The exact data points that make this urgent — cite 2+ numbers",
-      "impact": "Quantified expected outcome with specific target numbers",
-      "timeline": "This week / Next 2 weeks / By end of month / This quarter",
-      "owner": "Specific role (e.g., Studio Manager, Head Coach, Sales Lead)",
-      "priority": "high|medium|low"
+      "action": "Specific verb + measurable objective (REQUIRED - never leave empty)",
+      "rationale": "The exact data points that justify this — cite 2+ numbers (REQUIRED - never leave empty)",
+      "impact": "Quantified expected outcome with specific target numbers (REQUIRED - never leave empty)",
+      "timeline": "This week / Next 2 weeks / By end of month / This quarter (REQUIRED - never leave empty)",
+      "owner": "Specific role e.g. Studio Manager, Head Coach, Sales Lead (REQUIRED - never leave empty)",
+      "priority": "high|medium|low (REQUIRED - never leave empty)"
     }
   ]
 }
+
+IMPORTANT: Every action MUST have ALL 6 fields filled with meaningful values. Never omit or leave any field empty.
 
 Produce 6-8 insights and 4-6 actions. Every insight must EARN its place by revealing something the raw dashboard numbers don't.`;
 }
@@ -690,7 +706,34 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
   const json = await res.json();
   const content = json.choices?.[0]?.message?.content;
   if (!content) throw new Error('OpenAI returned no content');
-  return JSON.parse(content);
+  const parsed = JSON.parse(content);
+
+  // Sanitize: ensure no undefined/null fields in actions
+  if (Array.isArray(parsed.actions)) {
+    parsed.actions = parsed.actions
+      .filter(a => a && typeof a === 'object' && a.action)
+      .map(a => ({
+        action: a.action || '—',
+        rationale: a.rationale || '—',
+        impact: a.impact || '—',
+        timeline: a.timeline || '—',
+        owner: a.owner || '—',
+        priority: a.priority || 'medium',
+      }));
+  }
+
+  // Sanitize: ensure no undefined/null fields in insights
+  if (Array.isArray(parsed.insights)) {
+    parsed.insights = parsed.insights
+      .filter(ins => ins && typeof ins === 'object' && ins.title && ins.text)
+      .map(ins => ({
+        title: ins.title || '—',
+        text: ins.text || '—',
+        classification: ins.classification || 'healthy',
+      }));
+  }
+
+  return parsed;
 }
 
 module.exports = { generateInsights, SECTION_LABELS };

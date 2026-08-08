@@ -1,11 +1,6 @@
-# nixpacks build config — ensures both Python 3 and Node.js are available on Railway
-providers = ["python", "node"]
-
+# nixpacks build config — only add Python 3; Node.js is auto-detected from package.json
 [phases.setup]
-nixPkgs = ["python312", "nodejs_20"]
-
-[phases.install]
-cmds = ["npm install"]
+nixPkgs = ["python312"]
 
 [start]
 cmd = "npm start"

@@ -130,34 +130,35 @@
       });
     });
 
-    async function trimCsvFile(file) {
-      const MAX_BYTES = 2.5 * 1024 * 1024; // Strict 2.5 MB cap to stay under Vercel's 4.5 MB limit
-      if (file.size <= MAX_BYTES) return file;
-      try {
-        const text = await file.text();
-        const lines = text.split('\n');
-        if (lines.length <= 1) return file;
+    async function uploadFileInChunks(sessionId, slotField, file, onProgress) {
+      const CHUNK_SIZE = 1.5 * 1024 * 1024; // 1.5 MB chunk size to stay safely under Vercel's 4.5 MB limit
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-        const header = lines[0];
-        let currentBytes = header.length + 1;
-        const keptLines = [];
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * CHUNK_SIZE;
+        const end = Math.min(file.size, start + CHUNK_SIZE);
+        const blobChunk = file.slice(start, end);
 
-        // Loop backwards from end of file (newest rows) to collect up to 2.5 MB of recent records
-        for (let i = lines.length - 1; i >= 1; i--) {
-          const line = lines[i];
-          if (!line.trim()) continue;
-          const lineLen = line.length + 1;
-          if (currentBytes + lineLen > MAX_BYTES) break;
-          keptLines.push(line);
-          currentBytes += lineLen;
+        const formData = new FormData();
+        formData.append('sessionId', sessionId);
+        formData.append('slot', slotField);
+        formData.append('chunkIndex', chunkIndex);
+        formData.append('totalChunks', totalChunks);
+        formData.append('chunk', blobChunk, `${slotField}_part_${chunkIndex}.csv`);
+
+        const res = await fetch('/upload-chunk', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Upload failed for ${slotField} (part ${chunkIndex + 1}/${totalChunks})`);
         }
 
-        keptLines.reverse();
-        const resultText = header + '\n' + keptLines.join('\n');
-        const blob = new Blob([resultText], { type: 'text/csv' });
-        return new File([blob], file.name, { type: 'text/csv' });
-      } catch (e) {
-        return file;
+        if (onProgress) {
+          onProgress(chunkIndex + 1, totalChunks);
+        }
       }
     }
 
@@ -176,32 +177,18 @@
           const input = zone.querySelector('input[type=file]');
           const rawFile = input.files[0];
 
-          const pct = Math.round(((i + 0.2) / (dropzones.length + 1)) * 100);
-          loadingBarFill.style.width = pct + '%';
-          loadingTitle.textContent = `Processing file ${i + 1} of ${dropzones.length}…`;
-          loadingSub.textContent = `Optimizing ${rawFile.name} for fast serverless analysis.`;
-
-          const trimmedFile = await trimCsvFile(rawFile);
-
-          const formData = new FormData();
-          formData.append('sessionId', sessionId);
-          formData.append('slot', field);
-          formData.append('file', trimmedFile);
-
-          const uploadRes = await fetch('/upload-slot', {
-            method: 'POST',
-            body: formData,
+          await uploadFileInChunks(sessionId, field, rawFile, (chunkIdx, totalChunks) => {
+            const filePct = chunkIdx / totalChunks;
+            const overallPct = Math.round(((i + filePct) / (dropzones.length + 1)) * 100);
+            loadingBarFill.style.width = overallPct + '%';
+            loadingTitle.textContent = `Uploading file ${i + 1} of ${dropzones.length}: ${truncate(rawFile.name, 22)}`;
+            loadingSub.textContent = `Uploading chunk ${chunkIdx} of ${totalChunks} (${(rawFile.size / (1024 * 1024)).toFixed(1)} MB total full file).`;
           });
-
-          if (!uploadRes.ok) {
-            const errData = await uploadRes.json().catch(() => ({}));
-            throw new Error(errData.error || `Upload failed for ${field}`);
-          }
         }
 
         loadingBarFill.style.width = '90%';
-        loadingTitle.textContent = 'Running performance analysis…';
-        loadingSub.textContent = 'Aggregating revenue, conversion funnel, check-ins & session metrics.';
+        loadingTitle.textContent = 'Running performance analysis on full dataset…';
+        loadingSub.textContent = 'Aggregating revenue, conversion funnel, check-ins & session metrics across full CSV history.';
 
         const analyzeRes = await fetch('/analyze-session', {
           method: 'POST',

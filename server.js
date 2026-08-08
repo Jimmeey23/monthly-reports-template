@@ -159,6 +159,38 @@ app.get('/select', (req, res) => {
   });
 });
 
+app.post('/upload-chunk', upload.single('chunk'), (req, res) => {
+  const sessionId = req.body.sessionId || req.query.sessionId;
+  const slot = req.body.slot || req.query.slot;
+  const chunkIndex = parseInt(req.body.chunkIndex || req.query.chunkIndex || '0', 10);
+  const totalChunks = parseInt(req.body.totalChunks || req.query.totalChunks || '1', 10);
+
+  if (!sessionId || !slot || !req.file) {
+    return res.status(400).json({ error: 'Missing sessionId, slot, or chunk file' });
+  }
+
+  const sessionDir = path.join(UPLOADS_DIR, sessionId);
+  fs.mkdirSync(sessionDir, { recursive: true });
+
+  const slotInfo = CSV_SLOTS.find((s) => s.field === slot);
+  const targetFilename = slotInfo ? slotInfo.filename : `${slot}.csv`;
+  const targetPath = path.join(sessionDir, targetFilename);
+
+  try {
+    const chunkBuffer = fs.readFileSync(req.file.path);
+    if (chunkIndex === 0) {
+      fs.writeFileSync(targetPath, chunkBuffer);
+    } else {
+      fs.appendFileSync(targetPath, chunkBuffer);
+    }
+    try { fs.unlinkSync(req.file.path); } catch (e) {}
+  } catch (err) {
+    return res.status(500).json({ error: `Failed to write chunk: ${err.message}` });
+  }
+
+  res.json({ ok: true, slot, chunkIndex, totalChunks, isComplete: chunkIndex === totalChunks - 1 });
+});
+
 app.post('/upload-slot', upload.single('file'), (req, res) => {
   const sessionId = req.body.sessionId || req.query.sessionId;
   const slot = req.body.slot || req.query.slot;

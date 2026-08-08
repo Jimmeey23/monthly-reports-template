@@ -1,6 +1,8 @@
-# nixpacks build config — only add Python 3; Node.js is auto-detected from package.json
+# Install Python3 via apt so it doesn't conflict with nixpacks' auto-detected Node.js nix setup.
+# nixpacks auto-detects Node.js from package.json and installs it via nix (its native path).
+# Python goes through apt — totally separate, no version conflicts possible.
 [phases.setup]
-nixPkgs = ["python312"]
+aptPkgs = ["python3"]
 
 [start]
 cmd = "npm start"

@@ -77,31 +77,50 @@
   // ───────────────────────── Per-section AI insights ─────────────────────────
 
   function renderResult(result) {
+    const CLASS_COLORS = {
+      excellent: '#10b981',
+      healthy: '#3b82f6',
+      warning: '#f59e0b',
+      critical: '#ef4444',
+    };
+    const PRIORITY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#6b7280' };
+
     const insightCards = (result.insights || [])
-      .map(
-        (ins, i) => `
+      .map((ins, i) => {
+        const cls = (ins.classification || '').toLowerCase();
+        const clsColor = CLASS_COLORS[cls] || '#6b7280';
+        const badge = cls
+          ? `<span class="insight-badge" style="background:${clsColor}22;color:${clsColor};border:1px solid ${clsColor}55;">${cls.toUpperCase()}</span>`
+          : '';
+        return `
       <div class="insight-card">
         <div class="insight-num">${String(i + 1).padStart(2, '0')}</div>
         <div class="insight-body">
-          <div class="insight-title">${escapeHtml(ins.title)}</div>
+          <div class="insight-title-row">${badge}<div class="insight-title">${escapeHtml(ins.title)}</div></div>
           <div class="insight-text">${escapeHtml(ins.text)}</div>
         </div>
-      </div>`
-      )
+      </div>`;
+      })
       .join('');
 
     const actions = result.actions || [];
     const actionRows = actions
-      .map(
-        (a) => `
+      .map((a) => {
+        const pri = (a.priority || '').toLowerCase();
+        const priColor = PRIORITY_COLORS[pri] || '#6b7280';
+        const priBadge = pri
+          ? `<span class="insight-badge" style="background:${priColor}22;color:${priColor};border:1px solid ${priColor}55;font-size:10px;">${pri.toUpperCase()}</span>`
+          : '';
+        return `
       <tr>
         <td>${escapeHtml(a.action)}</td>
         <td>${escapeHtml(a.rationale)}</td>
         <td>${escapeHtml(a.impact)}</td>
         <td>${escapeHtml(a.timeline)}</td>
         <td>${escapeHtml(a.owner)}</td>
-      </tr>`
-      )
+        <td style="text-align:center">${priBadge}</td>
+      </tr>`;
+      })
       .join('');
 
     return `
@@ -113,7 +132,7 @@
           actions.length
             ? `<div class="table-wrap" style="margin-top:20px;">
                 <table class="data-table">
-                  <thead><tr><th>Action</th><th>Rationale</th><th>Impact</th><th>Timeline</th><th>Owner</th></tr></thead>
+                  <thead><tr><th>Action</th><th>Rationale</th><th>Impact</th><th>Timeline</th><th>Owner</th><th>Priority</th></tr></thead>
                   <tbody>${actionRows}</tbody>
                 </table>
               </div>`

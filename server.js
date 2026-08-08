@@ -4,6 +4,22 @@ const { execFile } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+
+// Basic .env file loader if process.env.OPENAI_API_KEY is not already set
+if (fs.existsSync(path.join(__dirname, '.env'))) {
+  const envConfig = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
+  for (const line of envConfig.split('\n')) {
+    const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+    if (match) {
+      const key = match[1];
+      let value = (match[2] || '').trim();
+      if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+      if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+      if (!process.env[key]) process.env[key] = value;
+    }
+  }
+}
+
 const { generateInsights } = require('./openai_insights');
 const { renderReportToPdf } = require('./pdf_export');
 
@@ -48,6 +64,13 @@ function assignSessionId(req, res, next) {
 }
 
 const app = express();
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -178,6 +201,7 @@ app.post('/generate', (req, res) => {
           loc: selectedLocs[0],
           month: selectedMonths[0],
           filename: outputFilename,
+          serverUrl: process.env.SERVER_URL || `http://localhost:${PORT}`,
         })};</script>\n<script src="/report-client.js"></script>`;
         fs.writeFileSync(outputPath, html.replace('<!-- REPORT_CLIENT_PLACEHOLDER -->', bootstrap));
       } catch (spliceErr) {

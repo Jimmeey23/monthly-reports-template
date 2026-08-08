@@ -141,8 +141,11 @@ Vary your phrasing and structure from a typical templated report — write like 
 }
 
 async function generateInsights(analysis, locKey, month, section = 'executive-summary') {
-  if (!OPENAI_API_KEY) {
-    const err = new Error('OPENAI_API_KEY is not configured on the server.');
+  const apiKey = process.env.OPENAI_API_KEY;
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
+  if (!apiKey) {
+    const err = new Error('OPENAI_API_KEY is not configured on the server. Please add OPENAI_API_KEY to your .env file or environment.');
     err.code = 'NO_API_KEY';
     throw err;
   }
@@ -155,10 +158,10 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: OPENAI_MODEL,
+      model,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt(sectionLabel, angle) },

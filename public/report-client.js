@@ -1,6 +1,15 @@
 (function () {
-  const ctx = window.__REPORT_CTX__;
-  if (!ctx) return;
+  const ctx = window.__REPORT_CTX__ || {};
+
+  function resolveApiUrl(path) {
+    if (ctx.serverUrl) {
+      return `${ctx.serverUrl.replace(/\/$/, '')}${path}`;
+    }
+    if (window.location.protocol.startsWith('http')) {
+      return path;
+    }
+    return `http://localhost:3000${path}`;
+  }
 
   function escapeHtml(str) {
     return String(str)
@@ -38,11 +47,16 @@
   editBtn.addEventListener('click', () => setEditing(!editing));
 
   saveBtn.addEventListener('click', async () => {
+    if (!ctx.sessionId) {
+      statusEl.textContent = 'Error: Missing session ID';
+      return;
+    }
     saveBtn.disabled = true;
     statusEl.textContent = 'Saving…';
     try {
       const html = '<!doctype html>\n' + document.documentElement.outerHTML;
-      const res = await fetch(`/save-report/${ctx.sessionId}/${encodeURIComponent(ctx.filename)}`, {
+      const saveUrl = resolveApiUrl(`/save-report/${ctx.sessionId}/${encodeURIComponent(ctx.filename || 'report.html')}`);
+      const res = await fetch(saveUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ html }),
@@ -115,13 +129,19 @@
       const slot = document.getElementById(`ai-slot-${section}`);
       if (!slot) return;
 
+      if (!ctx.sessionId) {
+        slot.innerHTML = `<div class="ai-result"><div class="ai-result-error">AI insights require viewing through the report server (missing session ID).</div></div>`;
+        return;
+      }
+
       btn.disabled = true;
       btn.classList.add('is-loading');
       btn.innerHTML = '<span class="ai-btn-icon">&#10024;</span> Generating&hellip;';
       slot.innerHTML = '';
 
       try {
-        const res = await fetch(`/ai-insights/${ctx.sessionId}/${section}`, {
+        const aiUrl = resolveApiUrl(`/ai-insights/${ctx.sessionId}/${section}`);
+        const res = await fetch(aiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ loc: ctx.loc, month: ctx.month }),

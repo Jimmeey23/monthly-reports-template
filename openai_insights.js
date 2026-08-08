@@ -662,10 +662,15 @@ Every field is MANDATORY. Do NOT omit or leave any field empty/null.
 }
 
 QUANTITIES:
-- performance_summary.patterns: 2-4 patterns
-- key_insights: 5-8 insights (quality over quantity — each must earn its place)
-- highlights: 4-6 highlights (mix of achievements AND dips, always with constructive framing)
-- recommendations: 5-8 recommendations (specific, detailed, actionable)
+- performance_summary.patterns: 2-3 patterns (MAXIMUM)
+- key_insights: 4-5 insights (quality over quantity — each must earn its place)
+- highlights: 3-4 highlights (mix of achievements AND dips, always with constructive framing)
+- recommendations: 4-5 recommendations (specific, detailed, actionable)
+
+CONCISENESS RULE:
+- BE EXTREMELY CONCISE. Keep all descriptions to 2-3 short sentences maximum.
+- Do not write long paragraphs. Get straight to the point.
+- If you exceed the token limit, the JSON will truncate and fail.
 
 CLASSIFICATION LABELS:
 - Use "excellent" for metrics significantly above benchmark/baseline
@@ -707,7 +712,7 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
       temperature: 0.5,
       presence_penalty: 0.5,
       frequency_penalty: 0.4,
-      max_tokens: 5000,
+      max_tokens: 4096, // Reduced to standard max_tokens for gpt-4o compatibility
     }),
   });
 

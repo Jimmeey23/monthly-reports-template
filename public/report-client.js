@@ -23,9 +23,16 @@
   const toolbar = document.createElement('div');
   toolbar.className = 'editor-toolbar';
   toolbar.innerHTML =
+    '<div class="editor-tools-left">' +
     '<button type="button" id="edit-toggle-btn">&#9998; Edit</button>' +
     '<button type="button" id="save-btn" disabled>&#128190; Save</button>' +
-    '<span class="editor-status" id="editor-status"></span>';
+    '<span class="editor-status" id="editor-status"></span>' +
+  '</div>' +
+  '<div class="editor-format-tools" id="format-tools" style="display:none;">' +
+    '<button type="button" class="format-btn" data-command="bold" title="Bold"><b>B</b></button>' +
+    '<button type="button" class="format-btn" data-command="italic" title="Italic"><i>I</i></button>' +
+    '<button type="button" class="format-btn" data-command="insertUnorderedList" title="Bullet List">&#8226; List</button>' +
+  '</div>';
   document.body.appendChild(toolbar);
 
   const editBtn = document.getElementById('edit-toggle-btn');
@@ -42,6 +49,7 @@
     editBtn.classList.toggle('is-active', on);
     editBtn.innerHTML = on ? '&#9998; Editing&hellip;' : '&#9998; Edit';
     saveBtn.disabled = !on;
+    if (formatTools) formatTools.style.display = on ? 'flex' : 'none';
   }
 
   editBtn.addEventListener('click', () => setEditing(!editing));
@@ -70,6 +78,16 @@
     setTimeout(() => {
       statusEl.textContent = '';
     }, 3000);
+  });
+
+  
+  // ─── Format Toolbar Logic ─────────────────────────
+  const formatTools = document.getElementById('format-tools');
+  document.querySelectorAll('.format-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.execCommand(btn.dataset.command, false, null);
+    });
   });
 
   setEditing(false);
@@ -233,7 +251,7 @@
   });
 
   // ─── AI button click handler ─────────────────────────
-  document.querySelectorAll('.ai-btn').forEach((btn) => {
+  document.querySelectorAll('.ai-info-btn').forEach((btn) => {
     const originalLabel = btn.innerHTML;
     btn.addEventListener('click', async () => {
       const section = btn.dataset.section;
@@ -247,7 +265,7 @@
 
       btn.disabled = true;
       btn.classList.add('is-loading');
-      btn.innerHTML = '<span class="ai-btn-icon">&#10024;</span> Analysing&hellip;';
+      btn.innerHTML = '<span class="ai-info-icon spinner">&#8982;</span>';
       slot.innerHTML = '';
 
       try {
@@ -260,7 +278,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Request failed');
         slot.innerHTML = renderResult(data);
-        btn.innerHTML = '<span class="ai-btn-icon">&#10024;</span> Regenerate Analysis';
+        btn.innerHTML = '<span class="ai-info-icon">i</span>';
       } catch (e) {
         slot.innerHTML = `<div class="ai-result ai-result-v2"><div class="ai-result-error">AI analysis failed: ${escapeHtml(e.message)}</div></div>`;
         btn.innerHTML = originalLabel;
@@ -275,6 +293,19 @@
   const styleEl = document.createElement('style');
   styleEl.textContent = `
 /* ───────────────────────── AI Insights V2 ───────────────────────── */
+
+.editor-tools-left, .editor-format-tools { display: flex; gap: 8px; align-items: center; }
+.editor-format-tools { padding-left: 8px; border-left: 1px solid var(--border); }
+.format-btn { background: transparent; border: 1px solid transparent; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); font-size: 13px; }
+.format-btn:hover { background: var(--bg-inset); border-color: var(--border); }
+
+
+.ai-info-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); font-family: var(--font-serif); font-style: italic; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; padding: 0; box-shadow: var(--shadow-sm); }
+.ai-info-btn:hover { color: var(--primary); border-color: var(--primary); transform: scale(1.05); }
+.ai-info-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ai-info-btn .spinner { animation: ai-spin 1s linear infinite; font-style: normal; }
+.ai-slot { min-height: 0; transition: all 0.3s ease; }
+
 .ai-result-v2 { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; position: relative; overflow: hidden; animation: ai-fade-in 400ms ease both; box-shadow: var(--shadow-sm); }
 .ai-result-v2::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, var(--accent), var(--primary)); }
 .ai-result-header { display: flex; gap: 16px; margin-bottom: 24px; align-items: center; }

@@ -118,10 +118,10 @@ def section_header(eyebrow, title, deck, section_num, total=7, loc_key='', month
           <p class="section-deck">{deck}</p>
         </div>
         <div class="section-header-right">
-          <div class="section-anchor">Section {section_num} / {total:02d}</div>
-          <button type="button" class="ai-btn" data-section="{section_id}" data-slot="{slot_id}" data-loc="{loc_key}" data-month="{month_key}">
-            <span class="ai-btn-icon">&#10024;</span> Generate AI Insights
+          <button type="button" class="ai-info-btn" data-section="{section_id}" data-slot="{slot_id}" data-loc="{loc_key}" data-month="{month_key}" title="View AI Insights">
+            <span class="ai-info-icon">i</span>
           </button>
+          <div class="section-anchor">Section {section_num} / {total:02d}</div>
         </div>
       </div>
     </div>

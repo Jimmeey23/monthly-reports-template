@@ -21,6 +21,11 @@
       <span class="eyebrow">Studio Pulse</span>
       <h1>Performance Report <span class="accent">Generator</span></h1>
       <p class="subtitle">Drop your 7 CSV exports below. We'll analyze them and auto-generate a studio &amp; month performance report.</p>
+      
+      <div style="margin-top:24px; display:flex; gap:8px; justify-content:center; align-items:center;">
+        <input type="text" id="join-code" placeholder="6-digit code" maxlength="6" style="padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); font-family:var(--font-mono); font-size:16px; text-align:center; width:140px; letter-spacing:2px;" />
+        <button type="button" class="btn btn-secondary" onclick="const code = document.getElementById('join-code').value.trim(); if(code.length === 6) window.location.href = '/join/' + code;">Join Session</button>
+      </div>
     </div>
 
     <% if (error) { %>

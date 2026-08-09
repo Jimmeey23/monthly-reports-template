@@ -418,7 +418,7 @@
     function joinSession(role, code) {
       myRole = role;
       myCode = code;
-      socket.emit('join_room', { role, code });
+      socket.emit('join_room', { role, code, reportUrl: window.location.pathname });
       
       document.getElementById('p-code').textContent = 'Code: ' + code;
       document.getElementById('p-code').style.display = 'inline-block';
@@ -461,5 +461,11 @@
       pBar.classList.remove('is-active');
       document.body.classList.remove('viewer-locked');
     });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const initCode = urlParams.get('roomCode');
+    if (initCode && initCode.length === 6) {
+      joinSession('viewer', initCode);
+    }
   }
 })();

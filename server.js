@@ -374,6 +374,16 @@ app.get('/download/:sessionId/:filename', (req, res) => {
   });
 });
 
+app.get('/join/:code', (req, res) => {
+  const code = req.params.code;
+  const room = presenterRooms[code];
+  if (room && room.reportUrl) {
+    res.redirect(`${room.reportUrl}?roomCode=${code}`);
+  } else {
+    res.status(404).send('Session not found or host has not started presenting.');
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => res.json({ status: 'ok', uploadsDir: UPLOADS_DIR }));
 
@@ -383,18 +393,19 @@ const io = new Server(server, { cors: { origin: '*' } });
 const presenterRooms = {};
 
 io.on('connection', (socket) => {
-  socket.on('join_room', ({ role, code }) => {
+  socket.on('join_room', ({ role, code, reportUrl }) => {
     if (!code) return;
     socket.join(code);
     socket.roomCode = code;
     socket.role = role;
 
     if (!presenterRooms[code]) {
-      presenterRooms[code] = { presenterId: null, viewers: 0 };
+      presenterRooms[code] = { presenterId: null, viewers: 0, reportUrl: null };
     }
 
     if (role === 'presenter') {
       presenterRooms[code].presenterId = socket.id;
+      if (reportUrl) presenterRooms[code].reportUrl = reportUrl;
     } else {
       presenterRooms[code].viewers++;
     }

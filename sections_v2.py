@@ -5,6 +5,9 @@ Each function takes a context dict and returns HTML for one section.
 """
 import calendar
 import json
+import html
+
+AI_CONTEXT = {}
 
 # Import helpers and data access functions from gen_report_v2
 # These are imported lazily to avoid circular import issues
@@ -107,6 +110,70 @@ SECTION_IDS = {
 }
 
 
+
+def render_ai_result(result):
+    if not result:
+        return ''
+    
+    ps = result.get('performance_summary', {})
+    insights = result.get('key_insights') or result.get('insights') or []
+    highlights = result.get('highlights', [])
+    recs = result.get('recommendations', [])
+    
+    def safe_html(s):
+        if s is None: return ''
+        return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        
+    def safe_val(s):
+        if not s or str(s).strip() == '—': return '—'
+        return str(s).strip()
+
+    # Summary
+    title = safe_html(ps.get('title', 'Performance Overview'))
+    narrative = safe_html(ps.get('narrative', ''))
+    patterns_html = ''
+    if ps.get('patterns'):
+        patterns_html = '<div class="ai-patterns-wrap"><div class="ai-sub-label">Identified Patterns</div>'
+        for p in ps['patterns']:
+            patterns_html += f'<div class="ai-pattern-card"><div class="ai-pattern-name">&#128269; {safe_html(p.get("pattern", ""))}</div><div class="ai-pattern-desc">{safe_html(p.get("description", ""))}</div></div>'
+        patterns_html += '</div>'
+    summary_html = f'<div class="ai-summary-narrative">{narrative}</div>{patterns_html}'
+
+    # Insights
+    insights_html = ''
+    for i, ins in enumerate(insights):
+        badge = f'<span class="ai-insight-badge {safe_html(ins.get("classification", "")).lower()}">{safe_html(ins.get("classification", ""))}</span>' if ins.get("classification") else ''
+        evidence = f'<div class="ai-evidence"><span class="ai-evidence-label">&#128202; Data:</span> {safe_html(ins.get("data_evidence", ""))}</div>' if ins.get("data_evidence") else ''
+        insights_html += f'<div class="insight-card"><div class="insight-num">{str(i+1).zfill(2)}</div><div class="insight-body"><div class="insight-title-row">{badge}<div class="insight-title">{safe_html(ins.get("title", ""))}</div></div><div class="insight-text">{safe_html(ins.get("text", ""))}</div>{evidence}</div></div>'
+
+    # Highlights
+    highlights_html = '<div class="ai-highlights-grid">'
+    for h in highlights:
+        is_ach = str(h.get('type', '')).lower() == 'achievement'
+        color = '#10b981' if is_ach else '#f59e0b'
+        icon = '&#9650;' if is_ach else '&#9660;'
+        t_label = 'Achievement' if is_ach else 'Area to Improve'
+        highlights_html += f'<div class="ai-highlight-card" style="border-left-color:{color}"><div class="ai-highlight-header"><span class="ai-highlight-icon" style="color:{color}">{icon}</span><span class="ai-highlight-metric">{safe_html(safe_val(h.get("metric")))}</span><span class="ai-highlight-type-badge" style="background:{color}18;color:{color};border:1px solid {color}44;">{t_label}</span></div><div class="ai-highlight-headline">{safe_html(safe_val(h.get("headline")))}</div><div class="ai-highlight-magnitude" style="color:{color}">{safe_html(safe_val(h.get("magnitude")))}</div><div class="ai-highlight-detail">{safe_html(safe_val(h.get("detail")))}</div></div>'
+    highlights_html += '</div>'
+
+    # Recs
+    recs_html = ''
+    for i, r in enumerate(recs):
+        pri = safe_val(r.get('priority', '')).lower()
+        pri_badge = f'<span class="meta-pill" style="background:var(--bg-inset);color:var(--text);border:1px solid var(--border);font-weight:600;">{pri.upper()}</span>' if pri and pri != '—' else ''
+        recs_html += f'<div class="ai-rec-card"><div class="ai-rec-num">{str(i+1).zfill(2)}</div><div class="ai-rec-content"><div class="ai-rec-title">{safe_html(safe_val(r.get("title")))}</div><div class="ai-rec-desc">{safe_html(safe_val(r.get("description")))}</div><div class="ai-rec-impact"><span class="ai-rec-impact-label">&#127919; Expected Impact:</span> {safe_html(safe_val(r.get("expected_impact")))}</div><div class="ai-rec-meta">{pri_badge}<span class="meta-pill">&#128197; {safe_html(safe_val(r.get("timeline")))}</span><span class="meta-pill">&#128100; {safe_html(safe_val(r.get("owner")))}</span></div></div></div>'
+
+    sections_arr = [
+        f'<div class="ai-section"><button type="button" class="ai-section-toggle is-open" data-target="summary"><span class="ai-section-icon">&#128203;</span><span class="ai-section-label">{title}</span><span class="ai-section-chevron">&#9660;</span></button><div class="ai-section-body is-open" id="ai-body-summary">{summary_html}</div></div>',
+        f'<div class="ai-section"><button type="button" class="ai-section-toggle is-open" data-target="insights"><span class="ai-section-icon">&#128161;</span><span class="ai-section-label">Key Insights ({len(insights)})</span><span class="ai-section-chevron">&#9660;</span></button><div class="ai-section-body is-open" id="ai-body-insights">{insights_html}</div></div>',
+        f'<div class="ai-section"><button type="button" class="ai-section-toggle is-open" data-target="highlights"><span class="ai-section-icon">&#11088;</span><span class="ai-section-label">Highlights & Standouts ({len(highlights)})</span><span class="ai-section-chevron">&#9660;</span></button><div class="ai-section-body is-open" id="ai-body-highlights">{highlights_html}</div></div>',
+        f'<div class="ai-section"><button type="button" class="ai-section-toggle" data-target="recs"><span class="ai-section-icon">&#127919;</span><span class="ai-section-label">Recommendations ({len(recs)})</span><span class="ai-section-chevron">&#9660;</span></button><div class="ai-section-body" id="ai-body-recs">{recs_html}</div></div>'
+    ]
+
+    inner = "".join(sections_arr)
+    return f'<div class="ai-result ai-result-v2"><div class="ai-result-header"><div class="ai-result-header-icon">&#10024;</div><div><div class="ai-result-header-title">AI-Powered Analysis</div><div class="ai-result-header-sub">Deep insights generated from your data — fully curated.</div></div></div>{inner}</div>'
+
+
 def section_header(eyebrow, title, deck, section_num, total=7, loc_key='', month_key='', id_suffix=''):
     section_id = SECTION_IDS.get(section_num, f'section-{section_num}')
     slot_id = f'ai-slot-{section_id}{id_suffix}'
@@ -118,14 +185,11 @@ def section_header(eyebrow, title, deck, section_num, total=7, loc_key='', month
           <p class="section-deck">{deck}</p>
         </div>
         <div class="section-header-right">
-          <button type="button" class="ai-info-btn" data-section="{section_id}" data-slot="{slot_id}" data-loc="{loc_key}" data-month="{month_key}" title="View AI Insights">
-            <span class="ai-info-icon">i</span>
-          </button>
           <div class="section-anchor">Section {section_num} / {total:02d}</div>
         </div>
       </div>
     </div>
-    <div class="ai-slot" id="{slot_id}"></div>'''
+    <div class="ai-slot" id="{slot_id}">{render_ai_result(AI_CONTEXT.get(f"{loc_key}|{month_key}|{section_id}", {}))}</div>'''
 
 
 def subsection(title, deck):

@@ -16,6 +16,15 @@ ANALYSIS_JSON = sys.argv[1] if len(sys.argv) > 1 else 'analysis_v2.json'
 LOC_KEY_ARG = sys.argv[2] if len(sys.argv) > 2 else None
 MONTH_KEY_ARG = sys.argv[3] if len(sys.argv) > 3 else None
 OUTPUT_HTML = sys.argv[4] if len(sys.argv) > 4 else None
+AI_CONTEXT_JSON = sys.argv[5] if len(sys.argv) > 5 else None
+
+import sections_v2
+if AI_CONTEXT_JSON and os.path.exists(AI_CONTEXT_JSON):
+    with open(AI_CONTEXT_JSON, 'r') as f:
+        sections_v2.AI_CONTEXT = json.load(f)
+else:
+    sections_v2.AI_CONTEXT = {}
+
 
 # Load CSS from reference (co-located with this script, not the caller's cwd)
 with open(os.path.join(SCRIPT_DIR, 'full_css.txt'), 'r') as f:

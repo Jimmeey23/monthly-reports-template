@@ -210,7 +210,7 @@ app.post('/analyze-session', (req, res) => {
   });
 });
 
-app.post('/generate', (req, res) => {
+app.post('/generate', async (req, res) => {
   const { sessionId } = req.body;
   const session = getSession(sessionId);
   if (!session) {
@@ -244,11 +244,45 @@ app.post('/generate', (req, res) => {
   } else {
     outputFilename = `Performance_Report_Bundle_${comboCount}_reports_${Date.now()}.html`;
   }
+
   const outputPath = path.join(session.dir, outputFilename);
 
-  runPythonScript(
-    GEN_REPORT_SCRIPT,
-    [session.analysisPath, selectedLocs.join(','), selectedMonths.join(','), outputPath],
+  // Generate AI Insights AOT for this report
+  try {
+    const analysis = JSON.parse(fs.readFileSync(session.analysisPath, 'utf8'));
+    const sections = ['executive-summary', 'sales-funnel', 'revenue', 'studio-utilization', 'member-retention', 'trial-conversion', 'class-attendance'];
+    
+    // We'll store a big map of locKey|monthKey|section -> insights
+    const aiContext = {};
+    const promises = [];
+
+    for (const loc of selectedLocs) {
+      for (const month of selectedMonths) {
+        for (const sec of sections) {
+          promises.push((async () => {
+            try {
+              const res = await generateInsights(analysis, loc, month, sec);
+              const key = loc + '|' + month + '|' + sec;
+              aiContext[key] = res;
+            } catch (err) {
+              console.error('Failed to generate AI for ' + sec, err.message);
+            }
+          })());
+        }
+      }
+    }
+
+    await Promise.all(promises);
+
+    // Save context to pass to Python
+    const aiContextPath = path.join(session.dir, 'ai_context_' + Date.now() + '.json');
+    fs.writeFileSync(aiContextPath, JSON.stringify(aiContext));
+
+    runPythonScript(
+      GEN_REPORT_SCRIPT,
+      [session.analysisPath, selectedLocs.join(','), selectedMonths.join(','), outputPath, aiContextPath],
+      (err, stdout, stderr) => {
+
     (err, stdout, stderr) => {
       if (err) {
         console.error(stderr || err.message);

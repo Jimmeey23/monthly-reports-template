@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const multer = require('multer');
 const { execFile } = require('child_process');
 const crypto = require('crypto');
@@ -268,7 +270,7 @@ app.post('/generate', (req, res) => {
           month: selectedMonths[0],
           filename: outputFilename,
           serverUrl: process.env.SERVER_URL || `${protocol}://${host}`,
-        })};</script>\n<script src="/report-client.js"></script>`;
+        })};</script>\n<script src="/socket.io/socket.io.js"></script>\n<script src="/report-client.js"></script>`;
         fs.writeFileSync(outputPath, html.replace('<!-- REPORT_CLIENT_PLACEHOLDER -->', bootstrap));
       } catch (spliceErr) {
         console.error('Could not inject report client script:', spliceErr.message);
@@ -375,10 +377,56 @@ app.get('/download/:sessionId/:filename', (req, res) => {
 // Health check endpoint
 app.get('/health', (req, res) => res.json({ status: 'ok', uploadsDir: UPLOADS_DIR }));
 
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
+
+const presenterRooms = {};
+
+io.on('connection', (socket) => {
+  socket.on('join_room', ({ role, code }) => {
+    if (!code) return;
+    socket.join(code);
+    socket.roomCode = code;
+    socket.role = role;
+
+    if (!presenterRooms[code]) {
+      presenterRooms[code] = { presenterId: null, viewers: 0 };
+    }
+
+    if (role === 'presenter') {
+      presenterRooms[code].presenterId = socket.id;
+    } else {
+      presenterRooms[code].viewers++;
+    }
+
+    io.to(code).emit('room_state', presenterRooms[code]);
+  });
+
+  socket.on('presenter_event', (data) => {
+    if (socket.role === 'presenter' && socket.roomCode) {
+      socket.to(socket.roomCode).emit('presenter_sync', data);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    if (socket.roomCode && presenterRooms[socket.roomCode]) {
+      if (socket.role === 'presenter') {
+        presenterRooms[socket.roomCode].presenterId = null;
+      } else {
+        presenterRooms[socket.roomCode].viewers = Math.max(0, presenterRooms[socket.roomCode].viewers - 1);
+      }
+      io.to(socket.roomCode).emit('room_state', presenterRooms[socket.roomCode]);
+      if (!presenterRooms[socket.roomCode].presenterId && presenterRooms[socket.roomCode].viewers === 0) {
+        delete presenterRooms[socket.roomCode];
+      }
+    }
+  });
+});
+
 if (require.main === module) {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Studio performance report app running at http://localhost:${PORT}`);
   });
 }
 
-module.exports = app;
+module.exports = { app, server, io };

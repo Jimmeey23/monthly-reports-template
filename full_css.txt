@@ -452,3 +452,25 @@ tr.disc-high td { background: var(--warn-soft); }
 .editor-format-tools { padding-left: 8px; border-left: 1px solid var(--border); }
 .format-btn { background: transparent; border: 1px solid transparent; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); font-size: 13px; }
 .format-btn:hover { background: var(--bg-inset); border-color: var(--border); }
+
+
+/* ───────────────────────── Presenter View ───────────────────────── */
+.presenter-bar { position: fixed; top: 0; left: 0; right: 0; background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 2000; box-shadow: var(--shadow-sm); font-size: 13px; }
+.presenter-bar.is-active { background: var(--primary); color: white; border-bottom: none; }
+.presenter-info { display: flex; align-items: center; gap: 12px; }
+.presenter-badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-weight: 600; font-family: var(--font-mono); }
+.presenter-actions { display: flex; gap: 8px; }
+.presenter-btn { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; }
+.presenter-btn:hover { background: var(--bg-hover); }
+.presenter-bar.is-active .presenter-btn { background: white; color: var(--primary); border: none; }
+.presenter-bar.is-active .presenter-btn:hover { background: rgba(255,255,255,0.9); }
+body.viewer-locked { overflow: hidden !important; pointer-events: none !important; }
+.viewer-overlay { position: fixed; top: 40px; left: 0; right: 0; bottom: 0; z-index: 1999; cursor: not-allowed; display: none; }
+body.viewer-locked .viewer-overlay { display: block; }
+.presenter-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-card); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); z-index: 3000; display: none; flex-direction: column; gap: 16px; width: 300px; }
+.presenter-modal.is-open { display: flex; }
+.presenter-modal-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.presenter-modal input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-inset); color: var(--text); font-family: var(--font-mono); text-align: center; letter-spacing: 2px; font-size: 16px; margin-bottom: 16px; }
+.presenter-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+body { padding-top: 40px !important; }

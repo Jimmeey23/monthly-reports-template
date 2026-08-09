@@ -359,5 +359,107 @@
 .ai-rec-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 `;
   document.head.appendChild(styleEl);
+  // ───────────────────────── Presenter View ─────────────────────────
+  if (typeof io !== 'undefined') {
+    const pBar = document.createElement('div');
+    pBar.className = 'presenter-bar';
+    pBar.innerHTML = `<div class="presenter-info"><span id="p-status">Presenter Mode Offline</span><span class="presenter-badge" id="p-code" style="display:none;"></span></div><div class="presenter-actions"><button type="button" class="presenter-btn" id="p-host-btn">Host</button><button type="button" class="presenter-btn" id="p-join-btn">Join</button><button type="button" class="presenter-btn" id="p-leave-btn" style="display:none;">Leave</button></div>`;
+    document.body.appendChild(pBar);
 
+    const pOverlay = document.createElement('div');
+    pOverlay.className = 'viewer-overlay';
+    document.body.appendChild(pOverlay);
+
+    const pModal = document.createElement('div');
+    pModal.className = 'presenter-modal';
+    pModal.innerHTML = `<div class="presenter-modal-title">Join Session</div><input type="text" id="p-input" placeholder="6-digit code" maxlength="6"><div class="presenter-modal-actions"><button class="presenter-btn" id="p-cancel">Cancel</button><button class="presenter-btn" id="p-submit">Join</button></div>`;
+    document.body.appendChild(pModal);
+
+    const socket = io(ctx.serverUrl || window.location.origin);
+    let myRole = 'idle';
+    let myCode = null;
+
+    socket.on('room_state', (state) => {
+      document.getElementById('p-status').textContent = myRole === 'presenter' ? `Broadcasting (${state.viewers} viewers)` : 'Viewing Host Screen';
+    });
+
+    socket.on('presenter_sync', (data) => {
+      if (myRole !== 'viewer') return;
+      if (data.type === 'scroll') {
+        window.scrollTo({ top: data.scrollY, behavior: 'instant' });
+      }
+      if (data.type === 'click') {
+        const el = document.elementFromPoint(data.x, data.y);
+        if (el && typeof el.click === 'function') {
+          document.body.classList.remove('viewer-locked');
+          el.click();
+          document.body.classList.add('viewer-locked');
+        }
+      }
+    });
+
+    let scrollTicking = false;
+    window.addEventListener('scroll', () => {
+      if (myRole === 'presenter' && !scrollTicking) {
+        window.requestAnimationFrame(() => {
+          socket.emit('presenter_event', { type: 'scroll', scrollY: window.scrollY });
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (myRole === 'presenter' && e.isTrusted) {
+        socket.emit('presenter_event', { type: 'click', x: e.clientX, y: e.clientY });
+      }
+    });
+
+    function joinSession(role, code) {
+      myRole = role;
+      myCode = code;
+      socket.emit('join_room', { role, code });
+      
+      document.getElementById('p-code').textContent = 'Code: ' + code;
+      document.getElementById('p-code').style.display = 'inline-block';
+      document.getElementById('p-host-btn').style.display = 'none';
+      document.getElementById('p-join-btn').style.display = 'none';
+      document.getElementById('p-leave-btn').style.display = 'inline-block';
+      pBar.classList.add('is-active');
+
+      if (role === 'viewer') {
+        document.body.classList.add('viewer-locked');
+      }
+    }
+
+    document.getElementById('p-host-btn').addEventListener('click', () => {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      joinSession('presenter', code);
+    });
+
+    document.getElementById('p-join-btn').addEventListener('click', () => pModal.classList.add('is-open'));
+    document.getElementById('p-cancel').addEventListener('click', () => pModal.classList.remove('is-open'));
+    
+    document.getElementById('p-submit').addEventListener('click', () => {
+      const code = document.getElementById('p-input').value.trim();
+      if (code.length === 6) {
+        joinSession('viewer', code);
+        pModal.classList.remove('is-open');
+      }
+    });
+
+    document.getElementById('p-leave-btn').addEventListener('click', () => {
+      socket.disconnect();
+      socket.connect();
+      myRole = 'idle';
+      myCode = null;
+      document.getElementById('p-status').textContent = 'Presenter Mode Offline';
+      document.getElementById('p-code').style.display = 'none';
+      document.getElementById('p-host-btn').style.display = 'inline-block';
+      document.getElementById('p-join-btn').style.display = 'inline-block';
+      document.getElementById('p-leave-btn').style.display = 'none';
+      pBar.classList.remove('is-active');
+      document.body.classList.remove('viewer-locked');
+    });
+  }
 })();

@@ -20,7 +20,7 @@
     <div class="upload-hero">
       <span class="eyebrow">Studio Pulse</span>
       <h1>Performance Report <span class="accent">Generator</span></h1>
-      <p class="subtitle">Drop your 7 CSV exports below. We'll analyze them and auto-generate a studio &amp; month performance report.</p>
+      <p class="subtitle">Drop all your CSV files at once into the common upload section below. Files will be automatically identified by keyword!</p>
       
       <div style="margin-top:24px; display:flex; gap:8px; justify-content:center; align-items:center;">
         <input type="text" id="join-code" placeholder="6-digit code" maxlength="6" style="padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); font-family:var(--font-mono); font-size:16px; text-align:center; width:140px; letter-spacing:2px;" />
@@ -35,6 +35,21 @@
     <% } %>
 
     <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" novalidate>
+      <div class="master-dropzone" id="master-dropzone" tabindex="0">
+        <div class="master-dz-icon">📂</div>
+        <div class="master-dz-body">
+          <div class="master-dz-title">Drop all CSV files here</div>
+          <div class="master-dz-sub">Select multiple CSV files at once — we'll automatically identify Sales, Sessions, Checkins, Leads, New/Trials, Lapsed &amp; Active based on keywords in the filenames.</div>
+          <div class="master-dz-badge" id="master-dz-status">Click or drag &amp; drop CSV files</div>
+        </div>
+        <input type="file" id="master-file-input" multiple accept=".csv" />
+      </div>
+
+      <div class="slots-header">
+        <span>Detected &amp; Assigned CSV Slots</span>
+        <span class="slots-subtitle">Drag or pick individual files below if needed</span>
+      </div>
+
       <div class="dropzones" id="dropzones">
         <% const icons = { sales: '💳', sessions: '🗓️', checkins: '✅', leads: '📞', new: '✨', lapsed: '📉', active: '👥' };
            slots.forEach(function(slot, i) { %>
@@ -80,6 +95,99 @@
     const loadingBarFill = document.getElementById('loading-bar-fill');
     const total = dropzones.length;
 
+    const masterZone = document.getElementById('master-dropzone');
+    const masterInput = document.getElementById('master-file-input');
+    const masterStatus = document.getElementById('master-dz-status');
+
+    const KEYWORD_MAP = {
+      sales: ['sale', 'sales', 'revenue', 'transaction', 'invoice', 'billing', 'payment', 'gross', 'net'],
+      sessions: ['session', 'sessions', 'class', 'classes', 'booking', 'schedule', 'format', 'trainer'],
+      checkins: ['checkin', 'checkins', 'check-in', 'check_in', 'visit', 'attendance'],
+      leads: ['lead', 'leads', 'inquir', 'prospect', 'acquisition'],
+      new: ['new', 'trial', 'trials', 'first_time', 'first-time', 'join', 'joined', 'conversion'],
+      lapsed: ['lapsed', 'lapse', 'churn', 'cancell', 'expire', 'renew', 'renewal'],
+      active: ['active', 'member', 'members', 'subscription', 'base']
+    };
+
+    function matchFileToSlot(fileName) {
+      const cleanName = fileName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      let bestSlot = null;
+      let highestScore = 0;
+
+      for (const [slot, keywords] of Object.entries(KEYWORD_MAP)) {
+        for (const kw of keywords) {
+          if (cleanName.includes(kw)) {
+            const score = kw.length;
+            if (score > highestScore) {
+              highestScore = score;
+              bestSlot = slot;
+            }
+          }
+        }
+      }
+      return bestSlot;
+    }
+
+    function processBatchFiles(files) {
+      const fileArray = Array.from(files);
+      let matchedCount = 0;
+
+      fileArray.forEach((file) => {
+        const slotName = matchFileToSlot(file.name);
+        if (slotName) {
+          const zone = dropzones.find((z) => z.dataset.field === slotName);
+          if (zone) {
+            const input = zone.querySelector('input[type=file]');
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            updateZone(zone);
+            matchedCount++;
+          }
+        }
+      });
+
+      refreshMasterStatus();
+    }
+
+    function refreshMasterStatus() {
+      const filled = dropzones.filter((z) => z.classList.contains('filled')).length;
+      if (filled === total) {
+        masterStatus.textContent = '🎉 All 7 required CSV slots auto-matched!';
+        masterStatus.classList.add('all-matched');
+      } else if (filled > 0) {
+        masterStatus.textContent = `✓ ${filled} of 7 slots assigned. Please drop or pick missing files below.`;
+        masterStatus.classList.remove('all-matched');
+      } else {
+        masterStatus.textContent = 'Click or drag & drop CSV files';
+        masterStatus.classList.remove('all-matched');
+      }
+    }
+
+    masterInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        processBatchFiles(e.target.files);
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach((evt) =>
+      masterZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        masterZone.classList.add('drag-over');
+      })
+    );
+    ['dragleave', 'dragend', 'drop'].forEach((evt) =>
+      masterZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        masterZone.classList.remove('drag-over');
+      })
+    );
+    masterZone.addEventListener('drop', (e) => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        processBatchFiles(e.dataTransfer.files);
+      }
+    });
+
     function truncate(name, max) {
       if (name.length <= max) return name;
       return name.slice(0, max - 1) + '…';
@@ -102,6 +210,7 @@
       const filled = dropzones.filter((z) => z.classList.contains('filled')).length;
       filledCountEl.textContent = filled;
       submitBtn.disabled = filled < total;
+      refreshMasterStatus();
     }
 
     dropzones.forEach((zone) => {

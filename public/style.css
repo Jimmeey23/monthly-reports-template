@@ -180,6 +180,115 @@ h1 {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ───────────────────────── Master Drag & Drop Box ───────────────────────── */
+
+.master-dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, rgba(91, 123, 181, 0.1), rgba(245, 197, 24, 0.08));
+  border: 2px dashed var(--primary);
+  border-radius: var(--radius-lg);
+  padding: 26px 28px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: all 250ms ease;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.master-dropzone:hover, .master-dropzone.drag-over {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(91, 123, 181, 0.18), rgba(245, 197, 24, 0.16));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.master-dz-icon {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 220ms ease;
+}
+
+.master-dropzone:hover .master-dz-icon {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.master-dz-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.master-dz-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.master-dz-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.master-dz-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-2);
+  margin-top: 6px;
+  transition: all 200ms ease;
+  border: 1px solid rgba(91, 123, 181, 0.3);
+}
+
+.master-dz-badge.all-matched {
+  background: var(--good-soft);
+  color: var(--good);
+  border-color: rgba(79, 185, 123, 0.3);
+}
+
+#master-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.slots-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+.slots-subtitle {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--subtle);
+}
+
 /* ───────────────────────── Dropzones ───────────────────────── */
 
 .dropzones {

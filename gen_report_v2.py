@@ -326,12 +326,22 @@ def build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, laps
         'yoy_sales': yoy_sales,
     }
     
-    # Sales comparators
+    cy_avg_data = baseline.get('cy_avg', {})
+    cy_sales = cy_avg_data.get('sales', {})
+    cy_sessions = cy_avg_data.get('sessions', {})
+    cy_leads = cy_avg_data.get('leads', {})
+    cy_new = cy_avg_data.get('new', {})
+    cy_lapsed = cy_avg_data.get('lapsed', {})
+    cy_checkins = cy_avg_data.get('checkins', {})
+
+    # Sales 3-period comparators
     ctx['net_mom'] = pct_change(prev_sales.get('net', 0), sales.get('net', 0))
+    ctx['net_cy_avg'] = pct_change(cy_sales.get('net', 0), sales.get('net', 0))
     ctx['net_yoy'] = pct_change(yoy_sales.get('net', 0), sales.get('net', 0)) if yoy_sales else "n/a"
     ctx['net_baseline'] = pct_change(baseline['sales']['net'], sales.get('net', 0))
     
     ctx['gross_mom'] = pct_change(prev_sales.get('gross', 0), sales.get('gross', 0))
+    ctx['gross_cy_avg'] = pct_change(cy_sales.get('gross', 0), sales.get('gross', 0))
     ctx['gross_yoy'] = pct_change(yoy_sales.get('gross', 0), sales.get('gross', 0)) if yoy_sales else "n/a"
     ctx['gross_baseline'] = pct_change(baseline['sales']['gross'], sales.get('gross', 0))
     
@@ -341,73 +351,75 @@ def build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, laps
     ctx['sales_count_mom'] = pct_change(prev_sales.get('sales', 0), sales.get('sales', 0))
     ctx['members_mom'] = pct_change(prev_sales.get('members', 0), sales.get('members', 0))
     ctx['atv_mom'] = pct_change(prev_sales.get('atv', 0), sales.get('atv', 0))
+    ctx['atv_cy_avg'] = pct_change(cy_sales.get('atv', 0), sales.get('atv', 0))
+    ctx['atv_yoy'] = "n/a"
     
     ctx['disc_eff_mom'] = pct_change(prev_sales.get('disc_eff', 0), sales.get('disc_eff', 0))
     ctx['disc_eff_yoy'] = pct_change(yoy_sales.get('disc_eff', 0), sales.get('disc_eff', 0)) if yoy_sales else "n/a"
     ctx['disc_eff_baseline'] = pct_change(baseline['sales']['disc_eff'], sales.get('disc_eff', 0))
     
-    # Sessions comparators
+    # Sessions 3-period comparators
     ctx['sessions_mom'] = pct_change(prev_sessions.get('sessions', 0), sessions.get('sessions', 0))
     ctx['visits_mom'] = pct_change(prev_sessions.get('visits', 0), sessions.get('visits', 0))
+    ctx['visits_cy_avg'] = pct_change(cy_sessions.get('visits', 0), sessions.get('visits', 0))
     ctx['fill_mom'] = pp_change(prev_sessions.get('fill', 0), sessions.get('fill', 0))
+    ctx['fill_cy_avg'] = pp_change(cy_sessions.get('fill', 0), sessions.get('fill', 0))
     ctx['fill_baseline'] = pp_change(baseline['sessions']['fill'], sessions.get('fill', 0))
     ctx['sess_rev_mom'] = pct_change(prev_sessions.get('revenue', 0), sessions.get('revenue', 0))
-    ctx['sessions_baseline'] = pct_change(baseline['sessions']['sessions'], sessions.get('sessions', 0))
-    ctx['visits_baseline'] = pct_change(baseline['sessions']['visits'], sessions.get('visits', 0))
     
     # Leads comparators
     ctx['leads_mom'] = pct_change(prev_leads.get('total', 0), leads.get('total', 0))
 
-    # Conversion is trials -> converted, off the New sheet's own Conversion Status
-    # (not the Leads sheet's Conversion Status).
+    # Trial Conversion (Trials to Converted Ratio) 3-period comparators
     ctx['conv_mom'] = pp_change(prev_new.get('rate', 0), new.get('rate', 0))
+    ctx['conv_cy_avg'] = pp_change(cy_new.get('rate', 0), new.get('rate', 0))
+    ctx['conv_yoy'] = "n/a"
     ctx['conv_baseline'] = pp_change(baseline['new']['rate'], new.get('rate', 0))
     ctx['converted_mom'] = pct_change(prev_new.get('converted', 0), new.get('converted', 0))
 
-    # Trials comparators
+    # Trials 3-period comparators
     ctx['trials_mom'] = pct_change(prev_new.get('trials', 0), new.get('trials', 0))
+    ctx['trials_cy_avg'] = pct_change(cy_new.get('trials', 0), new.get('trials', 0))
     ctx['retained_mom'] = pct_change(prev_new.get('retained', 0), new.get('retained', 0))
     
-    # Lapsed comparators
+    # Lapsed 3-period comparators
     ctx['lapsed_mom'] = pct_change(prev_lapsed.get('lapsed', 0), lapsed.get('lapsed', 0))
     ctx['churn_mom'] = pp_change(prev_lapsed.get('churn', 0), lapsed.get('churn', 0))
+    ctx['churn_cy_avg'] = pp_change(cy_lapsed.get('churn', 0), lapsed.get('churn', 0))
     ctx['churn_baseline'] = pp_change(baseline['lapsed']['churn'], lapsed.get('churn', 0))
     ctx['renewal_mom'] = pp_change(prev_lapsed.get('renewal_rate', 0), lapsed.get('renewal_rate', 0))
-    ctx['renewal_baseline'] = pp_change(baseline['lapsed']['renewal_rate'], lapsed.get('renewal_rate', 0))
-    ctx['lapsed_total_mom'] = pct_change(prev_lapsed.get('total', 0), lapsed.get('total', 0))
     
-    # Checkins comparators
+    # Checkins & Late Cancels
     ctx['late_cancel_mom'] = pct_change(prev_checkins.get('late_cancel', 0), checkins.get('late_cancel', 0))
+    ctx['late_cancel_cy_avg'] = pct_change(cy_checkins.get('late_cancel', 0), checkins.get('late_cancel', 0))
     ctx['lc_rate'] = (checkins.get('late_cancel', 0) / checkins.get('total', 1)) * 100 if checkins.get('total') else 0
     ctx['prev_lc_rate'] = (prev_checkins.get('late_cancel', 0) / prev_checkins.get('total', 1)) * 100 if prev_checkins.get('total') else 0
     ctx['lc_rate_mom'] = pp_change(ctx['prev_lc_rate'], ctx['lc_rate'])
     
-    # Discount penetration
     ctx['disc_penetration'] = (sales.get('disc', 0) / sales.get('gross', 1)) * 100 if sales.get('gross') else 0
     ctx['prev_disc_penetration'] = (prev_sales.get('disc', 0) / prev_sales.get('gross', 1)) * 100 if prev_sales.get('gross') else 0
     ctx['disc_pen_mom'] = pp_change(ctx['prev_disc_penetration'], ctx['disc_penetration'])
     
-    # Retention rate of trials
     ctx['trial_retention'] = (new.get('retained', 0) / new.get('trials', 1)) * 100 if new.get('trials') else 0
-    
-    # Cumulative lapsed
     ctx['cumulative_lapsed'] = get_lapsed_cumulative(loc_key).get(month_key, 0)
     
     return ctx
 
 
 def build_html(ctx):
-    """Assemble the full HTML document."""
+    """Assemble the full HTML document with 9 executive sections."""
     html = head(ctx)
     html += topbar(ctx)
     html += hero(ctx)
-    html += section_01_executive_summary(ctx)
-    html += section_02_revenue(ctx)
-    html += section_03_funnel(ctx)
-    html += section_04_sessions(ctx)
-    html += section_05_lapsed(ctx)
-    html += section_06_recommendations(ctx)
-    html += section_07_predictions(ctx)
+    html += sections_v2.section_01(ctx)
+    html += sections_v2.section_02(ctx)
+    html += sections_v2.section_03(ctx)
+    html += sections_v2.section_04(ctx)
+    html += sections_v2.section_05(ctx)
+    html += sections_v2.section_06(ctx)
+    html += sections_v2.section_07(ctx)
+    html += sections_v2.section_08(ctx)
+    html += sections_v2.section_09(ctx)
     html += "\n<!-- REPORT_CLIENT_PLACEHOLDER -->\n"
     html += footer(ctx)
     html += theme_script(ctx)
@@ -623,42 +635,41 @@ def hero(ctx):
     </div>
 
     <div class="hero-kpi-grid">
-      {kpi_card("Net Sales", net_val, f"Gross {gross_val} &middot; Disc {disc_val}",
-                ctx['net_mom'], ctx['net_yoy'], ctx['net_baseline'], higher_is_better=True)}
+      {kpi_card("Net Revenue", net_val, f"Gross {gross_val} &middot; Disc {disc_val}",
+                ctx['net_mom'], ctx['net_cy_avg'], ctx['net_yoy'], higher_is_better=True)}
       {kpi_card("Visits", visits_val, f"Across {sess['sessions']} sessions",
-                ctx['visits_mom'], "n/a", ctx['visits_baseline'], higher_is_better=True)}
+                ctx['visits_mom'], ctx['visits_cy_avg'], "n/a", higher_is_better=True)}
       {kpi_card("Fill Rate", fill_val, "Capacity utilization",
-                ctx['fill_mom'], "n/a", ctx['fill_baseline'], higher_is_better=True, is_pp=True)}
-      {kpi_card("Conversion Rate", conv_val, f"{ctx['new']['trials']} trials &rarr; {ctx['new']['converted']} converted",
-                ctx['conv_mom'], "n/a", ctx['conv_baseline'], higher_is_better=True, is_pp=True)}
-      {kpi_card("Lapsed Members", lapsed_val, f"Churn rate {pct(ctx['lapsed']['churn'])}",
-                ctx['lapsed_mom'], "n/a", "Active retention work", higher_is_better=False)}
+                ctx['fill_mom'], ctx['fill_cy_avg'], "n/a", higher_is_better=True, is_pp=True)}
+      {kpi_card("Trial-to-Converted Rate", conv_val, f"{ctx['new']['trials']} trials &rarr; {ctx['new']['converted']} converted",
+                ctx['conv_mom'], ctx['conv_cy_avg'], "n/a", higher_is_better=True, is_pp=True)}
+      {kpi_card("Monthly Churn Rate", pct(ctx['lapsed']['churn']), f"{lapsed_val} lapsed members",
+                ctx['churn_mom'], ctx['churn_cy_avg'], "n/a", higher_is_better=False, is_pp=True)}
       {kpi_card("Discount Efficiency", disc_eff_val, "Revenue collected / &#8377;1 discounted",
-                ctx['disc_eff_mom'], ctx['disc_eff_yoy'], ctx['disc_eff_baseline'], higher_is_better=True)}
+                ctx['disc_eff_mom'], ctx['disc_eff_baseline'], ctx['disc_eff_yoy'], higher_is_better=True)}
     </div>
   </div>
 </section>
 '''
 
 
-def kpi_card(label, value, sub, mom, yoy, baseline_text, higher_is_better=True, is_pp=False):
-    """Generate a KPI card."""
+def kpi_card(label, value, sub, mom, cy_avg, sply="n/a", higher_is_better=True, is_pp=False):
+    """Generate a KPI card displaying 3 explicit comparison periods."""
     mom_b = badge(mom, higher_is_better) if not is_pp else badge_from_pp(mom, higher_is_better)
-    yoy_b = badge(yoy, higher_is_better) if not is_pp else badge_from_pp(yoy, higher_is_better)
+    cy_b = badge(cy_avg, higher_is_better) if not is_pp else badge_from_pp(cy_avg, higher_is_better)
+    sply_b = badge(sply, higher_is_better) if not is_pp else badge_from_pp(sply, higher_is_better)
     
-    yoy_html = ""
-    if yoy != "n/a":
-        yoy_html = f'''<span class="kpi-trend"><span class="trend-label">YoY</span> <span class='badge {yoy_b}'>{yoy}</span></span>'''
+    sply_html = f'''<span class="kpi-trend"><span class="trend-label">vs SPLY</span> <span class='badge {sply_b}'>{sply}</span></span>''' if sply != "n/a" else ""
     
     return f'''        <div class="kpi-card">
           <div class="kpi-label">{label}</div>
           <div class="kpi-value">{value}</div>
           <div class="kpi-sub">{sub}</div>
           <div class="kpi-trends">
-            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class='badge {mom_b}'>{mom}</span></span>
-            {yoy_html}
+            <span class="kpi-trend"><span class="trend-label">vs Prev Mth</span> <span class='badge {mom_b}'>{mom}</span></span>
+            <span class="kpi-trend"><span class="trend-label">vs CY Avg</span> <span class='badge {cy_b}'>{cy_avg}</span></span>
+            {sply_html}
           </div>
-          <div class="kpi-baseline">{baseline_text}</div>
         </div>'''
 
 
@@ -701,19 +712,21 @@ def footer(ctx):
           Performance Report &middot; {mo['month_name']} {mo['year']}<br>
           Compiled from studio sales, sessions, leads, membership, and check-in records.<br>
           Net Sales excludes tax; Gross Sales reflects amount collected per transaction.
-          Compared against the {ctx['baseline_label']} baseline.
+          Compared against Previous Month, Current Year Monthly Average, and Last Year Same Month.
         </p>
       </div>
       <div>
-        <div class="footer-label">Contents</div>
+        <div class="footer-label">Report Sections</div>
         <p class="footer-text">
-          01 Executive Summary<br>
-          02 Revenue &amp; Sales Performance<br>
-          03 New Client Conversion Funnel<br>
-          04 Sessions &amp; Class Performance<br>
-          05 Lapsed Memberships Deep Dive<br>
-          06 Strategic Recommendations<br>
-          07 Predictions &amp; Forward View
+          01 Financial Performance &amp; Revenue Analytics<br>
+          02 Client Acquisition &amp; Trial Conversion Engine<br>
+          03 Lead Funnel Velocity &amp; Pipeline Performance<br>
+          04 Instructional Staff &amp; Trainer Performance Metrics<br>
+          05 Class Format Comparative Analysis &amp; Program Yield<br>
+          06 Schedule Utilization &amp; Session Performance<br>
+          07 Member Retention, Cohort Dynamics &amp; Churn<br>
+          08 Late Cancellations &amp; Revenue Leakage Impact<br>
+          09 Strategic AI Synthesis &amp; Data-Driven Action Plan
         </p>
       </div>
       <div>
@@ -722,7 +735,7 @@ def footer(ctx):
           Net Sales: {lakh(s['net'])}<br>
           Visits: {fmt_int(sess['visits'])}<br>
           Fill Rate: {pct(sess['fill'])}<br>
-          Conversion: {pct(ctx['leads']['rate'])}<br>
+          Trial Conversion: {pct(ctx['new']['rate'])}<br>
           Churn Rate: {pct(ctx['lapsed']['churn'])}<br>
           Discount Penetration: {pct(ctx['disc_penetration'])}
         </p>

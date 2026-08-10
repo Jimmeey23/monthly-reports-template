@@ -689,8 +689,22 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
     throw err;
   }
 
-  const digest = buildDigest(analysis, locKey, month, section);
-  const sectionLabel = SECTION_LABELS[section] || section;
+  // Alias section keys to standard digest categories
+  const SECTION_ALIASES = {
+    'sales-revenue': 'revenue-performance',
+    'new-client-conversion': 'conversion-funnel',
+    'funnel-health': 'conversion-funnel',
+    'trainer-performance': 'sessions',
+    'class-formats': 'sessions',
+    'class-performance': 'sessions',
+    'member-retention': 'lapsed',
+    'late-cancellations': 'sessions',
+    'recommendations': 'recommendations',
+  };
+  const normalizedSection = SECTION_ALIASES[section] || section;
+
+  const digest = buildDigest(analysis, locKey, month, normalizedSection);
+  const sectionLabel = SECTION_LABELS[normalizedSection] || SECTION_LABELS[section] || section;
   const angle = ANALYTICAL_ANGLES[Math.floor(Math.random() * ANALYTICAL_ANGLES.length)];
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {

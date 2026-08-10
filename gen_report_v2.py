@@ -577,7 +577,7 @@ def hero(ctx):
     disc_val = lakh(s['disc'])
     visits_val = fmt_int(sess['visits'])
     fill_val = pct(sess['fill'])
-    conv_val = pct(ctx['leads']['rate'])
+    conv_val = pct(ctx['new']['rate'])
     lapsed_val = fmt_int(ctx['lapsed']['lapsed'])
     disc_eff_val = f"&#8377;{s['disc_eff']:.2f}"
     
@@ -629,7 +629,7 @@ def hero(ctx):
                 ctx['visits_mom'], "n/a", ctx['visits_baseline'], higher_is_better=True)}
       {kpi_card("Fill Rate", fill_val, "Capacity utilization",
                 ctx['fill_mom'], "n/a", ctx['fill_baseline'], higher_is_better=True, is_pp=True)}
-      {kpi_card("Conversion Rate", conv_val, f"{ctx['leads']['total']} leads &rarr; {ctx['leads']['converted']} converted",
+      {kpi_card("Conversion Rate", conv_val, f"{ctx['new']['trials']} trials &rarr; {ctx['new']['converted']} converted",
                 ctx['conv_mom'], "n/a", ctx['conv_baseline'], higher_is_better=True, is_pp=True)}
       {kpi_card("Lapsed Members", lapsed_val, f"Churn rate {pct(ctx['lapsed']['churn'])}",
                 ctx['lapsed_mom'], "n/a", "Active retention work", higher_is_better=False)}

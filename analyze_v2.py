@@ -172,11 +172,19 @@ def to_int(v):
         return 0
 
 def month_key(pd_str):
-    """Extract YYYY-MM from date string."""
+    """Extract YYYY-MM from a date string. Supports:
+    - '2026-07-15, 10:30:00' (ISO, YYYY-MM-DD...)
+    - '09/08/2026 21:03:52'  (DD/MM/YYYY...)"""
     if not pd_str:
         return ''
-    # Handle '2026-07-15, 10:30:00' format
-    return pd_str[:7]
+    s = pd_str.strip()
+    if re.match(r'^\d{4}-\d{2}-\d{2}', s):
+        return s[:7]
+    m = re.match(r'^(\d{2})/(\d{2})/(\d{4})', s)
+    if m:
+        day, month, year = m.groups()
+        return f'{year}-{month}'
+    return ''
 
 
 LOCATIONS = detect_locations()

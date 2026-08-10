@@ -396,46 +396,30 @@
     }).join('');
   }
 
-  window.filterTable = function(inputEl) {
-    const targetId = inputEl.getAttribute('data-table-target');
-    const query = inputEl.value.toLowerCase().trim();
-    let table = targetId ? document.getElementById(targetId) : null;
-    if (!table) {
-      const card = inputEl.closest('.table-header-card');
-      if (card && card.nextElementSibling) {
-        table = card.nextElementSibling.querySelector('table');
-      }
-    }
-    if (!table) return;
-    const rows = table.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-      const text = row.textContent.toLowerCase();
-      row.style.display = text.includes(query) ? '' : 'none';
-    });
-  };
-
   function renderResult(result) {
-    if (!result) return '';
-    const ps = result.performance_summary || {};
+    const ps = result.performance_summary;
     const insights = result.key_insights || result.insights || [];
+    const highlights = result.highlights || [];
     const recs = result.recommendations || [];
-    const narrative = escapeHtml(ps.narrative || ps.title || 'Executive Analysis');
+    const summaryTitle = (ps && ps.title) ? ps.title : 'Performance Overview';
 
-    const itemsHtml = insights.slice(0, 4).map(ins => `
-      <div class="ai-synthesis-item">
-        <span class="ai-synthesis-bullet">&#9670;</span>
-        <div><strong>${escapeHtml(ins.title || '')}:</strong> ${escapeHtml(ins.text || '')}</div>
-      </div>
-    `).join('');
+    const sectionsHtml = [
+      renderCollapsible('summary', '&#128203;', summaryTitle, renderSummarySection(ps), true),
+      renderCollapsible('insights', '&#128161;', `Key Insights (${insights.length})`, renderInsightsSection(insights), true),
+      renderCollapsible('highlights', '&#11088;', `Highlights & Standouts (${highlights.length})`, renderHighlightsSection(highlights), true),
+      renderCollapsible('recs', '&#127919;', `Recommendations (${recs.length})`, renderRecommendationsSection(recs), false),
+    ].join('');
 
     return `
-      <div class="ai-executive-synthesis-card">
-        <div class="ai-synthesis-header">
-          <span class="ai-synthesis-badge">&#10024; AI Executive Synthesis</span>
-          <h3 class="ai-synthesis-title">${escapeHtml(ps.title || 'Strategic Performance Diagnosis')}</h3>
+      <div class="ai-result ai-result-v2">
+        <div class="ai-result-header">
+          <div class="ai-result-header-icon">&#10024;</div>
+          <div>
+            <div class="ai-result-header-title">AI-Powered Analysis</div>
+            <div class="ai-result-header-sub">Deep insights generated from your data — click each section to expand or collapse</div>
+          </div>
         </div>
-        <div class="ai-synthesis-narrative">${narrative}</div>
-        ${itemsHtml ? `<div class="ai-synthesis-grid">${itemsHtml}</div>` : ''}
+        ${sectionsHtml}
       </div>`;
   }
 

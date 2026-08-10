@@ -823,7 +823,7 @@ def main():
             bl_new['retention_rate'] = bl_new['retained'] / bl_new['trials'] * 100 if bl_new['trials'] else 0
         baseline[loc_key]['new'] = bl_new
 
-        # Baseline (Trailing Recent Quarter Reference)
+        # Lapsed baseline
         bl_lapsed = {'total': 0, 'renewed': 0, 'lapsed': 0, 'frozen': 0, 'count': 0}
         for m in bl_months:
             if m in lapsed_data[loc_key]:
@@ -839,49 +839,6 @@ def main():
             bl_lapsed['churn'] = bl_lapsed['lapsed'] / bl_lapsed['total'] * 100 if bl_lapsed['total'] else 0
             bl_lapsed['renewal_rate'] = bl_lapsed['renewed'] / bl_lapsed['total'] * 100 if bl_lapsed['total'] else 0
         baseline[loc_key]['lapsed'] = bl_lapsed
-
-        # CY Monthly Average (Current Year YTD Monthly Average across all detected 2026 months)
-        cy_months = [m for m in MONTHS if m in sales_data[loc_key]]
-        cy_count = len(cy_months) or 1
-        cy_avg = {
-            'sales': {
-                'gross': sum(sales_data[loc_key][m]['gross'] for m in cy_months) / cy_count,
-                'net': sum(sales_data[loc_key][m]['net'] for m in cy_months) / cy_count,
-                'disc': sum(sales_data[loc_key][m]['disc'] for m in cy_months) / cy_count,
-                'sales': sum(sales_data[loc_key][m]['sales'] for m in cy_months) / cy_count,
-                'members': sum(sales_data[loc_key][m]['members'] for m in cy_months) / cy_count,
-                'atv': sum(sales_data[loc_key][m]['atv'] for m in cy_months) / cy_count,
-                'disc_eff': sum(sales_data[loc_key][m]['disc_eff'] for m in cy_months) / cy_count,
-            },
-            'sessions': {
-                'sessions': sum(sessions_data[loc_key].get(m, {}).get('sessions', 0) for m in cy_months) / cy_count,
-                'visits': sum(sessions_data[loc_key].get(m, {}).get('visits', 0) for m in cy_months) / cy_count,
-                'capacity': sum(sessions_data[loc_key].get(m, {}).get('capacity', 0) for m in cy_months) / cy_count,
-                'revenue': sum(sessions_data[loc_key].get(m, {}).get('revenue', 0) for m in cy_months) / cy_count,
-                'fill': sum(sessions_data[loc_key].get(m, {}).get('fill', 0) for m in cy_months) / cy_count,
-            },
-            'leads': {
-                'total': sum(leads_data[loc_key].get(m, {}).get('total', 0) for m in cy_months) / cy_count,
-                'converted': sum(leads_data[loc_key].get(m, {}).get('converted', 0) for m in cy_months) / cy_count,
-            },
-            'new': {
-                'trials': sum(new_data[loc_key].get(m, {}).get('trials', 0) for m in cy_months) / cy_count,
-                'converted': sum(new_data[loc_key].get(m, {}).get('converted', 0) for m in cy_months) / cy_count,
-                'retained': sum(new_data[loc_key].get(m, {}).get('retained', 0) for m in cy_months) / cy_count,
-                'rate': sum(new_data[loc_key].get(m, {}).get('rate', 0) for m in cy_months) / cy_count,
-            },
-            'lapsed': {
-                'total': sum(lapsed_data[loc_key].get(m, {}).get('total', 0) for m in cy_months) / cy_count,
-                'lapsed': sum(lapsed_data[loc_key].get(m, {}).get('lapsed', 0) for m in cy_months) / cy_count,
-                'renewed': sum(lapsed_data[loc_key].get(m, {}).get('renewed', 0) for m in cy_months) / cy_count,
-                'churn': sum(lapsed_data[loc_key].get(m, {}).get('churn', 0) for m in cy_months) / cy_count,
-            },
-            'checkins': {
-                'total': sum(checkins_data[loc_key].get(m, {}).get('total', 0) for m in cy_months) / cy_count,
-                'late_cancel': sum(checkins_data[loc_key].get(m, {}).get('late_cancel', 0) for m in cy_months) / cy_count,
-            }
-        }
-        baseline[loc_key]['cy_avg'] = cy_avg
     
     # Assemble all data
     all_data = {

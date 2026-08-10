@@ -250,11 +250,7 @@ app.post('/generate', async (req, res) => {
   // Generate AI Insights AOT for this report
   try {
     const analysis = JSON.parse(fs.readFileSync(session.analysisPath, 'utf8'));
-    const sections = [
-      'sales-revenue', 'new-client-conversion', 'funnel-health',
-      'trainer-performance', 'class-formats', 'class-performance',
-      'member-retention', 'late-cancellations', 'recommendations'
-    ];
+    const sections = ['executive-summary', 'sales-funnel', 'revenue', 'studio-utilization', 'member-retention', 'trial-conversion', 'class-attendance'];
     
     // We'll store a big map of locKey|monthKey|section -> insights
     const aiContext = {};

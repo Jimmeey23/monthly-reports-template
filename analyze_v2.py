@@ -56,6 +56,25 @@ def slugify(name):
     return token or 'loc'
 
 
+def sniff_delimiter(path):
+    """Exports come in as comma or tab separated depending on source; pick
+    whichever delimiter actually splits the header into multiple columns."""
+    try:
+        with open(path, encoding='utf-8-sig') as f:
+            header = f.readline()
+    except OSError:
+        return ','
+    return '\t' if header.count('\t') > header.count(',') else ','
+
+
+def _require_column(fieldnames, name):
+    if fieldnames is not None and name not in fieldnames:
+        raise RuntimeError(
+            f"sales.csv is missing the required column '{name}'. "
+            f"Columns found: {', '.join(fieldnames) if fieldnames else '(none — file may be empty)'}"
+        )
+
+
 def detect_locations():
     """Scan the sales file for distinct 'Calculated Location' values and build
     {loc_key: full_name} from them. loc_key is derived from the first word of
@@ -63,12 +82,18 @@ def detect_locations():
     names = []
     seen = set()
     with open(SALES_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(SALES_FILE))
+        _require_column(r.fieldnames, 'Calculated Location')
+        row_count = 0
         for row in r:
+            row_count += 1
             loc = (row.get('Calculated Location') or '').strip()
             if loc and loc not in seen:
                 seen.add(loc)
                 names.append(loc)
+
+    if row_count == 0:
+        raise RuntimeError('sales.csv has a header row but no data rows.')
 
     locations = {}
     used_keys = set()
@@ -81,20 +106,40 @@ def detect_locations():
             i += 1
         used_keys.add(key)
         locations[key] = name
+
+    if not locations:
+        raise RuntimeError(
+            f"Scanned {row_count} row(s) in sales.csv but every 'Calculated Location' value was blank."
+        )
     return locations
 
 
 def detect_months():
-    """Scan the sales file for distinct YYYY-MM values in 'Payment Date'."""
+    """Scan the sales file for distinct YYYY-MM values in 'Payment Date'
+    among rows whose 'Payment Status' is 'succeeded' (case-insensitive)."""
     months = set()
+    succeeded_rows = 0
     with open(SALES_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(SALES_FILE))
+        _require_column(r.fieldnames, 'Payment Date')
+        _require_column(r.fieldnames, 'Payment Status')
         for row in r:
-            if row.get('Payment Status') != 'succeeded':
+            if (row.get('Payment Status') or '').strip().lower() != 'succeeded':
                 continue
+            succeeded_rows += 1
             m = month_key(row.get('Payment Date', ''))
             if re.match(r'^\d{4}-\d{2}$', m or ''):
                 months.add(m)
+
+    if succeeded_rows == 0:
+        raise RuntimeError(
+            "sales.csv has no rows with Payment Status = 'succeeded' — check the export filter."
+        )
+    if not months:
+        raise RuntimeError(
+            f"Found {succeeded_rows} succeeded row(s) in sales.csv but none had a parseable "
+            "'Payment Date' (expected it to start with YYYY-MM)."
+        )
     return sorted(months)
 
 
@@ -153,7 +198,7 @@ def analyze_sales():
                  for lk in LOCATIONS}
     
     with open(SALES_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(SALES_FILE))
         # sales_data[loc_key][month][sale_id] = sale_total_paid
         sales_data = {lk: defaultdict(dict) for lk in LOCATIONS}
         # per-row accumulators
@@ -254,7 +299,7 @@ def analyze_sales():
                      for lk in LOCATIONS}
     
     with open(SALES_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(SALES_FILE))
         for row in r:
             if row.get('Payment Status') != 'succeeded':
                 continue
@@ -339,7 +384,7 @@ def analyze_sessions():
               for lk in LOCATIONS}
 
     with open(SESSIONS_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(SESSIONS_FILE))
         for row in r:
             loc = row.get('Location', '')
             loc_key = loc_key_for(loc)
@@ -430,7 +475,7 @@ def analyze_leads():
                 for lk in LOCATIONS}
     
     with open(LEADS_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(LEADS_FILE))
         for row in r:
             center = row.get('Center', '')
             loc_key = loc_key_for(center)
@@ -471,7 +516,7 @@ def analyze_new():
     by_type = {lk: {m: defaultdict(int) for m in MONTHS} for lk in LOCATIONS}
     
     with open(NEW_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(NEW_FILE))
         for row in r:
             fvl = row.get('First Visit Location', '')
             loc_key = loc_key_for(fvl)
@@ -534,7 +579,7 @@ def analyze_lapsed():
     cumulative = {lk: defaultdict(set) for lk in LOCATIONS}
 
     with open(LAPSED_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(LAPSED_FILE))
         for row in r:
             loc = row.get('Primary Location', '')
             loc_key = loc_key_for(loc)
@@ -604,7 +649,7 @@ def analyze_checkins():
     member_cancels = {lk: {m: defaultdict(int) for m in MONTHS} for lk in LOCATIONS}
     
     with open(CHECKINS_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(CHECKINS_FILE))
         for row in r:
             loc = row.get('Location', '')
             loc_key = loc_key_for(loc)
@@ -648,7 +693,7 @@ def analyze_active():
     data = {lk: {'total': 0, 'types': defaultdict(int)} for lk in LOCATIONS}
     
     with open(ACTIVE_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f)
+        r = csv.DictReader(f, delimiter=sniff_delimiter(ACTIVE_FILE))
         for row in r:
             loc = row.get('Home Location', '')
             loc_key = loc_key_for(loc)

@@ -282,9 +282,7 @@ app.post('/generate', async (req, res) => {
       GEN_REPORT_SCRIPT,
       [session.analysisPath, selectedLocs.join(','), selectedMonths.join(','), outputPath, aiContextPath],
       (err, stdout, stderr) => {
-
-    (err, stdout, stderr) => {
-      if (err) {
+        if (err) {
         console.error(stderr || err.message);
         return res.render('select', {
           sessionId,
@@ -323,6 +321,15 @@ app.post('/generate', async (req, res) => {
       });
     }
   );
+  } catch (err) {
+    console.error('AI insights/report generation failed:', err.message);
+    return res.render('select', {
+      sessionId,
+      locations: session.locations,
+      months: [...session.months].reverse(),
+      error: `Report generation failed: ${err.message}`,
+    });
+  }
 });
 
 app.get('/download-pdf/:sessionId/:filename', async (req, res) => {

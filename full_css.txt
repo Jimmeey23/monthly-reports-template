@@ -607,3 +607,118 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
   border-radius: var(--radius);
   background: var(--bg-card);
 }
+
+/* ───────────────────────── Streamlined Narrative & Bulleted Insights ───────────────────────── */
+.ai-summary-narrative-block {
+  margin-bottom: 20px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.ai-block-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-summary-para {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.ai-summary-para:last-child {
+  margin-bottom: 0;
+}
+.ai-list-block {
+  margin-bottom: 20px;
+}
+.ai-list-block:last-child {
+  margin-bottom: 0;
+}
+.ai-bullet-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ai-bullet-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  align-items: flex-start;
+}
+.ai-bullet-dot {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.ai-bullet-dot.rec-dot {
+  background: var(--good-soft);
+  color: var(--good);
+}
+.ai-bullet-content {
+  flex: 1;
+}
+.ai-bullet-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.ai-bullet-title {
+  font-size: 14px;
+  color: var(--text);
+}
+.ai-bullet-meaning {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.ai-bullet-evidence {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-inset);
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  display: inline-block;
+  margin-top: 4px;
+}
+.ai-rec-impact-tag {
+  font-size: 12.5px;
+  color: var(--good);
+  background: var(--good-soft);
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin: 6px 0;
+}
+.meta-pill.pri-high {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.meta-pill.pri-medium {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+

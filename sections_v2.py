@@ -115,11 +115,6 @@ def render_ai_result(result):
     if not result:
         return ''
     
-    ps = result.get('performance_summary', {})
-    insights = result.get('key_insights') or result.get('insights') or []
-    highlights = result.get('highlights', [])
-    recs = result.get('recommendations', [])
-    
     def safe_html(s):
         if s is None: return ''
         return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -128,50 +123,96 @@ def render_ai_result(result):
         if not s or str(s).strip() == '—': return '—'
         return str(s).strip()
 
-    # Summary
-    title = safe_html(ps.get('title', 'Performance Overview'))
-    narrative = safe_html(ps.get('narrative', ''))
-    patterns_html = ''
-    if ps.get('patterns'):
-        patterns_html = '<div class="ai-patterns-wrap"><div class="ai-sub-label">Identified Patterns</div>'
-        for p in ps['patterns']:
-            patterns_html += f'<div class="ai-pattern-card"><div class="ai-pattern-name">&#128269; {safe_html(p.get("pattern", ""))}</div><div class="ai-pattern-desc">{safe_html(p.get("description", ""))}</div></div>'
-        patterns_html += '</div>'
-    summary_html = f'<div class="ai-summary-narrative">{narrative}</div>{patterns_html}'
+    title = safe_html(result.get('title') or result.get('performance_summary', {}).get('title', 'Executive Strategic Analysis'))
+    summary_text = safe_html(result.get('detailed_summary') or result.get('summary') or result.get('performance_summary', {}).get('narrative', ''))
+    
+    insights = result.get('insights') or result.get('key_insights') or []
+    recs = result.get('recommendations') or result.get('actions') or []
 
-    # Insights
+    # 1. Detailed Summary Block
+    summary_html = ''
+    if summary_text:
+        paras = [p.strip() for p in summary_text.split('\n\n') if p.strip()]
+        if not paras:
+            paras = [summary_text.strip()]
+        para_tags = "".join([f'<p class="ai-summary-para">{p}</p>' for p in paras])
+        summary_html = f'''<div class="ai-summary-narrative-block">
+            <div class="ai-block-heading">&#128203; Detailed Executive Narrative</div>
+            {para_tags}
+        </div>'''
+
+    # 2. Bulleted Insights Block ("What These Metrics Tell Us")
     insights_html = ''
-    for i, ins in enumerate(insights):
-        badge = f'<span class="ai-insight-badge {safe_html(ins.get("classification", "")).lower()}">{safe_html(ins.get("classification", ""))}</span>' if ins.get("classification") else ''
-        evidence = f'<div class="ai-evidence"><span class="ai-evidence-label">&#128202; Data:</span> {safe_html(ins.get("data_evidence", ""))}</div>' if ins.get("data_evidence") else ''
-        insights_html += f'<div class="insight-card"><div class="insight-num">{str(i+1).zfill(2)}</div><div class="insight-body"><div class="insight-title-row">{badge}<div class="insight-title">{safe_html(ins.get("title", ""))}</div></div><div class="insight-text">{safe_html(ins.get("text", ""))}</div>{evidence}</div></div>'
+    if insights:
+        items_html = ''
+        for i, ins in enumerate(insights):
+            headline = safe_html(ins.get('headline') or ins.get('title', '—'))
+            meaning = safe_html(ins.get('meaning') or ins.text if hasattr(ins, 'text') else ins.get('text', '—'))
+            classification = safe_html(ins.get('classification', '')).lower()
+            badge = f'<span class="ai-insight-badge {classification}">{classification.upper()}</span>' if classification else ''
+            evidence = safe_html(ins.get('data_evidence', ''))
+            evidence_html = f'<div class="ai-bullet-evidence">&#128202; <strong>Data Evidence:</strong> {evidence}</div>' if evidence else ''
+            
+            items_html += f'''
+            <li class="ai-bullet-item">
+              <div class="ai-bullet-dot">&#128161;</div>
+              <div class="ai-bullet-content">
+                <div class="ai-bullet-header">{badge}<strong class="ai-bullet-title">{headline}</strong></div>
+                <div class="ai-bullet-meaning">{meaning}</div>
+                {evidence_html}
+              </div>
+            </li>'''
+        
+        insights_html = f'''<div class="ai-list-block">
+            <div class="ai-block-heading">&#128161; What These Metrics Tell Us ({len(insights)})</div>
+            <ul class="ai-bullet-list">{items_html}</ul>
+        </div>'''
 
-    # Highlights
-    highlights_html = '<div class="ai-highlights-grid">'
-    for h in highlights:
-        is_ach = str(h.get('type', '')).lower() == 'achievement'
-        color = '#10b981' if is_ach else '#f59e0b'
-        icon = '&#9650;' if is_ach else '&#9660;'
-        t_label = 'Achievement' if is_ach else 'Area to Improve'
-        highlights_html += f'<div class="ai-highlight-card" style="border-left-color:{color}"><div class="ai-highlight-header"><span class="ai-highlight-icon" style="color:{color}">{icon}</span><span class="ai-highlight-metric">{safe_html(safe_val(h.get("metric")))}</span><span class="ai-highlight-type-badge" style="background:{color}18;color:{color};border:1px solid {color}44;">{t_label}</span></div><div class="ai-highlight-headline">{safe_html(safe_val(h.get("headline")))}</div><div class="ai-highlight-magnitude" style="color:{color}">{safe_html(safe_val(h.get("magnitude")))}</div><div class="ai-highlight-detail">{safe_html(safe_val(h.get("detail")))}</div></div>'
-    highlights_html += '</div>'
-
-    # Recs
+    # 3. Bulleted Recommendations Block ("Strategic Action Plan")
     recs_html = ''
-    for i, r in enumerate(recs):
-        pri = safe_val(r.get('priority', '')).lower()
-        pri_badge = f'<span class="meta-pill" style="background:var(--bg-inset);color:var(--text);border:1px solid var(--border);font-weight:600;">{pri.upper()}</span>' if pri and pri != '—' else ''
-        recs_html += f'<div class="ai-rec-card"><div class="ai-rec-num">{str(i+1).zfill(2)}</div><div class="ai-rec-content"><div class="ai-rec-title">{safe_html(safe_val(r.get("title")))}</div><div class="ai-rec-desc">{safe_html(safe_val(r.get("description")))}</div><div class="ai-rec-impact"><span class="ai-rec-impact-label">&#127919; Expected Impact:</span> {safe_html(safe_val(r.get("expected_impact")))}</div><div class="ai-rec-meta">{pri_badge}<span class="meta-pill">&#128197; {safe_html(safe_val(r.get("timeline")))}</span><span class="meta-pill">&#128100; {safe_html(safe_val(r.get("owner")))}</span></div></div></div>'
+    if recs:
+        items_html = ''
+        for i, r in enumerate(recs):
+            rec_title = safe_html(r.get('title') or r.get('action', '—'))
+            desc = safe_html(r.get('description') or r.get('details') or r.get('rationale', '—'))
+            impact = safe_html(r.get('expected_impact') or r.get('impact', '—'))
+            timeline = safe_html(r.get('timeline', '—'))
+            owner = safe_html(r.get('owner', '—'))
+            priority = safe_html(r.get('priority', '')).lower()
+            
+            pri_pill = f'<span class="meta-pill pri-{priority}">{priority.upper()} PRIORITY</span>' if priority and priority != '—' else ''
+            time_pill = f'<span class="meta-pill">&#128197; {timeline}</span>' if timeline and timeline != '—' else ''
+            owner_pill = f'<span class="meta-pill">&#128100; {owner}</span>' if owner and owner != '—' else ''
+            impact_html = f'<div class="ai-rec-impact-tag">&#127919; <strong>Expected Impact:</strong> {impact}</div>' if impact and impact != '—' else ''
 
-    sections_arr = [
-        f'<div class="ai-section"><button type="button" class="ai-section-toggle is-open" data-target="summary"><span class="ai-section-icon">&#128203;</span><span class="ai-section-label">{title}</span><span class="ai-section-chevron">&#9660;</span></button><div class="ai-section-body is-open" id="ai-body-summary">{summary_html}</div></div>',
-        f'<div class="ai-section"><button type="button" class="ai-section-toggle is-open" data-target="insights"><span class="ai-section-icon">&#128161;</span><span class="ai-section-label">Key Insights ({len(insights)})</span><span class="ai-section-chevron">&#9660;</span></button><div class="ai-section-body is-open" id="ai-body-insights">{insights_html}</div></div>',
-        f'<div class="ai-section"><button type="button" class="ai-section-toggle is-open" data-target="highlights"><span class="ai-section-icon">&#11088;</span><span class="ai-section-label">Highlights & Standouts ({len(highlights)})</span><span class="ai-section-chevron">&#9660;</span></button><div class="ai-section-body is-open" id="ai-body-highlights">{highlights_html}</div></div>',
-        f'<div class="ai-section"><button type="button" class="ai-section-toggle" data-target="recs"><span class="ai-section-icon">&#127919;</span><span class="ai-section-label">Recommendations ({len(recs)})</span><span class="ai-section-chevron">&#9660;</span></button><div class="ai-section-body" id="ai-body-recs">{recs_html}</div></div>'
-    ]
+            items_html += f'''
+            <li class="ai-bullet-item rec-item">
+              <div class="ai-bullet-dot rec-dot">&#127919;</div>
+              <div class="ai-bullet-content">
+                <div class="ai-bullet-header"><strong class="ai-bullet-title">{rec_title}</strong></div>
+                <div class="ai-bullet-meaning">{desc}</div>
+                {impact_html}
+                <div class="ai-rec-meta">{pri_pill}{time_pill}{owner_pill}</div>
+              </div>
+            </li>'''
+        
+        recs_html = f'''<div class="ai-list-block">
+            <div class="ai-block-heading">&#127919; Actionable Recommendations ({len(recs)})</div>
+            <ul class="ai-bullet-list">{items_html}</ul>
+        </div>'''
 
-    inner = "".join(sections_arr)
-    return f'<div class="ai-result ai-result-v2"><div class="ai-result-header"><div class="ai-result-header-icon">&#10024;</div><div><div class="ai-result-header-title">AI-Powered Analysis</div><div class="ai-result-header-sub">Deep insights generated from your data — fully curated.</div></div></div>{inner}</div>'
+    return f'''<div class="ai-result ai-result-v2">
+        <div class="ai-result-header">
+            <div class="ai-result-header-icon">&#10024;</div>
+            <div>
+                <div class="ai-result-header-title">{title}</div>
+                <div class="ai-result-header-sub">Strategic Analysis &amp; Action Plan</div>
+            </div>
+        </div>
+        {summary_html}
+        {insights_html}
+        {recs_html}
+    </div>'''
 
 
 def section_header(eyebrow, title, deck, section_num, total=7, loc_key='', month_key='', id_suffix=''):

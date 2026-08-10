@@ -614,69 +614,42 @@ HARD RULES:
 8. Write like a strategic advisor — dense, precise, evidence-backed, but warm and encouraging.
 
 ═══════════════════════════════════════════════════════════════
-REQUIRED OUTPUT — EXACTLY 4 SECTIONS in valid JSON:
-Every field is MANDATORY. Do NOT omit or leave any field empty/null.
+REQUIRED OUTPUT — UNIFIED STRUCTURE in valid JSON:
+Do NOT segregate output into multiple complicated sub-sections.
+Return ONLY these key fields in JSON:
 ═══════════════════════════════════════════════════════════════
 
 {
-  "performance_summary": {
-    "title": "Performance Overview — [Month Year]",
-    "narrative": "A 4-6 sentence written narrative summarising overall performance for this period. Cover the big picture: how did the studio perform relative to last month, the baseline, and its own trajectory? Identify 2-3 key patterns or behavioral shifts observed in the data (e.g., 'volume-driven growth pattern', 'improving retention cycle', 'seasonal acquisition surge'). This should read like an analyst's opening paragraph — confident, data-rich, and forward-looking. Always acknowledge the positives first.",
-    "patterns": [
-      {
-        "pattern": "Short name for the pattern (e.g., 'Volume-Over-Price Growth Pattern')",
-        "description": "2-3 sentences explaining what this pattern is, the evidence for it in the data, and what it implies going forward. Frame constructively."
-      }
-    ]
-  },
-
-  "key_insights": [
+  "title": "Executive Strategic Analysis — [Month Year]",
+  "detailed_summary": "A rich 2-3 paragraph written narrative providing a complete executive story for this period. Cover the overall trajectory, primary revenue/operational mechanisms driving results, leading vs lagging signals, and key underlying tensions. Write like a senior strategic advisor — confident, data-backed, and articulate. Do not just list metrics.",
+  "insights": [
     {
-      "title": "Short punchy headline (max 8 words)",
-      "text": "3-4 sentences. Cross-reference 2+ metrics. Cite specific ₹ numbers. Explain the mechanism AND the opportunity. Back every claim with data.",
-      "classification": "excellent|healthy|opportunity|watch",
-      "data_evidence": "The specific numbers that support this insight, e.g., '₹25,80,029 gross (+18.3% MoM) driven by 349 transactions (+23.8%) while ATV compressed 4.4%'"
+      "headline": "Short punchy headline (max 8 words)",
+      "meaning": "2-3 sentences explaining WHAT this metric or combination of metrics tells us about business health, root causes, or operational friction. NEVER just restate numbers — explain the underlying mechanism and implication.",
+      "data_evidence": "The specific numbers supporting this insight (e.g., '₹25,80,029 gross (+18.3%) driven by 349 transactions (+23.8%) while ATV compressed 4.4%')",
+      "classification": "excellent|healthy|opportunity|watch"
     }
   ],
-
-  "highlights": [
-    {
-      "type": "achievement|dip",
-      "metric": "The specific metric (e.g., 'Gross Revenue', 'Member Count', 'Transaction Volume')",
-      "headline": "Short description (e.g., 'Record Transaction Volume')",
-      "detail": "2-3 sentences explaining what happened, WHY it likely happened (cite possible causes), and what it means. For achievements, explain what's working and how to sustain it. For dips, explain likely causes and the specific fix. ALWAYS end on a constructive note.",
-      "magnitude": "The specific number and % change (e.g., '+23.8% to 349 transactions')"
-    }
-  ],
-
   "recommendations": [
     {
-      "title": "Clear, specific action title (e.g., 'Launch Premium Package Upsell at Check-in')",
-      "description": "3-4 sentences. What EXACTLY to do, step by step. Be specific — name the metric to move, the lever to pull, the process to implement. Include the data that justifies this recommendation.",
-      "expected_impact": "Quantified outcome (e.g., 'Recovering ATV from ₹7,393 to ₹8,000 adds ~₹2.1L/month in gross revenue')",
+      "title": "Clear action title (e.g., 'Launch Premium Package Upsell at Check-in')",
+      "description": "2-3 sentences detailing the step-by-step initiative, which lever to pull, and why the data justifies it.",
+      "expected_impact": "Quantified expected outcome (e.g., 'Lifting ATV to ₹8,000 adds ~₹2.1L/month in gross revenue')",
       "timeline": "This week / Next 2 weeks / By end of month / This quarter",
       "priority": "high|medium|low",
-      "owner": "Specific role (e.g., Studio Manager, Head Coach, Sales Lead, Front Desk Team)"
+      "owner": "Specific role (e.g., Studio Manager, Head Coach, Sales Lead)"
     }
   ]
 }
 
 QUANTITIES:
-- performance_summary.patterns: 2-3 patterns (MAXIMUM)
-- key_insights: 4-5 insights (quality over quantity — each must earn its place)
-- highlights: 3-4 highlights (mix of achievements AND dips, always with constructive framing)
-- recommendations: 4-5 recommendations (specific, detailed, actionable)
+- insights: 4-6 high-impact bullets ("What These Metrics Tell Us")
+- recommendations: 4-5 prioritized action bullets ("Strategic Action Plan")
 
-CONCISENESS RULE:
-- BE EXTREMELY CONCISE. Keep all descriptions to 2-3 short sentences maximum.
-- Do not write long paragraphs. Get straight to the point.
-- If you exceed the token limit, the JSON will truncate and fail.
-
-CLASSIFICATION LABELS:
-- Use "excellent" for metrics significantly above benchmark/baseline
-- Use "healthy" for metrics tracking well
-- Use "opportunity" (NOT "warning") for metrics below benchmark — frame as upside to capture
-- Use "watch" (NOT "critical") for metrics needing attention — frame as areas to monitor with a clear fix`;
+CONCISENESS & QUALITY RULES:
+- Never restate raw numbers without explaining the mechanism behind them.
+- Cross-reference at least 2 metrics per insight.
+- Frame underperformance constructively as "opportunity" or "watch".`;
 }
 
 async function generateInsights(analysis, locKey, month, section = 'executive-summary') {
@@ -726,57 +699,34 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
   if (!content) throw new Error('OpenAI returned no content');
   const parsed = JSON.parse(content);
 
-  // ── Sanitize performance_summary ──
-  if (!parsed.performance_summary || typeof parsed.performance_summary !== 'object') {
-    parsed.performance_summary = { title: 'Performance Overview', narrative: '', patterns: [] };
-  }
-  parsed.performance_summary.title = parsed.performance_summary.title || 'Performance Overview';
-  parsed.performance_summary.narrative = parsed.performance_summary.narrative || '';
-  if (Array.isArray(parsed.performance_summary.patterns)) {
-    parsed.performance_summary.patterns = parsed.performance_summary.patterns
-      .filter(p => p && p.pattern && p.description)
-      .map(p => ({ pattern: p.pattern, description: p.description }));
-  } else {
-    parsed.performance_summary.patterns = [];
-  }
+  // ── Sanitize title & detailed_summary ──
+  parsed.title = parsed.title || `Executive Strategic Analysis — ${month}`;
+  parsed.detailed_summary = parsed.detailed_summary || parsed.summary || parsed.performance_summary?.narrative || '';
 
-  // ── Sanitize key_insights ──
-  if (Array.isArray(parsed.key_insights)) {
-    parsed.key_insights = parsed.key_insights
-      .filter(ins => ins && ins.title && ins.text)
+  // ── Sanitize insights ──
+  let rawInsights = parsed.insights || parsed.key_insights || [];
+  if (Array.isArray(rawInsights)) {
+    parsed.insights = rawInsights
+      .filter(ins => ins && (ins.headline || ins.title || ins.meaning || ins.text))
       .map(ins => ({
-        title: ins.title || '—',
-        text: ins.text || '—',
+        headline: ins.headline || ins.title || '—',
+        meaning: ins.meaning || ins.text || '—',
         classification: ins.classification || 'healthy',
         data_evidence: ins.data_evidence || '',
       }));
   } else {
-    parsed.key_insights = [];
-  }
-
-  // ── Sanitize highlights ──
-  if (Array.isArray(parsed.highlights)) {
-    parsed.highlights = parsed.highlights
-      .filter(h => h && h.headline && h.detail)
-      .map(h => ({
-        type: h.type || 'achievement',
-        metric: h.metric || '—',
-        headline: h.headline || '—',
-        detail: h.detail || '—',
-        magnitude: h.magnitude || '—',
-      }));
-  } else {
-    parsed.highlights = [];
+    parsed.insights = [];
   }
 
   // ── Sanitize recommendations ──
-  if (Array.isArray(parsed.recommendations)) {
-    parsed.recommendations = parsed.recommendations
-      .filter(r => r && r.title)
+  let rawRecs = parsed.recommendations || parsed.actions || [];
+  if (Array.isArray(rawRecs)) {
+    parsed.recommendations = rawRecs
+      .filter(r => r && (r.title || r.action))
       .map(r => ({
-        title: r.title || '—',
-        description: r.description || '—',
-        expected_impact: r.expected_impact || '—',
+        title: r.title || r.action || '—',
+        description: r.description || r.details || r.rationale || '—',
+        expected_impact: r.expected_impact || r.impact || '—',
         timeline: r.timeline || '—',
         priority: r.priority || 'medium',
         owner: r.owner || '—',
@@ -785,23 +735,27 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
     parsed.recommendations = [];
   }
 
-  // ── Backward compat: also populate legacy fields so old clients don't break ──
-  if (!parsed.summary) {
-    parsed.summary = parsed.performance_summary.narrative;
-  }
-  if (!parsed.insights) {
-    parsed.insights = parsed.key_insights;
-  }
-  if (!parsed.actions) {
-    parsed.actions = parsed.recommendations.map(r => ({
-      action: r.title,
-      rationale: r.description,
-      impact: r.expected_impact,
-      timeline: r.timeline,
-      owner: r.owner,
-      priority: r.priority,
-    }));
-  }
+  // ── Backward compatibility maps for legacy viewers/callers ──
+  parsed.performance_summary = {
+    title: parsed.title,
+    narrative: parsed.detailed_summary,
+    patterns: []
+  };
+  parsed.key_insights = parsed.insights.map(i => ({
+    title: i.headline,
+    text: i.meaning,
+    classification: i.classification,
+    data_evidence: i.data_evidence
+  }));
+  parsed.summary = parsed.detailed_summary;
+  parsed.actions = parsed.recommendations.map(r => ({
+    action: r.title,
+    rationale: r.description,
+    impact: r.expected_impact,
+    timeline: r.timeline,
+    owner: r.owner,
+    priority: r.priority
+  }));
 
   return parsed;
 }

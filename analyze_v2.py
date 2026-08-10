@@ -548,15 +548,26 @@ def analyze_new():
                 continue
             
             if month not in data[loc_key]:
-                data[loc_key][month] = {'trials': 0, 'retained': 0}
-            
+                data[loc_key][month] = {'trials': 0, 'retained': 0, 'converted': 0}
+
             data[loc_key][month]['trials'] += 1
             rs = row.get('Retention Status', '')
             if rs == 'Retained':
                 data[loc_key][month]['retained'] += 1
-            
+
+            cs = row.get('Conversion Status', '')
+            if cs == 'Converted':
+                data[loc_key][month]['converted'] += 1
+
             by_type[loc_key][month][is_new] += 1
-    
+
+    # Conversion rate: trials that converted, per new.csv's own Conversion Status
+    for loc_key in LOCATIONS:
+        for month in MONTHS:
+            if month in data[loc_key]:
+                d = data[loc_key][month]
+                d['rate'] = d['converted'] / d['trials'] * 100 if d['trials'] else 0
+
     return data, by_type
 
 
@@ -794,7 +805,24 @@ def main():
             bl_leads['converted'] /= bl_leads['count']
             bl_leads['rate'] = bl_leads['converted'] / bl_leads['total'] * 100 if bl_leads['total'] else 0
         baseline[loc_key]['leads'] = bl_leads
-        
+
+        # New/trials baseline (conversion + retention rates off the New sheet itself)
+        bl_new = {'trials': 0, 'retained': 0, 'converted': 0, 'count': 0}
+        for m in bl_months:
+            if m in new_data[loc_key]:
+                n = new_data[loc_key][m]
+                bl_new['trials'] += n['trials']
+                bl_new['retained'] += n['retained']
+                bl_new['converted'] += n['converted']
+                bl_new['count'] += 1
+        if bl_new['count']:
+            bl_new['trials'] /= bl_new['count']
+            bl_new['retained'] /= bl_new['count']
+            bl_new['converted'] /= bl_new['count']
+            bl_new['rate'] = bl_new['converted'] / bl_new['trials'] * 100 if bl_new['trials'] else 0
+            bl_new['retention_rate'] = bl_new['retained'] / bl_new['trials'] * 100 if bl_new['trials'] else 0
+        baseline[loc_key]['new'] = bl_new
+
         # Lapsed baseline
         bl_lapsed = {'total': 0, 'renewed': 0, 'lapsed': 0, 'frozen': 0, 'count': 0}
         for m in bl_months:

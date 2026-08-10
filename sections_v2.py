@@ -285,7 +285,7 @@ def section_01(ctx):
         f"({lakh(s['gross'])} gross, {lakh(s['disc'])} discount), which is "
         f"<strong>{ctx['net_baseline']} vs the {ctx['baseline_label']} baseline</strong> of {lakh(baseline['sales']['net'])}. "
         f"The MoM figure is {ctx['net_mom']} vs {prev_name}. "
-        f"Conversion rate is {pct(leads['rate'])} ({leads['converted']} of {leads['total']} leads), "
+        f"Conversion rate is {pct(new['rate'])} ({new['converted']} of {new['trials']} trials), "
         f"{'up' if ctx['conv_mom'].startswith('+') else 'down'} {ctx['conv_mom']} MoM. "
         f"Churn rate stands at {pct(lapsed['churn'])}, {'improving' if ctx['churn_mom'].startswith('-') else 'deteriorating'} {ctx['churn_mom']} MoM. "
         f"Discount efficiency is &#8377;{s['disc_eff']:.2f} of revenue collected per &#8377;1 discounted."
@@ -339,13 +339,13 @@ def build_section_01_insights(ctx):
     ))
     
     # 02: Conversion & funnel
-    conv_rate = leads['rate']
-    conv_bl = baseline['leads']['rate']
+    conv_rate = new['rate']
+    conv_bl = baseline['new']['rate']
     conv_bl_diff = pp_change(conv_bl, conv_rate)
     insights.append(insight_card(
         "02",
         f"Conversion rate at {pct(conv_rate)} &mdash; {conv_bl_diff} vs baseline.",
-        f"{leads['converted']} of {leads['total']} leads converted ({pct(conv_rate)}), "
+        f"{new['converted']} of {new['trials']} trials converted ({pct(conv_rate)}), "
         f"{'up' if ctx['conv_mom'].startswith('+') else 'down'} {ctx['conv_mom']} MoM and {conv_bl_diff} vs the {ctx['baseline_label']} baseline of {pct(conv_bl)}. "
         f"Trials: {new['trials']}, retained: {new['retained']} ({pct(ctx['trial_retention'])} retention)."
     ))
@@ -480,8 +480,8 @@ def build_section_01_kpi_table(ctx):
     rows.append(row("Visits", fmt_int(sess['visits']), fmt_int(prev_sess.get('visits',0)), f"{baseline['sessions']['visits']:.0f}", ctx['visits_mom'], current_raw=sess['visits'], baseline_raw=baseline['sessions']['visits']))
     rows.append(row_pp("Fill Rate", pct(sess['fill']), pct(prev_sess.get('fill',0)), pct(baseline['sessions']['fill']), ctx['fill_mom'], current_raw=sess['fill'], baseline_raw=baseline['sessions']['fill']))
     rows.append(row("Leads", fmt_int(leads['total']), fmt_int(prev_leads.get('total',0)), f"{baseline['leads']['total']:.0f}", ctx['leads_mom'], current_raw=leads['total'], baseline_raw=baseline['leads']['total']))
-    rows.append(row_pp("Conv Rate", pct(leads['rate']), pct(prev_leads.get('rate',0)), pct(baseline['leads']['rate']), ctx['conv_mom'], current_raw=leads['rate'], baseline_raw=baseline['leads']['rate']))
-    rows.append(row("Converted", fmt_int(leads['converted']), fmt_int(prev_leads.get('converted',0)), f"{baseline['leads']['converted']:.0f}", ctx['converted_mom'], current_raw=leads['converted'], baseline_raw=baseline['leads']['converted']))
+    rows.append(row_pp("Conv Rate", pct(new['rate']), pct(prev_new.get('rate',0)), pct(baseline['new']['rate']), ctx['conv_mom'], current_raw=new['rate'], baseline_raw=baseline['new']['rate']))
+    rows.append(row("Converted", fmt_int(new['converted']), fmt_int(prev_new.get('converted',0)), f"{baseline['new']['converted']:.0f}", ctx['converted_mom'], current_raw=new['converted'], baseline_raw=baseline['new']['converted']))
     rows.append(row("Trials", fmt_int(new['trials']), fmt_int(prev_new.get('trials',0)), "n/a", ctx['trials_mom']))
     rows.append(row("Retained", fmt_int(new['retained']), fmt_int(prev_new.get('retained',0)), "n/a", ctx['retained_mom']))
     rows.append(row_pp("Churn Rate", pct(lapsed['churn']), pct(prev_lapsed.get('churn',0)), pct(baseline['lapsed']['churn']), ctx['churn_mom'], current_raw=lapsed['churn'], baseline_raw=baseline['lapsed']['churn'], higher_better=False))
@@ -924,9 +924,9 @@ def section_03(ctx):
     
     lead_count = leads['total']
     trial_count = new['trials']
-    conv_count = leads['converted']
+    conv_count = new['converted']
     retained_count = new['retained']
-    conv_rate = leads['rate']
+    conv_rate = new['rate']
     
     # Get lead sources
     sources = get_leads_source(ctx['loc_key'], ctx['month_key'])
@@ -1011,7 +1011,7 @@ def build_funnel_insights(ctx, sources_sorted):
             insights.append(insight_card("01",
                 f"{best_conv[0]} is the highest-quality channel at {pct(rate)} conversion.",
                 f"{best_conv[1]['total']} leads &rarr; {best_conv[1]['converted']} conversions ({pct(rate)}). "
-                f"This is {mult(rate / leads['rate']) if leads['rate'] else 'n/a'} the portfolio average of {pct(leads['rate'])}."))
+                f"This is {mult(rate / new['rate']) if new['rate'] else 'n/a'} the portfolio average of {pct(new['rate'])}."))
         
         # Top source by volume
         top_vol = sources_sorted[0]
@@ -1041,8 +1041,8 @@ def build_funnel_insights(ctx, sources_sorted):
     # Conversion vs baseline
     insights.append(insight_card("05",
         f"Conversion rate {ctx['conv_mom']} MoM, {ctx['conv_baseline']} vs baseline.",
-        f"The {pct(leads['rate'])} conversion rate is {ctx['conv_mom']} vs {ctx['mo']['prev_month_name']} and "
-        f"{ctx['conv_baseline']} vs the {ctx['baseline_label']} baseline of {pct(ctx['baseline']['leads']['rate'])}."))
+        f"The {pct(new['rate'])} conversion rate is {ctx['conv_mom']} vs {ctx['mo']['prev_month_name']} and "
+        f"{ctx['conv_baseline']} vs the {ctx['baseline_label']} baseline of {pct(ctx['baseline']['new']['rate'])}."))
     
     # Pipeline volume
     if ctx['leads_mom'].startswith('-'):
@@ -2288,7 +2288,7 @@ def build_funnel_recommendations(ctx):
             rate = referral[1]['converted'] / referral[1]['total'] * 100 if referral[1]['total'] else 0
             insights.append(insight_card("02",
                 f"Client Referral: {referral[1]['total']} leads at {pct(rate)} conversion &mdash; highest-quality channel.",
-                f"Referral leads convert at {mult(rate/leads['rate']) if leads['rate'] else 'n/a'} the portfolio average. "
+                f"Referral leads convert at {mult(rate/new['rate']) if new['rate'] else 'n/a'} the portfolio average. "
                 f"Double down on referral incentives: member-get-member programme, referral credits, social proof."))
         
         # Zero-conversion sources
@@ -2379,9 +2379,10 @@ def section_07(ctx):
     s = ctx['sales']
     sess = ctx['sessions']
     leads = ctx['leads']
+    new = ctx['new']
     lapsed = ctx['lapsed']
     baseline = ctx['baseline']
-    
+
     loc_name = loc['short_name']
     month_name = mo['month_name']
     next_name = mo['next_month_name']
@@ -2443,7 +2444,7 @@ def section_07(ctx):
               <tr><td>Visits</td><td class="num">{fmt_int(sess['visits'])}</td><td class="num">{fmt_int(sess['visits']*0.97)}&ndash;{fmt_int(sess['visits'])}</td><td class="num">{fmt_int(sess['visits'])}&ndash;{fmt_int(sess['visits']*1.05)}</td></tr>
               <tr><td>Fill Rate</td><td class="num">{pct(sess['fill'])}</td><td class="num">{pct(sess['fill']-1)}&ndash;{pct(sess['fill'])}</td><td class="num">{pct(sess['fill'])}&ndash;{pct(sess['fill']+3)}</td></tr>
               <tr><td>Leads</td><td class="num">{leads['total']}</td><td class="num">{int(leads['total']*0.95)}&ndash;{leads['total']}</td><td class="num">{int(leads['total']*1.15)}&ndash;{int(leads['total']*1.25)}</td></tr>
-              <tr><td>Conversion Rate</td><td class="num">{pct(leads['rate'])}</td><td class="num">{pct(leads['rate'])}</td><td class="num">{pct(leads['rate']+3)}&ndash;{pct(leads['rate']+5)}</td></tr>
+              <tr><td>Conversion Rate</td><td class="num">{pct(new['rate'])}</td><td class="num">{pct(new['rate'])}</td><td class="num">{pct(new['rate']+3)}&ndash;{pct(new['rate']+5)}</td></tr>
               <tr><td>Churn Rate</td><td class="num">{pct(lapsed['churn'])}</td><td class="num">{pct(lapsed['churn'])}</td><td class="num">{pct(max(0,lapsed['churn']-5))}&ndash;{pct(max(0,lapsed['churn']-8))}</td></tr>
             </tbody>
           </table>
@@ -2499,7 +2500,7 @@ def section_07(ctx):
               <tr><td>Net Sales</td><td class="num">{lakh(baseline['sales']['net'])}</td><td class="num">{lakh(s['net'])}</td><td class="num">{lakh(baseline['sales']['net']*1.3)}&ndash;{lakh(baseline['sales']['net']*1.5)}</td></tr>
               <tr><td>Sessions</td><td class="num">{baseline['sessions']['sessions']:.0f}</td><td class="num">{sess['sessions']}</td><td class="num">{int(baseline['sessions']['sessions']*1.1)}&ndash;{int(baseline['sessions']['sessions']*1.2)}</td></tr>
               <tr><td>Fill Rate</td><td class="num">{pct(baseline['sessions']['fill'])}</td><td class="num">{pct(sess['fill'])}</td><td class="num">50%&ndash;55%</td></tr>
-              <tr><td>Conversion Rate</td><td class="num">{pct(baseline['leads']['rate'])}</td><td class="num">{pct(leads['rate'])}</td><td class="num">15%&ndash;20%</td></tr>
+              <tr><td>Conversion Rate</td><td class="num">{pct(baseline['new']['rate'])}</td><td class="num">{pct(new['rate'])}</td><td class="num">15%&ndash;20%</td></tr>
               <tr><td>Churn Rate</td><td class="num">{pct(baseline['lapsed']['churn'])}</td><td class="num">{pct(lapsed['churn'])}</td><td class="num">30%&ndash;35%</td></tr>
               <tr><td>Discount Penetration</td><td class="num">{pct(baseline['sales']['disc']/baseline['sales']['gross']*100)}</td><td class="num">{pct(ctx['disc_penetration'])}</td><td class="num">&le; 8%</td></tr>
             </tbody>

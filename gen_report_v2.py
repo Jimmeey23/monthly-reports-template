@@ -357,10 +357,13 @@ def build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, laps
     
     # Leads comparators
     ctx['leads_mom'] = pct_change(prev_leads.get('total', 0), leads.get('total', 0))
-    ctx['conv_mom'] = pp_change(prev_leads.get('rate', 0), leads.get('rate', 0))
-    ctx['conv_baseline'] = pp_change(baseline['leads']['rate'], leads.get('rate', 0))
-    ctx['converted_mom'] = pct_change(prev_leads.get('converted', 0), leads.get('converted', 0))
-    
+
+    # Conversion is trials -> converted, off the New sheet's own Conversion Status
+    # (not the Leads sheet's Conversion Status).
+    ctx['conv_mom'] = pp_change(prev_new.get('rate', 0), new.get('rate', 0))
+    ctx['conv_baseline'] = pp_change(baseline['new']['rate'], new.get('rate', 0))
+    ctx['converted_mom'] = pct_change(prev_new.get('converted', 0), new.get('converted', 0))
+
     # Trials comparators
     ctx['trials_mom'] = pct_change(prev_new.get('trials', 0), new.get('trials', 0))
     ctx['retained_mom'] = pct_change(prev_new.get('retained', 0), new.get('retained', 0))

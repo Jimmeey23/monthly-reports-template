@@ -118,25 +118,64 @@ section.report-section:first-of-type { border-top: none; }
 @media (max-width: 640px)  { .hero-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .kpi-card {
-  position: relative; background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 18px 18px 16px; overflow: hidden;
-  transition: all 200ms ease;
+  --tone-color: var(--primary);
+  --tone-soft: var(--primary-soft);
+  position: relative; isolation: isolate;
+  background: linear-gradient(160deg, var(--bg-card) 0%, var(--bg-inset) 130%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px 20px 18px; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms ease, border-color 220ms ease;
 }
-.kpi-card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: var(--shadow); }
-.kpi-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary); }
-.kpi-card.tone-good::before { background: var(--good); }
-.kpi-card.tone-warn::before { background: var(--warn); }
-.kpi-card.tone-bad::before  { background: var(--bad); }
-.kpi-label { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
-.kpi-value { font-family: var(--font-serif); font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); line-height: 1.1; margin-bottom: 4px; }
-.kpi-sub { font-size: 11px; color: var(--text-subtle); margin-bottom: 12px; }
-.kpi-trends { display: flex; gap: 10px; font-size: 11px; margin-bottom: 8px; }
-.kpi-trend { display: inline-flex; align-items: center; gap: 4px; }
-.trend-label { color: var(--text-subtle); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-.kpi-baseline { font-size: 10px; color: var(--primary); font-weight: 600; padding-top: 8px; border-top: 1px dashed var(--border); }
-[data-theme="dark"] .kpi-baseline { color: var(--accent); }
+.kpi-card::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0;
+  background: radial-gradient(120px 90px at 100% 0%, var(--tone-soft), transparent 70%);
+  transition: opacity 220ms ease;
+}
+.kpi-card::after {
+  content: ""; position: absolute; top: 14px; right: 16px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--tone-color);
+  box-shadow: 0 0 0 3px var(--tone-soft);
+}
+.kpi-card:hover {
+  transform: translateY(-4px) scale(1.015);
+  border-color: color-mix(in srgb, var(--tone-color) 40%, var(--border-strong));
+  box-shadow: var(--shadow-lg), 0 0 0 1px color-mix(in srgb, var(--tone-color) 12%, transparent);
+}
+.kpi-card:hover::before { opacity: 1; }
+.kpi-card.tone-good { --tone-color: var(--good); --tone-soft: var(--good-soft); }
+.kpi-card.tone-warn { --tone-color: var(--warn); --tone-soft: var(--warn-soft); }
+.kpi-card.tone-bad  { --tone-color: var(--bad);  --tone-soft: var(--bad-soft); }
 
-.badge { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 600; font-family: var(--font-mono); letter-spacing: -0.01em; }
+.kpi-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 700; margin-bottom: 10px;
+}
+.kpi-label::before {
+  content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--tone-color); flex-shrink: 0;
+}
+.kpi-value {
+  font-family: var(--font-serif); font-size: 30px; font-weight: 650; letter-spacing: -0.025em;
+  color: var(--text); line-height: 1.08; margin-bottom: 5px;
+  font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;
+}
+.kpi-sub { font-size: 11.5px; color: var(--text-subtle); margin-bottom: 14px; line-height: 1.4; }
+.kpi-trends { display: flex; gap: 8px; font-size: 11px; margin-bottom: 10px; flex-wrap: wrap; }
+.kpi-trend {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--bg-inset); border: 1px solid var(--border);
+  padding: 3px 8px 3px 4px; border-radius: 999px;
+}
+.trend-label { color: var(--text-subtle); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.kpi-baseline {
+  font-size: 10.5px; color: var(--tone-color); font-weight: 700; letter-spacing: 0.01em;
+  padding-top: 10px; margin-top: 2px; border-top: 1px dashed var(--border);
+  display: flex; align-items: center; gap: 6px;
+}
+.kpi-baseline::before { content: "\25CE"; font-size: 9px; opacity: 0.7; }
+
+.badge { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 700; font-family: var(--font-mono); letter-spacing: -0.01em; }
 .badge.good   { background: var(--good-soft);   color: var(--good); }
 .badge.bad    { background: var(--bad-soft);    color: var(--bad); }
 .badge.warn   { background: var(--warn-soft);   color: var(--warn); }
@@ -364,9 +403,10 @@ tr.disc-high td { background: var(--warn-soft); }
 
 /* Editor toolbar + inline editing */
 .editor-toolbar {
-  position: fixed; right: 24px; bottom: 24px; z-index: 100;
-  display: flex; align-items: center; gap: 10px;
-  background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 999px;
+  position: fixed; right: 24px; bottom: 24px; left: 24px; z-index: 100;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  max-width: min(96vw, 980px); margin-left: auto;
+  background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
   padding: 8px 10px; box-shadow: var(--shadow-lg); font-family: var(--font-sans);
 }
 .editor-toolbar button {
@@ -374,6 +414,7 @@ tr.disc-high td { background: var(--warn-soft); }
   font-family: inherit; font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 9px 16px;
   transition: transform 160ms ease, opacity 160ms ease;
 }
+#edit-toggle-btn, #save-btn { flex-shrink: 0; }
 .editor-toolbar button:hover { transform: translateY(-1px); }
 .editor-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 #edit-toggle-btn { background: var(--bg-inset); color: var(--text); }

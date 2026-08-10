@@ -20,25 +20,100 @@
 
   // ───────────────────────── Editor toolbar ─────────────────────────
 
+  const FONT_FAMILIES = [
+    ['Inter (default)', "'Inter','Helvetica Neue',Helvetica,Arial,sans-serif"],
+    ['Source Serif', "'Source Serif Pro',Georgia,serif"],
+    ['Georgia', 'Georgia, serif'],
+    ['Arial', 'Arial, Helvetica, sans-serif'],
+    ['Courier New', "'Courier New', monospace"],
+    ['Verdana', 'Verdana, Geneva, sans-serif'],
+  ];
+  const FONT_SIZES = [11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 40, 48];
+  const BORDER_STYLES = [
+    ['None', 'none'],
+    ['Thin solid', '1px solid'],
+    ['Medium solid', '2px solid'],
+    ['Thick solid', '3px solid'],
+    ['Dashed', '2px dashed'],
+    ['Dotted', '2px dotted'],
+  ];
+
+  function iconBtn(command, title, label) {
+    return `<button type="button" class="format-btn" data-command="${command}" title="${title}">${label}</button>`;
+  }
+
   const toolbar = document.createElement('div');
   toolbar.className = 'editor-toolbar';
   toolbar.innerHTML =
     '<div class="editor-tools-left">' +
-    '<button type="button" id="edit-toggle-btn">&#9998; Edit</button>' +
-    '<button type="button" id="save-btn" disabled>&#128190; Save</button>' +
-    '<span class="editor-status" id="editor-status"></span>' +
-  '</div>' +
-  '<div class="editor-format-tools" id="format-tools" style="display:none;">' +
-    '<button type="button" class="format-btn" data-command="bold" title="Bold"><b>B</b></button>' +
-    '<button type="button" class="format-btn" data-command="italic" title="Italic"><i>I</i></button>' +
-    '<button type="button" class="format-btn" data-command="insertUnorderedList" title="Bullet List">&#8226; List</button>' +
-  '</div>';
+      '<button type="button" id="edit-toggle-btn">&#9998; Edit</button>' +
+      '<button type="button" id="save-btn" disabled>&#128190; Save</button>' +
+      '<span class="editor-status" id="editor-status"></span>' +
+    '</div>' +
+    '<div class="editor-format-tools" id="format-tools" style="display:none;">' +
+
+      '<div class="fmt-group">' +
+        iconBtn('undo', 'Undo', '&#8630;') +
+        iconBtn('redo', 'Redo', '&#8631;') +
+      '</div>' +
+
+      '<div class="fmt-group">' +
+        `<select id="font-family-select" class="fmt-select" title="Font family">` +
+          `<option value="">Font</option>` +
+          FONT_FAMILIES.map(([label, val]) => `<option value="${val}">${label}</option>`).join('') +
+        `</select>` +
+        `<select id="font-size-select" class="fmt-select fmt-select-sm" title="Font size">` +
+          `<option value="">Size</option>` +
+          FONT_SIZES.map((sz) => `<option value="${sz}">${sz}px</option>`).join('') +
+        `</select>` +
+      '</div>' +
+
+      '<div class="fmt-group">' +
+        iconBtn('bold', 'Bold', '<b>B</b>') +
+        iconBtn('italic', 'Italic', '<i>I</i>') +
+        iconBtn('underline', 'Underline', '<u>U</u>') +
+        iconBtn('strikeThrough', 'Strikethrough', '<s>S</s>') +
+      '</div>' +
+
+      '<div class="fmt-group">' +
+        `<label class="fmt-color-swatch" title="Text color">A<input type="color" id="text-color-input" value="#0b1a33"></label>` +
+        `<label class="fmt-color-swatch" title="Highlight color">&#9635;<input type="color" id="highlight-color-input" value="#fff7d6"></label>` +
+      '</div>' +
+
+      '<div class="fmt-group">' +
+        iconBtn('justifyLeft', 'Align left', '&#8676;') +
+        iconBtn('justifyCenter', 'Align center', '&#8596;') +
+        iconBtn('justifyRight', 'Align right', '&#8677;') +
+        iconBtn('justifyFull', 'Justify', '&#9776;') +
+      '</div>' +
+
+      '<div class="fmt-group">' +
+        iconBtn('insertUnorderedList', 'Bullet list', '&#8226;&#8226;&#8226;') +
+        iconBtn('insertOrderedList', 'Numbered list', '1.2.3.') +
+        iconBtn('outdent', 'Decrease indent (Shift+Tab)', '&#8676;&#124;') +
+        iconBtn('indent', 'Increase indent / nest list (Tab)', '&#124;&#8677;') +
+      '</div>' +
+
+      '<div class="fmt-group">' +
+        `<select id="border-style-select" class="fmt-select fmt-select-sm" title="Border style">` +
+          BORDER_STYLES.map(([label, val]) => `<option value="${val}">${label}</option>`).join('') +
+        `</select>` +
+        `<label class="fmt-color-swatch" title="Border color">&#9633;<input type="color" id="border-color-input" value="#0f2c5e"></label>` +
+        `<button type="button" id="apply-border-btn" class="format-btn" title="Apply border to selection">Border</button>` +
+      '</div>' +
+
+      '<div class="fmt-group">' +
+        `<button type="button" id="clear-format-btn" class="format-btn" title="Clear formatting">Clear</button>` +
+      '</div>' +
+
+    '</div>';
   document.body.appendChild(toolbar);
 
   const editBtn = document.getElementById('edit-toggle-btn');
   const saveBtn = document.getElementById('save-btn');
   const statusEl = document.getElementById('editor-status');
   let editing = false;
+  let savedRange = null;
 
   function setEditing(on) {
     editing = on;
@@ -50,6 +125,9 @@
     editBtn.innerHTML = on ? '&#9998; Editing&hellip;' : '&#9998; Edit';
     saveBtn.disabled = !on;
     if (formatTools) formatTools.style.display = on ? 'flex' : 'none';
+    if (on) {
+      try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
+    }
   }
 
   editBtn.addEventListener('click', () => setEditing(!editing));
@@ -80,14 +158,120 @@
     }, 3000);
   });
 
-  
+
   // ─── Format Toolbar Logic ─────────────────────────
   const formatTools = document.getElementById('format-tools');
-  document.querySelectorAll('.format-btn').forEach(btn => {
+
+  function isInsideEditableContainer(node) {
+    return !!(node && node.closest && node.closest('.container[contenteditable="true"]'));
+  }
+
+  // The page's own selection collapses when focus moves to a toolbar control
+  // (a <select> or <input type="color">), so remember the last real range made
+  // inside the editable content and restore it before running a command.
+  document.addEventListener('selectionchange', () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      if (isInsideEditableContainer(range.commonAncestorContainer)) {
+        savedRange = range.cloneRange();
+      }
+    }
+  });
+
+  function restoreSelection() {
+    if (!savedRange) return null;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+    return sel;
+  }
+
+  // Wrap the current selection in a <span> carrying the given inline styles.
+  // Used for controls execCommand has no clean equivalent for (font size, border).
+  function wrapSelectionWithStyle(styleObj) {
+    const sel = restoreSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const span = document.createElement('span');
+    Object.assign(span.style, styleObj);
+    const frag = range.extractContents();
+    span.appendChild(frag);
+    range.insertNode(span);
+    sel.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(span);
+    sel.addRange(newRange);
+    savedRange = newRange.cloneRange();
+  }
+
+  document.querySelectorAll('.format-btn[data-command]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
+      restoreSelection();
       document.execCommand(btn.dataset.command, false, null);
     });
+  });
+
+  const fontFamilySelect = document.getElementById('font-family-select');
+  fontFamilySelect.addEventListener('change', () => {
+    if (!fontFamilySelect.value) return;
+    restoreSelection();
+    document.execCommand('fontName', false, fontFamilySelect.value);
+    fontFamilySelect.value = '';
+  });
+
+  const fontSizeSelect = document.getElementById('font-size-select');
+  fontSizeSelect.addEventListener('change', () => {
+    if (!fontSizeSelect.value) return;
+    wrapSelectionWithStyle({ fontSize: fontSizeSelect.value + 'px' });
+    fontSizeSelect.value = '';
+  });
+
+  const textColorInput = document.getElementById('text-color-input');
+  textColorInput.addEventListener('input', () => {
+    restoreSelection();
+    document.execCommand('foreColor', false, textColorInput.value);
+  });
+
+  const highlightColorInput = document.getElementById('highlight-color-input');
+  highlightColorInput.addEventListener('input', () => {
+    restoreSelection();
+    if (!document.execCommand('hiliteColor', false, highlightColorInput.value)) {
+      document.execCommand('backColor', false, highlightColorInput.value);
+    }
+  });
+
+  const borderStyleSelect = document.getElementById('border-style-select');
+  const borderColorInput = document.getElementById('border-color-input');
+  document.getElementById('apply-border-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    const style = borderStyleSelect.value || '1px solid';
+    if (style === 'none') {
+      wrapSelectionWithStyle({ border: 'none' });
+      return;
+    }
+    wrapSelectionWithStyle({
+      border: `${style} ${borderColorInput.value}`,
+      borderRadius: '4px',
+      padding: '2px 6px',
+      display: 'inline-block',
+    });
+  });
+
+  document.getElementById('clear-format-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    restoreSelection();
+    document.execCommand('removeFormat', false, null);
+  });
+
+  // Tab / Shift+Tab inside a list nests/un-nests it; inside a plain paragraph
+  // it indents/outdents the block. Without this, Tab just moves focus away.
+  document.addEventListener('keydown', (e) => {
+    if (!editing || e.key !== 'Tab') return;
+    if (!isInsideEditableContainer(document.activeElement)) return;
+    e.preventDefault();
+    document.execCommand(e.shiftKey ? 'outdent' : 'indent', false, null);
   });
 
   setEditing(false);
@@ -294,10 +478,26 @@
   styleEl.textContent = `
 /* ───────────────────────── AI Insights V2 ───────────────────────── */
 
-.editor-tools-left, .editor-format-tools { display: flex; gap: 8px; align-items: center; }
-.editor-format-tools { padding-left: 8px; border-left: 1px solid var(--border); }
-.format-btn { background: transparent; border: 1px solid transparent; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); font-size: 13px; }
-.format-btn:hover { background: var(--bg-inset); border-color: var(--border); }
+.editor-tools-left { display: flex; gap: 8px; align-items: center; }
+.editor-format-tools { display: flex; gap: 10px; align-items: center; padding-left: 10px; margin-left: 4px; border-left: 1px solid var(--border); flex-wrap: wrap; row-gap: 6px; }
+.fmt-group { display: flex; gap: 3px; align-items: center; padding: 2px 6px; background: var(--bg-inset); border: 1px solid var(--border); border-radius: 7px; }
+.editor-toolbar .format-btn { background: transparent; border: 1px solid transparent; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.editor-toolbar .format-btn:hover { background: var(--bg-card); border-color: var(--border); transform: none; }
+.fmt-select {
+  height: 26px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-card);
+  color: var(--text); font-size: 11.5px; padding: 0 4px; cursor: pointer; max-width: 108px;
+}
+.fmt-select-sm { max-width: 68px; }
+.fmt-color-swatch {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 4px; border: 1px solid var(--border);
+  background: var(--bg-card); cursor: pointer; font-size: 11px; font-weight: 700; color: var(--text-muted);
+  overflow: hidden;
+}
+.fmt-color-swatch:hover { border-color: var(--border-strong); }
+.fmt-color-swatch input[type="color"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; border: none; padding: 0;
+}
 
 
 .ai-info-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); font-family: var(--font-serif); font-style: italic; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; padding: 0; box-shadow: var(--shadow-sm); }

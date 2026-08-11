@@ -339,11 +339,12 @@
       try {
         const res = await fetch('/api/saved-sessions');
         const data = await res.json();
-        if (data.sessions && data.sessions.length > 0) {
+        const validSessions = (data.sessions || []).filter(s => s && s.sessionId && s.sessionId !== 'undefined');
+        if (validSessions.length > 0) {
           const wrapper = document.getElementById('saved-sessions-wrapper');
           const grid = document.getElementById('saved-sessions-grid');
           wrapper.style.display = 'block';
-          grid.innerHTML = data.sessions.map(s => {
+          grid.innerHTML = validSessions.map(s => {
             const locs = (s.locNames && s.locNames.length > 0) ? s.locNames.join(', ') : 'Studio Session';
             const months = (s.months && s.months.length > 0) ? `${s.months[s.months.length-1]} to ${s.months[0]}` : 'Multi-month';
             const dateStr = s.created ? new Date(s.created).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
@@ -353,7 +354,7 @@
                   <div style="font-weight: 700; color: var(--text); font-size: 15px;">🏢 ${locs}</div>
                   <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">🗓️ ${months} &middot; ${dateStr}</div>
                 </div>
-                <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 6px 12px; align-self: flex-start; margin-top: 4px;" onclick="window.location.href='/select?sessionId=${s.sessionId}'">
+                <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 6px 12px; align-self: flex-start; margin-top: 4px;" onclick="window.location.href='/select?sessionId=${encodeURIComponent(s.sessionId)}'">
                   Reload Session &rarr;
                 </button>
               </div>`;

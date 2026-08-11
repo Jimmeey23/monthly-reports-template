@@ -61,12 +61,18 @@ const CSV_SLOTS = [
   { field: 'active', label: 'Active', filename: 'active.csv' },
 ];
 
-// sessionId -> { dir, analysisPath, locations, months }
+// sessionId -> { sessionId, dir, analysisPath, locations, months }
 const sessions = new Map();
 
 function getSession(sessionId) {
-  if (!sessionId) return null;
-  if (sessions.has(sessionId)) return sessions.get(sessionId);
+  if (!sessionId || sessionId === 'undefined') return null;
+  if (sessions.has(sessionId)) {
+    const s = sessions.get(sessionId);
+    s.sessionId = sessionId;
+    s.dir = path.join(UPLOADS_DIR, sessionId);
+    s.analysisPath = path.join(s.dir, 'analysis.json');
+    return s;
+  }
 
   // Fallback: reload from disk if in-memory map was cleared (e.g. server restart)
   const sessionDir = path.join(UPLOADS_DIR, sessionId);
@@ -74,34 +80,142 @@ function getSession(sessionId) {
   if (fs.existsSync(sessionFile)) {
     try {
       const data = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
+      data.sessionId = sessionId;
+      data.dir = sessionDir;
+      data.analysisPath = path.join(sessionDir, 'analysis.json');
       sessions.set(sessionId, data);
       return data;
     } catch (e) {}
   }
+
+  // Secondary fallback: check if analysis.json exists directly in sessionDir
+  const analysisPath = path.join(sessionDir, 'analysis.json');
+  if (fs.existsSync(analysisPath)) {
+    try {
+      const analysis = JSON.parse(fs.readFileSync(analysisPath, 'utf8'));
+      if (analysis.meta) {
+        const data = {
+          sessionId,
+          dir: sessionDir,
+          analysisPath,
+          locations: analysis.meta.locations || {},
+          months: analysis.meta.months || [],
+        };
+        saveSession(sessionId, data);
+        return data;
+      }
+    } catch (e) {}
+  }
+
   return null;
 }
 
 const MANIFEST_PATH = path.join(UPLOADS_DIR, 'sessions_manifest.json');
 
 function loadManifest() {
+  let manifest = [];
   if (fs.existsSync(MANIFEST_PATH)) {
     try {
-      return JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
-    } catch (e) {}
+      manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+    } catch (e) {
+      manifest = [];
+    }
   }
-  return [];
+
+  // Filter out any broken items with missing or string 'undefined' sessionId
+  manifest = manifest.filter((s) => s && s.sessionId && s.sessionId !== 'undefined');
+
+  // Discover sessions on disk in UPLOADS_DIR
+  try {
+    if (fs.existsSync(UPLOADS_DIR)) {
+      const entries = fs.readdirSync(UPLOADS_DIR, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const sid = entry.name;
+          const index = manifest.findIndex((s) => s.sessionId === sid);
+
+          const sessionDir = path.join(UPLOADS_DIR, sid);
+          const sessionFile = path.join(sessionDir, 'session.json');
+          const analysisFile = path.join(sessionDir, 'analysis.json');
+
+          let sData = null;
+          if (fs.existsSync(sessionFile)) {
+            try {
+              sData = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
+            } catch (e) {}
+          } else if (fs.existsSync(analysisFile)) {
+            try {
+              const analysis = JSON.parse(fs.readFileSync(analysisFile, 'utf8'));
+              if (analysis.meta) {
+                sData = {
+                  locations: analysis.meta.locations || {},
+                  months: analysis.meta.months || [],
+                };
+              }
+            } catch (e) {}
+          }
+
+          if (sData && sData.locations) {
+            const locNames = Object.values(sData.locations || {}).map((l) => l.split(',')[0].trim());
+            let mtime = Date.now();
+            try {
+              mtime = fs.statSync(sessionDir).mtimeMs;
+            } catch (e) {}
+
+            const item = {
+              sessionId: sid,
+              locations: sData.locations || {},
+              locNames,
+              months: sData.months || [],
+              created: sData.created || mtime,
+            };
+
+            // Fix/update session.json on disk to guarantee sessionId field is present
+            try {
+              const fullData = {
+                sessionId: sid,
+                dir: sessionDir,
+                analysisPath: analysisFile,
+                locations: sData.locations || {},
+                months: sData.months || [],
+                created: item.created,
+              };
+              fs.writeFileSync(sessionFile, JSON.stringify(fullData, null, 2));
+            } catch (e) {}
+
+            if (index >= 0) {
+              manifest[index] = { ...manifest[index], ...item };
+            } else {
+              manifest.push(item);
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error scanning UPLOADS_DIR in loadManifest:', err.message);
+  }
+
+  manifest.sort((a, b) => (b.created || 0) - (a.created || 0));
+
+  try {
+    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest.slice(0, 30), null, 2));
+  } catch (e) {}
+
+  return manifest;
 }
 
 function updateManifest(sessionData) {
+  if (!sessionData || !sessionData.sessionId) return;
   const manifest = loadManifest();
   const index = manifest.findIndex((s) => s.sessionId === sessionData.sessionId);
-  const locNames = Object.values(sessionData.locations || {}).map(l => l.split(',')[0].trim());
+  const locNames = Object.values(sessionData.locations || {}).map((l) => l.split(',')[0].trim());
   const item = {
     sessionId: sessionData.sessionId,
     locations: sessionData.locations || {},
     locNames,
     months: sessionData.months || [],
-    created: Date.now(),
+    created: sessionData.created || Date.now(),
   };
   if (index >= 0) {
     manifest[index] = { ...manifest[index], ...item };
@@ -109,15 +223,18 @@ function updateManifest(sessionData) {
     manifest.unshift(item);
   }
   try {
-    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest.slice(0, 30)));
+    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest.slice(0, 30), null, 2));
   } catch (e) {}
 }
 
 function saveSession(sessionId, sessionData) {
+  sessionData.sessionId = sessionId;
+  sessionData.dir = path.join(UPLOADS_DIR, sessionId);
+  sessionData.analysisPath = path.join(sessionData.dir, 'analysis.json');
   sessions.set(sessionId, sessionData);
   try {
     const sessionFile = path.join(sessionData.dir, 'session.json');
-    fs.writeFileSync(sessionFile, JSON.stringify(sessionData));
+    fs.writeFileSync(sessionFile, JSON.stringify(sessionData, null, 2));
     updateManifest(sessionData);
   } catch (e) {}
 }
@@ -241,7 +358,7 @@ app.post('/analyze-session', (req, res) => {
       return res.status(400).json({ error: 'No studios or months detected in the uploaded CSVs.' });
     }
 
-    const sessionData = { dir: sessionDir, analysisPath, locations, months };
+    const sessionData = { sessionId, dir: sessionDir, analysisPath, locations, months, created: Date.now() };
     saveSession(sessionId, sessionData);
 
     res.json({ ok: true, redirectUrl: `/select?sessionId=${sessionId}` });

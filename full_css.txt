@@ -722,3 +722,47 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
   border-color: rgba(245, 158, 11, 0.3);
 }
 
+/* Section Edit Controls & Collapsible Toolbar */
+.editor-toolbar.is-collapsed {
+  padding: 6px 12px;
+  max-width: 260px;
+}
+.section-edit-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-inset, #f1f5f9);
+  border: 1px dashed var(--border, #cbd5e1);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.sec-bar-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  margin-right: auto;
+}
+.sec-bar-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+  color: var(--text, #0f172a);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sec-bar-btn:hover {
+  background: var(--primary-soft, #e2e8f0);
+}
+.sec-bar-btn.danger {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.sec-bar-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+

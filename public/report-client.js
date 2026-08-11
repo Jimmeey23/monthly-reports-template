@@ -44,10 +44,12 @@
 
   const toolbar = document.createElement('div');
   toolbar.className = 'editor-toolbar';
+  toolbar.id = 'editor-toolbar';
   toolbar.innerHTML =
     '<div class="editor-tools-left">' +
       '<button type="button" id="edit-toggle-btn">&#9998; Edit</button>' +
       '<button type="button" id="save-btn" disabled>&#128190; Save</button>' +
+      '<button type="button" id="toolbar-collapse-btn" class="format-btn" title="Collapse Toolbar">&#9650; Collapse</button>' +
       '<span class="editor-status" id="editor-status"></span>' +
     '</div>' +
     '<div class="editor-format-tools" id="format-tools" style="display:none;">' +
@@ -103,6 +105,18 @@
       '</div>' +
 
       '<div class="fmt-group">' +
+        `<button type="button" id="insert-image-btn" class="format-btn" title="Insert Image">&#128444; Image</button>` +
+        `<select id="insert-shape-select" class="fmt-select" title="Insert Visual Shape">` +
+          `<option value="">+ Shape</option>` +
+          `<option value="callout">Callout Box</option>` +
+          `<option value="badge">Stat Badge</option>` +
+          `<option value="card">Highlight Card</option>` +
+          `<option value="divider">Divider Line</option>` +
+        `</select>` +
+      '</div>' +
+
+      '<div class="fmt-group">' +
+        `<button type="button" id="add-global-section-btn" class="format-btn" title="Add New Section">+ Section</button>` +
         `<button type="button" id="clear-format-btn" class="format-btn" title="Clear formatting">Clear</button>` +
       '</div>' +
 
@@ -111,9 +125,103 @@
 
   const editBtn = document.getElementById('edit-toggle-btn');
   const saveBtn = document.getElementById('save-btn');
+  const collapseBtn = document.getElementById('toolbar-collapse-btn');
   const statusEl = document.getElementById('editor-status');
   let editing = false;
+  let isToolbarCollapsed = false;
   let savedRange = null;
+
+  collapseBtn.addEventListener('click', () => {
+    isToolbarCollapsed = !isToolbarCollapsed;
+    toolbar.classList.toggle('is-collapsed', isToolbarCollapsed);
+    collapseBtn.innerHTML = isToolbarCollapsed ? '&#9660; Expand' : '&#9650; Collapse';
+    if (formatTools && editing) {
+      formatTools.style.display = isToolbarCollapsed ? 'none' : 'flex';
+    }
+  });
+
+  function renderSectionControls() {
+    document.querySelectorAll('.report-section').forEach((sec) => {
+      let bar = sec.querySelector('.section-edit-bar');
+      if (editing) {
+        if (!bar) {
+          bar = document.createElement('div');
+          bar.className = 'section-edit-bar';
+          bar.setAttribute('contenteditable', 'false');
+          bar.innerHTML =
+            '<span class="sec-bar-title">&#9776; Section Controls</span>' +
+            '<button type="button" class="sec-bar-btn move-up-btn" title="Move Section Up">&#8593; Move Up</button>' +
+            '<button type="button" class="sec-bar-btn move-down-btn" title="Move Section Down">&#8595; Move Down</button>' +
+            '<button type="button" class="sec-bar-btn add-sec-btn" title="Add Section Below">+ Add Section</button>' +
+            '<button type="button" class="sec-bar-btn del-sec-btn danger" title="Delete Section">&#128465; Delete</button>';
+          sec.insertBefore(bar, sec.firstChild);
+
+          bar.querySelector('.move-up-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            const prev = sec.previousElementSibling;
+            if (prev && prev.classList.contains('report-section')) {
+              sec.parentNode.insertBefore(sec, prev);
+            }
+          });
+
+          bar.querySelector('.move-down-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            const next = sec.nextElementSibling;
+            if (next && next.classList.contains('report-section')) {
+              sec.parentNode.insertBefore(next, sec);
+            }
+          });
+
+          bar.querySelector('.add-sec-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            createNewSection(sec);
+          });
+
+          bar.querySelector('.del-sec-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to delete this section?')) {
+              sec.remove();
+            }
+          });
+        }
+        bar.style.display = 'flex';
+      } else if (bar) {
+        bar.style.display = 'none';
+      }
+    });
+  }
+
+  function createNewSection(afterElem) {
+    const titleText = prompt('Enter section title:', 'New Performance Section') || 'New Performance Section';
+    const subText = prompt('Enter section deck/subtitle:', 'Detailed analysis and strategic recommendations.') || 'Detailed analysis and strategic recommendations.';
+
+    const newSec = document.createElement('section');
+    newSec.className = 'report-section custom-added-section';
+    newSec.innerHTML =
+      '<div class="container" contenteditable="true">' +
+        '<div class="section-header">' +
+          '<div class="eyebrow">CUSTOM SECTION</div>' +
+          `<h2 class="section-title">${escapeHtml(titleText)}</h2>` +
+          `<p class="section-deck">${escapeHtml(subText)}</p>` +
+        '</div>' +
+        '<div class="card" style="padding:24px; margin-top:20px; background:var(--bg-card); border:1px solid var(--border); border-radius:12px;">' +
+          '<p>Click here to type your new section content, add tables, or insert images and visual shapes.</p>' +
+        '</div>' +
+      '</div>';
+
+    if (afterElem && afterElem.parentNode) {
+      afterElem.parentNode.insertBefore(newSec, afterElem.nextElementSibling);
+    } else {
+      const main = document.querySelector('main') || document.body;
+      main.appendChild(newSec);
+    }
+    renderSectionControls();
+  }
+
+  document.getElementById('add-global-section-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    createNewSection(null);
+  });
 
   function setEditing(on) {
     editing = on;
@@ -124,7 +232,8 @@
     editBtn.classList.toggle('is-active', on);
     editBtn.innerHTML = on ? '&#9998; Editing&hellip;' : '&#9998; Edit';
     saveBtn.disabled = !on;
-    if (formatTools) formatTools.style.display = on ? 'flex' : 'none';
+    if (formatTools) formatTools.style.display = (on && !isToolbarCollapsed) ? 'flex' : 'none';
+    renderSectionControls();
     if (on) {
       try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
     }
@@ -263,6 +372,36 @@
     e.preventDefault();
     restoreSelection();
     document.execCommand('removeFormat', false, null);
+  });
+
+  document.getElementById('insert-image-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    const url = prompt('Enter Image URL (or paste image web link):');
+    if (url) {
+      restoreSelection();
+      document.execCommand('insertImage', false, url);
+    }
+  });
+
+  const insertShapeSelect = document.getElementById('insert-shape-select');
+  insertShapeSelect.addEventListener('change', () => {
+    const shape = insertShapeSelect.value;
+    if (!shape) return;
+    restoreSelection();
+    let html = '';
+    if (shape === 'callout') {
+      html = '<div class="report-callout" style="padding:16px 20px; background:var(--bg-inset, #f0f4f9); border-left:4px solid var(--primary, #0f2c5e); border-radius:8px; margin:16px 0;"><strong>💡 Key Takeaway:</strong> Type your custom callout text here.</div>';
+    } else if (shape === 'badge') {
+      html = '<span class="report-badge" style="display:inline-block; padding:4px 12px; background:var(--accent-soft, #e6f0ff); color:var(--primary, #0f2c5e); font-weight:700; border-radius:999px; font-size:12px;">★ Highlight Badge</span>';
+    } else if (shape === 'card') {
+      html = '<div class="report-card" style="padding:20px; border:1px solid var(--border, #e2e8f0); border-radius:12px; background:var(--bg-card, #ffffff); margin:16px 0;"><h4 style="margin:0 0 8px 0; font-size:16px;">Highlight Card Title</h4><p style="margin:0;">Add key details or descriptions inside this highlight card block.</p></div>';
+    } else if (shape === 'divider') {
+      html = '<hr style="border:none; border-top:2px dashed var(--border, #cbd5e1); margin:24px 0;" />';
+    }
+    if (html) {
+      document.execCommand('insertHTML', false, html);
+    }
+    insertShapeSelect.value = '';
   });
 
   // Tab / Shift+Tab inside a list nests/un-nests it; inside a plain paragraph

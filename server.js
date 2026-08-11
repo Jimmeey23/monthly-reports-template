@@ -81,11 +81,44 @@ function getSession(sessionId) {
   return null;
 }
 
+const MANIFEST_PATH = path.join(UPLOADS_DIR, 'sessions_manifest.json');
+
+function loadManifest() {
+  if (fs.existsSync(MANIFEST_PATH)) {
+    try {
+      return JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+    } catch (e) {}
+  }
+  return [];
+}
+
+function updateManifest(sessionData) {
+  const manifest = loadManifest();
+  const index = manifest.findIndex((s) => s.sessionId === sessionData.sessionId);
+  const locNames = Object.values(sessionData.locations || {}).map(l => l.split(',')[0].trim());
+  const item = {
+    sessionId: sessionData.sessionId,
+    locations: sessionData.locations || {},
+    locNames,
+    months: sessionData.months || [],
+    created: Date.now(),
+  };
+  if (index >= 0) {
+    manifest[index] = { ...manifest[index], ...item };
+  } else {
+    manifest.unshift(item);
+  }
+  try {
+    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest.slice(0, 30)));
+  } catch (e) {}
+}
+
 function saveSession(sessionId, sessionData) {
   sessions.set(sessionId, sessionData);
   try {
     const sessionFile = path.join(sessionData.dir, 'session.json');
     fs.writeFileSync(sessionFile, JSON.stringify(sessionData));
+    updateManifest(sessionData);
   } catch (e) {}
 }
 
@@ -120,6 +153,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: '5mb' }));
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
+
+app.get('/api/saved-sessions', (req, res) => {
+  const manifest = loadManifest();
+  res.json({ sessions: manifest });
+});
 
 app.get('/', (req, res) => {
   res.render('upload', { slots: CSV_SLOTS, error: null });

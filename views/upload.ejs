@@ -34,6 +34,15 @@
       <div class="error" id="error-box" role="alert" style="display:none;"></div>
     <% } %>
 
+    <!-- Saved Upload Sessions Section -->
+    <div id="saved-sessions-wrapper" style="display:none; margin-bottom: 32px;">
+      <div class="slots-header" style="margin-bottom: 12px;">
+        <span>📂 Previous Upload Sessions (Persisted)</span>
+        <span class="slots-subtitle">Click any session to reload report options without re-uploading</span>
+      </div>
+      <div id="saved-sessions-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;"></div>
+    </div>
+
     <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" novalidate>
       <div class="master-dropzone" id="master-dropzone" tabindex="0">
         <div class="master-dz-icon">📂</div>
@@ -324,6 +333,34 @@
         errorBox.style.display = 'block';
       }
     });
+
+    // Fetch persistent saved sessions on load
+    (async function checkSavedSessions() {
+      try {
+        const res = await fetch('/api/saved-sessions');
+        const data = await res.json();
+        if (data.sessions && data.sessions.length > 0) {
+          const wrapper = document.getElementById('saved-sessions-wrapper');
+          const grid = document.getElementById('saved-sessions-grid');
+          wrapper.style.display = 'block';
+          grid.innerHTML = data.sessions.map(s => {
+            const locs = (s.locNames && s.locNames.length > 0) ? s.locNames.join(', ') : 'Studio Session';
+            const months = (s.months && s.months.length > 0) ? `${s.months[s.months.length-1]} to ${s.months[0]}` : 'Multi-month';
+            const dateStr = s.created ? new Date(s.created).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+            return `
+              <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+                <div>
+                  <div style="font-weight: 700; color: var(--text); font-size: 15px;">🏢 ${locs}</div>
+                  <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">🗓️ ${months} &middot; ${dateStr}</div>
+                </div>
+                <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 6px 12px; align-self: flex-start; margin-top: 4px;" onclick="window.location.href='/select?sessionId=${s.sessionId}'">
+                  Reload Session &rarr;
+                </button>
+              </div>`;
+          }).join('');
+        }
+      } catch (e) {}
+    })();
   </script>
 </body>
 </html>

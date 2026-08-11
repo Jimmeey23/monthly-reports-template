@@ -28,7 +28,7 @@
     ['Courier New', "'Courier New', monospace"],
     ['Verdana', 'Verdana, Geneva, sans-serif'],
   ];
-  const FONT_SIZES = [11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 40, 48];
+  const FONT_SIZES = [9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56];
   const BORDER_STYLES = [
     ['None', 'none'],
     ['Thin solid', '1px solid'],
@@ -87,6 +87,17 @@
         iconBtn('justifyCenter', 'Align center', '&#8596;') +
         iconBtn('justifyRight', 'Align right', '&#8677;') +
         iconBtn('justifyFull', 'Justify', '&#9776;') +
+      '</div>' +
+
+      '<div class="fmt-group">' +
+        `<select id="line-height-select" class="fmt-select fmt-select-sm" title="Line height">` +
+          `<option value="">Line</option>` +
+          `<option value="1.1">1.1</option>` +
+          `<option value="1.25">1.25</option>` +
+          `<option value="1.5">1.5</option>` +
+          `<option value="1.75">1.75</option>` +
+          `<option value="2">2.0</option>` +
+        `</select>` +
       '</div>' +
 
       '<div class="fmt-group">' +
@@ -337,6 +348,13 @@
     fontSizeSelect.value = '';
   });
 
+  const lineHeightSelect = document.getElementById('line-height-select');
+  lineHeightSelect.addEventListener('change', () => {
+    if (!lineHeightSelect.value) return;
+    wrapSelectionWithStyle({ lineHeight: lineHeightSelect.value });
+    lineHeightSelect.value = '';
+  });
+
   const textColorInput = document.getElementById('text-color-input');
   textColorInput.addEventListener('input', () => {
     restoreSelection();
@@ -429,40 +447,6 @@
   const PRIORITY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#10b981' };
   const safeVal = (v) => (v != null && v !== 'undefined' && String(v).trim() !== '') ? String(v) : '—';
 
-  function renderCollapsible(id, icon, title, contentHtml, defaultOpen) {
-    return `
-    <div class="ai-section" data-section-id="${id}">
-      <button type="button" class="ai-section-toggle ${defaultOpen ? 'is-open' : ''}" data-target="${id}">
-        <span class="ai-section-icon">${icon}</span>
-        <span class="ai-section-label">${title}</span>
-        <span class="ai-section-chevron">&#9662;</span>
-      </button>
-      <div class="ai-section-body ${defaultOpen ? 'is-open' : ''}" id="ai-body-${id}">
-        ${contentHtml}
-      </div>
-    </div>`;
-  }
-
-  function renderSummarySection(ps) {
-    if (!ps) return '';
-    const patternsHtml = (ps.patterns || []).map(p => `
-      <div class="ai-pattern-card">
-        <div class="ai-pattern-name">&#9670; ${escapeHtml(p.pattern)}</div>
-        <div class="ai-pattern-desc">${escapeHtml(p.description)}</div>
-      </div>
-    `).join('');
-
-    return `
-      <div class="ai-summary-narrative">${escapeHtml(ps.narrative || '')}</div>
-      ${patternsHtml ? `
-        <div class="ai-patterns-wrap">
-          <div class="ai-sub-label">Identified Patterns &amp; Behaviours</div>
-          ${patternsHtml}
-        </div>
-      ` : ''}
-    `;
-  }
-
   function renderInsightsSection(insights) {
     if (!insights || !insights.length) return '<p style="color:var(--text-muted);font-size:13px;">No insights generated.</p>';
     return insights.map((ins, i) => {
@@ -541,13 +525,14 @@
     const highlights = result.highlights || [];
     const recs = result.recommendations || [];
     const summaryTitle = (ps && ps.title) ? ps.title : 'Performance Overview';
-
-    const sectionsHtml = [
-      renderCollapsible('summary', '&#128203;', summaryTitle, renderSummarySection(ps), true),
-      renderCollapsible('insights', '&#128161;', `Key Insights (${insights.length})`, renderInsightsSection(insights), true),
-      renderCollapsible('highlights', '&#11088;', `Highlights & Standouts (${highlights.length})`, renderHighlightsSection(highlights), true),
-      renderCollapsible('recs', '&#127919;', `Recommendations (${recs.length})`, renderRecommendationsSection(recs), false),
-    ].join('');
+    const narrative = ps && ps.narrative ? `<div class="ai-summary-narrative">${escapeHtml(ps.narrative)}</div>` : '';
+    const patternList = (ps && ps.patterns && ps.patterns.length)
+      ? `<div class="ai-patterns-wrap"><div class="ai-sub-label">Identified Patterns &amp; Behaviours</div>${ps.patterns.map(p => `
+          <div class="ai-pattern-card">
+            <div class="ai-pattern-name">&#9670; ${escapeHtml(p.pattern)}</div>
+            <div class="ai-pattern-desc">${escapeHtml(p.description)}</div>
+          </div>`).join('')}</div>`
+      : '';
 
     return `
       <div class="ai-result ai-result-v2">
@@ -555,10 +540,35 @@
           <div class="ai-result-header-icon">&#10024;</div>
           <div>
             <div class="ai-result-header-title">AI-Powered Analysis</div>
-            <div class="ai-result-header-sub">Deep insights generated from your data — click each section to expand or collapse</div>
+            <div class="ai-result-header-sub">Deep insights generated from your data, presented as one continuous analysis block.</div>
           </div>
         </div>
-        ${sectionsHtml}
+        ${narrative}
+        ${patternList}
+        <div class="ai-section">
+          <div class="ai-section-toggle is-open" role="button" tabindex="0">
+            <span class="ai-section-icon">&#128161;</span>
+            <span class="ai-section-label">Key Insights (${insights.length})</span>
+            <span class="ai-section-chevron">&#9662;</span>
+          </div>
+          <div class="ai-section-body is-open">${renderInsightsSection(insights)}</div>
+        </div>
+        <div class="ai-section">
+          <div class="ai-section-toggle is-open" role="button" tabindex="0">
+            <span class="ai-section-icon">&#11088;</span>
+            <span class="ai-section-label">Highlights &amp; Standouts (${highlights.length})</span>
+            <span class="ai-section-chevron">&#9662;</span>
+          </div>
+          <div class="ai-section-body is-open">${renderHighlightsSection(highlights)}</div>
+        </div>
+        <div class="ai-section">
+          <div class="ai-section-toggle is-open" role="button" tabindex="0">
+            <span class="ai-section-icon">&#127919;</span>
+            <span class="ai-section-label">Recommendations (${recs.length})</span>
+            <span class="ai-section-chevron">&#9662;</span>
+          </div>
+          <div class="ai-section-body is-open">${renderRecommendationsSection(recs)}</div>
+        </div>
       </div>`;
   }
 
@@ -566,8 +576,7 @@
   document.addEventListener('click', (e) => {
     const toggle = e.target.closest('.ai-section-toggle');
     if (!toggle) return;
-    const target = toggle.dataset.target;
-    const body = document.getElementById('ai-body-' + target);
+    const body = toggle.parentElement && toggle.parentElement.querySelector('.ai-section-body');
     if (!body) return;
     toggle.classList.toggle('is-open');
     body.classList.toggle('is-open');
@@ -645,15 +654,15 @@
 .ai-info-btn .spinner { animation: ai-spin 1s linear infinite; font-style: normal; }
 .ai-slot { min-height: 0; transition: all 0.3s ease; }
 
-.ai-result-v2 { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; position: relative; overflow: hidden; animation: ai-fade-in 400ms ease both; box-shadow: var(--shadow-sm); }
+.ai-result-v2 { background: linear-gradient(180deg, var(--bg-card), var(--bg-inset)); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; position: relative; overflow: hidden; animation: ai-fade-in 400ms ease both; box-shadow: var(--shadow-sm); }
 .ai-result-v2::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, var(--accent), var(--primary)); }
-.ai-result-header { display: flex; gap: 16px; margin-bottom: 24px; align-items: center; }
+.ai-result-header { display: flex; gap: 16px; margin-bottom: 20px; align-items: center; }
 .ai-result-header-icon { font-size: 24px; }
 .ai-result-header-title { font-size: 18px; font-weight: 700; color: var(--text); font-family: var(--font-serif); margin-bottom: 2px; }
 .ai-result-header-sub { font-size: 13px; color: var(--text-muted); }
 
-.ai-section { margin-bottom: 12px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-inset); }
-.ai-section-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: transparent; border: none; cursor: pointer; text-align: left; transition: background 0.2s; }
+.ai-section { margin-bottom: 0; border: none; border-top: 1px solid var(--border); border-radius: 0; overflow: visible; background: transparent; }
+.ai-section-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: transparent; border: none; cursor: pointer; text-align: left; transition: background 0.2s; border-radius: 12px; }
 .ai-section-toggle:hover { background: rgba(0,0,0,0.02); }
 [data-theme='dark'] .ai-section-toggle:hover { background: rgba(255,255,255,0.02); }
 .ai-section-icon { font-size: 16px; }

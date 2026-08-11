@@ -339,7 +339,7 @@ def section_01(ctx):
     ya_net = baseline.get('sales', {}).get('net', 0)
     net_baseline_diff = ((s['net'] - ya_net) / ya_net * 100) if ya_net else 0
     
-    title = f"{month_name} delivered {'strong' if net_baseline_diff > 5 else 'steady' if net_baseline_diff > -5 else 'soft'} revenue at {lakh(s['net'])} net &mdash; {'above' if net_baseline_diff > 0 else 'below'} the {ctx['year_avg_label']} average, with {'improving' if ctx['conv_mom'].startswith('+') else 'declining'} conversion and {'stabilising' if ctx['churn_mom'].startswith('-') else 'rising'} churn as the key watchpoints."
+    title = f"{month_name} delivered {'strong' if net_baseline_diff > 5 else 'steady' if net_baseline_diff > -5 else 'soft'} revenue at {lakh(s['net'])} net &mdash; {'above' if net_baseline_diff > 0 else 'below'} the {ctx['year_avg_label']} average, with {'improving' if ctx['conv_mom'].startswith('+') else 'declining'} trial conversion and {'stabilising' if ctx['churn_mom'].startswith('-') else 'rising'} churn as the key watchpoints."
     
     deck = (
         f"Headline revenue closed at <strong>{lakh(s['net'])} net</strong> "
@@ -348,7 +348,7 @@ def section_01(ctx):
         f"<strong>{ctx['net_m2_mom']} vs {prev2_name}</strong> (M-2), "
         f"<strong>{ctx['net_year_avg']} vs {ctx['year_avg_label']}</strong>, "
         f"and <strong>{ctx['net_yoy']} vs {yoy_name}</strong> (YoY). "
-        f"Conversion rate is {pct(new['rate'])} ({new['converted']} of {new['trials']} trials), "
+        f"Trial conversion is {pct(new['rate'])} ({new['converted']} of {new['trials']} trials), "
         f"{'up' if ctx['conv_mom'].startswith('+') else 'down'} {ctx['conv_mom']} MoM. "
         f"Churn rate stands at {pct(lapsed['churn'])}, {'improving' if ctx['churn_mom'].startswith('-') else 'deteriorating'} {ctx['churn_mom']} MoM. "
         f"Discount efficiency is &#8377;{s['disc_eff']:.2f} of revenue collected per &#8377;1 discounted."
@@ -367,7 +367,15 @@ def section_01(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Headline KPI Table &middot; {month_name} vs Prior 2 Months, {ctx['year_avg_label']} &amp; YoY</div>
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Headline KPI Matrix</div>
+            <div class="panel-subtitle">Current month vs the prior two months, the current-year average excluding the selected month, and same month last year.</div>
+          </div>
+          <div class="panel-controls">
+            <span class="meta-pill">M-1 / M-2 / Avg / YoY</span>
+          </div>
+        </div>
 {kpi_table}
       </div>
     </div>
@@ -410,8 +418,8 @@ def build_section_01_insights(ctx):
     is_conv_good = conv_rate >= conv_bl if conv_bl else True
     insights.append(insight_card(
         "02",
-        f"Conversion rate at {pct(conv_rate)} ({conv_bl_diff} vs {ctx['year_avg_label']}) &mdash; {'Strong Conversion' if is_conv_good else 'Funnel Bottleneck'}.",
-        f"{new['converted']} of {new['trials']} trialists converted ({pct(conv_rate)}), {ctx['conv_mom']} vs {mo['prev_month_name']} vs {ctx['year_avg_label']} average of {pct(conv_bl)}. "
+        f"Trial conversion rate at {pct(conv_rate)} ({conv_bl_diff} vs {ctx['year_avg_label']}) &mdash; {'Strong Conversion' if is_conv_good else 'Funnel Bottleneck'}.",
+        f"{new['converted']} of {new['trials']} trialists converted ({pct(conv_rate)}), {ctx['conv_mom']} vs {mo['prev_month_name']} and {ctx['year_avg_label']} average of {pct(conv_bl)}. "
         f"<br><strong>What this tells us:</strong> {'The trial experience is effectively convincing prospects to join.' if is_conv_good else 'Trial drop-off is occurring during the post-trial 48-hour window due to lack of immediate front-desk follow-up.'} "
         f"<br><strong>Strategic Action:</strong> {'Expand lead acquisition spend on high-converting channels.' if is_conv_good else 'Establish an automated 24-hour phone outreach rule for expiring trials to capture ~8 additional members/month.'}"
     ))
@@ -746,7 +754,7 @@ def section_02(ctx):
     html = f'''
 <section class="report-section" id="revenue-performance{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("02 &middot; Revenue &amp; Sales Performance", title, deck, 2, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("02 &middot; Commercial Revenue Performance", title, deck, 2, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection("Sales by Category &mdash; revenue mix and unit economics",
     "The category table below holds every metric available &mdash; revenue, units, ATV, share of revenue &mdash; so each line can be evaluated on absolute size and per-unit economics.")}
@@ -1158,7 +1166,7 @@ def section_03(ctx):
     html = f'''
 <section class="report-section" id="conversion-funnel{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("03 &middot; New Client Conversion Funnel", title, deck, 3, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("03 &middot; Acquisition Funnel Performance", title, deck, 3, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection("Funnel at a glance &mdash; stage-by-stage view",
     "The four-stage visual below traces the headline funnel from leads through retention.")}
@@ -1408,7 +1416,7 @@ def section_04(ctx):
     html = f'''
 <section class="report-section" id="sessions{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("04 &middot; Sessions &amp; Class Performance", title, deck, 4, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("04 &middot; Delivery, Formats &amp; Instructor Performance", title, deck, 4, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection("Format-level view &mdash; Barre, PowerCycle, Strength Lab",
     f"At the format level, the breakdown shows sessions, visits, capacity, revenue, and fill rate for each of the 3 formats: Barre, PowerCycle, and Strength Lab.")}
@@ -1922,7 +1930,7 @@ def section_05(ctx):
     html = f'''
 <section class="report-section" id="lapsed{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("05 &middot; Lapsed Memberships &mdash; Deep Dive", title, deck, 5, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("05 &middot; Retention &amp; Churn Dynamics", title, deck, 5, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {callout("<strong>Exclusions applied in this section (per management guidance):</strong> zero-value memberships, "
     "&lsquo;Newcomers 2 For 1&rsquo; SKUs, &lsquo;Studio Single Class&rsquo; SKUs, and all Private-class memberships. "
@@ -2250,7 +2258,7 @@ def section_06(ctx):
     html = f'''
 <section class="report-section" id="recommendations{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("06 &middot; Strategic Recommendations", title, deck, 6, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("06 &middot; Data-Driven Recommendations", title, deck, 6, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection("Class scheduling &mdash; additions, discontinuations, format-specific moves",
     "The scheduling decisions below are anchored to the Session Intelligence table. Every addition is justified by excess demand (fill &gt; 60%); every discontinuation by structural under-fill (fill &lt; 25%) over a sustained period.")}
@@ -2635,7 +2643,7 @@ def section_07(ctx):
     html = f'''
 <section class="report-section" id="predictions{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("07 &middot; Predictions &amp; Forward View", title, deck, 7, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("07 &middot; Forward Outlook &amp; Scenario Planning", title, deck, 7, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection(f"{next_name} {ctx['mo']['next_year']} forecast &mdash; base case vs upside case",
     f"The forecast below assumes (a) no major exogenous shock, (b) historical seasonality, and (c) for the upside case, the five decisions beginning to deliver from {next_name} W3.")}

@@ -128,44 +128,151 @@ section.report-section:first-of-type { border-top: none; }
 @media (max-width: 640px)  { .hero-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .kpi-card {
-  position: relative; background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 18px 18px 16px; overflow: hidden;
-  transition: all 200ms ease;
+  --tone-color: var(--primary);
+  --tone-soft: var(--primary-soft);
+  position: relative; isolation: isolate;
+  background: linear-gradient(160deg, var(--bg-card) 0%, var(--bg-inset) 130%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px 20px 18px; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms ease, border-color 220ms ease;
 }
-.kpi-card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: var(--shadow); }
-.kpi-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary); }
-.kpi-card.tone-good::before { background: var(--good); }
-.kpi-card.tone-warn::before { background: var(--warn); }
-.kpi-card.tone-bad::before  { background: var(--bad); }
-.kpi-label { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
-.kpi-value { font-family: var(--font-serif); font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); line-height: 1.1; margin-bottom: 4px; }
-.kpi-sub { font-size: 11px; color: var(--text-subtle); margin-bottom: 12px; }
-.kpi-trends { display: flex; gap: 10px; font-size: 11px; margin-bottom: 8px; }
-.kpi-trend { display: inline-flex; align-items: center; gap: 4px; }
-.trend-label { color: var(--text-subtle); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-.kpi-baseline { font-size: 10px; color: var(--primary); font-weight: 600; padding-top: 8px; border-top: 1px dashed var(--border); }
-[data-theme="dark"] .kpi-baseline { color: var(--accent); }
+.kpi-card::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0;
+  background: radial-gradient(120px 90px at 100% 0%, var(--tone-soft), transparent 70%);
+  transition: opacity 220ms ease;
+}
+.kpi-card::after {
+  content: ""; position: absolute; top: 14px; right: 16px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--tone-color);
+  box-shadow: 0 0 0 3px var(--tone-soft);
+}
+.kpi-card:hover {
+  transform: translateY(-4px) scale(1.015);
+  border-color: color-mix(in srgb, var(--tone-color) 40%, var(--border-strong));
+  box-shadow: var(--shadow-lg), 0 0 0 1px color-mix(in srgb, var(--tone-color) 12%, transparent);
+}
+.kpi-card:hover::before { opacity: 1; }
+.kpi-card.tone-good { --tone-color: var(--good); --tone-soft: var(--good-soft); }
+.kpi-card.tone-warn { --tone-color: var(--warn); --tone-soft: var(--warn-soft); }
+.kpi-card.tone-bad  { --tone-color: var(--bad);  --tone-soft: var(--bad-soft); }
 
-.badge { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 600; font-family: var(--font-mono); letter-spacing: -0.01em; }
+.kpi-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 700; margin-bottom: 10px;
+}
+.kpi-label::before {
+  content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--tone-color); flex-shrink: 0;
+}
+.kpi-value {
+  font-family: var(--font-serif); font-size: 30px; font-weight: 650; letter-spacing: -0.025em;
+  color: var(--text); line-height: 1.08; margin-bottom: 5px;
+  font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;
+}
+.kpi-sub { font-size: 11.5px; color: var(--text-subtle); margin-bottom: 14px; line-height: 1.4; }
+.kpi-trends { display: flex; gap: 8px; font-size: 11px; margin-bottom: 10px; flex-wrap: wrap; }
+.kpi-trend {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--bg-inset); border: 1px solid var(--border);
+  padding: 3px 8px 3px 4px; border-radius: 999px;
+}
+.trend-label { color: var(--text-subtle); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.kpi-baseline {
+  font-size: 10.5px; color: var(--tone-color); font-weight: 700; letter-spacing: 0.01em;
+  padding-top: 10px; margin-top: 2px; border-top: 1px dashed var(--border);
+  display: flex; align-items: center; gap: 6px;
+}
+.kpi-baseline::before { content: "\25CE"; font-size: 9px; opacity: 0.7; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: 24px;
+  gap: 3px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
 .badge.good   { background: var(--good-soft);   color: var(--good); }
 .badge.bad    { background: var(--bad-soft);    color: var(--bad); }
 .badge.warn   { background: var(--warn-soft);   color: var(--warn); }
 .badge.neutral{ background: var(--bg-inset);    color: var(--text-muted); }
 
-.section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; gap: 32px; flex-wrap: wrap; }
+/* Section hero — every section opens with its own banner, number watermark, and title */
+.section-hero {
+  position: relative; overflow: hidden; isolation: isolate;
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--bg-card) 65%);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 36px 40px; margin-bottom: 36px; box-shadow: var(--shadow-sm);
+}
+.section-hero::after {
+  content: attr(data-num); position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-serif); font-weight: 700; font-size: 148px; line-height: 1;
+  color: var(--primary); opacity: 0.06; z-index: -1; pointer-events: none; user-select: none;
+}
+.section-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
 .section-header-left { max-width: 780px; }
 .section-eyebrow { display: inline-block; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 3px 10px; border-radius: 4px; font-weight: 700; margin-bottom: 14px; }
 [data-theme="dark"] .section-eyebrow { color: var(--accent); }
 .section-title { font-family: var(--font-serif); font-size: 36px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; color: var(--text); line-height: 1.15; }
 .section-deck { font-size: 15px; color: var(--text-muted); line-height: 1.6; margin: 0; max-width: 720px; }
-.section-anchor { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); font-weight: 600; }
+.section-anchor {
+  flex-shrink: 0; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary);
+  font-weight: 700; background: var(--bg-card); border: 1px solid var(--border-strong);
+  padding: 6px 14px; border-radius: 20px;
+}
+[data-theme="dark"] .section-anchor { color: var(--accent); }
+
+.section-header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+.section-header-right .section-anchor {
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ai-btn {
+  display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-sans);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.01em; color: #16130a;
+  background: linear-gradient(120deg, var(--accent), #ffd84d); border: none; cursor: pointer;
+  padding: 8px 16px; border-radius: 20px; white-space: nowrap;
+  transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+}
+.ai-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(245,197,24,0.35); }
+.ai-btn:disabled { opacity: 0.6; cursor: progress; }
+.ai-btn-icon { font-size: 12px; }
+.ai-btn.is-loading .ai-btn-icon { animation: ai-spin 900ms linear infinite; display: inline-block; }
+@keyframes ai-spin { to { transform: rotate(360deg); } }
+
+.ai-slot { margin-bottom: 8px; }
+.ai-slot:empty { display: none; }
+.ai-slot .ai-result {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 24px; margin-bottom: 32px; position: relative; overflow: hidden;
+  animation: ai-fade-in 400ms ease both;
+}
+.ai-slot .ai-result::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, var(--accent), var(--primary-3));
+}
+@keyframes ai-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.ai-result-summary { font-size: 14px; color: var(--text); line-height: 1.6; margin: 0 0 18px; font-style: italic; }
+.ai-result-error { color: var(--bad); font-size: 13px; }
+.ai-result .insight-card:first-child { padding-top: 0; }
 
 .split-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 28px; align-items: start; margin-bottom: 36px; }
 @media (max-width: 1080px) { .split-grid { grid-template-columns: 1fr; } }
-.insights-pane { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; position: relative; }
+.insights-pane { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; position: relative; box-shadow: var(--shadow-sm); }
 .insights-pane::before { content: ""; position: absolute; left: 0; top: 24px; bottom: 24px; width: 3px; background: var(--accent); border-radius: 0 2px 2px 0; }
 .pane-title { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin: 0 0 16px; padding-left: 12px; }
-.data-pane { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px; overflow: hidden; }
+.data-pane { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 8px; overflow: hidden; box-shadow: var(--shadow-sm); }
 
 .insight-card { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px dashed var(--border); }
 .insight-card:last-child { border-bottom: none; padding-bottom: 0; }
@@ -209,7 +316,7 @@ section.report-section:first-of-type { border-top: none; }
 
 .table-wrap { overflow-x: auto; border-radius: var(--radius); }
 table.data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; font-variant-numeric: tabular-nums; }
-table.data-table thead th { text-align: right; padding: 12px 14px; background: var(--bg-inset); color: var(--text-muted); font-weight: 600; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; position: sticky; top: 0; }
+table.data-table thead th { text-align: right; padding: 12px 14px; background: linear-gradient(180deg, var(--bg-inset), color-mix(in srgb, var(--bg-inset) 72%, var(--bg-card))); color: var(--text-muted); font-weight: 700; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
 table.data-table thead th:first-child { text-align: left; border-top-left-radius: var(--radius); }
 table.data-table thead th:last-child  { border-top-right-radius: var(--radius); }
 table.data-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: right; color: var(--text); vertical-align: middle; }
@@ -218,6 +325,24 @@ table.data-table tbody tr:hover { background: var(--bg-card-hover); }
 table.data-table tbody tr:last-child td { border-bottom: none; }
 table.data-table .num strong { color: var(--primary); font-weight: 600; }
 [data-theme="dark"] table.data-table .num strong { color: var(--accent); }
+.data-table .badge { min-width: 78px; }
+.table-wrap { background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 16px 12px;
+  background: linear-gradient(180deg, var(--bg-card), var(--bg-inset));
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+}
+.panel-title { font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.panel-subtitle { margin-top: 4px; font-size: 12.5px; color: var(--text-muted); line-height: 1.45; max-width: 720px; }
+.panel-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.panel-header + .table-wrap { border-top-left-radius: 0; border-top-right-radius: 0; }
 .totals-row td { background: var(--bg-inset); font-weight: 600; border-top: 2px solid var(--primary); }
 .totals-row td.metric-name { color: var(--primary); }
 [data-theme="dark"] .totals-row td.metric-name { color: var(--accent); }
@@ -238,11 +363,14 @@ tr.disc-high td { background: var(--warn-soft); }
 .share-fill { height: 6px; background: linear-gradient(90deg, var(--primary) 0%, var(--primary-3) 100%); border-radius: 3px; min-width: 2px; }
 .share-bar span { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
 
-.heatmap-table { width: 100%; border-collapse: separate; border-spacing: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
-.heatmap-table th { padding: 8px 10px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; text-align: center; }
+.heatmap-table { width: 100%; border-collapse: separate; border-spacing: 5px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.heatmap-table th { padding: 10px 12px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); font-weight: 700; text-align: center; background: var(--bg-inset); border-radius: 8px; }
 .heatmap-table th.slot-label { text-align: left; color: var(--text); font-family: var(--font-mono); }
-.heat-cell { text-align: center; padding: 14px 8px; border-radius: 6px; font-weight: 600; color: white; font-family: var(--font-mono); font-size: 11px; }
+.heat-cell { text-align: center; padding: 14px 8px; border-radius: 10px; font-weight: 700; color: white; font-family: var(--font-mono); font-size: 11px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06); }
+.heat-cell .heat-sub { display: block; font-size: 8.5px; font-weight: 500; opacity: 0.9; margin-top: 3px; white-space: nowrap; }
 .heat-none { background: var(--bg-inset); color: var(--text-subtle); }
+.full-width-block { width: 100%; margin-bottom: 20px; }
+.full-width-block:last-child { margin-bottom: 36px; }
 .heat-1 { background: color-mix(in srgb, var(--bad) 70%, transparent); }
 .heat-2 { background: color-mix(in srgb, var(--warn) 75%, transparent); }
 .heat-3 { background: color-mix(in srgb, var(--primary-3) 75%, transparent); }
@@ -265,7 +393,7 @@ tr.disc-high td { background: var(--warn-soft); }
 .callout strong { color: var(--primary); font-weight: 600; }
 [data-theme="dark"] .callout strong { color: var(--accent); }
 
-.subsection { margin-top: 40px; margin-bottom: 18px; }
+.subsection { margin-top: 40px; margin-bottom: 18px; padding-left: 16px; border-left: 3px solid var(--border-strong); }
 .subsection-title { font-family: var(--font-serif); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; color: var(--text); margin: 0 0 8px; }
 .subsection-deck { font-size: 13.5px; color: var(--text-muted); margin: 0 0 20px; max-width: 820px; line-height: 1.55; }
 
@@ -276,11 +404,41 @@ tr.disc-high td { background: var(--warn-soft); }
 .footer-text { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 .footer-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; margin-bottom: 8px; }
 
+/* ───────────────────────── Report bundle (multi studio/month) ───────────────────────── */
+
+.toc-section { padding-bottom: 20px; }
+.toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.toc-item {
+  display: flex; align-items: center; gap: 14px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px; text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+.toc-item:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.toc-num {
+  font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--accent); background: var(--accent-soft);
+  width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.toc-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+
+@page { size: A4; margin: 16mm 14mm; }
+
+.print-frame { display: none; }
+
 @media print {
-  .topbar, .theme-toggle, .hero::before, .hero::after { display: none; }
+  html, body { background: white !important; }
+  .topbar, .theme-toggle, .hero::before, .hero::after,
+  .editor-toolbar, .ai-btn, .section-header-right .ai-btn { display: none !important; }
   body { font-size: 11px; }
   .hero { padding: 24px 0; }
-  section.report-section { page-break-inside: avoid; padding: 24px 0; }
+  section.report-section { padding: 24px 0; }
+  .kpi-card, .insight-card, .toc-item,
+  .hero-kpi-grid, table.data-table tr,
+  .section-hero, .subsection { page-break-inside: avoid; break-inside: avoid; }
+  .split-grid, .insights-pane, .data-pane { page-break-inside: avoid; break-inside: avoid; }
+  .print-frame {
+    display: block; position: fixed; inset: 6mm; border: 0.75pt solid var(--border-strong);
+    pointer-events: none; z-index: 9999;
+  }
 }
 
 /* Heatmap intensity classes */
@@ -291,10 +449,382 @@ tr.disc-high td { background: var(--warn-soft); }
 .heat-cell.empty { background: var(--bg-inset); color: var(--text-subtle); font-weight: 400; }
 .heatmap-table td.row-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text); text-align: left; padding: 14px 12px; background: var(--bg-soft); border-radius: 6px; }
 
+/* Editor toolbar + inline editing */
+.editor-toolbar {
+  position: fixed; right: 24px; bottom: 24px; left: 24px; z-index: 100;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  max-width: min(96vw, 980px); margin-left: auto;
+  background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
+  padding: 8px 10px; box-shadow: var(--shadow-lg); font-family: var(--font-sans);
+}
+.editor-toolbar button {
+  display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;
+  font-family: inherit; font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 9px 16px;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+#edit-toggle-btn, #save-btn { flex-shrink: 0; }
+.editor-toolbar button:hover { transform: translateY(-1px); }
+.editor-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+#edit-toggle-btn { background: var(--bg-inset); color: var(--text); }
+#edit-toggle-btn.is-active { background: var(--primary); color: white; }
+#save-btn { background: linear-gradient(120deg, var(--accent), #ffd84d); color: #16130a; }
+.editor-status { font-size: 11.5px; color: var(--text-muted); padding: 0 4px; min-width: 60px; }
+
+[data-editing="true"] .report-section [contenteditable="true"] { cursor: text; border-radius: 4px; transition: background 120ms ease; }
+[data-editing="true"] .report-section [contenteditable="true"]:hover { background: var(--accent-soft); outline: 1px dashed var(--accent); }
+[data-editing="true"] .report-section [contenteditable="true"]:focus { background: var(--bg-card); outline: 2px solid var(--accent); }
+
+
+
+/* ───────────────────────── AI Insights V2 ───────────────────────── */
+.ai-result-v2 { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; position: relative; overflow: hidden; animation: ai-fade-in 400ms ease both; box-shadow: var(--shadow-sm); }
+.ai-result-v2::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, var(--accent), var(--primary)); }
+.ai-result-header { display: flex; gap: 16px; margin-bottom: 24px; align-items: center; }
+.ai-result-header-icon { font-size: 24px; }
+.ai-result-header-title { font-size: 18px; font-weight: 700; color: var(--text); font-family: var(--font-serif); }
+.ai-result-header-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+.ai-result-v2 { background: linear-gradient(180deg, var(--bg-card), var(--bg-inset)); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; position: relative; overflow: hidden; animation: ai-fade-in 400ms ease both; box-shadow: var(--shadow-sm); }
+.ai-result-v2::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, var(--accent), var(--primary)); }
+.ai-result-header { display: flex; gap: 16px; margin-bottom: 20px; align-items: center; }
+.ai-result-header-icon { font-size: 24px; }
+.ai-result-header-title { font-size: 18px; font-weight: 700; color: var(--text); font-family: var(--font-serif); margin-bottom: 2px; }
+.ai-result-header-sub { font-size: 13px; color: var(--text-muted); }
+.ai-section { margin-bottom: 0; border: none; border-top: 1px solid var(--border); border-radius: 0; overflow: visible; background: transparent; }
+.ai-section:first-of-type { border-top: 1px solid var(--border); }
+.ai-section-toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: transparent; border: none; cursor: pointer; text-align: left; transition: background 0.2s; border-radius: 12px; }
+.ai-section-toggle:hover { background: rgba(0,0,0,0.02); }
+[data-theme='dark'] .ai-section-toggle:hover { background: rgba(255,255,255,0.02); }
+.ai-section-icon { font-size: 16px; }
+.ai-section-label { flex: 1; font-weight: 600; color: var(--text); font-size: 14px; }
+.ai-section-chevron { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+.ai-section-toggle.is-open .ai-section-chevron { transform: rotate(-180deg); }
+
+.ai-section-body { padding: 0 16px; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease; }
+.ai-section-body.is-open { max-height: 2000px; padding: 0 16px 16px 16px; opacity: 1; }
+
+.ai-summary-narrative { font-size: 14px; line-height: 1.6; color: var(--text); margin-bottom: 16px; font-weight: 500; }
+.ai-patterns-wrap { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border); }
+.ai-sub-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; }
+.ai-pattern-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--primary); }
+.ai-pattern-name { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.ai-pattern-desc { font-size: 12.5px; line-height: 1.5; color: var(--text-muted); }
+
+.ai-evidence { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; padding: 6px 10px; background: rgba(0,0,0,0.02); border-radius: 4px; display: inline-block; }
+[data-theme='dark'] .ai-evidence { background: rgba(255,255,255,0.03); }
+.ai-evidence-label { font-weight: 600; color: var(--text); }
+
+.ai-highlights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .ai-highlights-grid { grid-template-columns: 1fr; } }
+.ai-highlight-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; border-left: 3px solid transparent; }
+.ai-highlight-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.ai-highlight-icon { font-size: 12px; }
+.ai-highlight-metric { font-size: 12px; font-weight: 600; color: var(--text-muted); flex: 1; text-transform: uppercase; letter-spacing: 0.02em; }
+.ai-highlight-type-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.02em; }
+.ai-highlight-headline { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+.ai-highlight-magnitude { font-size: 16px; font-weight: 700; font-family: var(--font-mono); margin-bottom: 8px; }
+.ai-highlight-detail { font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+
+.ai-rec-card { display: flex; gap: 16px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; }
+.ai-rec-num { flex-shrink: 0; width: 32px; height: 32px; background: var(--primary-soft); color: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; font-family: var(--font-mono); }
+[data-theme='dark'] .ai-rec-num { background: var(--primary); color: white; }
+.ai-rec-content { flex: 1; }
+.ai-rec-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.ai-rec-desc { font-size: 13px; line-height: 1.5; color: var(--text-muted); margin-bottom: 12px; }
+.ai-rec-impact { font-size: 13px; color: var(--good); background: var(--good-soft); padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-weight: 500; }
+[data-theme='dark'] .ai-rec-impact { background: rgba(16, 185, 129, 0.1); }
+.ai-rec-impact-label { font-weight: 700; margin-right: 4px; }
+.ai-rec-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+
+
+.ai-info-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); font-family: var(--font-serif); font-style: italic; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; padding: 0; box-shadow: var(--shadow-sm); }
+.ai-info-btn:hover { color: var(--primary); border-color: var(--primary); transform: scale(1.05); }
+.ai-info-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ai-info-btn .spinner { animation: ai-spin 1s linear infinite; font-style: normal; }
+.ai-slot { min-height: 0; transition: all 0.3s ease; }
+
+
+.editor-tools-left, .editor-format-tools { display: flex; gap: 8px; align-items: center; }
+.editor-format-tools { padding-left: 8px; border-left: 1px solid var(--border); }
+.format-btn { background: transparent; border: 1px solid transparent; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); font-size: 13px; }
+.format-btn:hover { background: var(--bg-inset); border-color: var(--border); }
+
+
+/* ───────────────────────── Presenter View ───────────────────────── */
+.presenter-bar { position: fixed; top: 0; left: 0; right: 0; background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 2000; box-shadow: var(--shadow-sm); font-size: 13px; }
+.presenter-bar.is-active { background: var(--primary); color: white; border-bottom: none; }
+.presenter-info { display: flex; align-items: center; gap: 12px; }
+.presenter-badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-weight: 600; font-family: var(--font-mono); }
+.presenter-actions { display: flex; gap: 8px; }
+.presenter-btn { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; }
+.presenter-btn:hover { background: var(--bg-hover); }
+.presenter-bar.is-active .presenter-btn { background: white; color: var(--primary); border: none; }
+.presenter-bar.is-active .presenter-btn:hover { background: rgba(255,255,255,0.9); }
+body.viewer-locked { overflow: hidden !important; pointer-events: none !important; }
+.viewer-overlay { position: fixed; top: 40px; left: 0; right: 0; bottom: 0; z-index: 1999; cursor: not-allowed; display: none; }
+body.viewer-locked .viewer-overlay { display: block; }
+.presenter-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-card); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); z-index: 3000; display: none; flex-direction: column; gap: 16px; width: 300px; }
+.presenter-modal.is-open { display: flex; }
+.presenter-modal-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.presenter-modal input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-inset); color: var(--text); font-family: var(--font-mono); text-align: center; letter-spacing: 2px; font-size: 16px; margin-bottom: 16px; }
+.presenter-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+body { padding-top: 40px !important; }
+
+
+/* ───────────────────────── Premium Aesthetics Override ───────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary: #4f46e5;
+  --primary-soft: rgba(79, 70, 229, 0.1);
+  --accent: #ec4899;
+  --bg-body: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-inset: #f8fafc;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+[data-theme='dark'] {
+  --primary: #6366f1;
+  --primary-soft: rgba(99, 102, 241, 0.15);
+  --accent: #f472b6;
+  --bg-body: #0f172a;
+  --bg-card: #1e293b;
+  --bg-inset: #0f172a;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --border: #334155;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-body);
+  color: var(--text);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+}
+
+.ai-result-v2 {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme='dark'] .ai-result-v2 {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.container {
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.section-hero {
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-inset));
+}
+
+.ai-section {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.ai-section:hover {
+  box-shadow: var(--shadow);
+}
+
+.insight-card, .ai-highlight-card, .ai-rec-card, .ai-pattern-card {
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+}
+
+/* ───────────────────────── Streamlined Narrative & Bulleted Insights ───────────────────────── */
+.ai-summary-narrative-block {
+  margin-bottom: 20px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.ai-block-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-summary-para {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.ai-summary-para:last-child {
+  margin-bottom: 0;
+}
+.ai-list-block {
+  margin-bottom: 20px;
+}
+.ai-list-block:last-child {
+  margin-bottom: 0;
+}
+.ai-bullet-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ai-bullet-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  align-items: flex-start;
+}
+.ai-bullet-dot {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.ai-bullet-dot.rec-dot {
+  background: var(--good-soft);
+  color: var(--good);
+}
+.ai-bullet-content {
+  flex: 1;
+}
+.ai-bullet-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.ai-bullet-title {
+  font-size: 14px;
+  color: var(--text);
+}
+.ai-bullet-meaning {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.ai-bullet-evidence {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-inset);
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  display: inline-block;
+  margin-top: 4px;
+}
+.ai-rec-impact-tag {
+  font-size: 12.5px;
+  color: var(--good);
+  background: var(--good-soft);
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin: 6px 0;
+}
+.meta-pill.pri-high {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.meta-pill.pri-medium {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Section Edit Controls & Collapsible Toolbar */
+.editor-toolbar.is-collapsed {
+  padding: 6px 12px;
+  max-width: 260px;
+}
+.section-edit-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-inset, #f1f5f9);
+  border: 1px dashed var(--border, #cbd5e1);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.sec-bar-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  margin-right: auto;
+}
+.sec-bar-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+  color: var(--text, #0f172a);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sec-bar-btn:hover {
+  background: var(--primary-soft, #e2e8f0);
+}
+.sec-bar-btn.danger {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.sec-bar-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
 
   </style>
 </head>
 <body>
+<div class="print-frame"></div>
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -326,8 +856,8 @@ tr.disc-high td { background: var(--warn-soft); }
       for <span class="accent-yellow">July 2026</span> &mdash; operational rhythm, funnel economics, and the lapsed-member question.
     </h1>
     <p class="hero-sub">
-      A data-led review of the studio&rsquo;s commercial and operational performance in July 2026, benchmarked against June 2026
-      and the <strong>January &ndash; March 2026 baseline</strong>.
+      A data-led review of the studio&rsquo;s commercial and operational performance in July 2026, benchmarked against Jun 2026 2026
+      and the <strong>2026 Avg (excl. Jul) baseline</strong>.
       Every section is structured to surface a business decision &mdash; class schedule, trainer deployment, discount discipline,
       and membership retention &mdash; that senior management can act on this quarter.
     </p>
@@ -347,7 +877,7 @@ tr.disc-high td { background: var(--warn-soft); }
       </div>
       <div class="hero-meta-item">
         <span class="label">Comparators</span>
-        <span class="value">June 2026 &middot; Jan &ndash; Mar 2026 avg &middot; YoY</span>
+        <span class="value">Jun 2026 2026 &middot; 2026 Avg (excl. Jul) avg &middot; YoY</span>
       </div>
       <div class="hero-meta-item">
         <span class="label">Audience</span>
@@ -364,7 +894,7 @@ tr.disc-high td { background: var(--warn-soft); }
             <span class="kpi-trend"><span class="trend-label">MoM</span> <span class='badge good'>+18.2%</span></span>
             <span class="kpi-trend"><span class="trend-label">YoY</span> <span class='badge good'>+37.1%</span></span>
           </div>
-          <div class="kpi-baseline">+15.7%</div>
+          <div class="kpi-baseline">-5.1%</div>
         </div>
               <div class="kpi-card">
           <div class="kpi-label">Visits</div>
@@ -374,7 +904,7 @@ tr.disc-high td { background: var(--warn-soft); }
             <span class="kpi-trend"><span class="trend-label">MoM</span> <span class='badge good'>+6.6%</span></span>
             
           </div>
-          <div class="kpi-baseline">+16.5%</div>
+          <div class="kpi-baseline">+12.1%</div>
         </div>
               <div class="kpi-card">
           <div class="kpi-label">Fill Rate</div>
@@ -384,17 +914,17 @@ tr.disc-high td { background: var(--warn-soft); }
             <span class="kpi-trend"><span class="trend-label">MoM</span> <span class='badge good'>+1.0pp</span></span>
             
           </div>
-          <div class="kpi-baseline">+1.4pp</div>
+          <div class="kpi-baseline">+1.1pp</div>
         </div>
               <div class="kpi-card">
           <div class="kpi-label">Conversion Rate</div>
-          <div class="kpi-value">9.9%</div>
-          <div class="kpi-sub">151 leads &rarr; 15 converted</div>
+          <div class="kpi-value">26.4%</div>
+          <div class="kpi-sub">121 trials &rarr; 32 converted</div>
           <div class="kpi-trends">
-            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class='badge bad'>-14.3pp</span></span>
+            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class='badge neutral'>+0.0pp</span></span>
             
           </div>
-          <div class="kpi-baseline">-2.7pp</div>
+          <div class="kpi-baseline">+0.0pp</div>
         </div>
               <div class="kpi-card">
           <div class="kpi-label">Lapsed Members</div>
@@ -409,12 +939,12 @@ tr.disc-high td { background: var(--warn-soft); }
               <div class="kpi-card">
           <div class="kpi-label">Discount Efficiency</div>
           <div class="kpi-value">&#8377;14.45</div>
-          <div class="kpi-sub">Net rev / &#8377;1 discounted</div>
+          <div class="kpi-sub">Revenue collected / &#8377;1 discounted</div>
           <div class="kpi-trends">
             <span class="kpi-trend"><span class="trend-label">MoM</span> <span class='badge bad'>-11.0%</span></span>
             <span class="kpi-trend"><span class="trend-label">YoY</span> <span class='badge good'>+30.6%</span></span>
           </div>
-          <div class="kpi-baseline">+73.7%</div>
+          <div class="kpi-baseline">+105.7%</div>
         </div>
     </div>
   </div>
@@ -422,14 +952,19 @@ tr.disc-high td { background: var(--warn-soft); }
 
 <section class="report-section" id="executive-summary">
   <div class="container">
-    <div class="section-header">
-      <div class="section-header-left">
-        <span class="section-eyebrow">01 &middot; Executive Summary</span>
-        <h2 class="section-title">July delivered strong revenue at &#8377;24.54L net &mdash; above the Jan&ndash;Mar baseline, with declining conversion and stabilising churn as the key watchpoints.</h2>
-        <p class="section-deck">Headline revenue closed at <strong>&#8377;24.54L net</strong> (&#8377;25.80L gross, &#8377;1.70L discount), which is <strong>+15.7% vs the Jan &ndash; Mar baseline</strong> of &#8377;21.21L. The MoM figure is +18.2% vs June. Conversion rate is 9.9% (15 of 151 leads), down -14.3pp MoM. Churn rate stands at 40.0%, improving -5.1pp MoM. Discount efficiency is &#8377;14.45 of net revenue per &#8377;1 discounted.</p>
+    <div class="section-hero" data-num="01">
+      <div class="section-header">
+        <div class="section-header-left">
+          <span class="section-eyebrow">01 &middot; Executive Summary</span>
+          <h2 class="section-title">July delivered soft revenue at &#8377;24.54L net &mdash; below the 2026 Avg (excl. Jul) average, with improving trial conversion and stabilising churn as the key watchpoints.</h2>
+          <p class="section-deck">Headline revenue closed at <strong>&#8377;24.54L net</strong> (&#8377;25.80L gross, &#8377;1.70L discount), which is <strong>+18.2% vs Jun 2026</strong> (M-1), <strong>+6.2% vs May 2026</strong> (M-2), <strong>-5.1% vs 2026 Avg (excl. Jul)</strong>, and <strong>+37.1% vs Jul 2025</strong> (YoY). Trial conversion is 26.4% (32 of 121 trials), up +0.0pp MoM. Churn rate stands at 40.0%, improving -5.1pp MoM. Discount efficiency is &#8377;14.45 of revenue collected per &#8377;1 discounted.</p>
+        </div>
+        <div class="section-header-right">
+          <div class="section-anchor">Section 1 / 07</div>
+        </div>
       </div>
-      <div class="section-anchor">Section 1 / 07</div>
     </div>
+    <div class="ai-slot" id="ai-slot-executive-summary"></div>
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -438,219 +973,307 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Baseline-plus revenue at &#8377;24.54L net.</div>
-        <div class="insight-text">Net sales of <strong>&#8377;24.54L</strong> sit <strong>+15.7% vs the Jan &ndash; Mar average</strong> of &#8377;21.21L. The MoM figure is +18.2% vs June. Gross sales of &#8377;25.80L on 349 transactions at an ATV of &#8377;7,393.</div>
+        <div class="insight-title">Revenue at &#8377;24.54L net (-5.1% vs 2026 Avg (excl. Jul)) &mdash; Revenue Compression.</div>
+        <div class="insight-text">Net sales sit at <strong>&#8377;24.54L</strong> (-5.1% vs 2026 Avg (excl. Jul) average of &#8377;25.86L, +18.2% vs Jun 2026). Transactions (349) and ATV (&#8377;7,393) reveal the growth engine. <br><strong>What this tells us:</strong> Revenue is constrained by low transaction volume and pricing leakage. <br><strong>Strategic Action:</strong> Launch a targeted renewal drive to boost baseline transaction count.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Conversion rate at 9.9% &mdash; -2.7pp vs baseline.</div>
-        <div class="insight-text">15 of 151 leads converted (9.9%), down -14.3pp MoM and -2.7pp vs the Jan&ndash;Mar baseline of 12.6%. Trials: 121, retained: 32 (26.4% retention).</div>
+        <div class="insight-title">Trial conversion rate at 26.4% (n/a vs 2026 Avg (excl. Jul)) &mdash; Strong Conversion.</div>
+        <div class="insight-text">32 of 121 trialists converted (26.4%), +0.0pp vs Jun 2026 and 2026 Avg (excl. Jul) average of 0.0%. <br><strong>What this tells us:</strong> The trial experience is effectively convincing prospects to join. <br><strong>Strategic Action:</strong> Expand lead acquisition spend on high-converting channels.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Churn rate at 40.0% &mdash; -5.1pp MoM, +6.3pp vs baseline.</div>
-        <div class="insight-text">Of 380 memberships reaching end-of-life, 217 renewed (57.1%), 152 lapsed (40.0% churn). Renewal rate is -9.1pp vs the Jan&ndash;Mar baseline of 66.2%.</div>
+        <div class="insight-title">Churn at 40.0% (+3.4pp vs 2026 Avg (excl. Jul)) &mdash; Retention Leakage.</div>
+        <div class="insight-text">Of 380 expiring memberships, 217 renewed (57.1%), while 152 lapsed (40.0% churn). <br><strong>What this tells us:</strong> Lapses are escalating among members with declining check-in frequency in month 3. <br><strong>Strategic Action:</strong> Set automated alerts when a member visits fewer than 3 times in 30 days to trigger coach check-ins.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Discount efficiency at &#8377;14.45 per &#8377;1 discounted.</div>
-        <div class="insight-text">Discount value of &#8377;1.70L against &#8377;25.80L gross &mdash; discount penetration of 6.6%. Efficiency is +73.7% vs the Jan&ndash;Mar baseline of &#8377;8.32. Discipline is holding.</div>
+        <div class="insight-title">Discount Efficiency at &#8377;14.45 per &#8377;1 Discounted &mdash; Margin Healthy.</div>
+        <div class="insight-text">Discounts total &#8377;1.70L against &#8377;25.80L gross (6.6% penetration) vs 2026 Avg (excl. Jul) efficiency of &#8377;7.03. <br><strong>What this tells us:</strong> Promotional offers are yielding adequate net sales return. <br><strong>Strategic Action:</strong> Maintain current pricing controls.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">05</div>
       <div class="insight-body">
-        <div class="insight-title">368 sessions, 2,432 visits, 47.3% fill rate.</div>
-        <div class="insight-text">Session volume is +4.5% MoM and +13.5% vs baseline. Fill rate is +1.0pp MoM and +1.4pp vs the Jan&ndash;Mar baseline of 45.9%. Average class size: 6.6 visits/session.</div>
+        <div class="insight-title">Fill Rate at 47.3% across 368 Sessions &mdash; Utilization Signal.</div>
+        <div class="insight-text">368 sessions generated 2,432 visits (avg 6.6/session), +1.0pp vs Jun 2026 vs 2026 Avg (excl. Jul) average of 46.2%. <br><strong>What this tells us:</strong> Prime slots are running near capacity while off-peak hours pull down overall facility utilization. <br><strong>Strategic Action:</strong> Reallocate low-fill off-peak hours to peak class formats to unlock ~40 incremental visits per week.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">06</div>
       <div class="insight-body">
-        <div class="insight-title">Lead pipeline at 151 leads &mdash; -9.4% vs baseline.</div>
-        <div class="insight-text">Leads are +18.0% MoM vs June and -9.4% vs the Jan&ndash;Mar baseline of 167. The pipeline needs replenishment. Top source: Hosted Class (34 leads, 1 converted).</div>
+        <div class="insight-title">Lead Volume at 151 Leads (-1.6% vs 2026 Avg (excl. Jul)) &mdash; Pipeline Health.</div>
+        <div class="insight-text">Lead volume sits +18.0% vs Jun 2026 vs 2026 Avg (excl. Jul) average of 154. Top source: Hosted Class (34 leads, 1 converted). <br><strong>What this tells us:</strong> Pipeline contraction will constrain future trial conversion if unaddressed. <br><strong>Strategic Action:</strong> Launch a member referral incentive campaign to boost inquiry volume.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">07</div>
       <div class="insight-body">
-        <div class="insight-title">295 late cancels across 150 members &mdash; 4 heavy cancelers.</div>
-        <div class="insight-text">Late-cancel rate is 10.8% of all check-ins (+0.7pp MoM). 4 members account for 5+ cancels each. Total penalty collected: <strong>&#8377;0</strong>. A policy intervention here is a near-zero-risk win.</div>
+        <div class="insight-title">295 Late Cancels (4 Heavy Cancelers) &mdash; Capacity Loss.</div>
+        <div class="insight-text">Late-cancel rate is 10.8% of check-ins (+0.7pp vs Jun 2026), with 4 members canceling 5+ times. Zero penalty collected. <br><strong>What this tells us:</strong> Unenforced cancellation policies result in wasted spot capacity and prevent waitlisted members from attending. <br><strong>Strategic Action:</strong> Implement a standard &#8377;250 late-cancel fee to recover lost spots and improve class commitment.</div>
       </div>
     </div>
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Headline KPI Table &middot; July vs June vs Jan &ndash; Mar Baseline</div>
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Headline KPI Matrix</div>
+            <div class="panel-subtitle">Current month vs the prior two months, the current-year average excluding the selected month, and same month last year.</div>
+          </div>
+          <div class="panel-controls">
+            <span class="meta-pill">M-1 / M-2 / Avg / YoY</span>
+          </div>
+        </div>
         <div class="table-wrap">
           <table class="data-table">
             <thead>
               <tr>
                 <th>Metric</th>
                 <th>Jul 2026</th>
-                <th>June</th>
-                <th>Jan&ndash;Mar avg</th>
-                <th>MoM</th>
-                <th>vs Baseline</th>
+                <th>Jun 2026</th>
+                <th>May 2026</th>
+                <th>2026 Avg (excl. Jul)</th>
+                <th>Jul 2025</th>
+                <th>vs M-1</th>
+                <th>vs M-2</th>
+                <th>vs 2026 Avg</th>
+                <th>vs YoY</th>
               </tr>
             </thead>
             <tbody>
             <tr>
-              <td>Net Sales</td>
+              <td class="metric-name">Net Sales</td>
               <td class="num">&#8377;24.54L</td>
               <td class="num">&#8377;20.77L</td>
-              <td class="num">&#8377;21.21L</td>
+              <td class="num">&#8377;23.11L</td>
+              <td class="num">&#8377;25.86L</td>
+              <td class="num">&#8377;17.90L</td>
               <td><span class='badge good'>+18.2%</span></td>
-              <td><span class='badge good'>+15.7%</span></td>
+              <td><span class='badge good'>+6.2%</span></td>
+              <td><span class='badge bad'>-5.1%</span></td>
+              <td><span class='badge good'>+37.1%</span></td>
             </tr>
             <tr>
-              <td>Gross Sales</td>
+              <td class="metric-name">Gross Sales</td>
               <td class="num">&#8377;25.80L</td>
               <td class="num">&#8377;21.81L</td>
-              <td class="num">&#8377;22.28L</td>
+              <td class="num">&#8377;24.28L</td>
+              <td class="num">&#8377;27.16L</td>
+              <td class="num">&#8377;21.12L</td>
               <td><span class='badge good'>+18.3%</span></td>
-              <td><span class='badge good'>+15.8%</span></td>
+              <td><span class='badge good'>+6.2%</span></td>
+              <td><span class='badge bad'>-5.0%</span></td>
+              <td><span class='badge good'>+22.2%</span></td>
             </tr>
             <tr>
-              <td>Discount Value</td>
+              <td class="metric-name">Discount Value</td>
               <td class="num">&#8377;1.70L</td>
               <td class="num">&#8377;1.28L</td>
-              <td class="num">&#8377;2.55L</td>
+              <td class="num">&#8377;3.43L</td>
+              <td class="num">&#8377;3.68L</td>
+              <td class="num">&#8377;1.62L</td>
               <td><span class='badge bad'>+32.8%</span></td>
-              <td><span class='badge good'>-33.4%</span></td>
+              <td><span class='badge good'>-50.5%</span></td>
+              <td><span class='badge good'>-53.8%</span></td>
+              <td><span class='badge bad'>+5.0%</span></td>
             </tr>
             <tr>
-              <td>Transactions</td>
+              <td class="metric-name">Transactions</td>
               <td class="num">349</td>
               <td class="num">282</td>
-              <td class="num">272</td>
+              <td class="num">264</td>
+              <td class="num">282</td>
+              <td class="num">249</td>
               <td><span class='badge good'>+23.8%</span></td>
-              <td><span class='badge good'>+28.2%</span></td>
+              <td><span class='badge good'>+32.2%</span></td>
+              <td><span class='badge good'>+23.8%</span></td>
+              <td><span class='badge good'>+40.2%</span></td>
             </tr>
             <tr>
-              <td>Unique Buyers</td>
+              <td class="metric-name">Unique Buyers</td>
               <td class="num">232</td>
               <td class="num">217</td>
-              <td class="num">187</td>
+              <td class="num">193</td>
+              <td class="num">199</td>
+              <td class="num">178</td>
               <td><span class='badge good'>+6.9%</span></td>
-              <td><span class='badge good'>+23.8%</span></td>
+              <td><span class='badge good'>+20.2%</span></td>
+              <td><span class='badge good'>+16.5%</span></td>
+              <td><span class='badge good'>+30.3%</span></td>
             </tr>
             <tr>
-              <td>ATV</td>
+              <td class="metric-name">ATV</td>
               <td class="num">&#8377;7,393</td>
               <td class="num">&#8377;7,733</td>
-              <td class="num">&#8377;8,181</td>
+              <td class="num">&#8377;9,198</td>
+              <td class="num">&#8377;9,174</td>
+              <td class="num">&#8377;8,482</td>
               <td><span class='badge bad'>-4.4%</span></td>
-              <td><span class='badge bad'>-9.6%</span></td>
+              <td><span class='badge bad'>-19.6%</span></td>
+              <td><span class='badge bad'>-19.4%</span></td>
+              <td><span class='badge bad'>-12.8%</span></td>
             </tr>
             <tr>
-              <td>Disc Efficiency</td>
+              <td class="metric-name">Disc Efficiency</td>
               <td class="num">&#8377;14.45</td>
               <td class="num">&#8377;16.24</td>
-              <td class="num">&#8377;8.32</td>
+              <td class="num">&#8377;6.73</td>
+              <td class="num">&#8377;7.03</td>
+              <td class="num">&#8377;11.07</td>
               <td><span class='badge bad'>-11.0%</span></td>
-              <td><span class='badge good'>+73.7%</span></td>
+              <td><span class='badge good'>+114.7%</span></td>
+              <td><span class='badge good'>+105.7%</span></td>
+              <td><span class='badge good'>+30.6%</span></td>
             </tr>
             <tr>
-              <td>Sessions</td>
+              <td class="metric-name">Sessions</td>
               <td class="num">368</td>
               <td class="num">352</td>
-              <td class="num">324</td>
+              <td class="num">348</td>
+              <td class="num">335</td>
+              <td class="num">n/a</td>
               <td><span class='badge good'>+4.5%</span></td>
-              <td><span class='badge good'>+13.5%</span></td>
+              <td><span class='badge good'>+5.7%</span></td>
+              <td><span class='badge good'>+9.8%</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Visits</td>
+              <td class="metric-name">Visits</td>
               <td class="num">2,432</td>
               <td class="num">2,281</td>
-              <td class="num">2088</td>
+              <td class="num">2,307</td>
+              <td class="num">2,169</td>
+              <td class="num">n/a</td>
               <td><span class='badge good'>+6.6%</span></td>
-              <td><span class='badge good'>+16.5%</span></td>
+              <td><span class='badge good'>+5.4%</span></td>
+              <td><span class='badge good'>+12.1%</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Fill Rate</td>
+              <td class="metric-name">Fill Rate</td>
               <td class="num">47.3%</td>
               <td class="num">46.3%</td>
-              <td class="num">45.9%</td>
+              <td class="num">47.2%</td>
+              <td class="num">46.2%</td>
+              <td class="num">n/a</td>
               <td><span class='badge good'>+1.0pp</span></td>
-              <td><span class='badge good'>+1.4pp</span></td>
+              <td><span class='badge good'>+0.1pp</span></td>
+              <td><span class='badge good'>+1.1pp</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Leads</td>
+              <td class="metric-name">Leads</td>
               <td class="num">151</td>
               <td class="num">128</td>
-              <td class="num">167</td>
+              <td class="num">127</td>
+              <td class="num">154</td>
+              <td class="num">n/a</td>
               <td><span class='badge good'>+18.0%</span></td>
-              <td><span class='badge bad'>-9.4%</span></td>
+              <td><span class='badge good'>+18.9%</span></td>
+              <td><span class='badge bad'>-1.6%</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Conv Rate</td>
-              <td class="num">9.9%</td>
-              <td class="num">24.2%</td>
-              <td class="num">12.6%</td>
-              <td><span class='badge bad'>-14.3pp</span></td>
-              <td><span class='badge bad'>-2.7pp</span></td>
+              <td class="metric-name">Conv Rate</td>
+              <td class="num">26.4%</td>
+              <td class="num">n/a</td>
+              <td class="num">n/a</td>
+              <td class="num">0.0%</td>
+              <td class="num">n/a</td>
+              <td><span class='badge neutral'>n/a</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
+              <td><span class='badge good'>+26.4pp</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Converted</td>
-              <td class="num">15</td>
-              <td class="num">31</td>
-              <td class="num">21</td>
-              <td><span class='badge bad'>-51.6%</span></td>
-              <td><span class='badge bad'>-28.6%</span></td>
+              <td class="metric-name">Converted</td>
+              <td class="num">32</td>
+              <td class="num">n/a</td>
+              <td class="num">n/a</td>
+              <td class="num">0</td>
+              <td class="num">n/a</td>
+              <td><span class='badge neutral'>n/a</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Trials</td>
+              <td class="metric-name">Trials</td>
               <td class="num">121</td>
               <td class="num">129</td>
+              <td class="num">117</td>
+              <td class="num">110</td>
               <td class="num">n/a</td>
               <td><span class='badge bad'>-6.2%</span></td>
+              <td><span class='badge good'>+3.4%</span></td>
+              <td><span class='badge good'>+10.3%</span></td>
               <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Retained</td>
+              <td class="metric-name">Retained</td>
               <td class="num">32</td>
               <td class="num">47</td>
+              <td class="num">37</td>
+              <td class="num">32</td>
               <td class="num">n/a</td>
               <td><span class='badge bad'>-31.9%</span></td>
+              <td><span class='badge bad'>-13.5%</span></td>
+              <td><span class='badge bad'>-1.0%</span></td>
               <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Churn Rate</td>
+              <td class="metric-name">Churn Rate</td>
               <td class="num">40.0%</td>
               <td class="num">45.1%</td>
-              <td class="num">33.7%</td>
+              <td class="num">39.1%</td>
+              <td class="num">36.6%</td>
+              <td class="num">n/a</td>
               <td><span class='badge good'>-5.1pp</span></td>
-              <td><span class='badge bad'>+6.3pp</span></td>
+              <td><span class='badge bad'>+0.9pp</span></td>
+              <td><span class='badge bad'>+3.4pp</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Renewal Rate</td>
+              <td class="metric-name">Renewal Rate</td>
               <td class="num">57.1%</td>
               <td class="num">54.3%</td>
-              <td class="num">66.2%</td>
+              <td class="num">60.6%</td>
+              <td class="num">63.1%</td>
+              <td class="num">n/a</td>
               <td><span class='badge good'>+2.8pp</span></td>
-              <td><span class='badge bad'>-9.1pp</span></td>
+              <td><span class='badge bad'>-3.5pp</span></td>
+              <td><span class='badge bad'>-6.0pp</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Lapsed Members</td>
+              <td class="metric-name">Lapsed Members</td>
               <td class="num">152</td>
               <td class="num">148</td>
-              <td class="num">91</td>
+              <td class="num">118</td>
+              <td class="num">105</td>
+              <td class="num">n/a</td>
               <td><span class='badge bad'>+2.7%</span></td>
-              <td><span class='badge bad'>+67.6%</span></td>
+              <td><span class='badge bad'>+28.8%</span></td>
+              <td><span class='badge bad'>+44.3%</span></td>
+              <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
-              <td>Late Cancels</td>
+              <td class="metric-name">Late Cancels</td>
               <td class="num">295</td>
               <td class="num">257</td>
+              <td class="num">271</td>
+              <td class="num">262</td>
               <td class="num">n/a</td>
               <td><span class='badge bad'>+14.8%</span></td>
+              <td><span class='badge bad'>+8.9%</span></td>
+              <td><span class='badge bad'>+12.5%</span></td>
               <td><span class='badge neutral'>n/a</span></td>
             </tr>
             </tbody>
@@ -663,14 +1286,19 @@ tr.disc-high td { background: var(--warn-soft); }
 
 <section class="report-section" id="revenue-performance">
   <div class="container">
-    <div class="section-header">
-      <div class="section-header-left">
-        <span class="section-eyebrow">02 &middot; Revenue &amp; Sales Performance</span>
-        <h2 class="section-title">Memberships carry 47% of revenue, with healthy category diversification across the portfolio, and the studio&rsquo;s payment mix is diverse at 4 methods.</h2>
-        <p class="section-deck">July 2026 closed at <strong>&#8377;24.54L net</strong> on 349 transactions, an ATV of <strong>&#8377;7,393</strong>. Memberships and Class Packages together account for <strong>81% of revenue</strong>. Discount value of &#8377;1.70L represents 6.6% of gross. Payment mix: Custom (59%), Cash (21%), Stripe (14%).</p>
+    <div class="section-hero" data-num="02">
+      <div class="section-header">
+        <div class="section-header-left">
+          <span class="section-eyebrow">02 &middot; Commercial Revenue Performance</span>
+          <h2 class="section-title">Memberships carry 47% of revenue, with healthy category diversification across the portfolio, and the studio&rsquo;s payment mix is diverse at 4 methods.</h2>
+          <p class="section-deck">July 2026 closed at <strong>&#8377;24.54L net</strong> on 349 transactions, an ATV of <strong>&#8377;7,393</strong>. Memberships and Class Packages together account for <strong>81% of revenue</strong>. Discount value of &#8377;1.70L represents 6.6% of gross. Payment mix: Custom (59%), Cash (21%), Stripe (14%).</p>
+        </div>
+        <div class="section-header-right">
+          <div class="section-anchor">Section 2 / 07</div>
+        </div>
       </div>
-      <div class="section-anchor">Section 2 / 07</div>
     </div>
+    <div class="ai-slot" id="ai-slot-revenue-performance"></div>
 
     <div class="subsection">
       <h3 class="subsection-title">Sales by Category &mdash; revenue mix and unit economics</h3>
@@ -684,50 +1312,50 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Memberships anchor 47% of revenue.</div>
-        <div class="insight-text">Memberships contributed <strong>&#8377;11.59L (47%)</strong> of total net revenue on 31 units at an ATV of &#8377;37,385. Discount intensity is 10.4% (&#8377;1.27L of &#8377;12.23L gross). This is the highest-leverage line in the studio.</div>
+        <div class="insight-title">Memberships drives 47% of total revenue &mdash; Core Revenue Anchor.</div>
+        <div class="insight-text">Memberships contributed <strong>&#8377;11.59L (47%)</strong> on 31 units at ATV &#8377;37,385. Discount intensity is 10.4% (&#8377;1.27L). <br><strong>What this tells us:</strong> This category is the studio's primary financial foundation. However, high discount intensity is eroding margin yield. <br><strong>Strategic Action:</strong> Cap discounts at 5% to recover ~&#8377;65K/mo in net margin.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Class Packages contribute 34% of revenue.</div>
-        <div class="insight-text">65 units at &#8377;12,681 ATV produced <strong>&#8377;8.24L (34%)</strong>. Discount intensity is 4.3% &mdash; the cleanest line in the portfolio.</div>
+        <div class="insight-title">Class Packages contributes 34% of revenue &mdash; Secondary Revenue Engine.</div>
+        <div class="insight-text">65 units at &#8377;12,681 ATV produced <strong>&#8377;8.24L (34%)</strong>. Discount intensity: 4.3%. <br><strong>What this tells us:</strong> Solid revenue contribution with healthy unit economics. <br><strong>Strategic Action:</strong> Introduce multi-month package bundles to increase commitment length and lift ATV.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Sessions/Single Classes contribute 11% of revenue.</div>
-        <div class="insight-text">157 units at &#8377;1,695 ATV produced <strong>&#8377;2.66L (11%)</strong>. Discount intensity is 0.0% &mdash; the cleanest line in the portfolio.</div>
+        <div class="insight-title">Sessions/Single Classes contributes 11% of revenue &mdash; Secondary Revenue Engine.</div>
+        <div class="insight-text">157 units at &#8377;1,695 ATV produced <strong>&#8377;2.66L (11%)</strong>. Discount intensity: 0.0%. <br><strong>What this tells us:</strong> Solid revenue contribution with healthy unit economics. <br><strong>Strategic Action:</strong> Introduce multi-month package bundles to increase commitment length and lift ATV.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Privates is a minor but present line.</div>
-        <div class="insight-text">7 units at &#8377;11,247 ATV for &#8377;0.79L (3%). Discount intensity at 6.1% warrants review.</div>
+        <div class="insight-title">Privates (3% share) &mdash; Niche Line / Add-on Potential.</div>
+        <div class="insight-text">7 units at &#8377;11,247 ATV produced &#8377;0.79L (3%). Discount intensity: 6.1%. <br><strong>What this tells us:</strong> This is a secondary line with low volume penetration among active members. <br><strong>Strategic Action:</strong> Bundle this item as a complimentary add-on with core membership renewals to drive awareness.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">05</div>
       <div class="insight-body">
-        <div class="insight-title">Retail is a minor but present line.</div>
-        <div class="insight-text">81 units at &#8377;798 ATV for &#8377;0.65L (3%). Discount intensity is clean at 0.0%.</div>
+        <div class="insight-title">Retail (3% share) &mdash; Niche Line / Add-on Potential.</div>
+        <div class="insight-text">81 units at &#8377;798 ATV produced &#8377;0.65L (3%). Discount intensity: 0.0%. <br><strong>What this tells us:</strong> This is a secondary line with low volume penetration among active members. <br><strong>Strategic Action:</strong> Bundle this item as a complimentary add-on with core membership renewals to drive awareness.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">06</div>
       <div class="insight-body">
-        <div class="insight-title">Newcomers Special is a minor but present line.</div>
-        <div class="insight-text">17 units at &#8377;1,750 ATV for &#8377;0.30L (1%). Discount intensity is clean at 0.0%.</div>
+        <div class="insight-title">Newcomers Special (1% share) &mdash; Niche Line / Add-on Potential.</div>
+        <div class="insight-text">17 units at &#8377;1,750 ATV produced &#8377;0.30L (1%). Discount intensity: 0.0%. <br><strong>What this tells us:</strong> This is a secondary line with low volume penetration among active members. <br><strong>Strategic Action:</strong> Bundle this item as a complimentary add-on with core membership renewals to drive awareness.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">07</div>
       <div class="insight-body">
-        <div class="insight-title">Money Credits is a minor but present line.</div>
-        <div class="insight-text">34 units at &#8377;591 ATV for &#8377;0.20L (1%). Discount intensity is clean at 0.0%.</div>
+        <div class="insight-title">Money Credits (1% share) &mdash; Niche Line / Add-on Potential.</div>
+        <div class="insight-text">34 units at &#8377;591 ATV produced &#8377;0.20L (1%). Discount intensity: 0.0%. <br><strong>What this tells us:</strong> This is a secondary line with low volume penetration among active members. <br><strong>Strategic Action:</strong> Bundle this item as a complimentary add-on with core membership renewals to drive awareness.</div>
       </div>
     </div>
       </div>
@@ -857,43 +1485,43 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Studio Annual Unlimited Membership is the single largest revenue SKU.</div>
-        <div class="insight-text">3 units at &#8377;157,208 ATV produced <strong>&#8377;4.72L (19% of total)</strong>. Discount of &#8377;1.06L on &#8377;4.95L gross.</div>
+        <div class="insight-title">Studio Annual Unlimited Membership is the top revenue SKU (19% of total).</div>
+        <div class="insight-text">3 units at &#8377;157,208 ATV generated <strong>&#8377;4.72L (19%)</strong>. <br><strong>What this tells us:</strong> Highest product-market fit and willingness to pay among customers. <br><strong>Strategic Action:</strong> Cross-sell private coaching credits or retail add-ons at check-in to lift effective ticket size by 10%.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Studio 12 Class Package is a top-3 revenue driver.</div>
-        <div class="insight-text">23 units at &#8377;14,418 ATV for &#8377;3.32L (14%). Clean pricing.</div>
+        <div class="insight-title">Studio 12 Class Package (14% share) &mdash; Key Revenue Driver.</div>
+        <div class="insight-text">23 units at &#8377;14,418 ATV produced &#8377;3.32L (14%). Discount: &#8377;0.13L. <br><strong>What this tells us:</strong> Strong demand anchor for core member cohorts. <br><strong>Strategic Action:</strong> Optimize pricing structure and limit promotional discounts.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Studio 1 Month Unlimited Membership is a top-3 revenue driver.</div>
-        <div class="insight-text">15 units at &#8377;17,513 ATV for &#8377;2.63L (11%). Clean pricing.</div>
+        <div class="insight-title">Studio 1 Month Unlimited Membership (11% share) &mdash; Key Revenue Driver.</div>
+        <div class="insight-text">15 units at &#8377;17,513 ATV produced &#8377;2.63L (11%). Discount: &#8377;0.04L. <br><strong>What this tells us:</strong> Strong demand anchor for core member cohorts. <br><strong>Strategic Action:</strong> Optimize pricing structure and limit promotional discounts.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Studio 3 Month Unlimited Membership contributes 10% of revenue.</div>
-        <div class="insight-text">5 units at &#8377;49,217 ATV for &#8377;2.46L. Gross &#8377;2.58L, discount &#8377;0.08L.</div>
+        <div class="insight-title">Studio 3 Month Unlimited Membership (10% share) &mdash; Mid-Tier SKU.</div>
+        <div class="insight-text">5 units at &#8377;49,217 ATV generated &#8377;2.46L. Gross &#8377;2.58L, discount &#8377;0.08L. <br><strong>What this tells us:</strong> Steady volume driver supporting secondary member needs. <br><strong>Strategic Action:</strong> Test promotional upsell triggers to migrate buyers to higher-tier packages.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">05</div>
       <div class="insight-body">
-        <div class="insight-title">Studio 8 Class Package contributes 7% of revenue.</div>
-        <div class="insight-text">18 units at &#8377;9,933 ATV for &#8377;1.79L. Gross &#8377;1.88L, discount &#8377;0.05L.</div>
+        <div class="insight-title">Studio 8 Class Package (7% share) &mdash; Mid-Tier SKU.</div>
+        <div class="insight-text">18 units at &#8377;9,933 ATV generated &#8377;1.79L. Gross &#8377;1.88L, discount &#8377;0.05L. <br><strong>What this tells us:</strong> Steady volume driver supporting secondary member needs. <br><strong>Strategic Action:</strong> Test promotional upsell triggers to migrate buyers to higher-tier packages.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">06</div>
       <div class="insight-body">
-        <div class="insight-title">Studio Single Class contributes 6% of revenue.</div>
-        <div class="insight-text">81 units at &#8377;1,708 ATV for &#8377;1.38L. Gross &#8377;1.46L, discount &#8377;0.00L.</div>
+        <div class="insight-title">Studio Single Class (6% share) &mdash; Mid-Tier SKU.</div>
+        <div class="insight-text">81 units at &#8377;1,708 ATV generated &#8377;1.38L. Gross &#8377;1.46L, discount &#8377;0.00L. <br><strong>What this tells us:</strong> Steady volume driver supporting secondary member needs. <br><strong>Strategic Action:</strong> Test promotional upsell triggers to migrate buyers to higher-tier packages.</div>
       </div>
     </div>
       </div>
@@ -1022,43 +1650,43 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Top 2 sellers drove 53% of attributed revenue.</div>
-        <div class="insight-text">Vahishta Fitter and Akshay Rane together drove <strong>53% of attributed sales</strong>. </div>
+        <div class="insight-title">Top 2 Sellers drive 53% of attributed sales &mdash; Front-Desk Sales Concentration.</div>
+        <div class="insight-text">Vahishta Fitter and Akshay Rane generated <strong>53% of attributed revenue</strong> across 139 units. <br><strong>What this tells us:</strong> Sales performance relies heavily on key front-desk staff members. <br><strong>Strategic Action:</strong> Codify top seller sales scripts and objection-handling tactics to train the broader front-desk team.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Online / self-service transactions are 14% of gross.</div>
-        <div class="insight-text"><strong>&#8377;3.66L</strong> in 66 units came through with no attributed seller &mdash; these are online or self-service transactions. This is a healthy digital channel.</div>
+        <div class="insight-title">Online & Self-Service Channel: 14% of Gross Revenue.</div>
+        <div class="insight-text"><strong>&#8377;3.66L</strong> across 66 transactions processed without staff attribution. <br><strong>What this tells us:</strong> Indicates organic digital adoption by self-directed members. <br><strong>Strategic Action:</strong> Optimize website/app checkout flow to add instant package upsell recommendations.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Vahishta Fitter contributed 27% of gross revenue.</div>
-        <div class="insight-text">55 units at &#8377;12,465 ATV for &#8377;6.86L. Net revenue: &#8377;6.53L.</div>
+        <div class="insight-title">Vahishta Fitter: 27% of gross revenue (&#8377;6.86L).</div>
+        <div class="insight-text">55 transactions at ATV &#8377;12,465. Net: &#8377;6.53L. <br><strong>What this tells us:</strong> Consistent sales contributor to overall front-desk performance. <br><strong>Strategic Action:</strong> Provide targeted sales incentives for high-margin package conversions.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Akshay Rane contributed 26% of gross revenue.</div>
-        <div class="insight-text">84 units at &#8377;8,082 ATV for &#8377;6.79L. Net revenue: &#8377;6.47L.</div>
+        <div class="insight-title">Akshay Rane: 26% of gross revenue (&#8377;6.79L).</div>
+        <div class="insight-text">84 transactions at ATV &#8377;8,082. Net: &#8377;6.47L. <br><strong>What this tells us:</strong> Consistent sales contributor to overall front-desk performance. <br><strong>Strategic Action:</strong> Provide targeted sales incentives for high-margin package conversions.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">05</div>
       <div class="insight-body">
-        <div class="insight-title">Sheetal Kataria contributed 13% of gross revenue.</div>
-        <div class="insight-text">89 units at &#8377;3,714 ATV for &#8377;3.31L. Net revenue: &#8377;3.15L.</div>
+        <div class="insight-title">Sheetal Kataria: 13% of gross revenue (&#8377;3.31L).</div>
+        <div class="insight-text">89 transactions at ATV &#8377;3,714. Net: &#8377;3.15L. <br><strong>What this tells us:</strong> Consistent sales contributor to overall front-desk performance. <br><strong>Strategic Action:</strong> Provide targeted sales incentives for high-margin package conversions.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">06</div>
       <div class="insight-body">
-        <div class="insight-title">Tahira Sayyed contributed 9% of gross revenue.</div>
-        <div class="insight-text">66 units at &#8377;3,513 ATV for &#8377;2.32L. Net revenue: &#8377;2.21L.</div>
+        <div class="insight-title">Tahira Sayyed: 9% of gross revenue (&#8377;2.32L).</div>
+        <div class="insight-text">66 transactions at ATV &#8377;3,513. Net: &#8377;2.21L. <br><strong>What this tells us:</strong> Consistent sales contributor to overall front-desk performance. <br><strong>Strategic Action:</strong> Provide targeted sales incentives for high-margin package conversions.</div>
       </div>
     </div>
       </div>
@@ -1152,29 +1780,29 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Custom is the primary payment method at 59%.</div>
-        <div class="insight-text"><strong>&#8377;15.29L</strong> (59% of gross) processed via custom. 230 units at &#8377;6,650 average ticket.</div>
+        <div class="insight-title">Custom is the primary payment channel (59% of gross).</div>
+        <div class="insight-text">Processed <strong>&#8377;15.29L</strong> (59% of total) across 230 transactions at ATV &#8377;6,650. <br><strong>What this tells us:</strong> Members overwhelmingly prefer digital processing via Custom. <br><strong>Strategic Action:</strong> Enable automated recurring mandate billing for auto-renewals to reduce churn from expired cards.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Cash accounts for 21% of gross.</div>
-        <div class="insight-text">&#8377;5.34L across 79 units. A secondary channel with meaningful volume.</div>
+        <div class="insight-title">Cash accounts for 21% of gross revenue.</div>
+        <div class="insight-text">Processed &#8377;5.34L across 79 transactions. <br><strong>What this tells us:</strong> Secondary payment avenue supporting specific customer preferences. <br><strong>Strategic Action:</strong> Ensure frictionless checkout options across all digital payment modes.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Stripe accounts for 14% of gross.</div>
-        <div class="insight-text">&#8377;3.66L across 65 units. A smaller but present channel.</div>
+        <div class="insight-title">Stripe accounts for 14% of gross revenue.</div>
+        <div class="insight-text">Processed &#8377;3.66L across 65 transactions. <br><strong>What this tells us:</strong> Secondary payment avenue supporting specific customer preferences. <br><strong>Strategic Action:</strong> Ensure frictionless checkout options across all digital payment modes.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Multiple Payment Methods accounts for 6% of gross.</div>
-        <div class="insight-text">&#8377;1.50L across 23 units. A smaller but present channel.</div>
+        <div class="insight-title">Multiple Payment Methods accounts for 6% of gross revenue.</div>
+        <div class="insight-text">Processed &#8377;1.50L across 23 transactions. <br><strong>What this tells us:</strong> Secondary payment avenue supporting specific customer preferences. <br><strong>Strategic Action:</strong> Ensure frictionless checkout options across all digital payment modes.</div>
       </div>
     </div>
       </div>
@@ -1231,14 +1859,19 @@ tr.disc-high td { background: var(--warn-soft); }
 
 <section class="report-section" id="conversion-funnel">
   <div class="container">
-    <div class="section-header">
-      <div class="section-header-left">
-        <span class="section-eyebrow">03 &middot; New Client Conversion Funnel</span>
-        <h2 class="section-title">151 leads &rarr; 121 trials &rarr; 15 conversions &rarr; 32 retained. The funnel converts at 9.9% &mdash; conversion mechanics need attention alongside pipeline volume.</h2>
-        <p class="section-deck">The conversion story in July 2026: 151 leads generated, 121 first visits / trials, 15 converted (9.9% conversion rate), and 32 retained (26.4% of trials). Leads are +18.0% MoM, conversions -51.6% MoM. The referral channel is the highest-quality lead source. Below we walk the funnel source-by-source with all available metrics.</p>
+    <div class="section-hero" data-num="03">
+      <div class="section-header">
+        <div class="section-header-left">
+          <span class="section-eyebrow">03 &middot; Acquisition Funnel Performance</span>
+          <h2 class="section-title">151 leads &rarr; 121 trials &rarr; 32 conversions &rarr; 32 retained. The funnel converts at 26.4% &mdash; the constraint is top-of-pipeline volume, not conversion mechanics.</h2>
+          <p class="section-deck">The conversion story in July 2026: 151 leads generated, 121 first visits / trials, 32 converted (26.4% conversion rate), and 32 retained (26.4% of trials). Leads are +18.0% MoM, conversions n/a MoM. The referral channel is the highest-quality lead source. Below we walk the funnel source-by-source with all available metrics.</p>
+        </div>
+        <div class="section-header-right">
+          <div class="section-anchor">Section 3 / 07</div>
+        </div>
       </div>
-      <div class="section-anchor">Section 3 / 07</div>
     </div>
+    <div class="ai-slot" id="ai-slot-conversion-funnel"></div>
 
     <div class="subsection">
       <h3 class="subsection-title">Funnel at a glance &mdash; stage-by-stage view</h3>
@@ -1257,9 +1890,9 @@ tr.disc-high td { background: var(--warn-soft); }
         <div class="funnel-stage-sub">-6.2% MoM</div>
       </div>
       <div class="funnel-stage conv">
-        <div class="funnel-stage-num">15</div>
+        <div class="funnel-stage-num">32</div>
         <div class="funnel-stage-label">Converted</div>
-        <div class="funnel-stage-sub">-51.6% MoM &middot; 9.9% conv rate</div>
+        <div class="funnel-stage-sub">n/a MoM &middot; 26.4% conv rate</div>
       </div>
       <div class="funnel-stage conv">
         <div class="funnel-stage-num">32</div>
@@ -1278,43 +1911,43 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Incoming call is the highest-quality channel at 37.5% conversion.</div>
-        <div class="insight-text">8 leads &rarr; 3 conversions (37.5%). This is 3.8&times; the portfolio average of 9.9%.</div>
+        <div class="insight-title">Incoming call is the highest-quality acquisition channel (37.5% conversion).</div>
+        <div class="insight-text">8 leads &rarr; 3 conversions (37.5% vs portfolio avg 26.4%). <br><strong>What this tells us:</strong> High prospect intent and strong product-market fit. <br><strong>Strategic Action:</strong> Reallocate ad budget toward this channel to maximize qualified pipeline.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Hosted Class is the largest lead source at 34 leads.</div>
-        <div class="insight-text">34 leads (22.5% of total) &rarr; 1 conversions (2.9%). High volume, but conversion needs work.</div>
+        <div class="insight-title">Hosted Class drives top volume with 34 leads (22.5% of total).</div>
+        <div class="insight-text">34 leads &rarr; 1 conversions (2.9% conversion rate). <br><strong>What this tells us:</strong> Primary top-of-funnel entry point, though conversion efficiency needs refinement. <br><strong>Strategic Action:</strong> Improve lead qualification criteria before passing inquiries to front-desk sales.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">2 sources generated zero conversions.</div>
-        <div class="insight-text">Website (25 leads), Walkin (7 leads) &mdash; these channels produced leads but none converted. Either the lead quality is poor or the follow-up process is broken.</div>
+        <div class="insight-title">2 Channels Generated Zero Conversions — Budget Waste.</div>
+        <div class="insight-text">Website (25 leads), Walkin (7 leads) produced leads but 0 converted memberships. <br><strong>What this tells us:</strong> Either lead quality is low or follow-up response times are failing. <br><strong>Strategic Action:</strong> Audit ad targeting for these channels or pause spend immediately.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">32 of 121 trials retained (26.4%).</div>
-        <div class="insight-text">Retention rate of 26.4% means 89 trialists did not return. Retention is healthy.</div>
+        <div class="insight-title">Trial Retention Rate at 26.4% (32 of 121 retained).</div>
+        <div class="insight-text">Retention rate indicates 89 trialists dropped off after initial visits. <br><strong>What this tells us:</strong> Trial experience engagement dictates long-term member conversion. <br><strong>Strategic Action:</strong> Introduce mid-trial coach check-ins to build rapport before trial expiration.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">05</div>
       <div class="insight-body">
-        <div class="insight-title">Conversion rate -14.3pp MoM, -2.7pp vs baseline.</div>
-        <div class="insight-text">The 9.9% conversion rate is -14.3pp vs June and -2.7pp vs the Jan&ndash;Mar baseline of 12.6%.</div>
+        <div class="insight-title">Conversion rate +0.0pp MoM, +0.0pp vs baseline.</div>
+        <div class="insight-text">The 26.4% conversion rate is +0.0pp vs Jun 2026 and +0.0pp vs the 2026 Avg (excl. Jul) baseline of 0.0%.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">06</div>
       <div class="insight-body">
         <div class="insight-title">Lead pipeline at 151 &mdash; +18.0% MoM.</div>
-        <div class="insight-text">Pipeline is growing vs June. This is a positive signal for next month's conversion potential.</div>
+        <div class="insight-text">Pipeline is growing vs Jun 2026. This is a positive signal for next month's conversion potential.</div>
       </div>
     </div>
       </div>
@@ -1436,29 +2069,29 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Trial Class: 48 trials (40%).</div>
-        <div class="insight-text">The dominant trial type. 48 first visits through this channel.</div>
+        <div class="insight-title">Trial Class: 48 trialists (40% share) &mdash; Primary Entry Channel.</div>
+        <div class="insight-text">48 first-time trial visits recorded through this channel. <br><strong>What this tells us:</strong> Primary prospect onboarding pathway driving trial acquisition. <br><strong>Strategic Action:</strong> Optimize front-desk onboarding touchpoints for this specific trial cohort.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Referral Class: 24 trials (20%).</div>
-        <div class="insight-text">A secondary trial channel. 24 first visits through this channel.</div>
+        <div class="insight-title">Referral Class: 24 trialists (20% share) &mdash; Trial Channel.</div>
+        <div class="insight-text">24 first-time trial visits recorded through this channel. <br><strong>What this tells us:</strong> Secondary onboarding pathway with specific prospect appeal. <br><strong>Strategic Action:</strong> Cross-promote trial upgrades.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Hosted Class: 24 trials (20%).</div>
-        <div class="insight-text">A secondary trial channel. 24 first visits through this channel.</div>
+        <div class="insight-title">Hosted Class: 24 trialists (20% share) &mdash; Trial Channel.</div>
+        <div class="insight-text">24 first-time trial visits recorded through this channel. <br><strong>What this tells us:</strong> Secondary onboarding pathway with specific prospect appeal. <br><strong>Strategic Action:</strong> Cross-promote trial upgrades.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Paid First Visit: 22 trials (18%).</div>
-        <div class="insight-text">A secondary trial channel. 22 first visits through this channel.</div>
+        <div class="insight-title">Paid First Visit: 22 trialists (18% share) &mdash; Trial Channel.</div>
+        <div class="insight-text">22 first-time trial visits recorded through this channel. <br><strong>What this tells us:</strong> Secondary onboarding pathway with specific prospect appeal. <br><strong>Strategic Action:</strong> Cross-promote trial upgrades.</div>
       </div>
     </div>
       </div>
@@ -1515,18 +2148,23 @@ tr.disc-high td { background: var(--warn-soft); }
 
 <section class="report-section" id="sessions">
   <div class="container">
-    <div class="section-header">
-      <div class="section-header-left">
-        <span class="section-eyebrow">04 &middot; Sessions &amp; Class Performance</span>
-        <h2 class="section-title">368 sessions, 2,432 visits, 47.3% fill &mdash; Strength Lab (Full Body) is the supply-constrained hero at 89.0% fill &mdash; Studio Juniors Class at 2.2% is the structural underperformer.</h2>
-        <p class="section-deck">The session portfolio delivered <strong>&#8377;21.03L of session-attributed revenue</strong> across 40 distinct class formats in July. Average class size is 6.6 visits per session. Strength Lab (Full Body) fill rate at 89.0% makes it the supply-constrained hero. Studio Juniors Class at 2.2% fill is the structural underperformer.</p>
+    <div class="section-hero" data-num="04">
+      <div class="section-header">
+        <div class="section-header-left">
+          <span class="section-eyebrow">04 &middot; Delivery, Formats &amp; Instructor Performance</span>
+          <h2 class="section-title">368 sessions, 2,432 visits, 47.3% fill &mdash; Strength Lab (Full Body) is the supply-constrained hero at 89.0% fill &mdash; Studio Juniors Class at 2.2% is the structural underperformer.</h2>
+          <p class="section-deck">The session portfolio delivered <strong>&#8377;21.03L of session-attributed revenue</strong> across 40 distinct class formats in July. Average class size is 6.6 visits per session. Strength Lab (Full Body) fill rate at 89.0% makes it the supply-constrained hero. Studio Juniors Class at 2.2% fill is the structural underperformer.</p>
+        </div>
+        <div class="section-header-right">
+          <div class="section-anchor">Section 4 / 07</div>
+        </div>
       </div>
-      <div class="section-anchor">Section 4 / 07</div>
     </div>
+    <div class="ai-slot" id="ai-slot-sessions"></div>
 
     <div class="subsection">
-      <h3 class="subsection-title">Format-level view &mdash; Studio, PowerCycle, Strength</h3>
-      <p class="subsection-deck">At the format level, the breakdown shows sessions, visits, capacity, revenue, and fill rate for each major format category.</p>
+      <h3 class="subsection-title">Format-level view &mdash; Barre, PowerCycle, Strength Lab</h3>
+      <p class="subsection-deck">At the format level, the breakdown shows sessions, visits, capacity, revenue, and fill rate for each of the 3 formats: Barre, PowerCycle, and Strength Lab.</p>
     </div>
 
     <div class="split-grid">
@@ -1536,36 +2174,36 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Studio is the dominant format at 58% of sessions.</div>
-        <div class="insight-text">212 sessions (58% of total) delivered 1431 visits (59% of total) at 38.3% fill rate. Revenue: &#8377;12.90L.</div>
+        <div class="insight-title">Studio anchors the schedule (58% of sessions, 38.3% fill).</div>
+        <div class="insight-text">212 sessions delivered 1431 visits (59% of total) and &#8377;12.90L revenue. <br><strong>What this tells us:</strong> Primary class demand driver for the studio. <br><strong>Strategic Action:</strong> Maintain current schedule while testing new peak time slots.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">powerCycle: 90 sessions at 65.0% fill.</div>
-        <div class="insight-text">24% of sessions, 24% of visits. Healthy fill. Revenue: &#8377;5.15L.</div>
+        <div class="insight-title">powerCycle running at 65.0% fill (90 sessions).</div>
+        <div class="insight-text">90 sessions (24% of total) generated 585 visits and &#8377;5.15L. <br><strong>What this tells us:</strong> High fill rate indicates strong format demand. <br><strong>Strategic Action:</strong> Consider adding more classes for this format.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Strength: 62 sessions at 83.9% fill.</div>
-        <div class="insight-text">17% of sessions, 15% of visits. Supply-constrained. Revenue: &#8377;2.91L.</div>
+        <div class="insight-title">Strength running at 83.9% fill (62 sessions).</div>
+        <div class="insight-text">62 sessions (17% of total) generated 364 visits and &#8377;2.91L. <br><strong>What this tells us:</strong> High fill rate indicates strong format demand. <br><strong>Strategic Action:</strong> Consider adding more classes for this format.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Physique: 3 sessions at 66.0% fill.</div>
-        <div class="insight-text">1% of sessions, 1% of visits. Healthy fill. Revenue: &#8377;0.00L.</div>
+        <div class="insight-title">Physique running at 66.0% fill (3 sessions).</div>
+        <div class="insight-text">3 sessions (1% of total) generated 33 visits and &#8377;0.00L. <br><strong>What this tells us:</strong> High fill rate indicates strong format demand. <br><strong>Strategic Action:</strong> Consider adding more classes for this format.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">05</div>
       <div class="insight-body">
-        <div class="insight-title">Mobility: 1 sessions at 95.0% fill.</div>
-        <div class="insight-text">0% of sessions, 1% of visits. Supply-constrained. Revenue: &#8377;0.07L.</div>
+        <div class="insight-title">Mobility running at 95.0% fill (1 sessions).</div>
+        <div class="insight-text">1 sessions (0% of total) generated 19 visits and &#8377;0.07L. <br><strong>What this tells us:</strong> High fill rate indicates strong format demand. <br><strong>Strategic Action:</strong> Consider adding more classes for this format.</div>
       </div>
     </div>
       </div>
@@ -1578,66 +2216,94 @@ tr.disc-high td { background: var(--warn-soft); }
               <tr>
                 <th>Format</th>
                 <th>Sessions</th>
-                <th>Visits</th>
-                <th>Capacity</th>
+                <th>Class Avg</th>
                 <th>Fill %</th>
-                <th>Avg Size</th>
-                <th>Revenue</th>
+                <th>Cancels</th>
+                <th>New Members</th>
+                <th>Converted</th>
+                <th>Conv %</th>
+                <th>Retained</th>
+                <th>Retention %</th>
+                <th>Net Rev (₹)</th>
               </tr>
             </thead>
             <tbody>
             <tr>
-              <td>Studio</td>
+              <td><strong>Studio</strong></td>
               <td class="num">212</td>
-              <td class="num">1431</td>
-              <td class="num">3738</td>
-              <td class="num">38.3%</td>
               <td class="num">6.8</td>
+              <td class="num">38.3%</td>
+              <td class="num">114</td>
+              <td class="num">71</td>
+              <td class="num">18</td>
+              <td class="num">25.4%</td>
+              <td class="num">18</td>
+              <td class="num">25.4%</td>
               <td class="num">&#8377;12.90L</td>
             </tr>
             <tr>
-              <td>powerCycle</td>
+              <td><strong>powerCycle</strong></td>
               <td class="num">90</td>
-              <td class="num">585</td>
-              <td class="num">900</td>
-              <td class="num">65.0%</td>
               <td class="num">6.5</td>
+              <td class="num">65.0%</td>
+              <td class="num">46</td>
+              <td class="num">29</td>
+              <td class="num">7</td>
+              <td class="num">24.1%</td>
+              <td class="num">7</td>
+              <td class="num">24.1%</td>
               <td class="num">&#8377;5.15L</td>
             </tr>
             <tr>
-              <td>Strength</td>
+              <td><strong>Strength</strong></td>
               <td class="num">62</td>
-              <td class="num">364</td>
-              <td class="num">434</td>
-              <td class="num">83.9%</td>
               <td class="num">5.9</td>
+              <td class="num">83.9%</td>
+              <td class="num">29</td>
+              <td class="num">18</td>
+              <td class="num">4</td>
+              <td class="num">22.2%</td>
+              <td class="num">4</td>
+              <td class="num">22.2%</td>
               <td class="num">&#8377;2.91L</td>
             </tr>
             <tr>
-              <td>Physique</td>
+              <td><strong>Physique</strong></td>
               <td class="num">3</td>
-              <td class="num">33</td>
-              <td class="num">50</td>
-              <td class="num">66.0%</td>
               <td class="num">11.0</td>
+              <td class="num">66.0%</td>
+              <td class="num">2</td>
+              <td class="num">1</td>
+              <td class="num">0</td>
+              <td class="num">0.0%</td>
+              <td class="num">0</td>
+              <td class="num">0.0%</td>
               <td class="num">&#8377;0.00L</td>
             </tr>
             <tr>
-              <td>Mobility</td>
+              <td><strong>Mobility</strong></td>
               <td class="num">1</td>
-              <td class="num">19</td>
-              <td class="num">20</td>
-              <td class="num">95.0%</td>
               <td class="num">19.0</td>
+              <td class="num">95.0%</td>
+              <td class="num">1</td>
+              <td class="num">1</td>
+              <td class="num">0</td>
+              <td class="num">0.0%</td>
+              <td class="num">0</td>
+              <td class="num">0.0%</td>
               <td class="num">&#8377;0.07L</td>
             </tr>
             <tr class="total-row">
               <td>Total</td>
               <td class="num">368</td>
-              <td class="num">2432</td>
-              <td class="num">5142</td>
-              <td class="num">47.3%</td>
               <td class="num">6.6</td>
+              <td class="num">47.3%</td>
+              <td class="num">192</td>
+              <td class="num">120</td>
+              <td class="num">29</td>
+              <td class="num">24.2%</td>
+              <td class="num">29</td>
+              <td class="num">24.2%</td>
               <td class="num">&#8377;21.03L</td>
             </tr>
             </tbody>
@@ -1658,36 +2324,22 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Strength Lab (Full Body) is the highest-fill class at 89.0%.</div>
-        <div class="insight-text">22 sessions, 137 visits against 154 capacity. Supply-constrained &mdash; every additional session would likely fill.</div>
+        <div class="insight-title">Strength Lab (Full Body) is the highest-fill class at 89.0% fill.</div>
+        <div class="insight-text">22 sessions, 137 visits against 154 capacity. <br><strong>What this tells us:</strong> Exceptional member demand for this specific class slot. <br><strong>Strategic Action:</strong> Add a duplicate session adjacent to this time slot to capture waitlisted demand.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Studio Juniors Class at 2.2% fill is the structural underperformer.</div>
-        <div class="insight-text">18 sessions, 7 visits against 320 capacity. Consider discontinuing or consolidating.</div>
+        <div class="insight-title">Studio Juniors Class (2.2% fill) is underperforming schedule benchmarks.</div>
+        <div class="insight-text">18 sessions, 7 visits against 320 capacity. <br><strong>What this tells us:</strong> Poor slot placement or low interest in this specific class time. <br><strong>Strategic Action:</strong> Move or consolidate underperforming sessions to higher-traffic time windows.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Studio Barre 57 is the highest-volume class with 74 sessions.</div>
-        <div class="insight-text">74 sessions, 508 visits at 42.4% fill. Revenue: &#8377;5.00L.</div>
-      </div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-num">04</div>
-      <div class="insight-body">
-        <div class="insight-title">Studio Barre 57 is the revenue leader at &#8377;5.00L.</div>
-        <div class="insight-text">Revenue of &#8377;5.00L from 74 sessions. That is &#8377;984 per visit.</div>
-      </div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-num">05</div>
-      <div class="insight-body">
-        <div class="insight-title">40 distinct class formats in the schedule.</div>
-        <div class="insight-text">The portfolio spans 40 class types. A diverse schedule. Total of 368 sessions across all formats.</div>
+        <div class="insight-title">Studio Barre 57 leads class volume with 74 sessions (&#8377;5.00L revenue).</div>
+        <div class="insight-text">508 total visits at 42.4% fill rate. <br><strong>What this tells us:</strong> Core volume generator for the overall weekly schedule. <br><strong>Strategic Action:</strong> Ensure top coaches are assigned to anchor these high-volume sessions.</div>
       </div>
     </div>
       </div>
@@ -1699,373 +2351,537 @@ tr.disc-high td { background: var(--warn-soft); }
             <thead>
               <tr>
                 <th>Class</th>
+                <th>Format</th>
                 <th>Sessions</th>
                 <th>Visits</th>
                 <th>Capacity</th>
                 <th>Fill %</th>
                 <th>Avg Size</th>
-                <th>Revenue</th>
+                <th>Cancels</th>
+                <th>Unique Attendees</th>
+                <th>Gross Rev</th>
+                <th>Net Rev</th>
               </tr>
             </thead>
             <tbody>
             <tr>
-              <td>Studio Barre 57</td>
+              <td><strong>Studio Barre 57</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">74</td>
               <td class="num">508</td>
               <td class="num">1198</td>
               <td class="num">42.4%</td>
               <td class="num">6.9</td>
+              <td class="num">35</td>
+              <td class="num">330</td>
+              <td class="num">&#8377;5.25L</td>
               <td class="num">&#8377;5.00L</td>
             </tr>
             <tr>
-              <td>powerCycle</td>
+              <td><strong>powerCycle</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">58</td>
               <td class="num">367</td>
               <td class="num">580</td>
               <td class="num">63.3%</td>
               <td class="num">6.3</td>
+              <td class="num">25</td>
+              <td class="num">238</td>
+              <td class="num">&#8377;3.47L</td>
               <td class="num">&#8377;3.31L</td>
             </tr>
             <tr>
-              <td>Studio FIT</td>
+              <td><strong>Studio FIT</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">25</td>
               <td class="num">228</td>
               <td class="num">425</td>
               <td class="num">53.6%</td>
               <td class="num">9.1</td>
+              <td class="num">15</td>
+              <td class="num">148</td>
+              <td class="num">&#8377;1.89L</td>
               <td class="num">&#8377;1.80L</td>
             </tr>
             <tr>
-              <td>Strength Lab (Pull) </td>
+              <td><strong>Strength Lab (Pull) </strong></td>
+              <td><span class="meta-pill">Strength Lab</span></td>
               <td class="num">24</td>
               <td class="num">134</td>
               <td class="num">168</td>
               <td class="num">79.8%</td>
               <td class="num">5.6</td>
+              <td class="num">9</td>
+              <td class="num">87</td>
+              <td class="num">&#8377;1.11L</td>
               <td class="num">&#8377;1.06L</td>
             </tr>
             <tr>
-              <td>Strength Lab (Full Body)</td>
+              <td><strong>Strength Lab (Full Body)</strong></td>
+              <td><span class="meta-pill">Strength Lab</span></td>
               <td class="num">22</td>
               <td class="num">137</td>
               <td class="num">154</td>
               <td class="num">89.0%</td>
               <td class="num">6.2</td>
+              <td class="num">9</td>
+              <td class="num">89</td>
+              <td class="num">&#8377;1.15L</td>
               <td class="num">&#8377;1.10L</td>
             </tr>
             <tr>
-              <td>Studio Mat 57</td>
+              <td><strong>Studio Mat 57</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">21</td>
               <td class="num">251</td>
               <td class="num">420</td>
               <td class="num">59.8%</td>
               <td class="num">12.0</td>
+              <td class="num">17</td>
+              <td class="num">163</td>
+              <td class="num">&#8377;2.09L</td>
               <td class="num">&#8377;1.99L</td>
             </tr>
             <tr>
-              <td>Studio Cardio Barre</td>
+              <td><strong>Studio Cardio Barre</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">20</td>
               <td class="num">137</td>
               <td class="num">400</td>
               <td class="num">34.2%</td>
               <td class="num">6.8</td>
+              <td class="num">9</td>
+              <td class="num">89</td>
+              <td class="num">&#8377;1.30L</td>
               <td class="num">&#8377;1.24L</td>
             </tr>
             <tr>
-              <td>Studio Juniors Class</td>
+              <td><strong>Studio Juniors Class</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">18</td>
               <td class="num">7</td>
               <td class="num">320</td>
               <td class="num">2.2%</td>
               <td class="num">0.4</td>
+              <td class="num">0</td>
+              <td class="num">4</td>
+              <td class="num">&#8377;0.13L</td>
               <td class="num">&#8377;0.12L</td>
             </tr>
             <tr>
-              <td>Strength Lab (Push) </td>
+              <td><strong>Strength Lab (Push) </strong></td>
+              <td><span class="meta-pill">Strength Lab</span></td>
               <td class="num">16</td>
               <td class="num">93</td>
               <td class="num">112</td>
               <td class="num">83.0%</td>
               <td class="num">5.8</td>
+              <td class="num">6</td>
+              <td class="num">60</td>
+              <td class="num">&#8377;0.79L</td>
               <td class="num">&#8377;0.75L</td>
             </tr>
             <tr>
-              <td>Studio Back Body Blaze Express</td>
+              <td><strong>Studio Back Body Blaze Express</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">10</td>
               <td class="num">70</td>
               <td class="num">200</td>
               <td class="num">35.0%</td>
               <td class="num">7.0</td>
+              <td class="num">4</td>
+              <td class="num">45</td>
+              <td class="num">&#8377;0.67L</td>
               <td class="num">&#8377;0.64L</td>
             </tr>
             <tr>
-              <td>Studio Back Body Blaze</td>
+              <td><strong>Studio Back Body Blaze</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">10</td>
               <td class="num">43</td>
               <td class="num">160</td>
               <td class="num">26.9%</td>
               <td class="num">4.3</td>
+              <td class="num">3</td>
+              <td class="num">27</td>
+              <td class="num">&#8377;0.47L</td>
               <td class="num">&#8377;0.45L</td>
             </tr>
             <tr>
-              <td>Studio Cardio Barre Plus</td>
+              <td><strong>Studio Cardio Barre Plus</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">9</td>
               <td class="num">39</td>
               <td class="num">148</td>
               <td class="num">26.4%</td>
               <td class="num">4.3</td>
+              <td class="num">2</td>
+              <td class="num">25</td>
+              <td class="num">&#8377;0.35L</td>
               <td class="num">&#8377;0.33L</td>
             </tr>
             <tr>
-              <td>Studio Cardio Barre Express</td>
+              <td><strong>Studio Cardio Barre Express</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">9</td>
               <td class="num">43</td>
               <td class="num">180</td>
               <td class="num">23.9%</td>
               <td class="num">4.8</td>
+              <td class="num">3</td>
+              <td class="num">27</td>
+              <td class="num">&#8377;0.46L</td>
               <td class="num">&#8377;0.44L</td>
             </tr>
             <tr>
-              <td>Studio Mat 57 Express</td>
+              <td><strong>Studio Mat 57 Express</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">8</td>
               <td class="num">55</td>
               <td class="num">127</td>
               <td class="num">43.3%</td>
               <td class="num">6.9</td>
+              <td class="num">3</td>
+              <td class="num">35</td>
+              <td class="num">&#8377;0.60L</td>
               <td class="num">&#8377;0.57L</td>
             </tr>
             <tr>
-              <td>Studio Recovery</td>
+              <td><strong>Studio Recovery</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">4</td>
               <td class="num">20</td>
               <td class="num">80</td>
               <td class="num">25.0%</td>
               <td class="num">5.0</td>
+              <td class="num">1</td>
+              <td class="num">13</td>
+              <td class="num">&#8377;0.11L</td>
               <td class="num">&#8377;0.11L</td>
             </tr>
             <tr>
-              <td>powerCycle (G.O.A.T Hits)</td>
+              <td><strong>powerCycle (G.O.A.T Hits)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">4</td>
               <td class="num">34</td>
               <td class="num">40</td>
               <td class="num">85.0%</td>
               <td class="num">8.5</td>
+              <td class="num">2</td>
+              <td class="num">22</td>
+              <td class="num">&#8377;0.26L</td>
               <td class="num">&#8377;0.25L</td>
             </tr>
             <tr>
-              <td>powerCycle Express</td>
+              <td><strong>powerCycle Express</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">3</td>
               <td class="num">25</td>
               <td class="num">30</td>
               <td class="num">83.3%</td>
               <td class="num">8.3</td>
+              <td class="num">1</td>
+              <td class="num">16</td>
+              <td class="num">&#8377;0.25L</td>
               <td class="num">&#8377;0.24L</td>
             </tr>
             <tr>
-              <td>powerCycle (Seoul Sprinting)</td>
+              <td><strong>powerCycle (Seoul Sprinting)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">3</td>
               <td class="num">25</td>
               <td class="num">30</td>
               <td class="num">83.3%</td>
               <td class="num">8.3</td>
+              <td class="num">1</td>
+              <td class="num">16</td>
+              <td class="num">&#8377;0.18L</td>
               <td class="num">&#8377;0.18L</td>
             </tr>
             <tr>
-              <td>powerCycle (Holy Hip Hop)</td>
+              <td><strong>powerCycle (Holy Hip Hop)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">3</td>
               <td class="num">24</td>
               <td class="num">30</td>
               <td class="num">80.0%</td>
               <td class="num">8.0</td>
+              <td class="num">1</td>
+              <td class="num">15</td>
+              <td class="num">&#8377;0.23L</td>
               <td class="num">&#8377;0.22L</td>
             </tr>
             <tr>
-              <td>powerCycle (Kebab & Cardio)</td>
+              <td><strong>powerCycle (Kebab & Cardio)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">2</td>
               <td class="num">17</td>
               <td class="num">20</td>
               <td class="num">85.0%</td>
               <td class="num">8.5</td>
+              <td class="num">1</td>
+              <td class="num">11</td>
+              <td class="num">&#8377;0.16L</td>
               <td class="num">&#8377;0.15L</td>
             </tr>
             <tr>
-              <td>powerCycle (K -pop vs J pop)</td>
+              <td><strong>powerCycle (K -pop vs J pop)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">2</td>
               <td class="num">7</td>
               <td class="num">20</td>
               <td class="num">35.0%</td>
               <td class="num">3.5</td>
+              <td class="num">0</td>
+              <td class="num">4</td>
+              <td class="num">&#8377;0.07L</td>
               <td class="num">&#8377;0.07L</td>
             </tr>
             <tr>
-              <td>Studio Amped Up!</td>
+              <td><strong>Studio Amped Up!</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">2</td>
               <td class="num">13</td>
               <td class="num">40</td>
               <td class="num">32.5%</td>
               <td class="num">6.5</td>
+              <td class="num">0</td>
+              <td class="num">8</td>
+              <td class="num">&#8377;0.10L</td>
               <td class="num">&#8377;0.09L</td>
             </tr>
             <tr>
-              <td>powerCycle (Om My Watts)</td>
+              <td><strong>powerCycle (Om My Watts)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">2</td>
               <td class="num">16</td>
               <td class="num">20</td>
               <td class="num">80.0%</td>
               <td class="num">8.0</td>
+              <td class="num">1</td>
+              <td class="num">10</td>
+              <td class="num">&#8377;0.15L</td>
               <td class="num">&#8377;0.14L</td>
             </tr>
             <tr>
-              <td>powerCycle (Techno Trek)</td>
+              <td><strong>powerCycle (Techno Trek)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">2</td>
               <td class="num">6</td>
               <td class="num">20</td>
               <td class="num">30.0%</td>
               <td class="num">3.0</td>
+              <td class="num">0</td>
+              <td class="num">3</td>
+              <td class="num">&#8377;0.06L</td>
               <td class="num">&#8377;0.05L</td>
             </tr>
             <tr>
-              <td>powerCycle </td>
+              <td><strong>powerCycle </strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">2</td>
               <td class="num">6</td>
               <td class="num">20</td>
               <td class="num">30.0%</td>
               <td class="num">3.0</td>
+              <td class="num">0</td>
+              <td class="num">3</td>
+              <td class="num">&#8377;0.07L</td>
               <td class="num">&#8377;0.07L</td>
             </tr>
             <tr>
-              <td>powerCycle  (Kebab & Cardio)</td>
+              <td><strong>powerCycle  (Kebab & Cardio)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">5</td>
               <td class="num">10</td>
               <td class="num">50.0%</td>
               <td class="num">5.0</td>
+              <td class="num">0</td>
+              <td class="num">3</td>
+              <td class="num">&#8377;0.03L</td>
               <td class="num">&#8377;0.03L</td>
             </tr>
             <tr>
-              <td>Physique 57 X Drishni's Birthday Class</td>
+              <td><strong>Physique 57 X Drishni's Birthday Class</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">1</td>
               <td class="num">10</td>
               <td class="num">20</td>
               <td class="num">50.0%</td>
               <td class="num">10.0</td>
+              <td class="num">0</td>
+              <td class="num">6</td>
+              <td class="num">&#8377;0.00L</td>
               <td class="num">&#8377;0.00L</td>
             </tr>
             <tr>
-              <td>Studio Amped Up! (Progressive Overload)</td>
+              <td><strong>Studio Amped Up! (Progressive Overload)</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">1</td>
               <td class="num">10</td>
               <td class="num">20</td>
               <td class="num">50.0%</td>
               <td class="num">10.0</td>
+              <td class="num">0</td>
+              <td class="num">6</td>
+              <td class="num">&#8377;0.08L</td>
               <td class="num">&#8377;0.08L</td>
             </tr>
             <tr>
-              <td>powerCycle (Sheikh it off)</td>
+              <td><strong>powerCycle (Sheikh it off)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">7</td>
               <td class="num">10</td>
               <td class="num">70.0%</td>
               <td class="num">7.0</td>
+              <td class="num">0</td>
+              <td class="num">4</td>
+              <td class="num">&#8377;0.06L</td>
               <td class="num">&#8377;0.06L</td>
             </tr>
             <tr>
-              <td>Mobility Workshop </td>
+              <td><strong>Mobility Workshop </strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">1</td>
               <td class="num">19</td>
               <td class="num">20</td>
               <td class="num">95.0%</td>
               <td class="num">19.0</td>
+              <td class="num">1</td>
+              <td class="num">12</td>
+              <td class="num">&#8377;0.07L</td>
               <td class="num">&#8377;0.07L</td>
             </tr>
             <tr>
-              <td>Studio Amped Up! (Ball for All)</td>
+              <td><strong>Studio Amped Up! (Ball for All)</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">1</td>
               <td class="num">7</td>
               <td class="num">20</td>
               <td class="num">35.0%</td>
               <td class="num">7.0</td>
+              <td class="num">0</td>
+              <td class="num">4</td>
+              <td class="num">&#8377;0.04L</td>
               <td class="num">&#8377;0.03L</td>
             </tr>
             <tr>
-              <td>Physique 57 X Power Cycle BPB Hosted Class</td>
+              <td><strong>Physique 57 X Power Cycle BPB Hosted Class</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">10</td>
               <td class="num">10</td>
               <td class="num">100.0%</td>
               <td class="num">10.0</td>
+              <td class="num">0</td>
+              <td class="num">6</td>
+              <td class="num">&#8377;0.00L</td>
               <td class="num">&#8377;0.00L</td>
             </tr>
             <tr>
-              <td>powerCycle (What the Phu(n)k- ket)</td>
+              <td><strong>powerCycle (What the Phu(n)k- ket)</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">10</td>
               <td class="num">10</td>
               <td class="num">100.0%</td>
               <td class="num">10.0</td>
+              <td class="num">0</td>
+              <td class="num">6</td>
+              <td class="num">&#8377;0.11L</td>
               <td class="num">&#8377;0.10L</td>
             </tr>
             <tr>
-              <td>powerCycle Express ( What the Phu(n)k- ket )</td>
+              <td><strong>powerCycle Express ( What the Phu(n)k- ket )</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">9</td>
               <td class="num">10</td>
               <td class="num">90.0%</td>
               <td class="num">9.0</td>
+              <td class="num">0</td>
+              <td class="num">5</td>
+              <td class="num">&#8377;0.11L</td>
               <td class="num">&#8377;0.11L</td>
             </tr>
             <tr>
-              <td>powerCycle ( Wok the Beat )</td>
+              <td><strong>powerCycle ( Wok the Beat )</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">7</td>
               <td class="num">10</td>
               <td class="num">70.0%</td>
               <td class="num">7.0</td>
+              <td class="num">0</td>
+              <td class="num">4</td>
+              <td class="num">&#8377;0.02L</td>
               <td class="num">&#8377;0.02L</td>
             </tr>
             <tr>
-              <td>powerCycle ( What the Phu(n)k- ket )</td>
+              <td><strong>powerCycle ( What the Phu(n)k- ket )</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">8</td>
               <td class="num">10</td>
               <td class="num">80.0%</td>
               <td class="num">8.0</td>
+              <td class="num">0</td>
+              <td class="num">5</td>
+              <td class="num">&#8377;0.05L</td>
               <td class="num">&#8377;0.05L</td>
             </tr>
             <tr>
-              <td>powerCycle  ( Wok the Beat )</td>
+              <td><strong>powerCycle  ( Wok the Beat )</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">1</td>
               <td class="num">10</td>
               <td class="num">10.0%</td>
               <td class="num">1.0</td>
+              <td class="num">0</td>
+              <td class="num">1</td>
+              <td class="num">&#8377;0.02L</td>
               <td class="num">&#8377;0.02L</td>
             </tr>
             <tr>
-              <td>Physique 57 X Mitali Birthday Hosted Class</td>
+              <td><strong>Physique 57 X Mitali Birthday Hosted Class</strong></td>
+              <td><span class="meta-pill">Barre</span></td>
               <td class="num">1</td>
               <td class="num">13</td>
               <td class="num">20</td>
               <td class="num">65.0%</td>
               <td class="num">13.0</td>
+              <td class="num">0</td>
+              <td class="num">8</td>
+              <td class="num">&#8377;0.00L</td>
               <td class="num">&#8377;0.00L</td>
             </tr>
             <tr>
-              <td>powerCycle ( Holy Hip Hop )</td>
+              <td><strong>powerCycle ( Holy Hip Hop )</strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">1</td>
               <td class="num">10</td>
               <td class="num">10.0%</td>
               <td class="num">1.0</td>
+              <td class="num">0</td>
+              <td class="num">1</td>
+              <td class="num">&#8377;0.00L</td>
               <td class="num">&#8377;0.00L</td>
             </tr>
             <tr>
-              <td>powerCycle Express </td>
+              <td><strong>powerCycle Express </strong></td>
+              <td><span class="meta-pill">PowerCycle</span></td>
               <td class="num">1</td>
               <td class="num">10</td>
               <td class="num">10</td>
               <td class="num">100.0%</td>
               <td class="num">10.0</td>
+              <td class="num">0</td>
+              <td class="num">6</td>
+              <td class="num">&#8377;0.10L</td>
               <td class="num">&#8377;0.09L</td>
             </tr>
             </tbody>
@@ -2086,36 +2902,43 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Rohan Dahima is the top trainer by volume with 41 sessions.</div>
-        <div class="insight-text">41 sessions (11% of total), 351 visits at 55.0% fill. Revenue: &#8377;3.33L. Average class size: 8.6.</div>
+        <div class="insight-title">Rohan Dahima: 41 sessions at 55.0% fill (avg 8.6 visits/class).</div>
+        <div class="insight-text">Delivered 351 visits (11% of total sessions) generating &#8377;3.33L. <br><strong>What this tells us:</strong> Strong member retention and class draw. <br><strong>Strategic Action:</strong> Assign to prime peak slots and mentor junior coaches.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Cauveri Vikrant: 41 sessions at 38.7% fill.</div>
-        <div class="insight-text">11% of total sessions, 230 visits. Revenue: &#8377;2.12L. Average class size: 5.6.</div>
+        <div class="insight-title">Cauveri Vikrant: 41 sessions at 38.7% fill (avg 5.6 visits/class).</div>
+        <div class="insight-text">Delivered 230 visits (11% of total sessions) generating &#8377;2.12L. <br><strong>What this tells us:</strong> Coach utilization is lagging behind studio averages. <br><strong>Strategic Action:</strong> Pair with senior coaches to refine class delivery and engagement.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Mrigakshi Jaiswal: 37 sessions at 50.8% fill.</div>
-        <div class="insight-text">10% of total sessions, 251 visits. Revenue: &#8377;2.12L. Average class size: 6.8.</div>
+        <div class="insight-title">Mrigakshi Jaiswal: 37 sessions at 50.8% fill (avg 6.8 visits/class).</div>
+        <div class="insight-text">Delivered 251 visits (10% of total sessions) generating &#8377;2.12L. <br><strong>What this tells us:</strong> Strong member retention and class draw. <br><strong>Strategic Action:</strong> Assign to prime peak slots and mentor junior coaches.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Pranjali Jain: 29 sessions at 49.0% fill.</div>
-        <div class="insight-text">8% of total sessions, 236 visits. Revenue: &#8377;2.02L. Average class size: 8.1.</div>
+        <div class="insight-title">Pranjali Jain: 29 sessions at 49.0% fill (avg 8.1 visits/class).</div>
+        <div class="insight-text">Delivered 236 visits (8% of total sessions) generating &#8377;2.02L. <br><strong>What this tells us:</strong> Strong member retention and class draw. <br><strong>Strategic Action:</strong> Assign to prime peak slots and mentor junior coaches.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">05</div>
       <div class="insight-body">
-        <div class="insight-title">Vivaran Dhasmana: 28 sessions at 45.3% fill.</div>
-        <div class="insight-text">8% of total sessions, 177 visits. Revenue: &#8377;1.25L. Average class size: 6.3.</div>
+        <div class="insight-title">Anmol Sharma outperforms studio average fill by +38.2pp.</div>
+        <div class="insight-text">Runs at 85.5% fill vs studio average 47.3% across 18 sessions. <br><strong>What this tells us:</strong> High trainer rapport and strong client retention draw. <br><strong>Strategic Action:</strong> Give Anmol Sharma priority on peak time slots and use their coaching style as a benchmark.</div>
+      </div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">06</div>
+      <div class="insight-body">
+        <div class="insight-title">Karanvir Bhatia trails studio average fill by -15.0pp &mdash; Coaching Opportunity.</div>
+        <div class="insight-text">Runs at 32.3% fill vs studio average 47.3% across 23 sessions. <br><strong>What this tells us:</strong> Needs format adjustment or schedule slot optimization. <br><strong>Strategic Action:</strong> Pair Karanvir Bhatia with high-performing trainers for co-teaching sessions.</div>
       </div>
     </div>
       </div>
@@ -2280,12 +3103,11 @@ tr.disc-high td { background: var(--warn-soft); }
 
     <div class="subsection">
       <h3 class="subsection-title">Session heatmap &mdash; day &times; time slot demand intensity</h3>
-      <p class="subsection-deck">The heatmap below shows visit volume by day of week and time slot. Hot cells indicate peak demand; cold cells indicate under-utilised slots. Use this to optimise the weekly schedule.</p>
+      <p class="subsection-deck">The heatmap below shows visit volume by day of week and time slot, with the leading format and trainer for each slot. Hot cells indicate peak demand; cold cells indicate under-utilised slots. Use this to optimise the weekly schedule.</p>
     </div>
 
-    <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Heatmap insights</div>
+    <div class="insights-pane full-width-block">
+      <div class="pane-title">Heatmap insights</div>
 
     <div class="insight-card">
       <div class="insight-num">01</div>
@@ -2301,19 +3123,19 @@ tr.disc-high td { background: var(--warn-soft); }
         <div class="insight-text">Weakest slots: 16:30 Mon (0), 08:15 Mon (0), 11:30 Thu (2). Consider reallocating these to high-demand time windows.</div>
       </div>
     </div>
-      </div>
+    </div>
 
-      <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Visit Heatmap &middot; July 2026</div>
-        <div class="table-wrap">
-          <table class="data-table heatmap-table">
-            <thead>
-              <tr>
-                <th>Day</th>
-                <th>07:15</th><th>07:30</th><th>08:00</th><th>08:15</th><th>08:30</th><th>08:45</th><th>09:00</th><th>09:15</th><th>09:45</th><th>10:00</th><th>10:15</th><th>10:30</th><th>11:00</th><th>11:15</th><th>11:30</th><th>12:30</th><th>16:00</th><th>16:30</th><th>17:00</th><th>17:15</th><th>17:30</th><th>17:45</th><th>18:00</th><th>18:15</th><th>18:45</th><th>19:00</th><th>19:15</th><th>19:30</th>
-              </tr>
-            </thead>
-            <tbody>
+    <div class="data-pane full-width-block">
+      <div class="pane-title" style="padding: 16px 16px 8px;">Visit Heatmap &middot; July 2026</div>
+      <div class="table-wrap">
+        <table class="data-table heatmap-table">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>07:15</th><th>07:30</th><th>08:00</th><th>08:15</th><th>08:30</th><th>08:45</th><th>09:00</th><th>09:15</th><th>09:45</th><th>10:00</th><th>10:15</th><th>10:30</th><th>11:00</th><th>11:15</th><th>11:30</th><th>12:30</th><th>16:00</th><th>16:30</th><th>17:00</th><th>17:15</th><th>17:30</th><th>17:45</th><th>18:00</th><th>18:15</th><th>18:45</th><th>19:00</th><th>19:15</th><th>19:30</th>
+            </tr>
+          </thead>
+          <tbody>
             <tr><td class='row-label'>Mon</td><td class='heat-cell cold'>24</td><td class='heat-cell cold'>29</td><td class='heat-cell cold'>10</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>49</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>17</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>21</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>21</td><td class='heat-cell cold'>2</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>15</td><td class='heat-cell warm'>61</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>28</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>21</td><td class='heat-cell cold'>10</td></tr>
             <tr><td class='row-label'>Tue</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>50</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>30</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>20</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>20</td><td class='heat-cell cold'>23</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>39</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>10</td><td class='heat-cell cool'>39</td><td class='heat-cell cold'>27</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell warm'>61</td><td class='heat-cell empty'>&mdash;</td></tr>
             <tr><td class='row-label'>Wed</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell warm'>71</td><td class='heat-cell cool'>42</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>26</td><td class='heat-cell cool'>44</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>5</td><td class='heat-cell cold'>25</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>35</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>3</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>30</td><td class='heat-cell cool'>34</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell hot'>98</td><td class='heat-cell empty'>&mdash;</td></tr>
@@ -2321,9 +3143,8 @@ tr.disc-high td { background: var(--warn-soft); }
             <tr><td class='row-label'>Fri</td><td class='heat-cell cold'>9</td><td class='heat-cell cool'>38</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>39</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell warm'>64</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>26</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>32</td><td class='heat-cell cold'>24</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>30</td><td class='heat-cell cold'>30</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>18</td><td class='heat-cell cool'>44</td><td class='heat-cell empty'>&mdash;</td></tr>
             <tr><td class='row-label'>Sat</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>14</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>32</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>36</td><td class='heat-cell hot'>96</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell hot'>121</td><td class='heat-cell cold'>30</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>22</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>43</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td></tr>
             <tr><td class='row-label'>Sun</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>49</td><td class='heat-cell cool'>40</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cool'>54</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>23</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell cold'>28</td><td class='heat-cell cool'>33</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td><td class='heat-cell empty'>&mdash;</td></tr>
-            </tbody>
-          </table>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -2331,14 +3152,19 @@ tr.disc-high td { background: var(--warn-soft); }
 
 <section class="report-section" id="lapsed">
   <div class="container">
-    <div class="section-header">
-      <div class="section-header-left">
-        <span class="section-eyebrow">05 &middot; Lapsed Memberships &mdash; Deep Dive</span>
-        <h2 class="section-title">380 memberships reached end-of-life, 57.1% renewed, 40.0% churned. The lapsed book is concentrated in Studio Single Class holders &mdash; the highest-leverage reactivation target.</h2>
-        <p class="section-deck">July&rsquo;s expiration book had <strong>380 memberships reach end-of-life</strong>: <strong>217 renewed (57.1%)</strong>, <strong>152 lapsed (40.0%)</strong>, <strong>11 frozen</strong>. Churn rate is -5.1pp MoM and +6.3pp vs the Jan&ndash;Mar baseline. Renewal rate is improving. The cumulative lapsed book now stands at 784 unique lapsed members.</p>
+    <div class="section-hero" data-num="05">
+      <div class="section-header">
+        <div class="section-header-left">
+          <span class="section-eyebrow">05 &middot; Retention &amp; Churn Dynamics</span>
+          <h2 class="section-title">380 memberships reached end-of-life, 57.1% renewed, 40.0% churned. The lapsed book is concentrated in Studio Single Class holders &mdash; the highest-leverage reactivation target.</h2>
+          <p class="section-deck">July&rsquo;s expiration book had <strong>380 memberships reach end-of-life</strong>: <strong>217 renewed (57.1%)</strong>, <strong>152 lapsed (40.0%)</strong>, <strong>11 frozen</strong>. Churn rate is -5.1pp MoM and +3.4pp vs the 2026 Avg (excl. Jul) baseline. Renewal rate is improving. The cumulative lapsed book now stands at 784 unique lapsed members.</p>
+        </div>
+        <div class="section-header-right">
+          <div class="section-anchor">Section 5 / 07</div>
+        </div>
       </div>
-      <div class="section-anchor">Section 5 / 07</div>
     </div>
+    <div class="ai-slot" id="ai-slot-lapsed"></div>
 
     <div class="callout"><strong>Exclusions applied in this section (per management guidance):</strong> zero-value memberships, &lsquo;Newcomers 2 For 1&rsquo; SKUs, &lsquo;Studio Single Class&rsquo; SKUs, and all Private-class memberships. Complimentary / referral-free / influencer-free / staff-family classes are also excluded (zero LTV). The cleaned table below covers only revenue-bearing memberships where the lapse represents real lost revenue.</div>
 
@@ -2354,29 +3180,22 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Renewal rate at 57.1% is the studio&rsquo;s strongest retention signal.</div>
-        <div class="insight-text">217 of 380 expirations renewed. Industry benchmark for boutique fitness is 50&ndash;60% &mdash; Kwality House is in the healthy band. The rate is +2.8pp MoM and -9.1pp vs baseline.</div>
+        <div class="insight-title">Renewal Rate at 57.1% &mdash; Healthy Retention.</div>
+        <div class="insight-text">217 of 380 expirations renewed (+2.8pp MoM vs baseline 63.1%). <br><strong>What this tells us:</strong> Member satisfaction and subscription renewal momentum are strong. <br><strong>Strategic Action:</strong> Maintain pre-expiry email/SMS sequences.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">152 lapses in July is the actionable reactivation book.</div>
-        <div class="insight-text">Each lapsed member has a known LTV. Reactivating even 15% (22 members) at 50% of their previous LTV would recover approximately &#8377;4.6L of revenue over 3 months.</div>
+        <div class="insight-title">152 Lapsed Members &mdash; Reactivation Revenue Target.</div>
+        <div class="insight-text">Each lapsed member has known LTV history. Reactivating 15% (22 members) would recover ~&#8377;4.6L. <br><strong>What this tells us:</strong> Lapsed accounts represent warm leads with prior product familiarity. <br><strong>Strategic Action:</strong> Launch a targeted 'We Miss You' win-back offer with a complimentary private coaching session.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Only 11 frozen memberships &mdash; moderate recoverable inventory.</div>
-        <div class="insight-text">Frozen memberships typically thaw into either renewal or lapse. With 11 in the frozen state, the near-term recovery opportunity from this segment is meaningful.</div>
-      </div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-num">04</div>
-      <div class="insight-body">
-        <div class="insight-title">Churn rate at 40.0% &mdash; -5.1pp MoM.</div>
-        <div class="insight-text">The churn rate is -5.1pp vs June and +6.3pp vs the Jan&ndash;Mar baseline of 33.7%. Churn is above baseline &mdash; retention needs reinforcement.</div>
+        <div class="insight-title">Churn Rate at 40.0% (-5.1pp MoM vs baseline 36.6%).</div>
+        <div class="insight-text">152 members churned out of 380 total expirations. <br><strong>What this tells us:</strong> High churn rate directly compresses net member growth. <br><strong>Strategic Action:</strong> Track check-in velocity during month 2 to intervene before member disengagement.</div>
       </div>
     </div>
       </div>
@@ -2431,29 +3250,15 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Studio Single Class is the highest-lapse product with 44 lapses.</div>
-        <div class="insight-text">75 total expirations, 31 renewed, 44 lapsed (58.7% churn rate for this SKU). This is the highest-leverage reactivation target.</div>
+        <div class="insight-title">Studio Single Class is the highest-lapse SKU (44 lapses, 58.7% churn).</div>
+        <div class="insight-text">75 total expirations: 31 renewed, 44 lapsed. <br><strong>What this tells us:</strong> Specific membership SKU has lower long-term stickiness or price friction at renewal. <br><strong>Strategic Action:</strong> Review pricing tier structure or offer auto-renewal discount incentives for this SKU.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Studio Staff/Family Class has the highest renewal rate at 91.7%.</div>
-        <div class="insight-text">44 of 48 renewed (91.7%). This product has strong stickiness and loyalty.</div>
-      </div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-num">03</div>
-      <div class="insight-body">
-        <div class="insight-title">Studio Single Class has the highest expiration volume at 75.</div>
-        <div class="insight-text">75 memberships reached end-of-life: 31 renewed, 44 lapsed, 0 frozen.</div>
-      </div>
-    </div>
-    <div class="insight-card">
-      <div class="insight-num">04</div>
-      <div class="insight-body">
-        <div class="insight-title">25 distinct products in the expiration book.</div>
-        <div class="insight-text">The lapsed book spans 25 membership SKUs. Total: 380 expirations, 217 renewed, 152 lapsed.</div>
+        <div class="insight-title">Studio Staff/Family Class leads renewal rate at 91.7%.</div>
+        <div class="insight-text">44 of 48 renewed (91.7% renewal rate). <br><strong>What this tells us:</strong> Strongest member loyalty and product value perception. <br><strong>Strategic Action:</strong> Use this product format as the primary upgrade target for trial conversions.</div>
       </div>
     </div>
       </div>
@@ -2690,67 +3495,106 @@ tr.disc-high td { background: var(--warn-soft); }
 
     <div class="subsection">
       <h3 class="subsection-title">Cumulative lapsed trend &mdash; the growing reactivation pool</h3>
-      <p class="subsection-deck">The cumulative lapsed member count grows each month as new lapses are added. This is the total pool available for win-back campaigns and reactivation outreach.</p>
+      <p class="subsection-deck">The cumulative lapsed member count tracks the overall pool of un-renewed accounts over time. This detailed breakdown evaluates net additions, win-back reactivations, and overall LTV recovery opportunity.</p>
     </div>
 
     <div class="split-grid">
       <div class="insights-pane">
-        <div class="pane-title">Cumulative insights</div>
+        <div class="pane-title">Cumulative Trend Insights</div>
 
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Cumulative lapsed book now at 784 unique members.</div>
-        <div class="insight-text">The cumulative count of unique lapsed members has grown to 784 as of July 2026. This is the total reactivation pool available for win-back campaigns.</div>
+        <div class="insight-title">Cumulative Lapsed Base reaches 784 unique members.</div>
+        <div class="insight-text">The pool expanded by <strong>+152 new lapsed members</strong> in July 2026. <br><strong>What this tells us:</strong> Indicates cumulative un-reactivated accounts accumulated over the studio operating history. <br><strong>Strategic Action:</strong> Establish a dedicated reactivation cadence for accounts entering lapse status past 30 days.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Cumulative lapsed grew +24.1% MoM.</div>
-        <div class="insight-text">The lapsed book added 152 new unique lapsed members in July. The pool is expanding faster than reactivation efforts.</div>
+        <div class="insight-title">Reactivation LTV Pool valued at &#8377;192.08L in potential LTV.</div>
+        <div class="insight-text">Reactivating standard industry benchmark of 15% (117 members) yields ~<strong>&#8377;0.00L in recovered net revenue</strong>. <br><strong>What this tells us:</strong> Lapsed accounts represent high-yield warm prospects with zero initial acquisition cost. <br><strong>Strategic Action:</strong> Deploy automated SMS & email win-back offers carrying a 20% discount on quarterly renewals.</div>
+      </div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">03</div>
+      <div class="insight-body">
+        <div class="insight-title">Net Monthly Lapsed Growth Trajectory (+152 net addition/mo).</div>
+        <div class="insight-text">The growth rate of new lapses currently exceeds the active reactivation velocity. <br><strong>What this tells us:</strong> Without automated win-back triggers, the inactive member pool continues to compound. <br><strong>Strategic Action:</strong> Implement phone check-ins by front-desk staff for members with 0 check-ins in 14 days.</div>
       </div>
     </div>
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Cumulative Lapsed Members &middot; 2026</div>
+        <div class="pane-title" style="padding: 16px 16px 8px;">Cumulative Lapsed Members Trend &amp; LTV Sizing</div>
         <div class="table-wrap">
           <table class="data-table">
             <thead>
               <tr>
                 <th>Month</th>
-                <th>Cumulative Lapsed</th>
+                <th>New Lapsed</th>
+                <th>Reactivated</th>
+                <th>Net Change</th>
+                <th>Cumulative Base</th>
+                <th>LTV Pool (₹)</th>
               </tr>
             </thead>
             <tbody>
             <tr>
-              <td>January</td>
-              <td class="num">95</td>
+              <td><strong>January 2026</strong></td>
+              <td class="num">38</td>
+              <td class="num">5</td>
+              <td class="num">+33</td>
+              <td class="num"><strong>95</strong></td>
+              <td class="num">&#8377;23.27L</td>
             </tr>
             <tr>
-              <td>February</td>
-              <td class="num">186</td>
+              <td><strong>February 2026</strong></td>
+              <td class="num">91</td>
+              <td class="num">13</td>
+              <td class="num">+78</td>
+              <td class="num"><strong>186</strong></td>
+              <td class="num">&#8377;45.57L</td>
             </tr>
             <tr>
-              <td>March</td>
-              <td class="num">272</td>
+              <td><strong>March 2026</strong></td>
+              <td class="num">86</td>
+              <td class="num">12</td>
+              <td class="num">+74</td>
+              <td class="num"><strong>272</strong></td>
+              <td class="num">&#8377;66.64L</td>
             </tr>
             <tr>
-              <td>April</td>
-              <td class="num">366</td>
+              <td><strong>April 2026</strong></td>
+              <td class="num">94</td>
+              <td class="num">14</td>
+              <td class="num">+80</td>
+              <td class="num"><strong>366</strong></td>
+              <td class="num">&#8377;89.67L</td>
             </tr>
             <tr>
-              <td>May</td>
-              <td class="num">484</td>
+              <td><strong>May 2026</strong></td>
+              <td class="num">118</td>
+              <td class="num">17</td>
+              <td class="num">+101</td>
+              <td class="num"><strong>484</strong></td>
+              <td class="num">&#8377;118.58L</td>
             </tr>
             <tr>
-              <td>June</td>
-              <td class="num">632</td>
+              <td><strong>June 2026</strong></td>
+              <td class="num">148</td>
+              <td class="num">22</td>
+              <td class="num">+126</td>
+              <td class="num"><strong>632</strong></td>
+              <td class="num">&#8377;154.84L</td>
             </tr>
             <tr>
-              <td>July</td>
-              <td class="num">784</td>
+              <td><strong>July 2026</strong></td>
+              <td class="num">152</td>
+              <td class="num">22</td>
+              <td class="num">+130</td>
+              <td class="num"><strong>784</strong></td>
+              <td class="num">&#8377;192.08L</td>
             </tr>
             </tbody>
           </table>
@@ -2762,14 +3606,19 @@ tr.disc-high td { background: var(--warn-soft); }
 
 <section class="report-section" id="recommendations">
   <div class="container">
-    <div class="section-header">
-      <div class="section-header-left">
-        <span class="section-eyebrow">06 &middot; Strategic Recommendations</span>
-        <h2 class="section-title">Five business decisions for senior management to make this quarter &mdash; each anchored to a July 2026 data point with a target and an owner.</h2>
-        <p class="section-deck">The recommendations below consolidate the action items from sections 1&ndash;5 into a single decision-ready view. Each recommendation has a quantified opportunity (in &#8377; or members), a target metric, a 60- or 90-day timeline, and a single accountable owner. These are the five decisions that, taken together, would move the studio from baseline-plus to baseline-strong by August 2026.</p>
+    <div class="section-hero" data-num="06">
+      <div class="section-header">
+        <div class="section-header-left">
+          <span class="section-eyebrow">06 &middot; Data-Driven Recommendations</span>
+          <h2 class="section-title">Five business decisions for senior management to make this quarter &mdash; each anchored to a July 2026 data point with a target and an owner.</h2>
+          <p class="section-deck">The recommendations below consolidate the action items from sections 1&ndash;5 into a single decision-ready view. Each recommendation has a quantified opportunity (in &#8377; or members), a target metric, a 60- or 90-day timeline, and a single accountable owner. These are the five decisions that, taken together, would move the studio from baseline to baseline-plus by August 2026.</p>
+        </div>
+        <div class="section-header-right">
+          <div class="section-anchor">Section 6 / 07</div>
+        </div>
       </div>
-      <div class="section-anchor">Section 6 / 07</div>
     </div>
+    <div class="ai-slot" id="ai-slot-recommendations"></div>
 
     <div class="subsection">
       <h3 class="subsection-title">Class scheduling &mdash; additions, discontinuations, format-specific moves</h3>
@@ -2859,7 +3708,7 @@ tr.disc-high td { background: var(--warn-soft); }
       <div class="insight-num">01</div>
       <div class="insight-body">
         <div class="insight-title">Discount penetration at 6.6% &mdash; within acceptable range.</div>
-        <div class="insight-text">Total discount of &#8377;1.70L on &#8377;25.80L gross. This is within the healthy range but should be monitored. Baseline penetration: 11.4%.</div>
+        <div class="insight-text">Total discount of &#8377;1.70L on &#8377;25.80L gross. This is within the healthy range but should be monitored. Baseline penetration: 13.6%.</div>
       </div>
     </div>
     <div class="insight-card">
@@ -2873,7 +3722,7 @@ tr.disc-high td { background: var(--warn-soft); }
       <div class="insight-num">03</div>
       <div class="insight-body">
         <div class="insight-title">Discount efficiency at &#8377;14.45 per &#8377;1 discounted.</div>
-        <div class="insight-text">Efficiency is above the baseline of &#8377;8.32. Maintain current discipline.</div>
+        <div class="insight-text">Efficiency is above the baseline of &#8377;7.03. Maintain current discipline.</div>
       </div>
     </div>
       </div>
@@ -2907,15 +3756,15 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Lead pipeline at 151 &mdash; +18.0% MoM, -9.4% vs baseline.</div>
-        <div class="insight-text">Pipeline is thinning and needs replenishment. Target: 199 leads/month to sustain conversion volume.</div>
+        <div class="insight-title">Lead pipeline at 151 &mdash; +18.0% MoM, -1.6% vs baseline.</div>
+        <div class="insight-text">Pipeline is thinning and needs replenishment. Target: 184 leads/month to sustain conversion volume.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
         <div class="insight-title">Client Referral: 33 leads at 12.1% conversion &mdash; highest-quality channel.</div>
-        <div class="insight-text">Referral leads convert at 1.2&times; the portfolio average. Double down on referral incentives: member-get-member programme, referral credits, social proof.</div>
+        <div class="insight-text">Referral leads convert at 0.5&times; the portfolio average. Double down on referral incentives: member-get-member programme, referral credits, social proof.</div>
       </div>
     </div>
     <div class="insight-card">
@@ -2970,7 +3819,7 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Churn rate at 40.0% &mdash; +6.3pp vs baseline.</div>
+        <div class="insight-title">Churn rate at 40.0% &mdash; +3.4pp vs baseline.</div>
         <div class="insight-text">Churn is above baseline &mdash; retention needs reinforcement. Implement 30/60/90-day pre-expiry outreach to reduce future lapses.</div>
       </div>
     </div>
@@ -2984,7 +3833,7 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Renewal rate at 57.1% &mdash; -9.1pp vs baseline.</div>
+        <div class="insight-title">Renewal rate at 57.1% &mdash; -6.0pp vs baseline.</div>
         <div class="insight-text">Renewal rate is below baseline &mdash; strengthen renewal outreach. Industry benchmark: 50&ndash;60% for boutique fitness.</div>
       </div>
     </div>
@@ -3067,14 +3916,19 @@ tr.disc-high td { background: var(--warn-soft); }
 
 <section class="report-section" id="predictions">
   <div class="container">
-    <div class="section-header">
-      <div class="section-header-left">
-        <span class="section-eyebrow">07 &middot; Predictions &amp; Forward View</span>
-        <h2 class="section-title">August 2026 forecast: &#8377;23.32L&ndash;&#8377;24.54L net sales if no intervention, &#8377;27.00L&ndash;&#8377;28.23L if the five decisions are executed. Three red flags to monitor weekly.</h2>
-        <p class="section-deck">The forward view below blends the July baseline with the historical Jan &ndash; Mar 2026 trajectory and the five recommended interventions. The base-case forecast assumes no operational change; the upside case assumes execution of the five decisions starting August W2. Three red flags &mdash; discount penetration, late-cancel rate, and lead pipeline volume &mdash; should be monitored weekly and acted on if they deteriorate beyond the thresholds below.</p>
+    <div class="section-hero" data-num="07">
+      <div class="section-header">
+        <div class="section-header-left">
+          <span class="section-eyebrow">07 &middot; Forward Outlook &amp; Scenario Planning</span>
+          <h2 class="section-title">August 2026 forecast: &#8377;23.32L&ndash;&#8377;24.54L net sales if no intervention, &#8377;27.00L&ndash;&#8377;28.23L if the five decisions are executed. Three red flags to monitor weekly.</h2>
+          <p class="section-deck">The forward view below blends the July baseline with the historical 2026 Avg (excl. Jul) trajectory and the five recommended interventions. The base-case forecast assumes no operational change; the upside case assumes execution of the five decisions starting August W2. Three red flags &mdash; discount penetration, late-cancel rate, and lead pipeline volume &mdash; should be monitored weekly and acted on if they deteriorate beyond the thresholds below.</p>
+        </div>
+        <div class="section-header-right">
+          <div class="section-anchor">Section 7 / 07</div>
+        </div>
       </div>
-      <div class="section-anchor">Section 7 / 07</div>
     </div>
+    <div class="ai-slot" id="ai-slot-predictions"></div>
 
     <div class="subsection">
       <h3 class="subsection-title">August 2026 forecast &mdash; base case vs upside case</h3>
@@ -3102,8 +3956,8 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Steady-state upside: &#8377;27.57L&ndash;&#8377;31.82L/month.</div>
-        <div class="insight-text">Once all five decisions are fully delivered (estimated 60-90 days), the monthly run-rate could reach &#8377;27.57L&ndash;&#8377;31.82L. This is +30-50% over the Jan-Mar baseline.</div>
+        <div class="insight-title">Steady-state upside: &#8377;33.61L&ndash;&#8377;38.78L/month.</div>
+        <div class="insight-text">Once all five decisions are fully delivered (estimated 60-90 days), the monthly run-rate could reach &#8377;33.61L&ndash;&#8377;38.78L. This is +30-50% over the 2026 Avg (excl. Jul) baseline.</div>
       </div>
     </div>
     <div class="insight-card">
@@ -3142,7 +3996,7 @@ tr.disc-high td { background: var(--warn-soft); }
               <tr><td>Visits</td><td class="num">2,432</td><td class="num">2,359&ndash;2,432</td><td class="num">2,432&ndash;2,554</td></tr>
               <tr><td>Fill Rate</td><td class="num">47.3%</td><td class="num">46.3%&ndash;47.3%</td><td class="num">47.3%&ndash;50.3%</td></tr>
               <tr><td>Leads</td><td class="num">151</td><td class="num">143&ndash;151</td><td class="num">173&ndash;188</td></tr>
-              <tr><td>Conversion Rate</td><td class="num">9.9%</td><td class="num">9.9%</td><td class="num">12.9%&ndash;14.9%</td></tr>
+              <tr><td>Conversion Rate</td><td class="num">26.4%</td><td class="num">26.4%</td><td class="num">29.4%&ndash;31.4%</td></tr>
               <tr><td>Churn Rate</td><td class="num">40.0%</td><td class="num">40.0%</td><td class="num">35.0%&ndash;32.0%</td></tr>
             </tbody>
           </table>
@@ -3176,15 +4030,15 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Lead pipeline at 151 &mdash; threshold 133.</div>
-        <div class="insight-text">Currently above threshold. If pipeline drops below 133, launch an emergency marketing sprint within 7 days.</div>
+        <div class="insight-title">Lead pipeline at 151 &mdash; threshold 122.</div>
+        <div class="insight-text">Currently above threshold. If pipeline drops below 122, launch an emergency marketing sprint within 7 days.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Churn rate at 40.0% &mdash; threshold 39%.</div>
-        <div class="insight-text">Currently above threshold &mdash; activate reactivation. If churn exceeds 39%, activate the full reactivation campaign immediately.</div>
+        <div class="insight-title">Churn rate at 40.0% &mdash; threshold 42%.</div>
+        <div class="insight-text">Currently within threshold. If churn exceeds 42%, activate the full reactivation campaign immediately.</div>
       </div>
     </div>
     <div class="insight-card">
@@ -3205,8 +4059,8 @@ tr.disc-high td { background: var(--warn-soft); }
             <tbody>
               <tr><td>Discount Penetration</td><td class="num">6.6%</td><td class="num">&gt; 10%</td><td>Freeze all discounts &gt; &#8377;2,000</td></tr>
               <tr><td>Late-Cancel Rate</td><td class="num">10.8%</td><td class="num">&gt; 12%</td><td>Implement penalty policy</td></tr>
-              <tr><td>Lead Pipeline Volume</td><td class="num">151</td><td class="num">&lt; 133</td><td>Emergency marketing sprint</td></tr>
-              <tr><td>Churn Rate</td><td class="num">40.0%</td><td class="num">&gt; 39%</td><td>Activate reactivation campaign</td></tr>
+              <tr><td>Lead Pipeline Volume</td><td class="num">151</td><td class="num">&lt; 122</td><td>Emergency marketing sprint</td></tr>
+              <tr><td>Churn Rate</td><td class="num">40.0%</td><td class="num">&gt; 42%</td><td>Activate reactivation campaign</td></tr>
               <tr><td>Fill Rate</td><td class="num">47.3%</td><td class="num">&lt; 41%</td><td>Schedule review &amp; slot trimming</td></tr>
             </tbody>
           </table>
@@ -3215,8 +4069,8 @@ tr.disc-high td { background: var(--warn-soft); }
     </div>
 
     <div class="subsection">
-      <h3 class="subsection-title">Steady-state outlook &mdash; August&ndash;September 2026</h3>
-      <p class="subsection-deck">Once all five decisions are fully delivered (estimated 60&ndash;90 days), the monthly run-rate could reach a structural step-up from the Jan&ndash;Mar baseline.</p>
+      <h3 class="subsection-title">Steady-state outlook &mdash; August 2026&ndash;October 2026</h3>
+      <p class="subsection-deck">Once all five decisions are fully delivered (estimated 60&ndash;90 days), the monthly run-rate could reach a structural step-up from the 2026 Avg (excl. Jul) baseline.</p>
     </div>
 
     <div class="split-grid">
@@ -3226,46 +4080,46 @@ tr.disc-high td { background: var(--warn-soft); }
     <div class="insight-card">
       <div class="insight-num">01</div>
       <div class="insight-body">
-        <div class="insight-title">Net sales target: &#8377;27.57L&ndash;&#8377;31.82L/month.</div>
-        <div class="insight-text">A 30-50% step-up from the Jan&ndash;Mar baseline of &#8377;21.21L. This would represent a structural improvement in studio economics, not a one-month spike.</div>
+        <div class="insight-title">Net sales target: &#8377;33.61L&ndash;&#8377;38.78L/month.</div>
+        <div class="insight-text">A 30-50% step-up from the 2026 Avg (excl. Jul) baseline of &#8377;25.86L. This would represent a structural improvement in studio economics, not a one-month spike.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Fill rate target: 50&ndash;55% (from 45.9% baseline).</div>
+        <div class="insight-title">Fill rate target: 50&ndash;55% (from 46.2% baseline).</div>
         <div class="insight-text">Schedule rebalancing from low-fill to high-fill formats would lift overall fill rate by 5-10pp. Each percentage point of fill rate is worth approximately &#8377;0.00L in incremental revenue.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Conversion rate target: 15&ndash;20% (from 12.6% baseline).</div>
+        <div class="insight-title">Conversion rate target: 15&ndash;20% (from 0.0% baseline).</div>
         <div class="insight-text">Funnel repair &mdash; referral amplification, trial follow-up protocol, and zero-conversion source cleanup &mdash; would lift conversion by 3-8pp. Each additional conversion is worth approximately &#8377;25,000 in LTV.</div>
       </div>
     </div>
     <div class="insight-card">
       <div class="insight-num">04</div>
       <div class="insight-body">
-        <div class="insight-title">Churn rate target: 30&ndash;35% (from 33.7% baseline).</div>
+        <div class="insight-title">Churn rate target: 30&ndash;35% (from 36.6% baseline).</div>
         <div class="insight-text">Proactive retention &mdash; pre-expiry outreach, reactivation campaigns, and CRM improvements &mdash; would reduce churn by 5-10pp. Each percentage point of churn reduction retains approximately 3 members/month.</div>
       </div>
     </div>
       </div>
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Steady-State Target &middot; Q3 2026</div>
+        <div class="pane-title" style="padding: 16px 16px 8px;">Steady-State Target &middot; October 2026</div>
         <div class="table-wrap">
           <table class="data-table">
             <thead>
-              <tr><th>Metric</th><th>Jan&ndash;Mar Baseline</th><th>July Actual</th><th>Steady-State Target</th></tr>
+              <tr><th>Metric</th><th>2026 Avg (excl. Jul) Baseline</th><th>July Actual</th><th>Steady-State Target</th></tr>
             </thead>
             <tbody>
-              <tr><td>Net Sales</td><td class="num">&#8377;21.21L</td><td class="num">&#8377;24.54L</td><td class="num">&#8377;27.57L&ndash;&#8377;31.82L</td></tr>
-              <tr><td>Sessions</td><td class="num">324</td><td class="num">368</td><td class="num">356&ndash;389</td></tr>
-              <tr><td>Fill Rate</td><td class="num">45.9%</td><td class="num">47.3%</td><td class="num">50%&ndash;55%</td></tr>
-              <tr><td>Conversion Rate</td><td class="num">12.6%</td><td class="num">9.9%</td><td class="num">15%&ndash;20%</td></tr>
-              <tr><td>Churn Rate</td><td class="num">33.7%</td><td class="num">40.0%</td><td class="num">30%&ndash;35%</td></tr>
-              <tr><td>Discount Penetration</td><td class="num">11.4%</td><td class="num">6.6%</td><td class="num">&le; 8%</td></tr>
+              <tr><td>Net Sales</td><td class="num">&#8377;25.86L</td><td class="num">&#8377;24.54L</td><td class="num">&#8377;33.61L&ndash;&#8377;38.78L</td></tr>
+              <tr><td>Sessions</td><td class="num">335</td><td class="num">368</td><td class="num">368&ndash;402</td></tr>
+              <tr><td>Fill Rate</td><td class="num">46.2%</td><td class="num">47.3%</td><td class="num">50%&ndash;55%</td></tr>
+              <tr><td>Conversion Rate</td><td class="num">0.0%</td><td class="num">26.4%</td><td class="num">15%&ndash;20%</td></tr>
+              <tr><td>Churn Rate</td><td class="num">36.6%</td><td class="num">40.0%</td><td class="num">30%&ndash;35%</td></tr>
+              <tr><td>Discount Penetration</td><td class="num">13.6%</td><td class="num">6.6%</td><td class="num">&le; 8%</td></tr>
             </tbody>
           </table>
         </div>
@@ -3273,6 +4127,8 @@ tr.disc-high td { background: var(--warn-soft); }
     </div>
   </div>
 </section>
+
+<!-- REPORT_CLIENT_PLACEHOLDER -->
 
 
 <footer class="footer">
@@ -3282,9 +4138,9 @@ tr.disc-high td { background: var(--warn-soft); }
         <div class="footer-brand-text">Kwality House &middot; Studio Pulse</div>
         <p class="footer-text">
           Performance Report &middot; July 2026<br>
-          Generated from operational data extracts &middot; Sales, Sessions, Leads, Lapsed, Check-ins, Active Memberships.<br>
-          Reporting basis: Net Sales (Mrp - Pre Tax, excl VAT), Gross Sales (Sale Total Paid, deduplicated by Sale ID),<br>
-          Discount (Sale Item Unit Discount Value). Baseline: January &ndash; March 2026 average.
+          Compiled from studio sales, sessions, leads, membership, and check-in records.<br>
+          Net Sales excludes tax; Gross Sales reflects amount collected per transaction.
+          Compared against the 2026 Avg (excl. Jul) baseline.
         </p>
       </div>
       <div>

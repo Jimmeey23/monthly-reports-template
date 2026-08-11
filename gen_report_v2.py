@@ -39,16 +39,80 @@ if os.path.exists(ANALYSIS_JSON):
     except Exception:
         pass
 
-LOCATIONS = DATA.get('meta', {}).get('locations', {})
-MONTHS = DATA.get('meta', {}).get('months', {})
+def build_location_meta(full_name):
+    """Derive short_name/brand_mark from a full location name, e.g.
+    'Kwality House, Kemps Corner' -> short 'Kwality House', mark 'KH';
+    'Supreme HQ, Bandra' -> short 'Supreme HQ', mark 'SHQ'."""
+    short_name = full_name.split(',')[0].strip()
+    mark = ''
+    for word in short_name.split(' '):
+        if not word:
+            continue
+        mark += word if (word.isupper() and len(word) > 1) else word[0].upper()
+    return {
+        'full_name': full_name,
+        'short_name': short_name,
+        'brand_mark': mark,
+    }
 
+
+def build_month_meta(month_key):
+    """Derive display metadata for a 'YYYY-MM' key via calendar arithmetic."""
+    year, mon = (int(x) for x in month_key.split('-'))
+    month_name = calendar.month_name[mon]
+    month_short = calendar.month_abbr[mon]
+    days_in_month = calendar.monthrange(year, mon)[1]
+
+    # M-1 (1 month prior)
+    p1_year, p1_mon = (year, mon - 1) if mon > 1 else (year - 1, 12)
+    prev1_month_key = f'{p1_year}-{p1_mon:02d}'
+    prev1_month_name = f"{calendar.month_abbr[p1_mon]} {p1_year}"
+
+    # M-2 (2 months prior)
+    p2_year, p2_mon = (year, mon - 2) if mon > 2 else (year - 1, 12 + mon - 2)
+    prev2_month_key = f'{p2_year}-{p2_mon:02d}'
+    prev2_month_name = f"{calendar.month_abbr[p2_mon]} {p2_year}"
+
+    next_year, next_mon = (year, mon + 1) if mon < 12 else (year + 1, 1)
+    next_month_name = calendar.month_name[next_mon]
+    next_month_short = calendar.month_abbr[next_mon]
+
+    yoy_month_key = f'{year - 1}-{mon:02d}'
+    yoy_month_name = f'{month_short} {year - 1}'
+
+    return {
+        'month_name': month_name,
+        'month_short': month_short,
+        'year': str(year),
+        'date_range': f'01 {month_name} {year} &mdash; {days_in_month} {month_name} {year}',
+        'period_short': f'01 &mdash; {days_in_month} {month_short} {year}',
+        'prev_month': prev1_month_key,
+        'prev_month_name': prev1_month_name,
+        'prev2_month': prev2_month_key,
+        'prev2_month_name': prev2_month_name,
+        'prev_year': str(p1_year),
+        'yoy_month': yoy_month_key,
+        'yoy_month_name': yoy_month_name,
+        'next_month_name': next_month_name,
+        'next_month_short': next_month_short,
+        'next_year': str(next_year),
+    }
+
+def _init_meta():
+    global LOCATIONS, MONTHS
+    LOCATIONS = {lk: build_location_meta(full_name)
+                 for lk, full_name in DATA.get('meta', {}).get('locations', {}).items()}
+    MONTHS = {mk: build_month_meta(mk) for mk in DATA.get('meta', {}).get('months', [])}
+
+LOCATIONS = {}
+MONTHS = {}
+_init_meta()
 
 def run_generate(analysis_path, loc_keys, month_keys, output_path=None):
     global DATA, LOCATIONS, MONTHS
     with open(analysis_path, 'r') as f:
         DATA = json.load(f)
-    LOCATIONS = DATA['meta']['locations']
-    MONTHS = DATA['meta']['months']
+    _init_meta()
     if isinstance(loc_keys, str):
         loc_keys = [k.strip() for k in loc_keys.split(',') if k.strip()]
     if isinstance(month_keys, str):
@@ -144,15 +208,22 @@ def build_month_meta(month_key):
     month_short = calendar.month_abbr[mon]
     days_in_month = calendar.monthrange(year, mon)[1]
 
-    prev_year, prev_mon = (year, mon - 1) if mon > 1 else (year - 1, 12)
-    prev_month_key = f'{prev_year}-{prev_mon:02d}'
-    prev_month_name = calendar.month_name[prev_mon]
+    # M-1 (1 month prior)
+    p1_year, p1_mon = (year, mon - 1) if mon > 1 else (year - 1, 12)
+    prev1_month_key = f'{p1_year}-{p1_mon:02d}'
+    prev1_month_name = f"{calendar.month_abbr[p1_mon]} {p1_year}"
+
+    # M-2 (2 months prior)
+    p2_year, p2_mon = (year, mon - 2) if mon > 2 else (year - 1, 12 + mon - 2)
+    prev2_month_key = f'{p2_year}-{p2_mon:02d}'
+    prev2_month_name = f"{calendar.month_abbr[p2_mon]} {p2_year}"
 
     next_year, next_mon = (year, mon + 1) if mon < 12 else (year + 1, 1)
     next_month_name = calendar.month_name[next_mon]
     next_month_short = calendar.month_abbr[next_mon]
 
     yoy_month_key = f'{year - 1}-{mon:02d}'
+    yoy_month_name = f'{month_short} {year - 1}'
 
     return {
         'month_name': month_name,
@@ -160,11 +231,13 @@ def build_month_meta(month_key):
         'year': str(year),
         'date_range': f'01 {month_name} {year} &mdash; {days_in_month} {month_name} {year}',
         'period_short': f'01 &mdash; {days_in_month} {month_short} {year}',
-        'prev_month': prev_month_key,
-        'prev_month_name': prev_month_name,
-        'prev_year': str(prev_year),
+        'prev_month': prev1_month_key,
+        'prev_month_name': prev1_month_name,
+        'prev2_month': prev2_month_key,
+        'prev2_month_name': prev2_month_name,
+        'prev_year': str(p1_year),
         'yoy_month': yoy_month_key,
-        'yoy_month_name': f'{month_short} {year - 1}',
+        'yoy_month_name': yoy_month_name,
         'next_month_name': next_month_name,
         'next_month_short': next_month_short,
         'next_year': str(next_year),
@@ -179,58 +252,150 @@ MONTHS = {mk: build_month_meta(mk) for mk in DATA.get('meta', {}).get('months', 
 # ─── Data Access Helpers ──────────────────────────────────────────────────────
 
 def get_sales(loc, month):
-    return DATA['sales'][loc].get(month, {})
+    return DATA.get('sales', {}).get(loc, {}).get(month, {})
 
 def get_sessions(loc, month):
-    return DATA['sessions'][loc].get(month, {})
+    return DATA.get('sessions', {}).get(loc, {}).get(month, {})
 
 def get_leads(loc, month):
-    return DATA['leads'][loc].get(month, {})
+    return DATA.get('leads', {}).get(loc, {}).get(month, {})
 
 def get_leads_source(loc, month):
-    return DATA['leads_by_source'][loc].get(month, {})
+    return DATA.get('leads_by_source', {}).get(loc, {}).get(month, {})
 
 def get_new(loc, month):
-    return DATA['new'][loc].get(month, {})
+    return DATA.get('new', {}).get(loc, {}).get(month, {})
 
 def get_new_type(loc, month):
-    return DATA['new_by_type'][loc].get(month, {})
+    return DATA.get('new_by_type', {}).get(loc, {}).get(month, {})
 
 def get_lapsed(loc, month):
-    return DATA['lapsed'][loc].get(month, {})
+    return DATA.get('lapsed', {}).get(loc, {}).get(month, {})
 
 def get_lapsed_product(loc, month):
-    return DATA['lapsed_by_product'][loc].get(month, {})
+    return DATA.get('lapsed_by_product', {}).get(loc, {}).get(month, {})
 
 def get_lapsed_cumulative(loc):
-    return DATA['lapsed_cumulative'].get(loc, {})
+    return DATA.get('lapsed_cumulative', {}).get(loc, {})
 
 def get_checkins(loc, month):
-    return DATA['checkins'][loc].get(month, {})
+    return DATA.get('checkins', {}).get(loc, {}).get(month, {})
 
 def get_active(loc):
-    return DATA['active'].get(loc, {})
+    return DATA.get('active', {}).get(loc, {})
 
 def get_baseline(loc):
-    return DATA['baseline'].get(loc, {})
+    return DATA.get('baseline', {}).get(loc, {})
 
 def get_heatmap(loc, month):
-    return DATA['heatmap'][loc].get(month, {})
+    return DATA.get('heatmap', {}).get(loc, {}).get(month, {})
 
 def get_sessions_by_class(loc, month):
-    return DATA['sessions_by_class'][loc].get(month, {})
+    return DATA.get('sessions_by_class', {}).get(loc, {}).get(month, {})
 
 def get_sessions_by_trainer(loc, month):
-    return DATA['sessions_by_trainer'][loc].get(month, {})
+    return DATA.get('sessions_by_trainer', {}).get(loc, {}).get(month, {})
 
 def get_sessions_by_format(loc, month):
-    return DATA['sessions_by_format'][loc].get(month, {})
+    return DATA.get('sessions_by_format', {}).get(loc, {}).get(month, {})
 
 def get_sessions_by_trainer_format(loc, month):
     return DATA.get('sessions_by_trainer_format', {}).get(loc, {}).get(month, {})
 
 def get_sales_breakdowns(loc, month):
-    return DATA['sales_breakdowns'][loc].get(month, {})
+    return DATA.get('sales_breakdowns', {}).get(loc, {}).get(month, {})
+
+
+def compute_year_avg(loc_key, month_key):
+    """Compute metrics average across all available months in the current year excluding month_key."""
+    year_str = month_key.split('-')[0]
+    all_months = list(DATA.get('meta', {}).get('months', []))
+    other_months = [m for m in all_months if m.startswith(year_str + '-') and m != month_key]
+
+    if not other_months:
+        return {
+            'sales': {}, 'sessions': {}, 'leads': {}, 'new': {}, 'lapsed': {}, 'checkins': {},
+            'months_count': 0
+        }
+
+    n = len(other_months)
+
+    net_sum = sum(get_sales(loc_key, m).get('net', 0) for m in other_months)
+    gross_sum = sum(get_sales(loc_key, m).get('gross', 0) for m in other_months)
+    disc_sum = sum(get_sales(loc_key, m).get('disc', 0) for m in other_months)
+    sales_cnt_sum = sum(get_sales(loc_key, m).get('sales', 0) for m in other_months)
+    members_sum = sum(get_sales(loc_key, m).get('members', 0) for m in other_months)
+
+    avg_sales = {
+        'net': net_sum / n,
+        'gross': gross_sum / n,
+        'disc': disc_sum / n,
+        'sales': sales_cnt_sum / n,
+        'members': members_sum / n,
+        'atv': (net_sum / sales_cnt_sum) if sales_cnt_sum > 0 else 0,
+        'disc_eff': (net_sum / disc_sum) if disc_sum > 0 else 0,
+    }
+
+    sess_cnt_sum = sum(get_sessions(loc_key, m).get('sessions', 0) for m in other_months)
+    visits_sum = sum(get_sessions(loc_key, m).get('visits', 0) for m in other_months)
+    cap_sum = sum(get_sessions(loc_key, m).get('capacity', 0) for m in other_months)
+    rev_sum = sum(get_sessions(loc_key, m).get('revenue', 0) for m in other_months)
+
+    avg_sessions = {
+        'sessions': sess_cnt_sum / n,
+        'visits': visits_sum / n,
+        'capacity': cap_sum / n,
+        'fill': (visits_sum / cap_sum * 100) if cap_sum > 0 else 0,
+        'revenue': rev_sum / n,
+    }
+
+    leads_tot_sum = sum(get_leads(loc_key, m).get('total', 0) for m in other_months)
+    avg_leads = {
+        'total': leads_tot_sum / n,
+    }
+
+    trials_sum = sum(get_new(loc_key, m).get('trials', 0) for m in other_months)
+    conv_sum = sum(get_new(loc_key, m).get('converted', 0) for m in other_months)
+    ret_sum = sum(get_new(loc_key, m).get('retained', 0) for m in other_months)
+
+    avg_new = {
+        'trials': trials_sum / n,
+        'converted': conv_sum / n,
+        'retained': ret_sum / n,
+        'rate': (conv_sum / trials_sum * 100) if trials_sum > 0 else 0,
+    }
+
+    lapsed_tot_sum = sum(get_lapsed(loc_key, m).get('total', 0) for m in other_months)
+    renewed_sum = sum(get_lapsed(loc_key, m).get('renewed', 0) for m in other_months)
+    lapsed_cnt_sum = sum(get_lapsed(loc_key, m).get('lapsed', 0) for m in other_months)
+    frozen_sum = sum(get_lapsed(loc_key, m).get('frozen', 0) for m in other_months)
+
+    avg_lapsed = {
+        'total': lapsed_tot_sum / n,
+        'renewed': renewed_sum / n,
+        'lapsed': lapsed_cnt_sum / n,
+        'frozen': frozen_sum / n,
+        'churn': (lapsed_cnt_sum / lapsed_tot_sum * 100) if lapsed_tot_sum > 0 else 0,
+        'renewal_rate': (renewed_sum / lapsed_tot_sum * 100) if lapsed_tot_sum > 0 else 0,
+    }
+
+    lc_sum = sum(get_checkins(loc_key, m).get('late_cancel', 0) for m in other_months)
+    chk_tot_sum = sum(get_checkins(loc_key, m).get('total', 0) for m in other_months)
+
+    avg_checkins = {
+        'total': chk_tot_sum / n,
+        'late_cancel': lc_sum / n,
+    }
+
+    return {
+        'sales': avg_sales,
+        'sessions': avg_sessions,
+        'leads': avg_leads,
+        'new': avg_new,
+        'lapsed': avg_lapsed,
+        'checkins': avg_checkins,
+        'months_count': n,
+    }
 
 
 # ─── Report Generation ────────────────────────────────────────────────────────
@@ -247,8 +412,8 @@ def build_ctx_for(loc_key, month_key, id_suffix=''):
     lapsed = get_lapsed(loc_key, month_key)
     checkins = get_checkins(loc_key, month_key)
     active = get_active(loc_key)
-    baseline = get_baseline(loc_key)
 
+    # M-1 (1 month prior)
     prev_sales = get_sales(loc_key, mo['prev_month'])
     prev_sessions = get_sessions(loc_key, mo['prev_month'])
     prev_leads = get_leads(loc_key, mo['prev_month'])
@@ -256,18 +421,38 @@ def build_ctx_for(loc_key, month_key, id_suffix=''):
     prev_lapsed = get_lapsed(loc_key, mo['prev_month'])
     prev_checkins = get_checkins(loc_key, mo['prev_month'])
 
-    yoy_sales = get_sales(loc_key, mo['yoy_month'])
+    # M-2 (2 months prior)
+    prev2_sales = get_sales(loc_key, mo['prev2_month'])
+    prev2_sessions = get_sessions(loc_key, mo['prev2_month'])
+    prev2_leads = get_leads(loc_key, mo['prev2_month'])
+    prev2_new = get_new(loc_key, mo['prev2_month'])
+    prev2_lapsed = get_lapsed(loc_key, mo['prev2_month'])
+    prev2_checkins = get_checkins(loc_key, mo['prev2_month'])
 
-    ctx = build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, lapsed, checkins, active, baseline,
-                        prev_sales, prev_sessions, prev_leads, prev_new, prev_lapsed, prev_checkins, yoy_sales)
+    # Current year avg (excl. selected month)
+    year_avg = compute_year_avg(loc_key, month_key)
+
+    # YoY (Same month last year)
+    yoy_sales = get_sales(loc_key, mo['yoy_month'])
+    yoy_sessions = get_sessions(loc_key, mo['yoy_month'])
+    yoy_leads = get_leads(loc_key, mo['yoy_month'])
+    yoy_new = get_new(loc_key, mo['yoy_month'])
+    yoy_lapsed = get_lapsed(loc_key, mo['yoy_month'])
+    yoy_checkins = get_checkins(loc_key, mo['yoy_month'])
+
+    ctx = build_context(
+        loc_key, month_key, loc, mo, sales, sessions, leads, new, lapsed, checkins, active,
+        prev_sales, prev_sessions, prev_leads, prev_new, prev_lapsed, prev_checkins,
+        prev2_sales, prev2_sessions, prev2_leads, prev2_new, prev2_lapsed, prev2_checkins,
+        year_avg,
+        yoy_sales, yoy_sessions, yoy_leads, yoy_new, yoy_lapsed, yoy_checkins
+    )
     ctx['id_suffix'] = id_suffix
     return ctx
 
 
 def generate_report(loc_keys, month_keys):
-    """Generate a report for the cartesian product of loc_keys x month_keys.
-    A single combo produces the standard single-report document; multiple
-    combos are bundled into one document with a cover/TOC and page breaks."""
+    """Generate a report for the cartesian product of loc_keys x month_keys."""
     if isinstance(loc_keys, str):
         loc_keys = [loc_keys]
     if isinstance(month_keys, str):
@@ -284,31 +469,25 @@ def generate_report(loc_keys, month_keys):
 
 
 def build_baseline_label():
-    """Human label for the baseline months, e.g. 'Jun&ndash;Aug 2025' or
-    'Dec 2025&ndash;Feb 2026' when the range spans a year boundary."""
-    months = DATA.get('meta', {}).get('baseline_months', [])
-    if not months:
-        return 'baseline'
-    first, last = months[0], months[-1]
-    fy, fm = (int(x) for x in first.split('-'))
-    ly, lm = (int(x) for x in last.split('-'))
-    if first == last:
-        return f'{calendar.month_abbr[fm]} {fy}'
-    if fy == ly:
-        return f'{calendar.month_abbr[fm]}&ndash;{calendar.month_abbr[lm]} {fy}'
-    return f'{calendar.month_abbr[fm]} {fy}&ndash;{calendar.month_abbr[lm]} {ly}'
+    return 'Baseline'
 
 
-def build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, lapsed, checkins, active, baseline,
-                  prev_sales, prev_sessions, prev_leads, prev_new, prev_lapsed, prev_checkins, yoy_sales):
+def build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, lapsed, checkins, active,
+                  prev_sales, prev_sessions, prev_leads, prev_new, prev_lapsed, prev_checkins,
+                  prev2_sales, prev2_sessions, prev2_leads, prev2_new, prev2_lapsed, prev2_checkins,
+                  year_avg,
+                  yoy_sales, yoy_sessions, yoy_leads, yoy_new, yoy_lapsed, yoy_checkins):
     """Build a context dict with all computed values for the report."""
+
+    year_avg_label = f"{mo['year']} Avg (excl. {mo['month_short']})"
 
     ctx = {
         'loc': loc,
         'mo': mo,
         'loc_key': loc_key,
         'month_key': month_key,
-        'baseline_label': build_baseline_label(),
+        'year_avg_label': year_avg_label,
+        'baseline_label': year_avg_label,
         'sales': sales,
         'sessions': sessions,
         'leads': leads,
@@ -316,83 +495,98 @@ def build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, laps
         'lapsed': lapsed,
         'checkins': checkins,
         'active': active,
-        'baseline': baseline,
+        'baseline': year_avg,
+
         'prev_sales': prev_sales,
         'prev_sessions': prev_sessions,
         'prev_leads': prev_leads,
         'prev_new': prev_new,
         'prev_lapsed': prev_lapsed,
         'prev_checkins': prev_checkins,
+
+        'prev2_sales': prev2_sales,
+        'prev2_sessions': prev2_sessions,
+        'prev2_leads': prev2_leads,
+        'prev2_new': prev2_new,
+        'prev2_lapsed': prev2_lapsed,
+        'prev2_checkins': prev2_checkins,
+
+        'year_avg': year_avg,
+
         'yoy_sales': yoy_sales,
+        'yoy_sessions': yoy_sessions,
+        'yoy_leads': yoy_leads,
+        'yoy_new': yoy_new,
+        'yoy_lapsed': yoy_lapsed,
+        'yoy_checkins': yoy_checkins,
     }
-    
+
     # Sales comparators
     ctx['net_mom'] = pct_change(prev_sales.get('net', 0), sales.get('net', 0))
+    ctx['net_m2_mom'] = pct_change(prev2_sales.get('net', 0), sales.get('net', 0))
+    ctx['net_year_avg'] = pct_change(year_avg['sales'].get('net', 0), sales.get('net', 0))
     ctx['net_yoy'] = pct_change(yoy_sales.get('net', 0), sales.get('net', 0)) if yoy_sales else "n/a"
-    ctx['net_baseline'] = pct_change(baseline['sales']['net'], sales.get('net', 0))
-    
+    ctx['net_baseline'] = ctx['net_year_avg']
+
     ctx['gross_mom'] = pct_change(prev_sales.get('gross', 0), sales.get('gross', 0))
     ctx['gross_yoy'] = pct_change(yoy_sales.get('gross', 0), sales.get('gross', 0)) if yoy_sales else "n/a"
-    ctx['gross_baseline'] = pct_change(baseline['sales']['gross'], sales.get('gross', 0))
-    
+    ctx['gross_baseline'] = pct_change(year_avg['sales'].get('gross', 0), sales.get('gross', 0))
+
     ctx['disc_mom'] = pct_change(prev_sales.get('disc', 0), sales.get('disc', 0))
-    ctx['disc_baseline'] = pct_change(baseline['sales']['disc'], sales.get('disc', 0))
-    
+    ctx['disc_baseline'] = pct_change(year_avg['sales'].get('disc', 0), sales.get('disc', 0))
+
     ctx['sales_count_mom'] = pct_change(prev_sales.get('sales', 0), sales.get('sales', 0))
     ctx['members_mom'] = pct_change(prev_sales.get('members', 0), sales.get('members', 0))
     ctx['atv_mom'] = pct_change(prev_sales.get('atv', 0), sales.get('atv', 0))
-    
+
     ctx['disc_eff_mom'] = pct_change(prev_sales.get('disc_eff', 0), sales.get('disc_eff', 0))
     ctx['disc_eff_yoy'] = pct_change(yoy_sales.get('disc_eff', 0), sales.get('disc_eff', 0)) if yoy_sales else "n/a"
-    ctx['disc_eff_baseline'] = pct_change(baseline['sales']['disc_eff'], sales.get('disc_eff', 0))
-    
+    ctx['disc_eff_baseline'] = pct_change(year_avg['sales'].get('disc_eff', 0), sales.get('disc_eff', 0))
+
     # Sessions comparators
     ctx['sessions_mom'] = pct_change(prev_sessions.get('sessions', 0), sessions.get('sessions', 0))
     ctx['visits_mom'] = pct_change(prev_sessions.get('visits', 0), sessions.get('visits', 0))
     ctx['fill_mom'] = pp_change(prev_sessions.get('fill', 0), sessions.get('fill', 0))
-    ctx['fill_baseline'] = pp_change(baseline['sessions']['fill'], sessions.get('fill', 0))
+    ctx['fill_baseline'] = pp_change(year_avg['sessions'].get('fill', 0), sessions.get('fill', 0))
     ctx['sess_rev_mom'] = pct_change(prev_sessions.get('revenue', 0), sessions.get('revenue', 0))
-    ctx['sessions_baseline'] = pct_change(baseline['sessions']['sessions'], sessions.get('sessions', 0))
-    ctx['visits_baseline'] = pct_change(baseline['sessions']['visits'], sessions.get('visits', 0))
-    
+    ctx['sessions_baseline'] = pct_change(year_avg['sessions'].get('sessions', 0), sessions.get('sessions', 0))
+    ctx['visits_baseline'] = pct_change(year_avg['sessions'].get('visits', 0), sessions.get('visits', 0))
+
     # Leads comparators
     ctx['leads_mom'] = pct_change(prev_leads.get('total', 0), leads.get('total', 0))
 
-    # Conversion is trials -> converted, off the New sheet's own Conversion Status
-    # (not the Leads sheet's Conversion Status).
+    # Conversion
     ctx['conv_mom'] = pp_change(prev_new.get('rate', 0), new.get('rate', 0))
-    ctx['conv_baseline'] = pp_change(baseline['new']['rate'], new.get('rate', 0))
+    ctx['conv_baseline'] = pp_change(year_avg['new'].get('rate', 0), new.get('rate', 0))
     ctx['converted_mom'] = pct_change(prev_new.get('converted', 0), new.get('converted', 0))
 
     # Trials comparators
     ctx['trials_mom'] = pct_change(prev_new.get('trials', 0), new.get('trials', 0))
     ctx['retained_mom'] = pct_change(prev_new.get('retained', 0), new.get('retained', 0))
-    
+
     # Lapsed comparators
     ctx['lapsed_mom'] = pct_change(prev_lapsed.get('lapsed', 0), lapsed.get('lapsed', 0))
     ctx['churn_mom'] = pp_change(prev_lapsed.get('churn', 0), lapsed.get('churn', 0))
-    ctx['churn_baseline'] = pp_change(baseline['lapsed']['churn'], lapsed.get('churn', 0))
+    ctx['churn_baseline'] = pp_change(year_avg['lapsed'].get('churn', 0), lapsed.get('churn', 0))
     ctx['renewal_mom'] = pp_change(prev_lapsed.get('renewal_rate', 0), lapsed.get('renewal_rate', 0))
-    ctx['renewal_baseline'] = pp_change(baseline['lapsed']['renewal_rate'], lapsed.get('renewal_rate', 0))
+    ctx['renewal_baseline'] = pp_change(year_avg['lapsed'].get('renewal_rate', 0), lapsed.get('renewal_rate', 0))
     ctx['lapsed_total_mom'] = pct_change(prev_lapsed.get('total', 0), lapsed.get('total', 0))
-    
+
     # Checkins comparators
     ctx['late_cancel_mom'] = pct_change(prev_checkins.get('late_cancel', 0), checkins.get('late_cancel', 0))
     ctx['lc_rate'] = (checkins.get('late_cancel', 0) / checkins.get('total', 1)) * 100 if checkins.get('total') else 0
     ctx['prev_lc_rate'] = (prev_checkins.get('late_cancel', 0) / prev_checkins.get('total', 1)) * 100 if prev_checkins.get('total') else 0
     ctx['lc_rate_mom'] = pp_change(ctx['prev_lc_rate'], ctx['lc_rate'])
-    
+
     # Discount penetration
     ctx['disc_penetration'] = (sales.get('disc', 0) / sales.get('gross', 1)) * 100 if sales.get('gross') else 0
     ctx['prev_disc_penetration'] = (prev_sales.get('disc', 0) / prev_sales.get('gross', 1)) * 100 if prev_sales.get('gross') else 0
     ctx['disc_pen_mom'] = pp_change(ctx['prev_disc_penetration'], ctx['disc_penetration'])
-    
-    # Retention rate of trials
+
     ctx['trial_retention'] = (new.get('retained', 0) / new.get('trials', 1)) * 100 if new.get('trials') else 0
-    
-    # Cumulative lapsed
     ctx['cumulative_lapsed'] = get_lapsed_cumulative(loc_key).get(month_key, 0)
-    
+
+    return ctx
     return ctx
 
 

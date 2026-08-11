@@ -61,6 +61,14 @@ def _init_imports():
     get_heatmap = _gh
     get_sessions_by_trainer_format = _gstf
 
+def get_top_lead_source(ctx):
+    """Get the top lead source by volume."""
+    sources = get_leads_source(ctx['loc_key'], ctx['month_key'])
+    if not sources:
+        return "n/a"
+    top = max(sources.items(), key=lambda x: x[1]['total'])
+    return f"{top[0]} ({top[1]['total']} leads, {top[1]['converted']} converted)"
+
 # Wrapper functions that use the lazily-imported versions
 def lakh(v):
     if _lakh is None: _init_imports()
@@ -318,6 +326,8 @@ def section_01(ctx):
     loc_name = loc['short_name']
     month_name = mo['month_name']
     prev_name = mo['prev_month_name']
+    prev2_name = mo['prev2_month_name']
+    yoy_name = mo['yoy_month_name']
     
     # Build insights based on actual data
     insights = build_section_01_insights(ctx)
@@ -326,15 +336,18 @@ def section_01(ctx):
     kpi_table = build_section_01_kpi_table(ctx)
     
     # Build executive narrative
-    net_baseline_diff = ((s['net'] - baseline['sales']['net']) / baseline['sales']['net']) * 100
+    ya_net = baseline.get('sales', {}).get('net', 0)
+    net_baseline_diff = ((s['net'] - ya_net) / ya_net * 100) if ya_net else 0
     
-    title = f"{month_name} delivered {'strong' if net_baseline_diff > 5 else 'steady' if net_baseline_diff > -5 else 'soft'} revenue at {lakh(s['net'])} net &mdash; {'above' if net_baseline_diff > 0 else 'below'} the {ctx['baseline_label']} baseline, with {'improving' if ctx['conv_mom'].startswith('+') else 'declining'} conversion and {'stabilising' if ctx['churn_mom'].startswith('-') else 'rising'} churn as the key watchpoints."
+    title = f"{month_name} delivered {'strong' if net_baseline_diff > 5 else 'steady' if net_baseline_diff > -5 else 'soft'} revenue at {lakh(s['net'])} net &mdash; {'above' if net_baseline_diff > 0 else 'below'} the {ctx['year_avg_label']} average, with {'improving' if ctx['conv_mom'].startswith('+') else 'declining'} conversion and {'stabilising' if ctx['churn_mom'].startswith('-') else 'rising'} churn as the key watchpoints."
     
     deck = (
         f"Headline revenue closed at <strong>{lakh(s['net'])} net</strong> "
         f"({lakh(s['gross'])} gross, {lakh(s['disc'])} discount), which is "
-        f"<strong>{ctx['net_baseline']} vs the {ctx['baseline_label']} baseline</strong> of {lakh(baseline['sales']['net'])}. "
-        f"The MoM figure is {ctx['net_mom']} vs {prev_name}. "
+        f"<strong>{ctx['net_mom']} vs {prev_name}</strong> (M-1), "
+        f"<strong>{ctx['net_m2_mom']} vs {prev2_name}</strong> (M-2), "
+        f"<strong>{ctx['net_year_avg']} vs {ctx['year_avg_label']}</strong>, "
+        f"and <strong>{ctx['net_yoy']} vs {yoy_name}</strong> (YoY). "
         f"Conversion rate is {pct(new['rate'])} ({new['converted']} of {new['trials']} trials), "
         f"{'up' if ctx['conv_mom'].startswith('+') else 'down'} {ctx['conv_mom']} MoM. "
         f"Churn rate stands at {pct(lapsed['churn'])}, {'improving' if ctx['churn_mom'].startswith('-') else 'deteriorating'} {ctx['churn_mom']} MoM. "
@@ -354,7 +367,7 @@ def section_01(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Headline KPI Table &middot; {month_name} vs {prev_name} vs {ctx['baseline_label']} Baseline</div>
+        <div class="pane-title" style="padding: 16px 16px 8px;">Headline KPI Table &middot; {month_name} vs Prior 2 Months, {ctx['year_avg_label']} &amp; YoY</div>
 {kpi_table}
       </div>
     </div>
@@ -378,13 +391,13 @@ def build_section_01_insights(ctx):
     insights = []
     
     # 01: Revenue vs baseline
-    net_bl = baseline['sales']['net']
-    bl_diff = pct_change(net_bl, s['net'])
-    is_up = s['net'] > net_bl
+    net_bl = baseline.get('sales', {}).get('net', 0)
+    bl_diff = pct_change(net_bl, s['net']) if net_bl else "n/a"
+    is_up = s['net'] > net_bl if net_bl else True
     insights.append(insight_card(
         "01",
-        f"Revenue at {lakh(s['net'])} net ({bl_diff} vs baseline) &mdash; {'Volume-Driven Lift' if is_up else 'Revenue Compression'}.",
-        f"Net sales sit at <strong>{lakh(s['net'])}</strong> ({bl_diff} vs {ctx['baseline_label']} average of {lakh(net_bl)}, {ctx['net_mom']} MoM). "
+        f"Revenue at {lakh(s['net'])} net ({bl_diff} vs {ctx['year_avg_label']}) &mdash; {'Volume-Driven Lift' if is_up else 'Revenue Compression'}.",
+        f"Net sales sit at <strong>{lakh(s['net'])}</strong> ({bl_diff} vs {ctx['year_avg_label']} average of {lakh(net_bl)}, {ctx['net_mom']} vs {mo['prev_month_name']}). "
         f"Transactions ({int(s['sales'])}) and ATV ({rupee(s['atv'])}) reveal the growth engine. "
         f"<br><strong>What this tells us:</strong> {'Top-line momentum is active, but discounting (' + pct(ctx['disc_penetration']) + ' penetration) is eroding margin yield.' if is_up else 'Revenue is constrained by low transaction volume and pricing leakage.'} "
         f"<br><strong>Strategic Action:</strong> {'Pivot from price discounting to value-add bonuses to stabilize ATV and recover ~&#8377;1.1L/mo in net margin.' if is_up else 'Launch a targeted renewal drive to boost baseline transaction count.'}"
@@ -392,25 +405,25 @@ def build_section_01_insights(ctx):
     
     # 02: Conversion & funnel
     conv_rate = new['rate']
-    conv_bl = baseline['new']['rate']
-    conv_bl_diff = pp_change(conv_bl, conv_rate)
-    is_conv_good = conv_rate >= conv_bl
+    conv_bl = baseline.get('new', {}).get('rate', 0)
+    conv_bl_diff = pp_change(conv_bl, conv_rate) if conv_bl else "n/a"
+    is_conv_good = conv_rate >= conv_bl if conv_bl else True
     insights.append(insight_card(
         "02",
-        f"Conversion rate at {pct(conv_rate)} ({conv_bl_diff} vs baseline) &mdash; {'Strong Conversion' if is_conv_good else 'Funnel Bottleneck'}.",
-        f"{new['converted']} of {new['trials']} trialists converted ({pct(conv_rate)}), {ctx['conv_mom']} MoM vs baseline of {pct(conv_bl)}. "
+        f"Conversion rate at {pct(conv_rate)} ({conv_bl_diff} vs {ctx['year_avg_label']}) &mdash; {'Strong Conversion' if is_conv_good else 'Funnel Bottleneck'}.",
+        f"{new['converted']} of {new['trials']} trialists converted ({pct(conv_rate)}), {ctx['conv_mom']} vs {mo['prev_month_name']} vs {ctx['year_avg_label']} average of {pct(conv_bl)}. "
         f"<br><strong>What this tells us:</strong> {'The trial experience is effectively convincing prospects to join.' if is_conv_good else 'Trial drop-off is occurring during the post-trial 48-hour window due to lack of immediate front-desk follow-up.'} "
         f"<br><strong>Strategic Action:</strong> {'Expand lead acquisition spend on high-converting channels.' if is_conv_good else 'Establish an automated 24-hour phone outreach rule for expiring trials to capture ~8 additional members/month.'}"
     ))
     
     # 03: Churn
     churn = lapsed['churn']
-    churn_bl = baseline['lapsed']['churn']
-    churn_bl_diff = pp_change(churn_bl, churn)
-    is_churn_low = churn <= churn_bl
+    churn_bl = baseline.get('lapsed', {}).get('churn', 0)
+    churn_bl_diff = pp_change(churn_bl, churn) if churn_bl else "n/a"
+    is_churn_low = churn <= churn_bl if churn_bl else True
     insights.append(insight_card(
         "03",
-        f"Churn at {pct(churn)} ({churn_bl_diff} vs baseline) &mdash; {'Retention Stability' if is_churn_low else 'Retention Leakage'}.",
+        f"Churn at {pct(churn)} ({churn_bl_diff} vs {ctx['year_avg_label']}) &mdash; {'Retention Stability' if is_churn_low else 'Retention Leakage'}.",
         f"Of {lapsed['total']} expiring memberships, {lapsed['renewed']} renewed ({pct(lapsed['renewal_rate'])}), while {lapsed['lapsed']} lapsed ({pct(churn)} churn). "
         f"<br><strong>What this tells us:</strong> {'Member retention discipline is maintaining recurring base stability.' if is_churn_low else 'Lapses are escalating among members with declining check-in frequency in month 3.'} "
         f"<br><strong>Strategic Action:</strong> {'Focus outreach on lapsed recovery campaigns.' if is_churn_low else 'Set automated alerts when a member visits fewer than 3 times in 30 days to trigger coach check-ins.'}"
@@ -418,12 +431,12 @@ def build_section_01_insights(ctx):
     
     # 04: Discount efficiency
     disc_eff = s['disc_eff']
-    disc_eff_bl = baseline['sales']['disc_eff']
-    is_eff_good = disc_eff >= disc_eff_bl
+    disc_eff_bl = baseline.get('sales', {}).get('disc_eff', 0)
+    is_eff_good = disc_eff >= disc_eff_bl if disc_eff_bl else True
     insights.append(insight_card(
         "04",
         f"Discount Efficiency at &#8377;{disc_eff:.2f} per &#8377;1 Discounted &mdash; {'Margin Healthy' if is_eff_good else 'Uncontrolled Discounting'}.",
-        f"Discounts total {lakh(s['disc'])} against {lakh(s['gross'])} gross ({pct(ctx['disc_penetration'])} penetration) vs baseline efficiency of &#8377;{disc_eff_bl:.2f}. "
+        f"Discounts total {lakh(s['disc'])} against {lakh(s['gross'])} gross ({pct(ctx['disc_penetration'])} penetration) vs {ctx['year_avg_label']} efficiency of &#8377;{disc_eff_bl:.2f}. "
         f"<br><strong>What this tells us:</strong> {'Promotional offers are yielding adequate net sales return.' if is_eff_good else 'Discounts are cannibalizing full-price conversions without generating incremental volume.'} "
         f"<br><strong>Strategic Action:</strong> {'Maintain current pricing controls.' if is_eff_good else 'Enforce a strict 5% discount cap on annual memberships to protect yield.'}"
     ))
@@ -432,31 +445,30 @@ def build_section_01_insights(ctx):
     insights.append(insight_card(
         "05",
         f"Fill Rate at {pct(sess['fill'])} across {sess['sessions']} Sessions &mdash; Utilization Signal.",
-        f"{sess['sessions']} sessions generated {fmt_int(sess['visits'])} visits (avg {sess['avg_visits']:.1f}/session), {ctx['fill_mom']} MoM vs baseline {pct(baseline['sessions']['fill'])}. "
+        f"{sess['sessions']} sessions generated {fmt_int(sess['visits'])} visits (avg {sess['avg_visits']:.1f}/session), {ctx['fill_mom']} vs {mo['prev_month_name']} vs {ctx['year_avg_label']} average of {pct(baseline.get('sessions',{}).get('fill',0))}. "
         f"<br><strong>What this tells us:</strong> Prime slots are running near capacity while off-peak hours pull down overall facility utilization. "
         f"<br><strong>Strategic Action:</strong> Reallocate low-fill off-peak hours to peak class formats to unlock ~40 incremental visits per week."
     ))
     
     # 06: Lead pipeline
-    leads_bl = baseline['leads']['total']
-    leads_bl_diff = pct_change(leads_bl, leads['total'])
-    is_leads_good = leads['total'] >= leads_bl
+    leads_bl = baseline.get('leads', {}).get('total', 0)
+    leads_bl_diff = pct_change(leads_bl, leads['total']) if leads_bl else "n/a"
+    is_leads_good = leads['total'] >= leads_bl if leads_bl else True
     insights.append(insight_card(
         "06",
-        f"Lead Volume at {leads['total']} Leads ({leads_bl_diff} vs baseline) &mdash; Pipeline Health.",
-        f"Lead volume sits {ctx['leads_mom']} MoM vs baseline of {leads_bl:.0f}. Top source: {get_top_lead_source(ctx)}. "
+        f"Lead Volume at {leads['total']} Leads ({leads_bl_diff} vs {ctx['year_avg_label']}) &mdash; Pipeline Health.",
+        f"Lead volume sits {ctx['leads_mom']} vs {mo['prev_month_name']} vs {ctx['year_avg_label']} average of {leads_bl:.0f}. Top source: {get_top_lead_source(ctx)}. "
         f"<br><strong>What this tells us:</strong> {'Lead acquisition is generating steady prospect volume.' if is_leads_good else 'Pipeline contraction will constrain future trial conversion if unaddressed.'} "
         f"<br><strong>Strategic Action:</strong> {'Scale ad spend on top-performing acquisition channels.' if is_leads_good else 'Launch a member referral incentive campaign to boost inquiry volume.'}"
     ))
     
     # 07: Late cancels
     lc = checkins['late_cancel']
-    lc_members = checkins['lc_member_count']
     heavy = checkins['heavy_cancelers']
     insights.append(insight_card(
         "07",
         f"{lc} Late Cancels ({heavy} Heavy Cancelers) &mdash; Capacity Loss.",
-        f"Late-cancel rate is {pct(ctx['lc_rate'])} of check-ins ({ctx['lc_rate_mom']} MoM), with {heavy} members canceling 5+ times. Zero penalty collected. "
+        f"Late-cancel rate is {pct(ctx['lc_rate'])} of check-ins ({ctx['lc_rate_mom']} vs {mo['prev_month_name']}), with {heavy} members canceling 5+ times. Zero penalty collected. "
         f"<br><strong>What this tells us:</strong> Unenforced cancellation policies result in wasted spot capacity and prevent waitlisted members from attending. "
         f"<br><strong>Strategic Action:</strong> Implement a standard &#8377;250 late-cancel fee to recover lost spots and improve class commitment."
     ))
@@ -464,96 +476,210 @@ def build_section_01_insights(ctx):
     return "\n".join(insights)
 
 
-def get_top_lead_source(ctx):
-    """Get the top lead source by volume."""
-    sources = get_leads_source(ctx['loc_key'], ctx['month_key'])
-    if not sources:
-        return "n/a"
-    top = max(sources.items(), key=lambda x: x[1]['total'])
-    return f"{top[0]} ({top[1]['total']} leads, {top[1]['converted']} converted)"
-
-
 def build_section_01_kpi_table(ctx):
-    """Build the headline KPI comparison table."""
+    """Build the headline KPI comparison table showing current month, M-1, M-2, current year avg (excl. current month), and same month last year (YoY)."""
     s = ctx['sales']
     sess = ctx['sessions']
     leads = ctx['leads']
     new = ctx['new']
     lapsed = ctx['lapsed']
     checkins = ctx['checkins']
-    baseline = ctx['baseline']
-    prev_s = ctx['prev_sales']
-    prev_sess = ctx['prev_sessions']
-    prev_leads = ctx['prev_leads']
-    prev_new = ctx['prev_new']
-    prev_lapsed = ctx['prev_lapsed']
-    prev_checkins = ctx['prev_checkins']
-    
-    def row(metric, current_disp, prev_disp, baseline_disp, mom_str, current_raw=None, baseline_raw=None, higher_better=True):
-        mom_b = badge(mom_str, higher_better)
-        if baseline_raw is not None and current_raw is not None:
-            bl_str = pct_change(baseline_raw, current_raw)
-            bl_b = badge(bl_str, higher_better)
-        else:
-            bl_str = "n/a"
-            bl_b = "neutral"
+
+    prev1_s = ctx['prev_sales']
+    prev1_sess = ctx['prev_sessions']
+    prev1_leads = ctx['prev_leads']
+    prev1_new = ctx['prev_new']
+    prev1_lapsed = ctx['prev_lapsed']
+    prev1_checkins = ctx['prev_checkins']
+
+    prev2_s = ctx['prev2_sales']
+    prev2_sess = ctx['prev2_sessions']
+    prev2_leads = ctx['prev2_leads']
+    prev2_new = ctx['prev2_new']
+    prev2_lapsed = ctx['prev2_lapsed']
+    prev2_checkins = ctx['prev2_checkins']
+
+    year_avg = ctx['year_avg']
+    ya_s = year_avg.get('sales', {})
+    ya_sess = year_avg.get('sessions', {})
+    ya_leads = year_avg.get('leads', {})
+    ya_new = year_avg.get('new', {})
+    ya_lapsed = year_avg.get('lapsed', {})
+    ya_checkins = year_avg.get('checkins', {})
+
+    yoy_s = ctx['yoy_sales']
+    yoy_sess = ctx['yoy_sessions']
+    yoy_leads = ctx['yoy_leads']
+    yoy_new = ctx['yoy_new']
+    yoy_lapsed = ctx['yoy_lapsed']
+    yoy_checkins = ctx['yoy_checkins']
+
+    mo = ctx['mo']
+    m1_label = mo['prev_month_name']
+    m2_label = mo['prev2_month_name']
+    ya_label = ctx['year_avg_label']
+    yoy_label = mo['yoy_month_name']
+
+    def row(metric, current_disp, m1_disp, m2_disp, ya_disp, yoy_disp,
+            current_raw=None, m1_raw=None, m2_raw=None, ya_raw=None, yoy_raw=None, higher_better=True):
+
+        str_m1 = pct_change(m1_raw, current_raw) if (m1_raw is not None and current_raw is not None and m1_raw != 0) else "n/a"
+        b_m1 = badge(str_m1, higher_better)
+
+        str_m2 = pct_change(m2_raw, current_raw) if (m2_raw is not None and current_raw is not None and m2_raw != 0) else "n/a"
+        b_m2 = badge(str_m2, higher_better)
+
+        str_ya = pct_change(ya_raw, current_raw) if (ya_raw is not None and current_raw is not None and ya_raw != 0) else "n/a"
+        b_ya = badge(str_ya, higher_better)
+
+        str_yoy = pct_change(yoy_raw, current_raw) if (yoy_raw is not None and current_raw is not None and yoy_raw != 0) else "n/a"
+        b_yoy = badge(str_yoy, higher_better)
+
         return f'''            <tr>
-              <td>{metric}</td>
+              <td class="metric-name">{metric}</td>
               <td class="num">{current_disp}</td>
-              <td class="num">{prev_disp}</td>
-              <td class="num">{baseline_disp}</td>
-              <td><span class='badge {mom_b}'>{mom_str}</span></td>
-              <td><span class='badge {bl_b}'>{bl_str}</span></td>
+              <td class="num">{m1_disp}</td>
+              <td class="num">{m2_disp}</td>
+              <td class="num">{ya_disp}</td>
+              <td class="num">{yoy_disp}</td>
+              <td><span class='badge {b_m1}'>{str_m1}</span></td>
+              <td><span class='badge {b_m2}'>{str_m2}</span></td>
+              <td><span class='badge {b_ya}'>{str_ya}</span></td>
+              <td><span class='badge {b_yoy}'>{str_yoy}</span></td>
             </tr>'''
-    
-    def row_pp(metric, current_disp, prev_disp, baseline_disp, mom_str, current_raw=None, baseline_raw=None, higher_better=True):
-        mom_b = badge_from_pp(mom_str, higher_better)
-        if baseline_raw is not None and current_raw is not None:
-            bl_str = pp_change(baseline_raw, current_raw)
-            bl_b = badge_from_pp(bl_str, higher_better)
-        else:
-            bl_str = "n/a"
-            bl_b = "neutral"
+
+    def row_pp(metric, current_disp, m1_disp, m2_disp, ya_disp, yoy_disp,
+               current_raw=None, m1_raw=None, m2_raw=None, ya_raw=None, yoy_raw=None, higher_better=True):
+
+        str_m1 = pp_change(m1_raw, current_raw) if (m1_raw is not None and current_raw is not None) else "n/a"
+        b_m1 = badge_from_pp(str_m1, higher_better)
+
+        str_m2 = pp_change(m2_raw, current_raw) if (m2_raw is not None and current_raw is not None) else "n/a"
+        b_m2 = badge_from_pp(str_m2, higher_better)
+
+        str_ya = pp_change(ya_raw, current_raw) if (ya_raw is not None and current_raw is not None) else "n/a"
+        b_ya = badge_from_pp(str_ya, higher_better)
+
+        str_yoy = pp_change(yoy_raw, current_raw) if (yoy_raw is not None and current_raw is not None) else "n/a"
+        b_yoy = badge_from_pp(str_yoy, higher_better)
+
         return f'''            <tr>
-              <td>{metric}</td>
+              <td class="metric-name">{metric}</td>
               <td class="num">{current_disp}</td>
-              <td class="num">{prev_disp}</td>
-              <td class="num">{baseline_disp}</td>
-              <td><span class='badge {mom_b}'>{mom_str}</span></td>
-              <td><span class='badge {bl_b}'>{bl_str}</span></td>
+              <td class="num">{m1_disp}</td>
+              <td class="num">{m2_disp}</td>
+              <td class="num">{ya_disp}</td>
+              <td class="num">{yoy_disp}</td>
+              <td><span class='badge {b_m1}'>{str_m1}</span></td>
+              <td><span class='badge {b_m2}'>{str_m2}</span></td>
+              <td><span class='badge {b_ya}'>{str_ya}</span></td>
+              <td><span class='badge {b_yoy}'>{str_yoy}</span></td>
             </tr>'''
-    
+
     rows = []
-    rows.append(row("Net Sales", lakh(s['net']), lakh(prev_s.get('net',0)), lakh(baseline['sales']['net']), ctx['net_mom'], current_raw=s['net'], baseline_raw=baseline['sales']['net']))
-    rows.append(row("Gross Sales", lakh(s['gross']), lakh(prev_s.get('gross',0)), lakh(baseline['sales']['gross']), ctx['gross_mom'], current_raw=s['gross'], baseline_raw=baseline['sales']['gross']))
-    rows.append(row("Discount Value", lakh(s['disc']), lakh(prev_s.get('disc',0)), lakh(baseline['sales']['disc']), ctx['disc_mom'], current_raw=s['disc'], baseline_raw=baseline['sales']['disc'], higher_better=False))
-    rows.append(row("Transactions", fmt_int(s['sales']), fmt_int(prev_s.get('sales',0)), f"{baseline['sales']['sales']:.0f}", ctx['sales_count_mom'], current_raw=s['sales'], baseline_raw=baseline['sales']['sales']))
-    rows.append(row("Unique Buyers", fmt_int(s['members']), fmt_int(prev_s.get('members',0)), f"{baseline['sales']['members']:.0f}", ctx['members_mom'], current_raw=s['members'], baseline_raw=baseline['sales']['members']))
-    rows.append(row("ATV", rupee(s['atv']), rupee(prev_s.get('atv',0)), rupee(baseline['sales']['atv']), ctx['atv_mom'], current_raw=s['atv'], baseline_raw=baseline['sales']['atv']))
-    rows.append(row("Disc Efficiency", f"&#8377;{s['disc_eff']:.2f}", f"&#8377;{prev_s.get('disc_eff',0):.2f}", f"&#8377;{baseline['sales']['disc_eff']:.2f}", ctx['disc_eff_mom'], current_raw=s['disc_eff'], baseline_raw=baseline['sales']['disc_eff']))
-    rows.append(row("Sessions", fmt_int(sess['sessions']), fmt_int(prev_sess.get('sessions',0)), f"{baseline['sessions']['sessions']:.0f}", ctx['sessions_mom'], current_raw=sess['sessions'], baseline_raw=baseline['sessions']['sessions']))
-    rows.append(row("Visits", fmt_int(sess['visits']), fmt_int(prev_sess.get('visits',0)), f"{baseline['sessions']['visits']:.0f}", ctx['visits_mom'], current_raw=sess['visits'], baseline_raw=baseline['sessions']['visits']))
-    rows.append(row_pp("Fill Rate", pct(sess['fill']), pct(prev_sess.get('fill',0)), pct(baseline['sessions']['fill']), ctx['fill_mom'], current_raw=sess['fill'], baseline_raw=baseline['sessions']['fill']))
-    rows.append(row("Leads", fmt_int(leads['total']), fmt_int(prev_leads.get('total',0)), f"{baseline['leads']['total']:.0f}", ctx['leads_mom'], current_raw=leads['total'], baseline_raw=baseline['leads']['total']))
-    rows.append(row_pp("Conv Rate", pct(new['rate']), pct(prev_new.get('rate',0)), pct(baseline['new']['rate']), ctx['conv_mom'], current_raw=new['rate'], baseline_raw=baseline['new']['rate']))
-    rows.append(row("Converted", fmt_int(new['converted']), fmt_int(prev_new.get('converted',0)), f"{baseline['new']['converted']:.0f}", ctx['converted_mom'], current_raw=new['converted'], baseline_raw=baseline['new']['converted']))
-    rows.append(row("Trials", fmt_int(new['trials']), fmt_int(prev_new.get('trials',0)), "n/a", ctx['trials_mom']))
-    rows.append(row("Retained", fmt_int(new['retained']), fmt_int(prev_new.get('retained',0)), "n/a", ctx['retained_mom']))
-    rows.append(row_pp("Churn Rate", pct(lapsed['churn']), pct(prev_lapsed.get('churn',0)), pct(baseline['lapsed']['churn']), ctx['churn_mom'], current_raw=lapsed['churn'], baseline_raw=baseline['lapsed']['churn'], higher_better=False))
-    rows.append(row_pp("Renewal Rate", pct(lapsed['renewal_rate']), pct(prev_lapsed.get('renewal_rate',0)), pct(baseline['lapsed']['renewal_rate']), ctx['renewal_mom'], current_raw=lapsed['renewal_rate'], baseline_raw=baseline['lapsed']['renewal_rate']))
-    rows.append(row("Lapsed Members", fmt_int(lapsed['lapsed']), fmt_int(prev_lapsed.get('lapsed',0)), f"{baseline['lapsed']['lapsed']:.0f}", ctx['lapsed_mom'], current_raw=lapsed['lapsed'], baseline_raw=baseline['lapsed']['lapsed'], higher_better=False))
-    rows.append(row("Late Cancels", fmt_int(checkins['late_cancel']), fmt_int(prev_checkins.get('late_cancel',0)), "n/a", ctx['late_cancel_mom'], higher_better=False))
-    
+
+    def get_lakh(dict_obj, key):
+        return lakh(dict_obj.get(key, 0)) if dict_obj and dict_obj.get(key) else "n/a"
+
+    def get_fmt_int(dict_obj, key):
+        return fmt_int(dict_obj.get(key, 0)) if dict_obj and dict_obj.get(key) is not None and dict_obj != {} else "n/a"
+
+    def get_rupee(dict_obj, key):
+        return rupee(dict_obj.get(key, 0)) if dict_obj and dict_obj.get(key) else "n/a"
+
+    def get_pct(dict_obj, key):
+        return pct(dict_obj.get(key, 0)) if dict_obj and dict_obj.get(key) is not None and dict_obj != {} else "n/a"
+
+    # Net Sales
+    rows.append(row("Net Sales", lakh(s.get('net',0)), get_lakh(prev1_s, 'net'), get_lakh(prev2_s, 'net'), get_lakh(ya_s, 'net'), get_lakh(yoy_s, 'net'),
+                    current_raw=s.get('net'), m1_raw=prev1_s.get('net'), m2_raw=prev2_s.get('net'), ya_raw=ya_s.get('net'), yoy_raw=yoy_s.get('net')))
+
+    # Gross Sales
+    rows.append(row("Gross Sales", lakh(s.get('gross',0)), get_lakh(prev1_s, 'gross'), get_lakh(prev2_s, 'gross'), get_lakh(ya_s, 'gross'), get_lakh(yoy_s, 'gross'),
+                    current_raw=s.get('gross'), m1_raw=prev1_s.get('gross'), m2_raw=prev2_s.get('gross'), ya_raw=ya_s.get('gross'), yoy_raw=yoy_s.get('gross')))
+
+    # Discount Value
+    rows.append(row("Discount Value", lakh(s.get('disc',0)), get_lakh(prev1_s, 'disc'), get_lakh(prev2_s, 'disc'), get_lakh(ya_s, 'disc'), get_lakh(yoy_s, 'disc'),
+                    current_raw=s.get('disc'), m1_raw=prev1_s.get('disc'), m2_raw=prev2_s.get('disc'), ya_raw=ya_s.get('disc'), yoy_raw=yoy_s.get('disc'), higher_better=False))
+
+    # Transactions
+    rows.append(row("Transactions", fmt_int(s.get('sales',0)), get_fmt_int(prev1_s, 'sales'), get_fmt_int(prev2_s, 'sales'), get_fmt_int(ya_s, 'sales'), get_fmt_int(yoy_s, 'sales'),
+                    current_raw=s.get('sales'), m1_raw=prev1_s.get('sales'), m2_raw=prev2_s.get('sales'), ya_raw=ya_s.get('sales'), yoy_raw=yoy_s.get('sales')))
+
+    # Unique Buyers
+    rows.append(row("Unique Buyers", fmt_int(s.get('members',0)), get_fmt_int(prev1_s, 'members'), get_fmt_int(prev2_s, 'members'), get_fmt_int(ya_s, 'members'), get_fmt_int(yoy_s, 'members'),
+                    current_raw=s.get('members'), m1_raw=prev1_s.get('members'), m2_raw=prev2_s.get('members'), ya_raw=ya_s.get('members'), yoy_raw=yoy_s.get('members')))
+
+    # ATV
+    rows.append(row("ATV", rupee(s.get('atv',0)), get_rupee(prev1_s, 'atv'), get_rupee(prev2_s, 'atv'), get_rupee(ya_s, 'atv'), get_rupee(yoy_s, 'atv'),
+                    current_raw=s.get('atv'), m1_raw=prev1_s.get('atv'), m2_raw=prev2_s.get('atv'), ya_raw=ya_s.get('atv'), yoy_raw=yoy_s.get('atv')))
+
+    # Disc Efficiency
+    rows.append(row("Disc Efficiency", f"&#8377;{s.get('disc_eff',0):.2f}", f"&#8377;{prev1_s.get('disc_eff',0):.2f}" if prev1_s.get('disc_eff') else "n/a", f"&#8377;{prev2_s.get('disc_eff',0):.2f}" if prev2_s.get('disc_eff') else "n/a", f"&#8377;{ya_s.get('disc_eff',0):.2f}" if ya_s.get('disc_eff') else "n/a", f"&#8377;{yoy_s.get('disc_eff',0):.2f}" if yoy_s.get('disc_eff') else "n/a",
+                    current_raw=s.get('disc_eff'), m1_raw=prev1_s.get('disc_eff'), m2_raw=prev2_s.get('disc_eff'), ya_raw=ya_s.get('disc_eff'), yoy_raw=yoy_s.get('disc_eff')))
+
+    # Sessions
+    rows.append(row("Sessions", fmt_int(sess.get('sessions',0)), get_fmt_int(prev1_sess, 'sessions'), get_fmt_int(prev2_sess, 'sessions'), get_fmt_int(ya_sess, 'sessions'), get_fmt_int(yoy_sess, 'sessions'),
+                    current_raw=sess.get('sessions'), m1_raw=prev1_sess.get('sessions'), m2_raw=prev2_sess.get('sessions'), ya_raw=ya_sess.get('sessions'), yoy_raw=yoy_sess.get('sessions')))
+
+    # Visits
+    rows.append(row("Visits", fmt_int(sess.get('visits',0)), get_fmt_int(prev1_sess, 'visits'), get_fmt_int(prev2_sess, 'visits'), get_fmt_int(ya_sess, 'visits'), get_fmt_int(yoy_sess, 'visits'),
+                    current_raw=sess.get('visits'), m1_raw=prev1_sess.get('visits'), m2_raw=prev2_sess.get('visits'), ya_raw=ya_sess.get('visits'), yoy_raw=yoy_sess.get('visits')))
+
+    # Fill Rate
+    rows.append(row_pp("Fill Rate", pct(sess.get('fill',0)), get_pct(prev1_sess, 'fill'), get_pct(prev2_sess, 'fill'), get_pct(ya_sess, 'fill'), get_pct(yoy_sess, 'fill'),
+                       current_raw=sess.get('fill'), m1_raw=prev1_sess.get('fill'), m2_raw=prev2_sess.get('fill'), ya_raw=ya_sess.get('fill'), yoy_raw=yoy_sess.get('fill')))
+
+    # Leads
+    rows.append(row("Leads", fmt_int(leads.get('total',0)), get_fmt_int(prev1_leads, 'total'), get_fmt_int(prev2_leads, 'total'), get_fmt_int(ya_leads, 'total'), get_fmt_int(yoy_leads, 'total'),
+                    current_raw=leads.get('total'), m1_raw=prev1_leads.get('total'), m2_raw=prev2_leads.get('total'), ya_raw=ya_leads.get('total'), yoy_raw=yoy_leads.get('total')))
+
+    # Conv Rate
+    rows.append(row_pp("Conv Rate", pct(new.get('rate',0)), get_pct(prev1_new, 'rate'), get_pct(prev2_new, 'rate'), get_pct(ya_new, 'rate'), get_pct(yoy_new, 'rate'),
+                       current_raw=new.get('rate'), m1_raw=prev1_new.get('rate'), m2_raw=prev2_new.get('rate'), ya_raw=ya_new.get('rate'), yoy_raw=yoy_new.get('rate')))
+
+    # Converted
+    rows.append(row("Converted", fmt_int(new.get('converted',0)), get_fmt_int(prev1_new, 'converted'), get_fmt_int(prev2_new, 'converted'), get_fmt_int(ya_new, 'converted'), get_fmt_int(yoy_new, 'converted'),
+                    current_raw=new.get('converted'), m1_raw=prev1_new.get('converted'), m2_raw=prev2_new.get('converted'), ya_raw=ya_new.get('converted'), yoy_raw=yoy_new.get('converted')))
+
+    # Trials
+    rows.append(row("Trials", fmt_int(new.get('trials',0)), get_fmt_int(prev1_new, 'trials'), get_fmt_int(prev2_new, 'trials'), get_fmt_int(ya_new, 'trials'), get_fmt_int(yoy_new, 'trials'),
+                    current_raw=new.get('trials'), m1_raw=prev1_new.get('trials'), m2_raw=prev2_new.get('trials'), ya_raw=ya_new.get('trials'), yoy_raw=yoy_new.get('trials')))
+
+    # Retained
+    rows.append(row("Retained", fmt_int(new.get('retained',0)), get_fmt_int(prev1_new, 'retained'), get_fmt_int(prev2_new, 'retained'), get_fmt_int(ya_new, 'retained'), get_fmt_int(yoy_new, 'retained'),
+                    current_raw=new.get('retained'), m1_raw=prev1_new.get('retained'), m2_raw=prev2_new.get('retained'), ya_raw=ya_new.get('retained'), yoy_raw=yoy_new.get('retained')))
+
+    # Churn Rate
+    rows.append(row_pp("Churn Rate", pct(lapsed.get('churn',0)), get_pct(prev1_lapsed, 'churn'), get_pct(prev2_lapsed, 'churn'), get_pct(ya_lapsed, 'churn'), get_pct(yoy_lapsed, 'churn'),
+                       current_raw=lapsed.get('churn'), m1_raw=prev1_lapsed.get('churn'), m2_raw=prev2_lapsed.get('churn'), ya_raw=ya_lapsed.get('churn'), yoy_raw=yoy_lapsed.get('churn'), higher_better=False))
+
+    # Renewal Rate
+    rows.append(row_pp("Renewal Rate", pct(lapsed.get('renewal_rate',0)), get_pct(prev1_lapsed, 'renewal_rate'), get_pct(prev2_lapsed, 'renewal_rate'), get_pct(ya_lapsed, 'renewal_rate'), get_pct(yoy_lapsed, 'renewal_rate'),
+                       current_raw=lapsed.get('renewal_rate'), m1_raw=prev1_lapsed.get('renewal_rate'), m2_raw=prev2_lapsed.get('renewal_rate'), ya_raw=ya_lapsed.get('renewal_rate'), yoy_raw=yoy_lapsed.get('renewal_rate')))
+
+    # Lapsed Members
+    rows.append(row("Lapsed Members", fmt_int(lapsed.get('lapsed',0)), get_fmt_int(prev1_lapsed, 'lapsed'), get_fmt_int(prev2_lapsed, 'lapsed'), get_fmt_int(ya_lapsed, 'lapsed'), get_fmt_int(yoy_lapsed, 'lapsed'),
+                    current_raw=lapsed.get('lapsed'), m1_raw=prev1_lapsed.get('lapsed'), m2_raw=prev2_lapsed.get('lapsed'), ya_raw=ya_lapsed.get('lapsed'), yoy_raw=yoy_lapsed.get('lapsed'), higher_better=False))
+
+    # Late Cancels
+    rows.append(row("Late Cancels", fmt_int(checkins.get('late_cancel',0)), get_fmt_int(prev1_checkins, 'late_cancel'), get_fmt_int(prev2_checkins, 'late_cancel'), get_fmt_int(ya_checkins, 'late_cancel'), get_fmt_int(yoy_checkins, 'late_cancel'),
+                    current_raw=checkins.get('late_cancel'), m1_raw=prev1_checkins.get('late_cancel'), m2_raw=prev2_checkins.get('late_cancel'), ya_raw=ya_checkins.get('late_cancel'), yoy_raw=yoy_checkins.get('late_cancel'), higher_better=False))
+
     return f'''        <div class="table-wrap">
           <table class="data-table">
             <thead>
               <tr>
                 <th>Metric</th>
-                <th>{ctx['mo']['month_short']} {ctx['mo']['year']}</th>
-                <th>{ctx['mo']['prev_month_name']}</th>
-                <th>{ctx['baseline_label']} avg</th>
-                <th>MoM</th>
-                <th>vs Baseline</th>
+                <th>{mo['month_short']} {mo['year']}</th>
+                <th>{m1_label}</th>
+                <th>{m2_label}</th>
+                <th>{ya_label}</th>
+                <th>{yoy_label}</th>
+                <th>vs M-1</th>
+                <th>vs M-2</th>
+                <th>vs {mo['year']} Avg</th>
+                <th>vs YoY</th>
               </tr>
             </thead>
             <tbody>
@@ -2702,7 +2828,7 @@ def build_steady_state(ctx, baseline):
         f"Each percentage point of fill rate is worth approximately &#8377;{sess['revenue']/sess['capacity']*0.01/1e5:.2f}L in incremental revenue."))
     
     insights.append(insight_card("03",
-        f"Conversion rate target: 15&ndash;20% (from {pct(baseline['leads']['rate'])} baseline).",
+        f"Conversion rate target: 15&ndash;20% (from {pct(baseline.get('new',{}).get('rate',0))} baseline).",
         f"Funnel repair &mdash; referral amplification, trial follow-up protocol, and zero-conversion source cleanup &mdash; "
         f"would lift conversion by 3-8pp. Each additional conversion is worth approximately &#8377;25,000 in LTV."))
     

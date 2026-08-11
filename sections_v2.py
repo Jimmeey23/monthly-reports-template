@@ -249,6 +249,16 @@ def insight_card(num, title, text):
     </div>'''
 
 
+def classify_format(class_name):
+    """Every class is one of 3 formats: PowerCycle, Strength Lab, or Barre."""
+    name = (class_name or '').lower()
+    if 'powercycle' in name or 'power cycle' in name:
+        return 'PowerCycle'
+    if 'strength lab' in name:
+        return 'Strength Lab'
+    return 'Barre'
+
+
 def callout(text):
     return f'''    <div class="callout">{text}</div>'''
 

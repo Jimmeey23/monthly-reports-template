@@ -26,7 +26,8 @@ if (fs.existsSync(path.join(__dirname, '.env'))) {
 const { generateInsights } = require('./openai_insights');
 const { renderReportToPdf } = require('./pdf_export');
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
+let activePort = PORT;
 const PYTHON = process.env.PYTHON || 'python3';
 
 // Persistent uploads dir — use /uploads inside app dir (works on Railway/Render/VPS)
@@ -271,6 +272,215 @@ app.use(express.json({ limit: '5mb' }));
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
 
+app.get('/july-report/:studio', (req, res) => {
+  const files = {
+    kwality: 'Kwality_House_Performance_Report_July_2026_Enriched.html',
+    supreme: 'Supreme_HQ_Performance_Report_July_2026_Enriched.html',
+  };
+  const filename = files[req.params.studio];
+  if (!filename) return res.status(404).send('Report not found.');
+
+  const reportPath = path.join(__dirname, filename);
+  if (!fs.existsSync(reportPath)) return res.status(404).send('Report file missing.');
+  const embeddedCss = `<style>
+    .topbar,
+    .editor-toolbar,
+    .presenter-bar,
+    .presenter-modal,
+    .viewer-overlay,
+    .annotation-canvas,
+    .pdf-btn,
+    .topbar-actions,
+    .hm-controls {
+      display: none !important;
+    }
+    body {
+      padding-top: 0 !important;
+      margin: 0 !important;
+      overflow-x: hidden;
+      zoom: 0.9;
+    }
+    .hero {
+      padding-top: 24px !important;
+    }
+    .hero::before,
+    .hero::after,
+    .section-hero::after {
+      display: none !important;
+      content: none !important;
+    }
+    section.report-section .section-hero,
+    details.appendix-details > summary.section-hero,
+    .section-hero {
+      position: relative !important;
+      top: auto !important;
+      z-index: auto !important;
+    }
+    .section-hero.is-stuck {
+      padding-top: inherit !important;
+      padding-bottom: inherit !important;
+    }
+    .section-hero.is-stuck .section-title {
+      font-size: inherit !important;
+    }
+    .section-hero.is-stuck .section-deck {
+      display: block !important;
+    }
+    .container {
+      max-width: none !important;
+      width: 100% !important;
+      padding-left: clamp(28px, 3.5vw, 58px) !important;
+      padding-right: clamp(28px, 3.5vw, 58px) !important;
+      box-sizing: border-box !important;
+    }
+    .july-presenter-session-bar {
+      position: fixed !important;
+      top: 12px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      z-index: 99999 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 18px !important;
+      width: min(760px, calc(100vw - 32px)) !important;
+      padding: 10px 12px 10px 16px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 999px !important;
+      background: color-mix(in srgb, var(--bg-card) 94%, white 6%) !important;
+      color: var(--text) !important;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18) !important;
+      font: 700 13px var(--font-sans) !important;
+    }
+    .july-session-actions {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      flex-shrink: 0 !important;
+    }
+    .july-session-code {
+      display: inline-flex !important;
+      align-items: center !important;
+      min-height: 28px !important;
+      padding: 3px 10px !important;
+      border-radius: 999px !important;
+      background: var(--primary-soft) !important;
+      color: var(--primary) !important;
+      font-family: var(--font-mono) !important;
+    }
+    .july-presenter-session-bar button {
+      min-height: 30px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 999px !important;
+      background: var(--bg-inset) !important;
+      color: var(--text) !important;
+      padding: 4px 11px !important;
+      font: 800 12px var(--font-sans) !important;
+      cursor: pointer !important;
+    }
+    .july-presenter-session-active {
+      padding-top: 58px !important;
+    }
+    .july-viewer-locked .july-presenter-session-bar,
+    .july-viewer-locked .july-presenter-session-bar * {
+      pointer-events: auto !important;
+    }
+    @media (max-width: 640px) {
+      .july-presenter-session-bar {
+        align-items: flex-start !important;
+        border-radius: 18px !important;
+        flex-direction: column !important;
+      }
+    }
+  </style>`;
+  const embeddedScript = `<script>
+    (function () {
+      document.documentElement.setAttribute('data-theme', 'light');
+      try {
+        localStorage.setItem('kh-theme', 'light');
+      } catch (error) {}
+    })();
+  </script>`;
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.headers.host || `localhost:${activePort}`;
+  const serverUrl = process.env.SERVER_URL || `${protocol}://${host}`;
+  const presenterScript = `<script src="/socket.io/socket.io.js"></script>
+  <script>
+    (function () {
+      if (typeof io === 'undefined') return;
+      var params = new URLSearchParams(window.location.search);
+      var shouldHost = params.get('host') === '1';
+      var roomCode = params.get('roomCode');
+      if (!shouldHost && !roomCode) return;
+
+      var socket = io(${JSON.stringify(serverUrl)});
+      var role = shouldHost ? 'presenter' : 'viewer';
+      var code = shouldHost ? String(Math.floor(100000 + Math.random() * 900000)) : roomCode;
+      var reportUrl = window.location.pathname;
+      var scrollTicking = false;
+
+      var bar = document.createElement('div');
+      bar.className = 'july-presenter-session-bar';
+      bar.innerHTML =
+        '<div><strong>' + (role === 'presenter' ? 'Hosting July report' : 'Joined July report') + '</strong>' +
+        '<span id="july-session-status"></span></div>' +
+        '<div class="july-session-actions"><span class="july-session-code">Code: ' + code + '</span>' +
+        '<button type="button" id="july-copy-code">Copy</button>' +
+        '<button type="button" id="july-leave-session">Leave</button></div>';
+      document.body.appendChild(bar);
+      document.body.classList.add('july-presenter-session-active');
+      if (role === 'viewer') document.body.classList.add('july-viewer-locked');
+
+      socket.emit('join_room', { role: role, code: code, reportUrl: reportUrl });
+      socket.on('room_state', function (state) {
+        var status = document.getElementById('july-session-status');
+        if (status) status.textContent = role === 'presenter' ? ' · ' + state.viewers + ' viewers' : ' · viewing host screen';
+      });
+      socket.on('presenter_sync', function (data) {
+        if (role !== 'viewer') return;
+        if (data.type === 'scroll') window.scrollTo(0, data.scrollY);
+        if (data.type === 'click') {
+          var el = document.elementFromPoint(data.x, data.y);
+          if (el && typeof el.click === 'function' && !el.closest('.july-presenter-session-bar')) el.click();
+        }
+      });
+
+      window.addEventListener('scroll', function () {
+        if (role !== 'presenter' || scrollTicking) return;
+        window.requestAnimationFrame(function () {
+          socket.emit('presenter_event', { type: 'scroll', scrollY: window.scrollY });
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      });
+      document.addEventListener('click', function (event) {
+        if (role !== 'presenter' || !event.isTrusted || event.target.closest('.july-presenter-session-bar')) return;
+        socket.emit('presenter_event', { type: 'click', x: event.clientX, y: event.clientY });
+      });
+
+      document.getElementById('july-copy-code').addEventListener('click', function () {
+        if (navigator.clipboard) navigator.clipboard.writeText(code);
+      });
+      document.getElementById('july-leave-session').addEventListener('click', function () {
+        socket.disconnect();
+        window.close();
+      });
+    })();
+  </script>`;
+  let html = fs.readFileSync(reportPath, 'utf8');
+  html = html
+    .replace(/<html([^>]*?)data-theme=(["'])dark\2([^>]*)>/i, '<html$1data-theme="light"$3>')
+    .replace(/<script>window\.__REPORT_CTX__[\s\S]*?<\/script>\s*/g, '')
+    .replace(/<script src="\/socket\.io\/socket\.io\.js"><\/script>\s*/g, '')
+    .replace(/<script src="\/report-client\.js"><\/script>\s*/g, '')
+    .replace('</head>', `${embeddedCss}</head>`);
+  const bodyCloseIndex = html.lastIndexOf('</body>');
+  if (bodyCloseIndex >= 0) {
+    html = `${html.slice(0, bodyCloseIndex)}${embeddedScript}${presenterScript}${html.slice(bodyCloseIndex)}`;
+  }
+  res.type('html').send(html);
+});
+
 app.get('/api/saved-sessions', (req, res) => {
   const manifest = loadManifest();
   res.json({ sessions: manifest });
@@ -450,7 +660,7 @@ app.post('/generate', async (req, res) => {
       try {
         const html = fs.readFileSync(outputPath, 'utf8');
         const protocol = req.headers['x-forwarded-proto'] || 'http';
-        const host = req.headers.host || `localhost:${PORT}`;
+        const host = req.headers.host || `localhost:${activePort}`;
         const bootstrap = `<script>window.__REPORT_CTX__ = ${JSON.stringify({
           sessionId,
           loc: selectedLocs[0],
@@ -498,7 +708,7 @@ app.get('/download-pdf/:sessionId/:filename', async (req, res) => {
 
   try {
     const protocol = req.headers['x-forwarded-proto'] || 'http';
-    const host = req.headers.host || `localhost:${PORT}`;
+    const host = req.headers.host || `localhost:${activePort}`;
     const reportUrl = `${protocol}://${host}/report/${req.params.sessionId}/${encodeURIComponent(req.params.filename)}`;
     const pdf = await renderReportToPdf(reportUrl);
     const pdfName = req.params.filename.replace(/\.html$/i, '.pdf');
@@ -631,9 +841,29 @@ io.on('connection', (socket) => {
 });
 
 if (require.main === module) {
-  server.listen(PORT, () => {
-    console.log(`Studio performance report app running at http://localhost:${PORT}`);
-  });
+  const startServer = (port) => {
+    const onError = (error) => {
+      server.off('listening', onListening);
+      if (error.code === 'EADDRINUSE') {
+        console.warn(`Port ${port} is in use. Trying ${port + 1}...`);
+        startServer(port + 1);
+        return;
+      }
+      throw error;
+    };
+
+    const onListening = () => {
+      server.off('error', onError);
+      activePort = port;
+      console.log(`Studio performance report app running at http://localhost:${activePort}`);
+    };
+
+    server.once('error', onError);
+    server.once('listening', onListening);
+    server.listen(port);
+  };
+
+  startServer(PORT);
 }
 
 module.exports = { app, server, io };

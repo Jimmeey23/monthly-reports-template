@@ -22,7 +22,11 @@
       <h1>Performance Report <span class="accent">Generator</span></h1>
       <p class="subtitle">Drop all your CSV files at once into the common upload section below. Files will be automatically identified by keyword!</p>
       
-      <div style="margin-top:24px; display:flex; gap:8px; justify-content:center; align-items:center;">
+      <div class="upload-actions">
+        <button type="button" class="btn btn-primary" id="load-july-reports">Load July 2026 Reports</button>
+      </div>
+
+      <div style="margin-top:12px; display:flex; gap:8px; justify-content:center; align-items:center;">
         <input type="text" id="join-code" placeholder="6-digit code" maxlength="6" style="padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); font-family:var(--font-mono); font-size:16px; text-align:center; width:140px; letter-spacing:2px;" />
         <button type="button" class="btn btn-secondary" onclick="const code = document.getElementById('join-code').value.trim(); if(code.length === 6) window.location.href = '/join/' + code;">Join Session</button>
       </div>
@@ -92,6 +96,32 @@
     </div>
   </div>
 
+  <div class="july-reports-viewer is-single" id="july-reports-viewer" aria-hidden="true">
+    <div class="july-meeting-nav" aria-label="Presenter meeting controls">
+      <button type="button" class="july-meeting-btn" id="july-host-btn">Host</button>
+      <button type="button" class="july-meeting-btn" id="july-join-btn">Join</button>
+    </div>
+    <div class="july-view-switcher" id="july-view-switcher">
+      <button class="july-switcher-toggle" id="july-switcher-toggle" type="button" aria-label="Switch report view" aria-expanded="false">⇄</button>
+      <div class="july-viewer-tabs" aria-label="Report viewer mode">
+        <button class="july-tab is-active" type="button" data-report-mode="kwality">Kemps</button>
+        <button class="july-tab" type="button" data-report-mode="supreme">Bandra</button>
+        <button class="july-tab" type="button" data-report-mode="split">Both</button>
+      </div>
+    </div>
+    <button class="july-viewer-close" type="button" id="viewer-close" aria-label="Close July reports">Close</button>
+    <div class="july-viewer-grid">
+      <div class="july-frame-panel is-visible" data-report-panel="kwality">
+        <div class="july-frame-label">Kemps Corner &middot; Kwality House</div>
+        <iframe class="july-report-frame" id="kwality-report-frame" title="Kemps Corner July 2026 Report"></iframe>
+      </div>
+      <div class="july-frame-panel" data-report-panel="supreme">
+        <div class="july-frame-label">Bandra &middot; Supreme HQ</div>
+        <iframe class="july-report-frame" id="supreme-report-frame" title="Bandra July 2026 Report"></iframe>
+      </div>
+    </div>
+  </div>
+
   <script>
     const form = document.getElementById('upload-form');
     const submitBtn = document.getElementById('submit-btn');
@@ -117,6 +147,95 @@
       lapsed: ['lapsed', 'lapse', 'churn', 'cancell', 'expire', 'renew', 'renewal'],
       active: ['active', 'member', 'members', 'subscription', 'base']
     };
+
+    const julyReportSources = {
+      kwality: '/july-report/kwality',
+      supreme: '/july-report/supreme'
+    };
+    const julyViewer = document.getElementById('july-reports-viewer');
+    const julyLoadBtn = document.getElementById('load-july-reports');
+    const julyCloseBtn = document.getElementById('viewer-close');
+    const julySwitcher = document.getElementById('july-view-switcher');
+    const julySwitcherToggle = document.getElementById('july-switcher-toggle');
+    const julyHostBtn = document.getElementById('july-host-btn');
+    const julyJoinBtn = document.getElementById('july-join-btn');
+    const kwalityReportFrame = document.getElementById('kwality-report-frame');
+    const supremeReportFrame = document.getElementById('supreme-report-frame');
+    const julyTabs = Array.from(document.querySelectorAll('[data-report-mode]'));
+    const julyPanels = Array.from(document.querySelectorAll('[data-report-panel]'));
+    let julyReportsLoaded = false;
+    let julySwitcherTimer = null;
+
+    julyLoadBtn.addEventListener('click', () => {
+      if (!julyReportsLoaded) {
+        kwalityReportFrame.src = julyReportSources.kwality;
+        supremeReportFrame.src = julyReportSources.supreme;
+        julyReportsLoaded = true;
+      }
+      julyViewer.classList.add('is-open');
+      julyViewer.setAttribute('aria-hidden', 'false');
+      setJulyReportMode('kwality');
+      collapseJulySwitcher();
+    });
+    julyCloseBtn.addEventListener('click', closeJulyViewer);
+    julyHostBtn.addEventListener('click', () => {
+      const activeMode = getCurrentJulyReportMode();
+      const studio = activeMode === 'supreme' ? 'supreme' : 'kwality';
+      window.open(`${julyReportSources[studio]}?host=1`, '_blank', 'noopener');
+    });
+    julyJoinBtn.addEventListener('click', () => {
+      const code = window.prompt('Enter the 6-digit meeting code');
+      if (code && /^\d{6}$/.test(code.trim())) {
+        window.open(`/join/${code.trim()}`, '_blank', 'noopener');
+      }
+    });
+    julySwitcherToggle.addEventListener('click', () => {
+      julySwitcher.classList.toggle('is-expanded');
+      julySwitcherToggle.setAttribute('aria-expanded', julySwitcher.classList.contains('is-expanded') ? 'true' : 'false');
+      scheduleJulySwitcherCollapse();
+    });
+    julyTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        setJulyReportMode(tab.dataset.reportMode);
+        scheduleJulySwitcherCollapse();
+      });
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && julyViewer.classList.contains('is-open')) closeJulyViewer();
+    });
+
+    function closeJulyViewer() {
+      julyViewer.classList.remove('is-open');
+      julyViewer.setAttribute('aria-hidden', 'true');
+      collapseJulySwitcher();
+    }
+
+    function collapseJulySwitcher() {
+      window.clearTimeout(julySwitcherTimer);
+      julySwitcher.classList.remove('is-expanded');
+      julySwitcherToggle.setAttribute('aria-expanded', 'false');
+    }
+
+    function scheduleJulySwitcherCollapse() {
+      window.clearTimeout(julySwitcherTimer);
+      julySwitcherTimer = window.setTimeout(collapseJulySwitcher, 3200);
+    }
+
+    function getCurrentJulyReportMode() {
+      const activeTab = julyTabs.find((tab) => tab.classList.contains('is-active'));
+      return activeTab ? activeTab.dataset.reportMode : 'kwality';
+    }
+
+    function setJulyReportMode(mode) {
+      const normalizedMode = mode === 'supreme' || mode === 'split' ? mode : 'kwality';
+      julyViewer.classList.toggle('is-split', normalizedMode === 'split');
+      julyViewer.classList.toggle('is-single', normalizedMode !== 'split');
+      julyTabs.forEach((tab) => tab.classList.toggle('is-active', tab.dataset.reportMode === normalizedMode));
+      julyPanels.forEach((panel) => {
+        const visible = normalizedMode === 'split' || panel.dataset.reportPanel === normalizedMode;
+        panel.classList.toggle('is-visible', visible);
+      });
+    }
 
     function matchFileToSlot(fileName) {
       const cleanName = fileName.toLowerCase().replace(/[^a-z0-9]/g, '_');

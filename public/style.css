@@ -175,6 +175,214 @@ h1 {
   font-size: 15px;
 }
 
+.upload-actions {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 20;
+  margin-top: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#load-july-reports {
+  min-height: 32px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.july-reports-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  flex-direction: column;
+  background: var(--bg-body);
+  color: var(--text);
+  isolation: isolate;
+}
+
+.july-reports-viewer.is-open { display: flex; }
+
+.july-viewer-close {
+  position: fixed;
+  right: 14px;
+  top: 14px;
+  z-index: 10002;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-card) 90%, transparent);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  font: 800 12px var(--font-sans);
+}
+
+.july-meeting-nav {
+  position: fixed;
+  top: 14px;
+  right: 84px;
+  z-index: 10002;
+  display: inline-flex;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.july-meeting-btn {
+  min-height: 32px;
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  font: 800 12px var(--font-sans);
+}
+
+.july-meeting-btn:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.july-view-switcher {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 10002;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.july-switcher-toggle {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: white;
+  cursor: pointer;
+  font: 900 17px var(--font-sans);
+  line-height: 1;
+}
+
+.july-viewer-tabs {
+  display: inline-flex;
+  max-width: 0;
+  overflow: hidden;
+  transition: max-width 180ms ease, opacity 180ms ease;
+  opacity: 0;
+  gap: 6px;
+}
+
+.july-view-switcher.is-expanded .july-viewer-tabs {
+  max-width: 280px;
+  opacity: 1;
+}
+
+.july-tab {
+  min-width: 76px;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: 800 12px var(--font-sans);
+}
+
+.july-tab.is-active {
+  background: var(--primary);
+  color: white;
+}
+
+.july-viewer-grid {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--border);
+}
+
+.july-frame-panel {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-body);
+  display: flex;
+  flex-direction: column;
+}
+
+.july-frame-label {
+  display: none;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.july-report-frame {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: white;
+}
+
+.july-reports-viewer.is-single .july-viewer-grid { grid-template-columns: 1fr; }
+.july-reports-viewer.is-single .july-frame-panel { display: none; }
+.july-reports-viewer.is-single .july-frame-panel.is-visible { display: flex; }
+.july-reports-viewer.is-split .july-frame-label { display: block; }
+
+@media (max-width: 900px) {
+  .july-view-switcher {
+    left: 10px;
+    bottom: 10px;
+    max-width: calc(100vw - 84px);
+  }
+
+  .july-meeting-nav {
+    top: 12px;
+    left: 12px;
+    right: auto;
+  }
+
+  .july-tab {
+    min-width: 0;
+    flex: 1;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .july-viewer-grid { grid-template-columns: 1fr; }
+  .july-reports-viewer.is-split .july-frame-label { display: block; }
+}
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }

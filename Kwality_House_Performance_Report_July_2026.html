@@ -69,6 +69,17 @@ section.report-section:first-of-type { border-top: none; }
 .brand-text { font-size: 14px; color: var(--text); }
 .brand-text small { display: block; color: var(--text-muted); font-weight: 400; font-size: 11px; letter-spacing: 0.02em; text-transform: uppercase; }
 
+.topbar-actions {
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
+}
+.report-load-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 34px; padding: 7px 14px; background: var(--primary);
+  border: 1px solid var(--primary); border-radius: 999px; color: #fff;
+  cursor: pointer; font-size: 12px; font-weight: 700; font-family: var(--font-sans);
+  letter-spacing: 0.01em; transition: transform 160ms ease, background 160ms ease;
+}
+.report-load-btn:hover { background: var(--primary-2); transform: translateY(-1px); }
 .theme-toggle {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 7px 14px; background: var(--bg-card); border: 1px solid var(--border);
@@ -571,6 +582,35 @@ body.viewer-locked .viewer-overlay { display: block; }
 
 body { padding-top: 40px !important; }
 
+.reports-viewer {
+  position: fixed; inset: 0; z-index: 2600; display: none; flex-direction: column;
+  background: var(--bg); color: var(--text); pointer-events: auto;
+}
+.reports-viewer.is-open { display: flex; }
+.reports-viewer-close {
+  position: fixed; right: 14px; top: 14px; z-index: 2602; padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--bg-card);
+  color: var(--text); box-shadow: var(--shadow); cursor: pointer; font: 800 12px var(--font-sans);
+}
+.reports-viewer-grid {
+  flex: 1; min-height: 0; height: 100%; display: grid; grid-template-columns: 1fr 1fr; background: var(--border);
+}
+.reports-frame-panel { min-width: 0; min-height: 0; background: var(--bg); display: flex; flex-direction: column; }
+.reports-frame-label {
+  display: none; padding: 6px 10px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-muted); background: var(--bg-card); border-bottom: 1px solid var(--border);
+}
+.reports-frame { width: 100%; height: 100%; border: 0; background: #fff; }
+.reports-viewer.is-single .reports-viewer-grid { grid-template-columns: 1fr; }
+.reports-viewer.is-single .reports-frame-panel { display: none; }
+.reports-viewer.is-single .reports-frame-panel.is-visible { display: flex; }
+.reports-viewer.is-split .reports-frame-label { display: block; }
+@media (max-width: 900px) {
+  .reports-viewer-grid { grid-template-columns: 1fr; }
+  .reports-viewer.is-split .reports-frame-label { display: block; }
+  .topbar-inner { align-items: flex-start; gap: 12px; }
+}
+
 
 /* ───────────────────────── Premium Aesthetics Override ───────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
@@ -835,13 +875,16 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
         <small>Performance Report &middot; July 2026</small>
       </div>
     </div>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-      </svg>
-      <span id="theme-label">Dark</span>
-    </button>
+    <div class="topbar-actions">
+      <button class="report-load-btn" id="load-july-reports" type="button">Load July 2026 Reports</button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <span id="theme-label">Dark</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -4130,6 +4173,31 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
 
 <!-- REPORT_CLIENT_PLACEHOLDER -->
 
+<div class="reports-viewer is-single" id="july-reports-viewer" aria-hidden="true">
+  <button class="reports-viewer-close" id="viewer-close" type="button">Close</button>
+  <div class="reports-viewer-grid">
+    <div class="reports-frame-panel is-visible" data-report-panel="kwality">
+      <div class="reports-frame-label">Kemps Corner &middot; Kwality House</div>
+      <iframe class="reports-frame" id="kwality-report-frame" title="Kemps Corner July 2026 Report"></iframe>
+    </div>
+    <div class="reports-frame-panel" data-report-panel="supreme">
+      <div class="reports-frame-label">Bandra &middot; Supreme HQ</div>
+      <iframe class="reports-frame" id="supreme-report-frame" title="Bandra July 2026 Report"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="presenter-modal" id="viewer-meeting-modal" role="dialog" aria-modal="true" aria-labelledby="viewer-meeting-title">
+  <div>
+    <div class="presenter-modal-title" id="viewer-meeting-title">Join Meeting</div>
+    <input id="viewer-meeting-code" type="text" maxlength="6" inputmode="numeric" placeholder="000000" aria-label="Meeting code">
+  </div>
+  <div class="presenter-modal-actions">
+    <button class="presenter-btn" id="viewer-meeting-cancel" type="button">Cancel</button>
+    <button class="presenter-btn" id="viewer-meeting-confirm" type="button">Join</button>
+  </div>
+</div>
+
 
 <footer class="footer">
   <div class="container">
@@ -4172,6 +4240,91 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
 
 
 <script>
+(function() {
+  const reportSources = {
+    kwality: 'Kwality_House_Performance_Report_July_2026_Enriched.html',
+    supreme: 'Supreme_HQ_Performance_Report_July_2026_Enriched.html'
+  };
+  const loadButton = document.getElementById('load-july-reports');
+  const viewer = document.getElementById('july-reports-viewer');
+  const closeButton = document.getElementById('viewer-close');
+  const meetingModal = document.getElementById('viewer-meeting-modal');
+  const meetingTitle = document.getElementById('viewer-meeting-title');
+  const meetingCodeInput = document.getElementById('viewer-meeting-code');
+  const meetingConfirm = document.getElementById('viewer-meeting-confirm');
+  const meetingCancel = document.getElementById('viewer-meeting-cancel');
+  const kwalityFrame = document.getElementById('kwality-report-frame');
+  const supremeFrame = document.getElementById('supreme-report-frame');
+  const reportPanels = Array.from(document.querySelectorAll('[data-report-panel]'));
+
+  let reportsLoaded = false;
+  let activeMeetingMode = 'join';
+
+  if (loadButton && viewer) {
+    loadButton.addEventListener('click', openReportsViewer);
+    closeButton.addEventListener('click', closeReportsViewer);
+    meetingCancel.addEventListener('click', closeMeetingModal);
+    meetingConfirm.addEventListener('click', closeMeetingModal);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if (meetingModal.classList.contains('is-open')) closeMeetingModal();
+        else if (viewer.classList.contains('is-open')) closeReportsViewer();
+      }
+    });
+  }
+
+  function openReportsViewer() {
+    if (!reportsLoaded) {
+      kwalityFrame.src = reportSources.kwality;
+      supremeFrame.src = reportSources.supreme;
+      reportsLoaded = true;
+    }
+    viewer.classList.add('is-open');
+    viewer.setAttribute('aria-hidden', 'false');
+    setReportMode('split');
+  }
+
+  function closeReportsViewer() {
+    viewer.classList.remove('is-open');
+    viewer.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('viewer-locked');
+    closeMeetingModal();
+  }
+
+  function setReportMode(mode) {
+    const normalizedMode = mode === 'supreme' || mode === 'split' ? mode : 'kwality';
+    viewer.classList.toggle('is-split', normalizedMode === 'split');
+    viewer.classList.toggle('is-single', normalizedMode !== 'split');
+    reportPanels.forEach((panel) => {
+      const visible = normalizedMode === 'split' || panel.dataset.reportPanel === normalizedMode;
+      panel.classList.toggle('is-visible', visible);
+    });
+  }
+
+  function openMeetingModal(mode, code) {
+    activeMeetingMode = mode;
+    meetingTitle.textContent = mode === 'host' ? 'Host Meeting' : 'Join Meeting';
+    meetingConfirm.textContent = mode === 'host' ? 'Start' : 'Join';
+    meetingCodeInput.value = code || '';
+    meetingCodeInput.readOnly = mode === 'host';
+    meetingModal.classList.add('is-open');
+    setTimeout(() => meetingCodeInput.focus(), 0);
+  }
+
+  function closeMeetingModal() {
+    meetingModal.classList.remove('is-open');
+  }
+
+  function confirmMeeting() {
+    const code = meetingCodeInput.value.trim();
+    if (!/^\d{6}$/.test(code)) {
+      meetingCodeInput.focus();
+      return;
+    }
+    closeMeetingModal();
+  }
+})();
+
 (function() {
   const root = document.documentElement;
   const toggle = document.getElementById('theme-toggle');

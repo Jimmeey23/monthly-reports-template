@@ -1063,10 +1063,6 @@ body.annotation-erase-mode .annotation-canvas {
     pBar.innerHTML = `<div class="presenter-info"><span id="p-status"></span><span class="presenter-badge" id="p-code" style="display:none;"></span></div><div class="annotation-tools" aria-label="Presenter annotation tools"><button type="button" class="annotation-btn annotation-color is-active" data-color="#fff176" title="Yellow highlight">Yellow</button><button type="button" class="annotation-btn annotation-color" data-color="#a7f3d0" title="Green highlight">Green</button><button type="button" class="annotation-btn annotation-color" data-color="#fbcfe8" title="Pink highlight">Pink</button><button type="button" class="annotation-btn" id="p-highlight-btn" title="Highlight selected word or text">Highlight</button><button type="button" class="annotation-btn" id="p-tooltip-btn" title="Add tooltip note to selected text">Tooltip</button><button type="button" class="annotation-btn" id="p-pen-btn" title="Draw on screen">Pen</button><button type="button" class="annotation-btn" id="p-eraser-btn" title="Erase drawings">Eraser</button><button type="button" class="annotation-btn" id="p-clear-annotations-btn" title="Clear annotations">Clear</button></div><div class="presenter-actions"><button type="button" class="presenter-btn" id="p-host-btn">Host</button><button type="button" class="presenter-btn" id="p-join-btn">Join</button><button type="button" class="presenter-btn" id="p-leave-btn" style="display:none;">Leave</button></div>`;
     document.body.appendChild(pBar);
 
-    const pOverlay = document.createElement('div');
-    pOverlay.className = 'viewer-overlay';
-    document.body.appendChild(pOverlay);
-
     const pModal = document.createElement('div');
     pModal.className = 'presenter-modal';
     pModal.innerHTML = `<div class="presenter-modal-title">Join Session</div><input type="text" id="p-input" placeholder="6-digit code" maxlength="6"><div class="presenter-modal-actions"><button class="presenter-btn" id="p-cancel">Cancel</button><button class="presenter-btn" id="p-submit">Join</button></div>`;

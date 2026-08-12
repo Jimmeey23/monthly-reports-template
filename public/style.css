@@ -208,6 +208,16 @@ h1 {
 
 .july-reports-viewer.is-open { display: flex; }
 
+.july-reports-viewer .presenter-bar,
+.july-reports-viewer .presenter-modal,
+.july-reports-viewer .annotation-canvas {
+  display: none !important;
+}
+
+.july-reports-viewer .viewer-locked {
+  overflow: auto !important;
+}
+
 .july-viewer-close {
   position: fixed;
   right: 14px;
@@ -221,37 +231,6 @@ h1 {
   box-shadow: var(--shadow);
   cursor: pointer;
   font: 800 12px var(--font-sans);
-}
-
-.july-meeting-nav {
-  position: fixed;
-  top: 14px;
-  right: 84px;
-  z-index: 10002;
-  display: inline-flex;
-  gap: 6px;
-  padding: 5px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
-}
-
-.july-meeting-btn {
-  min-height: 32px;
-  padding: 7px 13px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--bg-card);
-  color: var(--text);
-  cursor: pointer;
-  font: 800 12px var(--font-sans);
-}
-
-.july-meeting-btn:hover {
-  background: var(--primary);
-  color: white;
 }
 
 .july-view-switcher {
@@ -364,12 +343,6 @@ h1 {
     left: 10px;
     bottom: 10px;
     max-width: calc(100vw - 84px);
-  }
-
-  .july-meeting-nav {
-    top: 12px;
-    left: 12px;
-    right: auto;
   }
 
   .july-tab {

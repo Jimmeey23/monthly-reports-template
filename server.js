@@ -274,8 +274,8 @@ app.use(express.json({ limit: '5mb' }));
 
 app.get('/july-report/:studio', (req, res) => {
   const files = {
-    kwality: 'Kwality_House_Performance_Report_July_2026_Enriched.html',
-    supreme: 'Supreme_HQ_Performance_Report_July_2026_Enriched.html',
+    kwality: path.join('public', 'revised-july', 'kwality-house-july-2026.html'),
+    supreme: path.join('public', 'revised-july', 'supreme-hq-bandra-july-2026.html'),
   };
   const filename = files[req.params.studio];
   if (!filename) return res.status(404).send('Report not found.');
@@ -287,7 +287,6 @@ app.get('/july-report/:studio', (req, res) => {
     .editor-toolbar,
     .presenter-bar,
     .presenter-modal,
-    .viewer-overlay,
     .annotation-canvas,
     .pdf-btn,
     .topbar-actions,
@@ -342,44 +341,55 @@ app.get('/july-report/:studio', (req, res) => {
       display: flex !important;
       align-items: center !important;
       justify-content: space-between !important;
-      gap: 18px !important;
-      width: min(760px, calc(100vw - 32px)) !important;
-      padding: 10px 12px 10px 16px !important;
+      gap: 10px !important;
+      width: auto !important;
+      max-width: min(620px, calc(100vw - 24px)) !important;
+      min-height: 36px !important;
+      max-height: 46px !important;
+      overflow: hidden !important;
+      padding: 5px 8px 5px 12px !important;
       border: 1px solid var(--border) !important;
       border-radius: 999px !important;
       background: color-mix(in srgb, var(--bg-card) 94%, white 6%) !important;
       color: var(--text) !important;
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18) !important;
-      font: 700 13px var(--font-sans) !important;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16) !important;
+      font: 700 12px var(--font-sans) !important;
+      line-height: 1.15 !important;
+      white-space: nowrap !important;
+    }
+    .july-presenter-session-bar > div:first-child {
+      min-width: 0 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
     }
     .july-session-actions {
       display: inline-flex !important;
       align-items: center !important;
-      gap: 8px !important;
+      gap: 5px !important;
       flex-shrink: 0 !important;
     }
     .july-session-code {
       display: inline-flex !important;
       align-items: center !important;
-      min-height: 28px !important;
-      padding: 3px 10px !important;
+      min-height: 24px !important;
+      padding: 2px 8px !important;
       border-radius: 999px !important;
       background: var(--primary-soft) !important;
       color: var(--primary) !important;
       font-family: var(--font-mono) !important;
     }
     .july-presenter-session-bar button {
-      min-height: 30px !important;
+      min-height: 24px !important;
       border: 1px solid var(--border) !important;
       border-radius: 999px !important;
       background: var(--bg-inset) !important;
       color: var(--text) !important;
-      padding: 4px 11px !important;
-      font: 800 12px var(--font-sans) !important;
+      padding: 3px 8px !important;
+      font: 800 11px var(--font-sans) !important;
       cursor: pointer !important;
     }
     .july-presenter-session-active {
-      padding-top: 58px !important;
+      padding-top: 44px !important;
     }
     .july-viewer-locked .july-presenter-session-bar,
     .july-viewer-locked .july-presenter-session-bar * {
@@ -387,10 +397,13 @@ app.get('/july-report/:studio', (req, res) => {
     }
     @media (max-width: 640px) {
       .july-presenter-session-bar {
-        align-items: flex-start !important;
-        border-radius: 18px !important;
-        flex-direction: column !important;
+        top: 8px !important;
+        max-width: calc(100vw - 16px) !important;
+        max-height: 40px !important;
+        gap: 6px !important;
+        padding: 4px 6px 4px 10px !important;
       }
+      .july-presenter-session-bar strong { display: none !important; }
     }
   </style>`;
   const embeddedScript = `<script>
@@ -476,7 +489,7 @@ app.get('/july-report/:studio', (req, res) => {
     .replace('</head>', `${embeddedCss}</head>`);
   const bodyCloseIndex = html.lastIndexOf('</body>');
   if (bodyCloseIndex >= 0) {
-    html = `${html.slice(0, bodyCloseIndex)}${embeddedScript}${presenterScript}${html.slice(bodyCloseIndex)}`;
+    html = `${html.slice(0, bodyCloseIndex)}${embeddedScript}<script src="/revised-july/sfx-soundboard.js?v=4"></script>${presenterScript}${html.slice(bodyCloseIndex)}`;
   }
   res.type('html').send(html);
 });

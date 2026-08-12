@@ -97,10 +97,6 @@
   </div>
 
   <div class="july-reports-viewer is-single" id="july-reports-viewer" aria-hidden="true">
-    <div class="july-meeting-nav" aria-label="Presenter meeting controls">
-      <button type="button" class="july-meeting-btn" id="july-host-btn">Host</button>
-      <button type="button" class="july-meeting-btn" id="july-join-btn">Join</button>
-    </div>
     <div class="july-view-switcher" id="july-view-switcher">
       <button class="july-switcher-toggle" id="july-switcher-toggle" type="button" aria-label="Switch report view" aria-expanded="false">⇄</button>
       <div class="july-viewer-tabs" aria-label="Report viewer mode">
@@ -149,16 +145,14 @@
     };
 
     const julyReportSources = {
-      kwality: '/july-report/kwality',
-      supreme: '/july-report/supreme'
+      kwality: '/revised-july/kwality-house-july-2026.html?v=4',
+      supreme: '/revised-july/supreme-hq-bandra-july-2026.html?v=4'
     };
     const julyViewer = document.getElementById('july-reports-viewer');
     const julyLoadBtn = document.getElementById('load-july-reports');
     const julyCloseBtn = document.getElementById('viewer-close');
     const julySwitcher = document.getElementById('july-view-switcher');
     const julySwitcherToggle = document.getElementById('july-switcher-toggle');
-    const julyHostBtn = document.getElementById('july-host-btn');
-    const julyJoinBtn = document.getElementById('july-join-btn');
     const kwalityReportFrame = document.getElementById('kwality-report-frame');
     const supremeReportFrame = document.getElementById('supreme-report-frame');
     const julyTabs = Array.from(document.querySelectorAll('[data-report-mode]'));
@@ -178,17 +172,6 @@
       collapseJulySwitcher();
     });
     julyCloseBtn.addEventListener('click', closeJulyViewer);
-    julyHostBtn.addEventListener('click', () => {
-      const activeMode = getCurrentJulyReportMode();
-      const studio = activeMode === 'supreme' ? 'supreme' : 'kwality';
-      window.open(`${julyReportSources[studio]}?host=1`, '_blank', 'noopener');
-    });
-    julyJoinBtn.addEventListener('click', () => {
-      const code = window.prompt('Enter the 6-digit meeting code');
-      if (code && /^\d{6}$/.test(code.trim())) {
-        window.open(`/join/${code.trim()}`, '_blank', 'noopener');
-      }
-    });
     julySwitcherToggle.addEventListener('click', () => {
       julySwitcher.classList.toggle('is-expanded');
       julySwitcherToggle.setAttribute('aria-expanded', julySwitcher.classList.contains('is-expanded') ? 'true' : 'false');
@@ -219,11 +202,6 @@
     function scheduleJulySwitcherCollapse() {
       window.clearTimeout(julySwitcherTimer);
       julySwitcherTimer = window.setTimeout(collapseJulySwitcher, 3200);
-    }
-
-    function getCurrentJulyReportMode() {
-      const activeTab = julyTabs.find((tab) => tab.classList.contains('is-active'));
-      return activeTab ? activeTab.dataset.reportMode : 'kwality';
     }
 
     function setJulyReportMode(mode) {
@@ -482,5 +460,6 @@
       } catch (e) {}
     })();
   </script>
+  <script src="/revised-july/sfx-soundboard.js?v=4"></script>
 </body>
 </html>

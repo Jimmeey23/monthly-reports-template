@@ -4187,18 +4187,6 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
   </div>
 </div>
 
-<div class="presenter-modal" id="viewer-meeting-modal" role="dialog" aria-modal="true" aria-labelledby="viewer-meeting-title">
-  <div>
-    <div class="presenter-modal-title" id="viewer-meeting-title">Join Meeting</div>
-    <input id="viewer-meeting-code" type="text" maxlength="6" inputmode="numeric" placeholder="000000" aria-label="Meeting code">
-  </div>
-  <div class="presenter-modal-actions">
-    <button class="presenter-btn" id="viewer-meeting-cancel" type="button">Cancel</button>
-    <button class="presenter-btn" id="viewer-meeting-confirm" type="button">Join</button>
-  </div>
-</div>
-
-
 <footer class="footer">
   <div class="container">
     <div class="footer-grid">
@@ -4248,28 +4236,17 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
   const loadButton = document.getElementById('load-july-reports');
   const viewer = document.getElementById('july-reports-viewer');
   const closeButton = document.getElementById('viewer-close');
-  const meetingModal = document.getElementById('viewer-meeting-modal');
-  const meetingTitle = document.getElementById('viewer-meeting-title');
-  const meetingCodeInput = document.getElementById('viewer-meeting-code');
-  const meetingConfirm = document.getElementById('viewer-meeting-confirm');
-  const meetingCancel = document.getElementById('viewer-meeting-cancel');
   const kwalityFrame = document.getElementById('kwality-report-frame');
   const supremeFrame = document.getElementById('supreme-report-frame');
   const reportPanels = Array.from(document.querySelectorAll('[data-report-panel]'));
 
   let reportsLoaded = false;
-  let activeMeetingMode = 'join';
 
   if (loadButton && viewer) {
     loadButton.addEventListener('click', openReportsViewer);
     closeButton.addEventListener('click', closeReportsViewer);
-    meetingCancel.addEventListener('click', closeMeetingModal);
-    meetingConfirm.addEventListener('click', closeMeetingModal);
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        if (meetingModal.classList.contains('is-open')) closeMeetingModal();
-        else if (viewer.classList.contains('is-open')) closeReportsViewer();
-      }
+      if (event.key === 'Escape' && viewer.classList.contains('is-open')) closeReportsViewer();
     });
   }
 
@@ -4288,7 +4265,6 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
     viewer.classList.remove('is-open');
     viewer.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('viewer-locked');
-    closeMeetingModal();
   }
 
   function setReportMode(mode) {
@@ -4299,29 +4275,6 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
       const visible = normalizedMode === 'split' || panel.dataset.reportPanel === normalizedMode;
       panel.classList.toggle('is-visible', visible);
     });
-  }
-
-  function openMeetingModal(mode, code) {
-    activeMeetingMode = mode;
-    meetingTitle.textContent = mode === 'host' ? 'Host Meeting' : 'Join Meeting';
-    meetingConfirm.textContent = mode === 'host' ? 'Start' : 'Join';
-    meetingCodeInput.value = code || '';
-    meetingCodeInput.readOnly = mode === 'host';
-    meetingModal.classList.add('is-open');
-    setTimeout(() => meetingCodeInput.focus(), 0);
-  }
-
-  function closeMeetingModal() {
-    meetingModal.classList.remove('is-open');
-  }
-
-  function confirmMeeting() {
-    const code = meetingCodeInput.value.trim();
-    if (!/^\d{6}$/.test(code)) {
-      meetingCodeInput.focus();
-      return;
-    }
-    closeMeetingModal();
   }
 })();
 

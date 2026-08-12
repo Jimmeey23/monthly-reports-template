@@ -52,16 +52,73 @@
       flex-wrap: wrap;
     }
 
+    .report-switcher {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      z-index: 25;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .report-switcher-panel {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .report-switcher.is-open .report-switcher-panel { display: inline-flex; }
+
+    .report-switcher-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font: 400 14px/1 inherit;
+      text-align: center;
+    }
+
+    .report-switcher button[data-report] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      font: 400 12px/1 inherit;
+      text-align: center;
+    }
+
     button,
     a.report-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       min-height: 34px;
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 7px 12px;
       background: var(--panel);
       color: var(--text);
-      font: 700 12px/1.1 inherit;
+      font: 400 12px/1.1 inherit;
       cursor: pointer;
+      text-align: center;
       text-decoration: none;
     }
 
@@ -95,15 +152,50 @@
       grid-template-columns: 1fr;
     }
 
-    .report-frame {
+    .report-panel.is-both {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .report-pane {
       display: none;
+      min-width: 0;
+      min-height: 0;
+      flex-direction: column;
+    }
+
+    .report-pane.is-active { display: flex; }
+
+    .report-pane-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .report-pane-header small {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 600;
+    }
+
+    .report-frame {
       width: 100%;
       height: 100%;
       border: 0;
       background: #fff;
     }
 
-    .report-frame.is-active { display: block; }
+    .report-pane .report-frame { display: block; }
 
     .audio-panel {
       overflow: auto;
@@ -144,6 +236,10 @@
 
     .audio-set.is-active { display: block; }
 
+    .both-mode .audio-panel {
+      display: none;
+    }
+
     @media (max-width: 980px) {
       header {
         align-items: flex-start;
@@ -171,16 +267,27 @@
         <a class="report-link" href="./supreme-hq-bandra-july-2026.html?v=20260812" target="_blank" rel="noopener">Open Bandra</a>
       </div>
     </div>
-    <div class="tabs" aria-label="Report selector">
-      <button type="button" data-report="kwality" aria-pressed="true">Kwality House</button>
-      <button type="button" data-report="bandra" aria-pressed="false">Supreme HQ Bandra</button>
-    </div>
   </header>
+
+  <div class="report-switcher" id="report-switcher">
+    <button class="report-switcher-toggle" id="report-switcher-toggle" type="button" aria-expanded="false" aria-controls="report-switcher-panel" title="Switch report">◉</button>
+    <div class="report-switcher-panel" id="report-switcher-panel" aria-label="Report selector">
+      <button type="button" data-report="kwality" aria-pressed="true">Kemps</button>
+      <button type="button" data-report="bandra" aria-pressed="false">Bandra</button>
+      <button type="button" data-report="both" aria-pressed="false">Both</button>
+    </div>
+  </div>
 
   <main>
     <section class="report-panel" aria-label="Report preview">
-      <iframe class="report-frame is-active" data-report-frame="kwality" src="./kwality-house-july-2026.html?v=20260812" title="Kwality House July 2026 revised report"></iframe>
-      <iframe class="report-frame" data-report-frame="bandra" src="./supreme-hq-bandra-july-2026.html?v=20260812" title="Supreme HQ Bandra July 2026 revised report"></iframe>
+      <div class="report-pane is-active" data-report-frame="kwality">
+        <div class="report-pane-header">Kemps <small>Kwality House</small></div>
+        <iframe class="report-frame" src="./kwality-house-july-2026.html?v=20260812" title="Kwality House July 2026 revised report"></iframe>
+      </div>
+      <div class="report-pane" data-report-frame="bandra">
+        <div class="report-pane-header">Bandra <small>Supreme HQ</small></div>
+        <iframe class="report-frame" src="./supreme-hq-bandra-july-2026.html?v=20260812" title="Supreme HQ Bandra July 2026 revised report"></iframe>
+      </div>
     </section>
 
     <aside class="audio-panel" aria-label="Audio files">
@@ -268,15 +375,55 @@
     const buttons = document.querySelectorAll('[data-report]');
     const frames = document.querySelectorAll('[data-report-frame]');
     const audioSets = document.querySelectorAll('[data-audio-set]');
+    const switcher = document.getElementById('report-switcher');
+    const switcherToggle = document.getElementById('report-switcher-toggle');
+
+    const reportPaths = {
+      kwality: '/july-report/kwality',
+      bandra: '/july-report/supreme',
+      both: '/july-report/kwality',
+    };
+
+    function setSwitcherOpen(open) {
+      switcher.classList.toggle('is-open', open);
+      switcherToggle.setAttribute('aria-expanded', String(open));
+    }
+
+    function setActiveReport(report, { updateUrl = true } = {}) {
+      buttons.forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.report === report)));
+      document.body.classList.toggle('both-mode', report === 'both');
+      document.querySelector('.report-panel').classList.toggle('is-both', report === 'both');
+      if (report === 'both') {
+        frames.forEach((frame) => frame.classList.add('is-active'));
+        audioSets.forEach((set) => set.classList.remove('is-active'));
+      } else {
+        frames.forEach((frame) => frame.classList.toggle('is-active', frame.dataset.reportFrame === report));
+        audioSets.forEach((set) => set.classList.toggle('is-active', set.dataset.audioSet === report));
+      }
+
+      if (updateUrl && reportPaths[report]) {
+        history.replaceState({ report }, '', reportPaths[report]);
+      }
+    }
 
     buttons.forEach((button) => {
       button.addEventListener('click', () => {
-        const report = button.dataset.report;
-        buttons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
-        frames.forEach((frame) => frame.classList.toggle('is-active', frame.dataset.reportFrame === report));
-        audioSets.forEach((set) => set.classList.toggle('is-active', set.dataset.audioSet === report));
+        setActiveReport(button.dataset.report);
       });
     });
+
+    switcherToggle.addEventListener('click', () => {
+      setSwitcherOpen(!switcher.classList.contains('is-open'));
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!switcher.contains(event.target)) {
+        setSwitcherOpen(false);
+      }
+    });
+
+    const initialReport = window.location.pathname.includes('/july-report/supreme') ? 'bandra' : 'kwality';
+    setActiveReport(initialReport, { updateUrl: false });
   </script>
 </body>
 </html>

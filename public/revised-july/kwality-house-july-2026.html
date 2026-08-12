@@ -52,8 +52,8 @@ body {
 }
 a { color: var(--primary-3); text-decoration: none; }
 a:hover { text-decoration: underline; }
-.container { max-width: 1380px; margin: 0 auto; padding: 0 32px; }
-@media (max-width: 768px) { .container { padding: 0 20px; } }
+.container { max-width: 1420px; margin: 0 auto; padding: 0 clamp(28px, 5vw, 72px); }
+@media (max-width: 768px) { .container { padding: 0 22px; } }
 section.report-section { padding: 40px 0 22px; border-top: 1px solid var(--border); }
 section.report-section:first-of-type { border-top: none; }
 
@@ -63,7 +63,7 @@ section.report-section:first-of-type { border-top: none; }
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
 }
-.topbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 12px 32px; max-width: 1380px; margin: 0 auto; }
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 12px clamp(28px, 5vw, 72px); max-width: 1420px; margin: 0 auto; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: -0.01em; }
 .brand-mark { width: 28px; height: 28px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 60%, var(--accent) 100%); border-radius: 6px; position: relative; }
 .brand-mark::after { content: ""; position: absolute; inset: 5px; background: var(--bg); border-radius: 2px; }
@@ -2289,24 +2289,23 @@ details.appendix-details > summary.section-hero { padding: clamp(27px, 3.6vw, 50
 .ai-slot .ai-result { padding: clamp(22px, 2.7vw, 34px); }
 .subsection { margin-top: 52px; }
 
-/* The headline matrix leaves the editorial column and uses the available screen width. */
+/* The headline matrix follows the same premium report column as surrounding sections. */
 .headline-kpi-matrix {
   position: relative;
-  left: 50%;
-  width: min(calc(100vw - 96px), 1840px);
-  max-width: none;
+  left: auto;
+  width: 100%;
+  max-width: 100%;
   margin: 0 0 24px;
-  transform: translateX(-50%);
   border-radius: 18px;
   box-shadow: 0 22px 64px rgba(16,21,34,.10);
 }
-.headline-kpi-matrix.reveal { transform: translateX(-50%) translateY(22px); }
-.headline-kpi-matrix.reveal.is-visible { transform: translateX(-50%); }
+.headline-kpi-matrix.reveal { transform: translateY(22px); }
+.headline-kpi-matrix.reveal.is-visible { transform: translateY(0); }
 .headline-kpi-matrix .panel-header { padding: 18px 22px; }
-.headline-kpi-matrix .table-wrap { width: 100%; }
-.headline-kpi-matrix table.data-table { width: 100%; min-width: 1380px; }
+.headline-kpi-matrix .table-wrap { width: 100%; max-width: 100%; overflow-x: auto; }
+.headline-kpi-matrix table.data-table { width: 100%; min-width: 1120px; }
 .headline-kpi-matrix table.data-table thead th,
-.headline-kpi-matrix table.data-table tbody td { padding-inline: 15px; }
+.headline-kpi-matrix table.data-table tbody td { padding-inline: 12px; }
 .executive-insights-only { grid-template-columns: 1fr; }
 .executive-insights-only > .insights-pane { width: 100%; }
 .executive-insights-only .insight-card { display: grid; grid-template-columns: 30px minmax(0,1fr); }
@@ -2428,16 +2427,17 @@ table.data-table tbody td { padding-block: 9px; }
    ───────────────────────────────────────────── */
 .container,
 .topbar-inner {
-  width: min(calc(100% - 144px), 1640px);
-  max-width: 1640px;
+  width: min(calc(100% - 220px), 1560px);
+  max-width: 1560px;
 }
 .hero-content { padding-inline: 4px; }
-section.report-section > .container { padding-inline: 4px; }
+section.report-section > .container { padding-inline: 12px; }
 .footer > .container { padding-inline: 4px; }
 
-/* Full-width matrix still breaks out, but now keeps a refined viewport margin. */
+/* Full-width matrix follows the same report canvas as every surrounding section. */
 .headline-kpi-matrix {
-  width: min(calc(100vw - 112px), 1840px);
+  width: 100%;
+  max-width: 100%;
   margin-bottom: 32px;
 }
 .headline-kpi-matrix .panel-header { padding: 20px 26px; }
@@ -2524,15 +2524,15 @@ section.report-section > .container { padding-inline: 4px; }
 
 @media (max-width: 1380px) {
   .container,
-  .topbar-inner { width: min(calc(100% - 104px), 1640px); }
-  .headline-kpi-matrix { width: calc(100vw - 80px); }
+  .topbar-inner { width: min(calc(100% - 144px), 1560px); }
+  .headline-kpi-matrix { width: 100%; }
   .split-grid.layout-insights-wide { grid-template-columns: minmax(0, 1.35fr) minmax(310px, .9fr); }
   .split-grid.layout-data-wide { grid-template-columns: minmax(300px, .8fr) minmax(0, 1.25fr); }
 }
 @media (max-width: 1080px) {
   .container,
-  .topbar-inner { width: min(calc(100% - 72px), 1640px); }
-  .headline-kpi-matrix { width: calc(100vw - 52px); }
+  .topbar-inner { width: min(calc(100% - 88px), 1560px); }
+  .headline-kpi-matrix { width: 100%; }
   .split-grid.layout-balanced,
   .split-grid.layout-insights-wide,
   .split-grid.layout-data-wide { grid-template-columns: 1fr; }
@@ -2549,8 +2549,8 @@ section.report-section > .container { padding-inline: 4px; }
 }
 @media (max-width: 760px) {
   .container,
-  .topbar-inner { width: min(calc(100% - 40px), 1640px); }
-  .headline-kpi-matrix { width: calc(100vw - 20px); }
+  .topbar-inner { width: min(calc(100% - 44px), 1560px); }
+  .headline-kpi-matrix { width: 100%; }
   .layout-stack > .insights-pane,
   .executive-insights-only > .insights-pane,
   .split-grid.layout-balanced > .insights-pane,
@@ -2991,6 +2991,83 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
   .hero-carousel-slide { display:none !important; }
   .hero-carousel-slide:first-child { display:block !important; opacity:1 !important; visibility:visible !important; transform:none !important; }
   .hero-carousel-controls,.hero-carousel-progress { display:none !important; }
+}
+
+@media screen {
+  .container,
+  .topbar-inner {
+    width: min(calc(100% - clamp(140px, 14vw, 320px)), 1560px) !important;
+    max-width: 1560px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .hero-content,
+  section.report-section > .container,
+  .footer > .container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .headline-kpi-matrix {
+    left: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: none;
+  }
+
+  .headline-kpi-matrix.reveal,
+  .headline-kpi-matrix.reveal.is-visible {
+    transform: translateY(0) !important;
+  }
+
+  .headline-kpi-matrix .table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto;
+  }
+
+  .headline-kpi-matrix table.data-table {
+    width: 100%;
+    min-width: 1320px;
+  }
+
+  table.data-table {
+    table-layout: auto;
+  }
+
+  table.data-table thead th,
+  table.data-table tbody td,
+  .appendix-body table.data-table thead th,
+  .appendix-body table.data-table tbody td {
+    text-align: center !important;
+  }
+
+  table.data-table thead th:first-child,
+  table.data-table tbody td:first-child,
+  table.data-table tbody td.metric-name,
+  .appendix-body table.data-table thead th:first-child,
+  .appendix-body table.data-table tbody td:first-child {
+    width: clamp(190px, 24%, 340px);
+    min-width: 190px;
+    text-align: left !important;
+  }
+
+  table.data-table thead th:not(:first-child),
+  table.data-table tbody td:not(:first-child) {
+    min-width: 96px;
+  }
+}
+
+@media screen and (max-width: 760px) {
+  .container,
+  .topbar-inner {
+    width: min(calc(100% - 44px), 1680px) !important;
+  }
+
+  .headline-kpi-matrix table.data-table {
+    min-width: 1120px;
+  }
 }
 </style>
 </head>
@@ -8337,6 +8414,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 </div>
 </div>
 </footer>
+<script src="./section-audio.js?v=1"></script>
 <script src="./sfx-soundboard.js?v=4"></script>
 </body>
 </html>

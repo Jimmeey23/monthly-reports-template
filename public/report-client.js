@@ -879,13 +879,43 @@ details.appendix-details > summary.section-hero,
 @media (max-width: 1500px) { .hero-kpi-grid { grid-template-columns: repeat(5, minmax(180px, 1fr)) !important; } }
 .presenter-bar {
   position: fixed;
-  right: 14px;
+  left: 14px;
   bottom: 14px;
   z-index: 3200;
   display: flex;
   align-items: center;
+  gap: 0;
+  max-width: min(680px, calc(100vw - 28px));
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.presenter-toggle {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  font: 900 15px/1 var(--font-sans);
+}
+.presenter-bar.is-active .presenter-toggle {
+  border-color: rgba(255, 99, 99, 0.35);
+}
+.presenter-panel {
+  display: none;
+  align-items: center;
   gap: 8px;
-  max-width: calc(100vw - 28px);
+  margin-left: 8px;
+  max-width: calc(100vw - 82px);
   padding: 8px;
   background: color-mix(in srgb, var(--bg-card) 92%, transparent);
   border: 1px solid var(--border);
@@ -893,28 +923,27 @@ details.appendix-details > summary.section-hero,
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
 }
-.presenter-bar.is-active {
-  left: 14px;
-  right: 14px;
-  bottom: 14px;
-  border-radius: 14px;
-  justify-content: space-between;
-}
-.presenter-info { display: none; align-items: center; gap: 8px; color: var(--text); font-size: 12px; font-weight: 700; }
+.presenter-bar.is-open .presenter-panel,
+.presenter-bar.is-active .presenter-panel { display: flex; }
+.presenter-info { display: none; align-items: center; gap: 8px; color: var(--text); font-size: 12px; font-weight: 400; }
 .presenter-bar.is-active .presenter-info { display: flex; }
-.presenter-badge { display: inline-flex; align-items: center; min-height: 24px; padding: 2px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-family: var(--font-mono); font-weight: 800; }
+.presenter-badge { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 2px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-family: var(--font-mono); font-weight: 400; text-align: center; }
 .presenter-actions, .annotation-tools { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .annotation-tools { display: none; }
 .presenter-bar.is-active .annotation-tools { display: flex; }
 .presenter-btn, .annotation-btn {
   min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--bg-card);
   color: var(--text);
   cursor: pointer;
-  font: 800 12px var(--font-sans);
+  font: 400 12px/1 var(--font-sans);
+  text-align: center;
 }
 .presenter-btn:hover, .annotation-btn:hover, .annotation-btn.is-active { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
 .annotation-color {
@@ -927,6 +956,17 @@ details.appendix-details > summary.section-hero,
 .annotation-color[data-color="#fff176"] { background: #fff176; }
 .annotation-color[data-color="#a7f3d0"] { background: #a7f3d0; }
 .annotation-color[data-color="#fbcfe8"] { background: #fbcfe8; }
+.presenting::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  z-index: 3300;
+  background: linear-gradient(90deg, #e11d48, #fb7185, #ef4444);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.15) inset;
+}
 .annotation-mark {
   border-radius: 4px;
   padding: 0 2px;
@@ -1059,9 +1099,11 @@ body.annotation-erase-mode .annotation-canvas {
   // ───────────────────────── Presenter View ─────────────────────────
   if (typeof io !== 'undefined') {
     const pBar = document.createElement('div');
-    pBar.className = 'presenter-bar';
-    pBar.innerHTML = `<div class="presenter-info"><span id="p-status"></span><span class="presenter-badge" id="p-code" style="display:none;"></span></div><div class="annotation-tools" aria-label="Presenter annotation tools"><button type="button" class="annotation-btn annotation-color is-active" data-color="#fff176" title="Yellow highlight">Yellow</button><button type="button" class="annotation-btn annotation-color" data-color="#a7f3d0" title="Green highlight">Green</button><button type="button" class="annotation-btn annotation-color" data-color="#fbcfe8" title="Pink highlight">Pink</button><button type="button" class="annotation-btn" id="p-highlight-btn" title="Highlight selected word or text">Highlight</button><button type="button" class="annotation-btn" id="p-tooltip-btn" title="Add tooltip note to selected text">Tooltip</button><button type="button" class="annotation-btn" id="p-pen-btn" title="Draw on screen">Pen</button><button type="button" class="annotation-btn" id="p-eraser-btn" title="Erase drawings">Eraser</button><button type="button" class="annotation-btn" id="p-clear-annotations-btn" title="Clear annotations">Clear</button></div><div class="presenter-actions"><button type="button" class="presenter-btn" id="p-host-btn">Host</button><button type="button" class="presenter-btn" id="p-join-btn">Join</button><button type="button" class="presenter-btn" id="p-leave-btn" style="display:none;">Leave</button></div>`;
+    pBar.className = 'presenter-bar is-collapsed';
+    pBar.innerHTML = `<button type="button" class="presenter-toggle" id="p-toggle" aria-expanded="false" aria-controls="presenter-panel" title="Meeting controls">◉</button><div class="presenter-panel" id="presenter-panel"><div class="presenter-info"><span id="p-status"></span><span class="presenter-badge" id="p-code" style="display:none;"></span></div><div class="annotation-tools" aria-label="Presenter annotation tools"><button type="button" class="annotation-btn annotation-color is-active" data-color="#fff176" title="Yellow highlight">Yellow</button><button type="button" class="annotation-btn annotation-color" data-color="#a7f3d0" title="Green highlight">Green</button><button type="button" class="annotation-btn annotation-color" data-color="#fbcfe8" title="Pink highlight">Pink</button><button type="button" class="annotation-btn" id="p-highlight-btn" title="Highlight selected word or text">Highlight</button><button type="button" class="annotation-btn" id="p-tooltip-btn" title="Add tooltip note to selected text">Tooltip</button><button type="button" class="annotation-btn" id="p-pen-btn" title="Draw on screen">Pen</button><button type="button" class="annotation-btn" id="p-eraser-btn" title="Erase drawings">Eraser</button><button type="button" class="annotation-btn" id="p-clear-annotations-btn" title="Clear annotations">Clear</button></div><div class="presenter-actions"><button type="button" class="presenter-btn" id="p-host-btn">Host</button><button type="button" class="presenter-btn" id="p-join-btn">Join</button><button type="button" class="presenter-btn" id="p-end-btn" style="display:none;">End Hosting</button><button type="button" class="presenter-btn" id="p-leave-btn" style="display:none;">Leave</button></div></div>`;
     document.body.appendChild(pBar);
+
+    const pToggle = document.getElementById('p-toggle');
 
     const pModal = document.createElement('div');
     pModal.className = 'presenter-modal';
@@ -1113,6 +1155,7 @@ body.annotation-erase-mode .annotation-canvas {
       }
       if (data.type === 'draw') drawStroke(data.points, data.color, data.size, data.erase);
       if (data.type === 'clear_annotations') clearAnnotations();
+      if (data.type === 'session_ended') resetPresenterSession();
     });
 
     let scrollTicking = false;
@@ -1186,6 +1229,12 @@ body.annotation-erase-mode .annotation-canvas {
       document.getElementById('p-eraser-btn').classList.toggle('is-active', mode === 'erase');
     }
 
+    function setPresenterPanelOpen(open) {
+      pBar.classList.toggle('is-collapsed', !open);
+      pBar.classList.toggle('is-open', open);
+      pToggle.setAttribute('aria-expanded', String(open));
+    }
+
     function drawStroke(points, color, size, erase) {
       if (!points || points.length < 2) return;
       annotationCtx.save();
@@ -1237,8 +1286,11 @@ body.annotation-erase-mode .annotation-canvas {
       document.getElementById('p-code').style.display = 'inline-block';
       document.getElementById('p-host-btn').style.display = 'none';
       document.getElementById('p-join-btn').style.display = 'none';
+      document.getElementById('p-end-btn').style.display = role === 'presenter' ? 'inline-block' : 'none';
       document.getElementById('p-leave-btn').style.display = 'inline-block';
       pBar.classList.add('is-active');
+      setPresenterPanelOpen(true);
+      document.body.classList.add('presenting');
 
       if (role === 'viewer') {
         document.body.classList.add('viewer-locked');
@@ -1248,6 +1300,10 @@ body.annotation-erase-mode .annotation-canvas {
     document.getElementById('p-host-btn').addEventListener('click', () => {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       joinSession('presenter', code);
+    });
+
+    pToggle.addEventListener('click', () => {
+      setPresenterPanelOpen(pBar.classList.contains('is-collapsed'));
     });
 
     document.getElementById('p-join-btn').addEventListener('click', () => pModal.classList.add('is-open'));
@@ -1261,20 +1317,32 @@ body.annotation-erase-mode .annotation-canvas {
       }
     });
 
-    document.getElementById('p-leave-btn').addEventListener('click', () => {
-      socket.disconnect();
-      socket.connect();
+    function resetPresenterSession() {
       myRole = 'idle';
       myCode = null;
       document.getElementById('p-status').textContent = '';
       document.getElementById('p-code').style.display = 'none';
       document.getElementById('p-host-btn').style.display = 'inline-block';
       document.getElementById('p-join-btn').style.display = 'inline-block';
+      document.getElementById('p-end-btn').style.display = 'none';
       document.getElementById('p-leave-btn').style.display = 'none';
       pBar.classList.remove('is-active');
+      setPresenterPanelOpen(false);
+      document.body.classList.remove('presenting');
       setAnnotationMode('idle');
       clearAnnotations();
       document.body.classList.remove('viewer-locked');
+    }
+
+    document.getElementById('p-end-btn').addEventListener('click', () => {
+      if (myCode) socket.emit('leave_room', { code: myCode, endSession: true });
+      resetPresenterSession();
+    });
+
+    document.getElementById('p-leave-btn').addEventListener('click', () => {
+      const wasPresenter = myRole === 'presenter';
+      if (myCode) socket.emit('leave_room', { code: myCode, endSession: wasPresenter });
+      resetPresenterSession();
     });
 
     const urlParams = new URLSearchParams(window.location.search);

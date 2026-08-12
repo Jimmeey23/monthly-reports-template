@@ -148,6 +148,10 @@
       kwality: '/revised-july/kwality-house-july-2026.html?v=4',
       supreme: '/revised-july/supreme-hq-bandra-july-2026.html?v=4'
     };
+    const julyReportRoutes = {
+      kwality: '/july-report/kwality',
+      supreme: '/july-report/supreme'
+    };
     const julyViewer = document.getElementById('july-reports-viewer');
     const julyLoadBtn = document.getElementById('load-july-reports');
     const julyCloseBtn = document.getElementById('viewer-close');
@@ -161,15 +165,8 @@
     let julySwitcherTimer = null;
 
     julyLoadBtn.addEventListener('click', () => {
-      if (!julyReportsLoaded) {
-        kwalityReportFrame.src = julyReportSources.kwality;
-        supremeReportFrame.src = julyReportSources.supreme;
-        julyReportsLoaded = true;
-      }
-      julyViewer.classList.add('is-open');
-      julyViewer.setAttribute('aria-hidden', 'false');
-      setJulyReportMode('kwality');
-      collapseJulySwitcher();
+      const activeMode = (julyTabs.find((tab) => tab.getAttribute('aria-pressed') === 'true') || julyTabs[0])?.dataset.reportMode || 'kwality';
+      window.location.href = julyReportRoutes[activeMode] || julyReportRoutes.kwality;
     });
     julyCloseBtn.addEventListener('click', closeJulyViewer);
     julySwitcherToggle.addEventListener('click', () => {

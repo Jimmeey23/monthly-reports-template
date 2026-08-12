@@ -278,10 +278,12 @@ app.get('/july-report/:studio', (req, res) => {
     supreme: path.join('public', 'revised-july', 'supreme-hq-bandra-july-2026.html'),
   };
   const filename = files[req.params.studio];
-  if (!filename) return res.status(404).send('Report not found.');
-
-  const reportPath = path.join(__dirname, filename);
-  if (!fs.existsSync(reportPath)) return res.status(404).send('Report file missing.');
+  const isBothView = req.params.studio === 'both';
+  if (!filename && !isBothView) return res.status(404).send('Report not found.');
+  const shouldEmbed = req.query.embed === '1';
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.headers.host || `localhost:${activePort}`;
+  const serverUrl = process.env.SERVER_URL || `${protocol}://${host}`;
   const embeddedCss = `<style>
     .topbar,
     .editor-toolbar,
@@ -297,7 +299,7 @@ app.get('/july-report/:studio', (req, res) => {
       padding-top: 0 !important;
       margin: 0 !important;
       overflow-x: hidden;
-      zoom: 0.9;
+      zoom: 1;
     }
     .hero {
       padding-top: 24px !important;
@@ -326,11 +328,58 @@ app.get('/july-report/:studio', (req, res) => {
       display: block !important;
     }
     .container {
-      max-width: none !important;
-      width: 100% !important;
-      padding-left: clamp(28px, 3.5vw, 58px) !important;
-      padding-right: clamp(28px, 3.5vw, 58px) !important;
+      max-width: 1560px !important;
+      width: min(calc(100% - clamp(140px, 14vw, 320px)), 1560px) !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
       box-sizing: border-box !important;
+    }
+    .headline-kpi-matrix {
+      left: auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      transform: none !important;
+    }
+    .headline-kpi-matrix .table-wrap {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: auto !important;
+    }
+    .headline-kpi-matrix table.data-table {
+      width: 100% !important;
+      min-width: 1320px !important;
+    }
+    table.data-table {
+      table-layout: auto !important;
+    }
+    table.data-table thead th,
+    table.data-table tbody td,
+    .appendix-body table.data-table thead th,
+    .appendix-body table.data-table tbody td {
+      text-align: center !important;
+    }
+    table.data-table thead th:first-child,
+    table.data-table tbody td:first-child,
+    table.data-table tbody td.metric-name,
+    .appendix-body table.data-table thead th:first-child,
+    .appendix-body table.data-table tbody td:first-child {
+      width: clamp(190px, 24%, 340px) !important;
+      min-width: 190px !important;
+      text-align: left !important;
+    }
+    table.data-table thead th:not(:first-child),
+    table.data-table tbody td:not(:first-child) {
+      min-width: 96px !important;
+    }
+    @media (max-width: 760px) {
+      .container {
+        width: min(calc(100% - 44px), 1680px) !important;
+      }
+      .headline-kpi-matrix table.data-table {
+        min-width: 1120px !important;
+      }
     }
     .july-presenter-session-bar {
       position: fixed !important;
@@ -353,7 +402,7 @@ app.get('/july-report/:studio', (req, res) => {
       background: color-mix(in srgb, var(--bg-card) 94%, white 6%) !important;
       color: var(--text) !important;
       box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16) !important;
-      font: 700 12px var(--font-sans) !important;
+      font: 400 12px var(--font-sans) !important;
       line-height: 1.15 !important;
       white-space: nowrap !important;
     }
@@ -371,25 +420,107 @@ app.get('/july-report/:studio', (req, res) => {
     .july-session-code {
       display: inline-flex !important;
       align-items: center !important;
+      justify-content: center !important;
       min-height: 24px !important;
       padding: 2px 8px !important;
       border-radius: 999px !important;
       background: var(--primary-soft) !important;
       color: var(--primary) !important;
       font-family: var(--font-mono) !important;
+      font-weight: 400 !important;
+      text-align: center !important;
     }
     .july-presenter-session-bar button {
       min-height: 24px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       border: 1px solid var(--border) !important;
       border-radius: 999px !important;
       background: var(--bg-inset) !important;
       color: var(--text) !important;
       padding: 3px 8px !important;
-      font: 800 11px var(--font-sans) !important;
+      font: 400 11px/1 var(--font-sans) !important;
+      text-align: center !important;
       cursor: pointer !important;
     }
     .july-presenter-session-active {
       padding-top: 44px !important;
+    }
+    .july-route-controls-visible {
+      padding-top: 68px !important;
+    }
+    .july-route-controls-visible.july-presenter-session-active {
+      padding-top: 114px !important;
+    }
+    .july-presenter-session-active .july-report-route-controls {
+      top: 58px !important;
+    }
+    .july-report-route-controls {
+      position: fixed !important;
+      top: 12px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      z-index: 99998 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      max-width: min(920px, calc(100vw - 24px)) !important;
+      padding: 7px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 999px !important;
+      background: color-mix(in srgb, var(--bg-card) 94%, white 6%) !important;
+      color: var(--text) !important;
+      box-shadow: 0 16px 38px rgba(15, 23, 42, 0.16) !important;
+      backdrop-filter: blur(16px) !important;
+      font-family: var(--font-sans) !important;
+      white-space: nowrap !important;
+    }
+    .july-report-route-tabs,
+    .july-report-session-actions {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 5px !important;
+    }
+    .july-report-route-controls a,
+    .july-report-route-controls button {
+      min-height: 30px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 999px !important;
+      background: var(--bg-inset) !important;
+      color: var(--text) !important;
+      padding: 6px 11px !important;
+      font: 400 11px/1 var(--font-sans) !important;
+      line-height: 1 !important;
+      text-align: center !important;
+      text-decoration: none !important;
+      cursor: pointer !important;
+    }
+    .july-report-route-controls a.is-active,
+    .july-report-route-controls button.primary {
+      background: var(--primary) !important;
+      border-color: var(--primary) !important;
+      color: #fff !important;
+    }
+    .july-report-route-controls input {
+      width: 86px !important;
+      min-height: 30px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 999px !important;
+      background: var(--bg-card) !important;
+      color: var(--text) !important;
+      padding: 5px 10px !important;
+      font: 400 12px/1 var(--font-mono) !important;
+      text-align: center !important;
+      letter-spacing: 0.08em !important;
+    }
+    .july-report-route-divider {
+      width: 1px !important;
+      height: 24px !important;
+      background: var(--border) !important;
     }
     .july-viewer-locked .july-presenter-session-bar,
     .july-viewer-locked .july-presenter-session-bar * {
@@ -404,6 +535,16 @@ app.get('/july-report/:studio', (req, res) => {
         padding: 4px 6px 4px 10px !important;
       }
       .july-presenter-session-bar strong { display: none !important; }
+      .july-report-route-controls {
+        top: 8px !important;
+        max-width: calc(100vw - 16px) !important;
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+      }
+      .july-report-route-controls a,
+      .july-report-route-controls button {
+        padding-inline: 9px !important;
+      }
     }
   </style>`;
   const embeddedScript = `<script>
@@ -414,9 +555,42 @@ app.get('/july-report/:studio', (req, res) => {
       } catch (error) {}
     })();
   </script>`;
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-  const host = req.headers.host || `localhost:${activePort}`;
-  const serverUrl = process.env.SERVER_URL || `${protocol}://${host}`;
+  const routeControlsScript = shouldEmbed ? '' : `<script>
+    (function () {
+      var current = ${JSON.stringify(req.params.studio)};
+      var bar = document.createElement('div');
+      bar.className = 'july-report-route-controls';
+      bar.innerHTML =
+        '<div class="july-report-route-tabs" aria-label="Report view">' +
+          '<a href="/july-report/kwality" data-view="kwality">Kemps</a>' +
+          '<a href="/july-report/supreme" data-view="supreme">Bandra</a>' +
+          '<a href="/july-report/both" data-view="both">Both</a>' +
+        '</div>' +
+        '<span class="july-report-route-divider" aria-hidden="true"></span>' +
+        '<div class="july-report-session-actions">' +
+          '<button type="button" class="primary" id="july-host-report">Host</button>' +
+          '<input id="july-join-code-input" inputmode="numeric" maxlength="6" placeholder="Code" aria-label="Join code">' +
+          '<button type="button" id="july-join-report">Join</button>' +
+        '</div>';
+      document.body.appendChild(bar);
+      document.body.classList.add('july-route-controls-visible');
+      bar.querySelectorAll('[data-view]').forEach(function (link) {
+        link.classList.toggle('is-active', link.getAttribute('data-view') === current);
+      });
+      document.getElementById('july-host-report').addEventListener('click', function () {
+        var url = new URL(window.location.href);
+        url.searchParams.set('host', '1');
+        url.searchParams.delete('roomCode');
+        window.location.href = url.toString();
+      });
+      document.getElementById('july-join-report').addEventListener('click', function () {
+        var input = document.getElementById('july-join-code-input');
+        var code = (input.value || '').replace(/\\D/g, '').slice(0, 6);
+        if (code.length === 6) window.location.href = '/join/' + code;
+        else input.focus();
+      });
+    })();
+  </script>`;
   const presenterScript = `<script src="/socket.io/socket.io.js"></script>
   <script>
     (function () {
@@ -439,6 +613,7 @@ app.get('/july-report/:studio', (req, res) => {
         '<span id="july-session-status"></span></div>' +
         '<div class="july-session-actions"><span class="july-session-code">Code: ' + code + '</span>' +
         '<button type="button" id="july-copy-code">Copy</button>' +
+        (role === 'presenter' ? '<button type="button" id="july-end-session">End Hosting</button>' : '') +
         '<button type="button" id="july-leave-session">Leave</button></div>';
       document.body.appendChild(bar);
       document.body.classList.add('july-presenter-session-active');
@@ -474,22 +649,64 @@ app.get('/july-report/:studio', (req, res) => {
       document.getElementById('july-copy-code').addEventListener('click', function () {
         if (navigator.clipboard) navigator.clipboard.writeText(code);
       });
+      var endButton = document.getElementById('july-end-session');
+      if (endButton) {
+        endButton.addEventListener('click', function () {
+          socket.emit('leave_room', { code: code, endSession: true });
+          window.location.href = reportUrl;
+        });
+      }
       document.getElementById('july-leave-session').addEventListener('click', function () {
-        socket.disconnect();
-        window.close();
+        socket.emit('leave_room', { code: code, endSession: role === 'presenter' });
+        window.location.href = role === 'presenter' ? reportUrl : '/july-report/' + (reportUrl.indexOf('supreme') !== -1 ? 'supreme' : 'kwality');
       });
     })();
   </script>`;
+  if (isBothView) {
+    const bothHtml = `<!DOCTYPE html>
+<html data-theme="light" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>July 2026 Reports · Both Studios</title>
+  <style>
+    :root { --bg:#f2f2f2; --bg-card:#fffefa; --bg-inset:#f1efe8; --border:rgba(21,23,28,.12); --text:#15171c; --text-muted:#62656d; --primary:#005fef; --font-sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --font-mono:"SFMono-Regular",Consolas,monospace; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font-sans); overflow:hidden; }
+    .july-both-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; height:100vh; padding-top:0; background:var(--border); }
+    .july-both-panel { min-width:0; min-height:0; display:flex; flex-direction:column; background:var(--bg-card); }
+    .july-both-label { height:32px; display:flex; align-items:center; padding:0 14px; border-bottom:1px solid var(--border); color:var(--text-muted); font:800 11px var(--font-sans); letter-spacing:.08em; text-transform:uppercase; }
+    iframe { width:100%; height:100%; border:0; background:white; }
+    .july-route-controls-visible .july-both-grid { height:calc(100vh - 68px); }
+    @media (max-width:900px) { body { overflow:auto; } .july-both-grid { grid-template-columns:1fr; height:auto; } .july-both-panel { height:80vh; } }
+  </style>
+  ${embeddedCss}
+</head>
+<body>
+  <div class="july-both-grid">
+    <section class="july-both-panel"><div class="july-both-label">Kemps Corner · Kwality House</div><iframe src="/july-report/kwality?embed=1" title="Kemps Corner July 2026 report"></iframe></section>
+    <section class="july-both-panel"><div class="july-both-label">Bandra · Supreme HQ</div><iframe src="/july-report/supreme?embed=1" title="Supreme HQ Bandra July 2026 report"></iframe></section>
+  </div>
+  ${embeddedScript}${routeControlsScript}${presenterScript}
+</body>
+</html>`;
+    return res.type('html').send(bothHtml);
+  }
+
+  const reportPath = path.join(__dirname, filename);
+  if (!fs.existsSync(reportPath)) return res.status(404).send('Report file missing.');
   let html = fs.readFileSync(reportPath, 'utf8');
   html = html
     .replace(/<html([^>]*?)data-theme=(["'])dark\2([^>]*)>/i, '<html$1data-theme="light"$3>')
     .replace(/<script>window\.__REPORT_CTX__[\s\S]*?<\/script>\s*/g, '')
     .replace(/<script src="\/socket\.io\/socket\.io\.js"><\/script>\s*/g, '')
     .replace(/<script src="\/report-client\.js"><\/script>\s*/g, '')
+    .replace(/<script src="\.\/section-audio\.js[^"]*"><\/script>\s*/g, '')
+    .replace(/<script src="\.\/sfx-soundboard\.js[^"]*"><\/script>\s*/g, '')
     .replace('</head>', `${embeddedCss}</head>`);
   const bodyCloseIndex = html.lastIndexOf('</body>');
   if (bodyCloseIndex >= 0) {
-    html = `${html.slice(0, bodyCloseIndex)}${embeddedScript}<script src="/revised-july/sfx-soundboard.js?v=4"></script>${presenterScript}${html.slice(bodyCloseIndex)}`;
+    html = `${html.slice(0, bodyCloseIndex)}${embeddedScript}<script src="/revised-july/section-audio.js?v=1"></script><script src="/revised-july/sfx-soundboard.js?v=4"></script>${routeControlsScript}${presenterScript}${html.slice(bodyCloseIndex)}`;
   }
   res.type('html').send(html);
 });
@@ -812,6 +1029,26 @@ const io = new Server(server, { cors: { origin: '*' } });
 const presenterRooms = {};
 
 io.on('connection', (socket) => {
+  function leavePresenterRoom({ endSession = false } = {}) {
+    const roomCode = socket.roomCode;
+    if (!roomCode || !presenterRooms[roomCode]) return;
+
+    if (endSession || socket.role === 'presenter') {
+      socket.to(roomCode).emit('presenter_sync', { type: 'session_ended' });
+      delete presenterRooms[roomCode];
+    } else if (socket.role === 'viewer') {
+      presenterRooms[roomCode].viewers = Math.max(0, presenterRooms[roomCode].viewers - 1);
+      io.to(roomCode).emit('room_state', presenterRooms[roomCode]);
+      if (!presenterRooms[roomCode].presenterId && presenterRooms[roomCode].viewers === 0) {
+        delete presenterRooms[roomCode];
+      }
+    }
+
+    socket.leave(roomCode);
+    socket.roomCode = null;
+    socket.role = null;
+  }
+
   socket.on('join_room', ({ role, code, reportUrl }) => {
     if (!code) return;
     socket.join(code);
@@ -838,18 +1075,12 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('leave_room', ({ endSession } = {}) => {
+    leavePresenterRoom({ endSession: Boolean(endSession) });
+  });
+
   socket.on('disconnect', () => {
-    if (socket.roomCode && presenterRooms[socket.roomCode]) {
-      if (socket.role === 'presenter') {
-        presenterRooms[socket.roomCode].presenterId = null;
-      } else {
-        presenterRooms[socket.roomCode].viewers = Math.max(0, presenterRooms[socket.roomCode].viewers - 1);
-      }
-      io.to(socket.roomCode).emit('room_state', presenterRooms[socket.roomCode]);
-      if (!presenterRooms[socket.roomCode].presenterId && presenterRooms[socket.roomCode].viewers === 0) {
-        delete presenterRooms[socket.roomCode];
-      }
-    }
+    leavePresenterRoom();
   });
 });
 

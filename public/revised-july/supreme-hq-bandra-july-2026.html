@@ -3569,7 +3569,7 @@ body.bandra-report .mom-modal-foot { min-height:42px; padding:10px 24px; }
 .headline-kpi-matrix .badge { min-width:57px; padding:5px 8px; border:1px solid currentColor; border-radius:999px; font-weight:800; box-shadow:none; }
 
 .balance-sheet-subsection { margin-top:38px; padding:0 0 20px 20px; border:0; border-left:4px solid var(--primary); border-radius:0; background:transparent; }
-.balance-sheet-subsection::before { content:"MONTH IN REVIEW"; display:block; margin-bottom:9px; color:var(--primary); font-size:10px; font-weight:850; letter-spacing:.14em; }
+.balance-sheet-subsection::before { content:"MONTH IN REVIEW"; position:static; display:block; width:auto; height:auto; margin-bottom:9px; color:var(--primary); font-size:10px; font-weight:850; letter-spacing:.14em; }
 .balance-sheet-subsection::after { display:none; }
 .balance-sheet-subsection .subsection-title { font-size:clamp(25px,2.4vw,35px); }
 .balance-sheet-subsection .subsection-deck { max-width:760px; color:var(--text-muted); }
@@ -3650,15 +3650,54 @@ body.bandra-report .section-header-actions .mom-info-btn:focus-visible,
 body.bandra-report .section-header-actions .section-audio-btn:hover,
 body.bandra-report .section-header-actions .section-audio-btn:focus-visible { border-color:#8190a6; background:#e9edf2; color:#172033; transform:translateY(-1px); outline:2px solid rgba(49,95,159,.18); outline-offset:2px; }
 body.bandra-report .section-header-actions .section-audio-btn.is-playing { border-color:#315f9f; background:#315f9f; color:#fff; }
+body.bandra-report .section-header-actions .mom-info-btn ~ .mom-info-btn { display:none !important; }
 body.bandra-report .section-info-popover { order:2; margin-top:2px; }
 
 /* Corrected July balance-sheet header */
 body.bandra-report .balance-sheet-subsection { display:block; margin:38px 0 0; padding:24px 26px 22px; border:1px solid #d8dee7; border-bottom:0; border-left:1px solid #d8dee7; border-radius:18px 18px 0 0; background:linear-gradient(115deg,#f8f9fb 0%,#eef1f4 100%); box-shadow:0 10px 26px rgba(15,23,42,.045); }
-body.bandra-report .balance-sheet-subsection::before { display:inline-flex; margin:0 0 10px; padding:5px 9px; border:1px solid #d8dee6; border-radius:999px; background:#fff; color:#596579; font-size:8.5px; font-weight:850; letter-spacing:.13em; }
+body.bandra-report .balance-sheet-subsection::before { position:static; display:inline-flex; width:auto; height:auto; margin:0 0 10px; padding:5px 9px; border:1px solid #d8dee6; border-radius:999px; background:#fff; color:#596579; font-size:8.5px; font-weight:850; letter-spacing:.13em; }
 body.bandra-report .balance-sheet-subsection .subsection-title { max-width:none; margin:0 0 8px; color:#172033; font-size:clamp(23px,2.1vw,31px); font-weight:800; letter-spacing:-.032em; line-height:1.15; }
 body.bandra-report .balance-sheet-subsection .subsection-deck { max-width:820px; margin:0; color:#667185; font-size:12.5px; line-height:1.6; }
 body.bandra-report .balance-sheet-subsection + .balance-sheet-grid { border:1px solid #d8dee7; border-top:0; border-radius:0 0 18px 18px; padding:0 20px 20px; background:#eef1f4; }
 @media(max-width:760px){ body.bandra-report .section-header{padding-right:0} body.bandra-report .section-header-right{width:100%;align-items:flex-start} body.bandra-report .section-header-actions{justify-content:flex-start} body.bandra-report .balance-sheet-subsection{padding:21px 19px 19px} body.bandra-report .balance-sheet-subsection + .balance-sheet-grid{padding:0 14px 14px} }
+
+/* The badge and its controls are one pinned top-right unit */
+body.bandra-report .section-hero .section-header-right { position:absolute !important; top:24px; right:26px; z-index:8; width:auto; min-width:110px; }
+body.bandra-report .section-hero .section-header { padding-right:150px; }
+
+/* Interactive demand heatmap */
+body.bandra-report #sessions .data-pane:has(#demand-heatmap) { overflow:hidden; border:1px solid #d7dde6; border-radius:18px; box-shadow:0 18px 44px rgba(15,23,42,.08); }
+body.bandra-report #sessions .data-pane:has(#demand-heatmap) .panel-header { padding:21px 23px; background:linear-gradient(110deg,#17243a,#263958); color:#fff; }
+body.bandra-report #sessions .data-pane:has(#demand-heatmap) .panel-title { color:#fff; font-size:19px; font-weight:820; }
+body.bandra-report #sessions .data-pane:has(#demand-heatmap) .panel-subtitle { color:rgba(255,255,255,.68); }
+body.bandra-report .hm-controls .hm-btn { border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:rgba(255,255,255,.76); }
+body.bandra-report .hm-controls .hm-btn.is-active { border-color:#fff; background:#fff; color:#17243a; }
+.hm-interactive-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:13px 20px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); background:#f7f8fa; }
+.hm-day-filters { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.hm-day-btn { min-width:38px; height:30px; padding:0 10px; border:1px solid #d8dde5; border-radius:8px; background:#fff; color:#5d687a; font:750 9.5px/1 var(--font-sans); cursor:pointer; }
+.hm-day-btn:hover,.hm-day-btn:focus-visible { border-color:#7e8ba0; color:#17243a; outline:2px solid rgba(49,95,159,.16); outline-offset:1px; }
+.hm-day-btn.is-active { border-color:#263958; background:#263958; color:#fff; }
+.hm-selection { min-width:270px; color:#5d687a; font-size:10.5px; line-height:1.4; text-align:right; }
+.hm-selection strong { color:#17243a; font-weight:800; }
+body.bandra-report .heatmap-table { border-spacing:4px; padding:6px; background:#f4f6f8; }
+body.bandra-report .heatmap-table th { position:sticky; top:0; z-index:3; min-width:72px; border-radius:7px; background:#e5e9ef; color:#536074; font-size:9px; }
+body.bandra-report .heatmap-table th:first-child { left:0; z-index:5; min-width:64px; background:#dce2ea; }
+body.bandra-report .heatmap-table td.row-label { position:sticky; left:0; z-index:2; border-radius:7px; background:#e5e9ef; color:#253249; font-weight:800; }
+body.bandra-report .heat-cell { min-width:72px; height:62px; padding:9px 7px; border:1px solid transparent; border-radius:8px; background:#eef1f5; color:#27344b; font-size:11px; box-shadow:none; cursor:pointer; opacity:1; transition:transform 160ms ease,box-shadow 160ms ease,border-color 160ms ease,opacity 160ms ease; }
+body.bandra-report .heat-cell.cold { background:#e9eef5; color:#46556b; }
+body.bandra-report .heat-cell.cool { background:#cad8e9; color:#233b5c; }
+body.bandra-report .heat-cell.warm { background:#829fc5; color:#fff; }
+body.bandra-report .heat-cell.hot { background:#294f83; color:#fff; }
+body.bandra-report .heat-cell.empty { background:#f7f8fa; color:#a4adba; cursor:default; }
+body.bandra-report .heat-cell.hm-grand { background:#17243a; color:#fff; }
+body.bandra-report .heat-cell .heat-sub { max-width:92px; overflow:hidden; text-overflow:ellipsis; opacity:.78; }
+body.bandra-report .heat-cell:hover,
+body.bandra-report .heat-cell:focus-visible { position:relative; z-index:4; border-color:#fff; transform:translateY(-2px) scale(1.035); box-shadow:0 10px 24px rgba(15,23,42,.2); filter:none; outline:2px solid #315f9f; outline-offset:1px; }
+body.bandra-report .heat-cell.is-selected { position:relative; z-index:4; border-color:#fff; box-shadow:0 0 0 3px #315f9f,0 10px 22px rgba(15,23,42,.18); transform:scale(1.035); }
+body.bandra-report #demand-heatmap tr.is-context-row td:not(.is-selected),
+body.bandra-report #demand-heatmap th.is-context-column { box-shadow:inset 0 0 0 2px rgba(49,95,159,.34); }
+body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.hm-totals) .heat-cell { opacity:.42; }
+@media(max-width:760px){ body.bandra-report .section-hero .section-header{padding-right:0;padding-top:100px} body.bandra-report .section-hero .section-header-right{top:18px;right:18px;align-items:flex-end;width:auto}.hm-interactive-bar{align-items:flex-start;flex-direction:column}.hm-selection{min-width:0;text-align:left} }
 </style>
 </head>
 <body class="bandra-report">
@@ -3834,36 +3873,36 @@ body.bandra-report .balance-sheet-subsection + .balance-sheet-grid { border:1px 
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.05V17h6v-.25c0-.85.4-1.55 1-2.05A7 7 0 0 0 12 2Z"></path></svg></div>
 <div class="ai-bullet-content">
-<div class="ai-bullet-header"><strong class="ai-bullet-title">Revenue Growth Driven by Volume</strong></div>
-<div class="ai-bullet-meaning">The studio's impressive revenue growth of 31.3% was largely volume-driven with transactions increasing by 24.2%. This indicates a successful pull strategy attracting more customers; however, the relatively small increase in ATV suggests untapped potential in upselling strategies. <span class="ai-bullet-evidence-inline">(₹18,89,427 gross (+31.3%) from 231 transactions (+24.2%) while ATV rose just 5.7%)</span></div>
+<div class="ai-bullet-header"><strong class="ai-bullet-title">High-intent channels outperform hosted volume by 10×</strong></div>
+<div class="ai-bullet-meaning">Hosted Classes supplied 81 leads but converted only 2 (2.47%). WhatsApp produced 5 conversions from 19 leads (26.32%), while referrals converted 5 of 18 (27.78%). <span class="ai-bullet-evidence-inline">Management implication: reallocate acquisition effort toward intent-rich conversations rather than event volume.</span></div>
 </div>
 </li>
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.05V17h6v-.25c0-.85.4-1.55 1-2.05A7 7 0 0 0 12 2Z"></path></svg></div>
 <div class="ai-bullet-content">
-<div class="ai-bullet-header"><strong class="ai-bullet-title">High Churn Rate Signals Retention Opportunity</strong></div>
-<div class="ai-bullet-meaning">A churn rate of 26.8% indicates significant membership turnover which is well above healthy industry standards (&lt;3%). This presents an opportunity to focus on retention programs that could stabilize member count and enhance long-term revenue stability. <span class="ai-bullet-evidence-inline">(Churn rate at 26.8%, net member change -71)</span></div>
+<div class="ai-bullet-header"><strong class="ai-bullet-title">More than half of the active base is already signalling risk</strong></div>
+<div class="ai-bullet-meaning">102 of 194 active clients are high or medium risk: 78 high risk and 24 medium risk. Historical lapsers completed only 2.15 sessions versus 5.72 for renewers. <span class="ai-bullet-evidence-inline">Management implication: weekly attendance recovery must start before clients fall below three completed sessions.</span></div>
 </div>
 </li>
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.05V17h6v-.25c0-.85.4-1.55 1-2.05A7 7 0 0 0 12 2Z"></path></svg></div>
 <div class="ai-bullet-content">
-<div class="ai-bullet-header"><strong class="ai-bullet-title">Lead Conversion Below Benchmark</strong></div>
-<div class="ai-bullet-meaning">Lead conversion rates are currently at 11.8%, significantly below the healthy benchmark of 30-45%. Improving this metric could dramatically boost the pipeline efficiency without additional marketing spend. <span class="ai-bullet-evidence-inline">(Lead conversion rate at 11.8%, compared to baseline of ~12%)</span></div>
+<div class="ai-bullet-header"><strong class="ai-bullet-title">Instructor assignment changes the newcomer outcome</strong></div>
+<div class="ai-bullet-meaning">Atulan retained 12 of 29 newcomers (41.38%) while Vivaran retained only 1 of 20 (5.00%) despite attracting 198 total visits. <span class="ai-bullet-evidence-inline">Management implication: protect Vivaran’s regular-member slots, but route newcomer sessions to proven trial handlers.</span></div>
 </div>
 </li>
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.05V17h6v-.25c0-.85.4-1.55 1-2.05A7 7 0 0 0 12 2Z"></path></svg></div>
 <div class="ai-bullet-content">
-<div class="ai-bullet-header"><strong class="ai-bullet-title">Class Fill Rates Indicate Capacity Utilization Gap</strong></div>
-<div class="ai-bullet-meaning">With class fill rates averaging only 41.6%, there's considerable room to improve capacity utilization through targeted promotions or schedule adjustments designed to attract more attendees during underutilized slots. <span class="ai-bullet-evidence-inline">('Class fill rate at 41.6%' against baseline of ~44%)</span></div>
+<div class="ai-bullet-header"><strong class="ai-bullet-title">The format gap is specific enough to schedule against</strong></div>
+<div class="ai-bullet-meaning">PowerCycle Express filled 78.85% and Studio FIT 59.77%; Mat 57 Express filled only 14.63%, with Cardio Barre and Trainer’s Choice below 29%. <span class="ai-bullet-evidence-inline">Management implication: replace weak tail slots with tested Express/FIT supply and a measured Strength Lab pilot.</span></div>
 </div>
 </li>
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.05V17h6v-.25c0-.85.4-1.55 1-2.05A7 7 0 0 0 12 2Z"></path></svg></div>
 <div class="ai-bullet-content">
-<div class="ai-bullet-header"><strong class="ai-bullet-title">'Momentum Deceleration Across Key Metrics'</strong></div>
-<div class="ai-bullet-meaning">Revenue is rising faster than attendance, fill rate, and member retention. In simple terms, a smaller group of higher-spending clients is carrying the result. The studio should protect that value while rebuilding the buyer base and improving repeat attendance.</div>
+<div class="ai-bullet-header"><strong class="ai-bullet-title">Sunday is the high-ticket closing window</strong></div>
+<div class="ai-bullet-meaning">Sunday generated an average order value of ₹10,163 despite low traffic, while Friday supplied the highest transaction volume. Put the strongest closer on Sunday mornings and preserve Friday for throughput rather than treating every day identically.</div>
 </div>
 </li></ul>
 </div>
@@ -6114,6 +6153,13 @@ body.bandra-report .balance-sheet-subsection + .balance-sheet-grid { border:1px 
 <span class="meta-pill">Top-5 slots: 18% of demand</span>
 <span class="meta-pill">AM vs PM: 58% / 42%</span>
 </div>
+<div class="hm-interactive-bar">
+<div aria-label="Filter heatmap by day" class="hm-day-filters">
+<button class="hm-day-btn is-active" data-day="all" type="button">All</button>
+<button class="hm-day-btn" data-day="Mon" type="button">Mon</button><button class="hm-day-btn" data-day="Tue" type="button">Tue</button><button class="hm-day-btn" data-day="Wed" type="button">Wed</button><button class="hm-day-btn" data-day="Thu" type="button">Thu</button><button class="hm-day-btn" data-day="Fri" type="button">Fri</button><button class="hm-day-btn" data-day="Sat" type="button">Sat</button><button class="hm-day-btn" data-day="Sun" type="button">Sun</button>
+</div>
+<div aria-live="polite" class="hm-selection" id="hm-selection"><strong>Select a populated slot</strong> to inspect its day, time, visits, format and instructor.</div>
+</div>
 <div class="table-wrap">
 <table class="data-table heatmap-table" id="demand-heatmap">
 <thead>
@@ -7532,6 +7578,69 @@ body.bandra-report .balance-sheet-subsection + .balance-sheet-grid { border:1px 
         var lbl = document.getElementById('hm-metric-label');
         if (lbl) lbl.innerHTML = b.getAttribute('data-label');
       });
+    });
+  }
+
+  // ---- Interactive heatmap exploration ----
+  var heatmap = document.getElementById('demand-heatmap');
+  var selection = document.getElementById('hm-selection');
+  if (heatmap) {
+    var headers = Array.prototype.slice.call(heatmap.querySelectorAll('thead th'));
+    var heatRows = Array.prototype.slice.call(heatmap.querySelectorAll('tbody tr:not(.hm-totals)'));
+    var selectableCells = Array.prototype.slice.call(heatmap.querySelectorAll('tbody tr:not(.hm-totals) .heat-cell[data-v]'));
+    var clearSelection = function () {
+      heatmap.classList.remove('has-selection');
+      heatmap.querySelectorAll('.is-selected,.is-context-row,.is-context-column').forEach(function (node) {
+        node.classList.remove('is-selected','is-context-row','is-context-column');
+      });
+    };
+    var selectCell = function (cell) {
+      clearSelection();
+      var row = cell.closest('tr');
+      var day = row.querySelector('.row-label').textContent.trim();
+      var columnIndex = Array.prototype.indexOf.call(row.children, cell);
+      var time = headers[columnIndex] ? headers[columnIndex].textContent.trim() : 'Slot';
+      var visits = +cell.getAttribute('data-v');
+      var detail = cell.querySelector('.heat-sub');
+      var detailText = detail ? detail.textContent.trim() : 'No format detail recorded';
+      cell.classList.add('is-selected');
+      row.classList.add('is-context-row');
+      if (headers[columnIndex]) headers[columnIndex].classList.add('is-context-column');
+      heatmap.classList.add('has-selection');
+      if (selection) selection.innerHTML = '<strong>' + day + ' · ' + time + '</strong> — ' + visits.toLocaleString('en-IN') + ' visits · ' + detailText;
+    };
+    selectableCells.forEach(function (cell) {
+      var row = cell.closest('tr');
+      var day = row.querySelector('.row-label').textContent.trim();
+      var columnIndex = Array.prototype.indexOf.call(row.children, cell);
+      var time = headers[columnIndex] ? headers[columnIndex].textContent.trim() : 'slot';
+      cell.tabIndex = 0;
+      cell.setAttribute('role','button');
+      cell.setAttribute('aria-label', day + ' ' + time + ', ' + cell.getAttribute('data-v') + ' visits. Select for details.');
+      cell.addEventListener('click', function () { selectCell(cell); });
+      cell.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectCell(cell); }
+      });
+    });
+    document.querySelectorAll('.hm-day-btn').forEach(function (button) {
+      button.setAttribute('aria-pressed', String(button.classList.contains('is-active')));
+      button.addEventListener('click', function () {
+        var day = button.getAttribute('data-day');
+        document.querySelectorAll('.hm-day-btn').forEach(function (item) {
+          var active = item === button;
+          item.classList.toggle('is-active', active);
+          item.setAttribute('aria-pressed', String(active));
+        });
+        heatRows.forEach(function (row) {
+          var rowDay = row.querySelector('.row-label').textContent.trim();
+          row.hidden = day !== 'all' && rowDay !== day;
+        });
+        clearSelection();
+        if (selection) selection.innerHTML = day === 'all' ? '<strong>All days visible.</strong> Select a populated slot for detail.' : '<strong>' + day + ' isolated.</strong> Select a populated slot for detail.';
+      });
+    });
+    heatmap.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') { clearSelection(); if (selection) selection.innerHTML = '<strong>Selection cleared.</strong> Choose another populated slot.'; }
     });
   }
 
@@ -9285,6 +9394,6 @@ window.SALES_CATEGORY_MATRIX = {"months":["2026-08","2026-07","2026-06","2026-05
   track.addEventListener('ended', function () { setPlaying(false); track.currentTime = 0; });
 }());
 </script>
-<script src="./section-audio.js?v=2"></script>
-<script src="./sfx-soundboard.js?v=10"></script>
+<script src="./section-audio.js?v=3"></script>
+<script src="./sfx-soundboard.js?v=20"></script>
 </body></html>

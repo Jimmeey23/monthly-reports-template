@@ -58,10 +58,11 @@
   function attachButton(actions, title) {
     if (!actions || actions.querySelector('.section-audio-btn')) return;
     audioIndex += 1;
+    var clipIndex = isBandra && audioIndex > 1 ? audioIndex + 1 : audioIndex;
     var button = document.createElement('button');
     button.type = 'button';
     button.className = 'section-audio-btn';
-    button.dataset.audioSrc = audioUrl(prefix + '-' + audioIndex + '.mp3');
+    button.dataset.audioSrc = audioUrl(prefix + '-' + clipIndex + '.mp3');
     button.dataset.audioLabel = 'Play ' + (title || 'section') + ' audio';
     button.setAttribute('aria-label', button.dataset.audioLabel);
     button.title = button.dataset.audioLabel;

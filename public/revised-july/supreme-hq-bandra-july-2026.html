@@ -1606,6 +1606,12 @@ details.appendix-details > summary.section-hero {
 }
 .subsection-title { margin-bottom: 8px; font-size: clamp(22px, 2.1vw, 31px); font-weight: 550; letter-spacing: -.035em; }
 .subsection-deck { max-width: 920px; font-size: 12.5px; line-height: 1.7; }
+.subsection-title-collapsible { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.subsection-collapse-btn { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin-left: auto; padding: 0; border: 1px solid var(--border-strong); border-radius: 50%; background: var(--bg-card); color: var(--primary); cursor: pointer; transition: transform .2s ease, background .15s ease; }
+.subsection-collapse-btn:hover { background: var(--primary-soft); }
+.subsection-collapse-btn svg { width: 14px; height: 14px; transition: transform .2s ease; }
+.subsection.collapsed .subsection-collapse-btn svg { transform: rotate(-90deg); }
+.subsection.collapsed .subsection-deck { margin-bottom: 0; }
 
 .panel-header {
   align-items: center;
@@ -3588,6 +3594,23 @@ body.bandra-report .mom-modal-foot { min-height:42px; padding:10px 24px; }
 @media(max-width:900px){ .hero-title-with-audio{grid-template-columns:1fr}.hero-audio-btn{justify-self:start;margin:0;min-width:210px} }
 @media(max-width:620px){ .hero-audio-btn{width:100%;min-width:0}.headline-kpi-matrix .panel-header{padding:20px}.balance-sheet-subsection{padding-left:16px} }
 
+.stat-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:0 0 16px; }
+.stat-chip { display:flex; flex-direction:column; gap:3px; padding:12px 14px; border:1px solid color-mix(in srgb,var(--primary) 16%,var(--border)); border-radius:12px; background:linear-gradient(160deg,color-mix(in srgb,var(--primary-soft) 60%,var(--bg-card)),var(--bg-card)); }
+.stat-chip-label { font-size:9.5px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--text-muted); }
+.stat-chip-value { font-size:17px; font-weight:800; letter-spacing:-.02em; color:var(--text); }
+.stat-chip-sub { font-size:11px; font-weight:650; color:var(--text-muted); }
+.stat-chip-sub.trend-up { color:var(--good); }
+.stat-chip-sub.trend-down { color:var(--bad); }
+@media(max-width:700px){ .stat-strip{grid-template-columns:1fr} }
+
+.trading-patterns-block .insight-card:nth-child(3) .insight-num,
+.avg-spend-block .insight-card .insight-num { background:color-mix(in srgb,var(--primary) 14%,var(--bg-card)); border-color:color-mix(in srgb,var(--primary) 35%,var(--border)); }
+.trading-patterns-pane .pane-title, .avg-spend-pane .panel-title { position:relative; }
+.trading-patterns-pane, .avg-spend-pane { border:1px solid color-mix(in srgb,var(--primary) 14%,var(--border)); border-radius:var(--radius); overflow:hidden; box-shadow:0 8px 22px rgba(15,23,42,.05); }
+.trading-patterns-pane .pane-title { background:linear-gradient(120deg,color-mix(in srgb,var(--primary) 10%,var(--bg-card)),var(--bg-card)); border-bottom:1px solid color-mix(in srgb,var(--primary) 14%,var(--border)); }
+.avg-spend-pane .table-wrap tbody tr:hover td { background:color-mix(in srgb,var(--primary) 5%,var(--bg-card)); }
+.avg-spend-pane .total-row td { background:color-mix(in srgb,var(--primary) 10%,var(--bg-card)) !important; }
+
 /* Requested neutral highlights and simplified inner-card edges */
 body.bandra-report { --good:#596579; --good-soft:#edf0f3; }
 body.bandra-report[data-theme="dark"] { --good:#c5ccd6; --good-soft:rgba(197,204,214,.12); }
@@ -4972,9 +4995,14 @@ body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):n
 <h3 class="subsection-title">Trading patterns — when Bandra actually closes</h3>
 <p class="subsection-deck">Volume lands on Friday; big tickets land on Sunday. Desk rostering and closer assignment should follow the money clock, not the shift rota.</p>
 </div>
-<div class="split-grid layout-insights-wide full-width-table-section">
+<div class="split-grid layout-insights-wide full-width-table-section trading-patterns-block">
 <div class="insights-pane">
 <div class="pane-title">Timing insights</div>
+<div class="stat-strip">
+<div class="stat-chip"><span class="stat-chip-label">Busiest day</span><span class="stat-chip-value">Friday</span><span class="stat-chip-sub">₹4.94L · 52 txns</span></div>
+<div class="stat-chip"><span class="stat-chip-label">Richest day</span><span class="stat-chip-value">Sunday</span><span class="stat-chip-sub">AOV ₹10,163 · 29 check-ins</span></div>
+<div class="stat-chip"><span class="stat-chip-label">Dead zone</span><span class="stat-chip-value">02:30–17:30</span><span class="stat-chip-sub">0–1 visits/slot</span></div>
+</div>
 <div class="insight-card">
 <div class="insight-num">01</div>
 <div class="insight-body">
@@ -4990,7 +5018,7 @@ body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):n
 </div>
 </div>
 </div>
-<div class="data-pane">
+<div class="data-pane trading-patterns-pane">
 <div class="pane-title" style="padding: 16px 16px 8px;">Revenue Timing Highlights · July 2026</div>
 <div class="table-wrap">
 <table class="data-table">
@@ -5010,9 +5038,14 @@ body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):n
 <h3 class="subsection-title">Average spend per client — paying vs total base</h3>
 <p class="subsection-deck">Bandra held revenue almost flat YoY on a smaller client base, which lifted both paying-client and total-client spend. This view separates true paying-client value from total-client value, including complimentary/promotional check-ins.</p>
 </div>
-<div class="split-grid layout-insights-wide full-width-table-section">
+<div class="split-grid layout-insights-wide full-width-table-section avg-spend-block">
 <div class="insights-pane">
 <div class="pane-title">Client value explanation</div>
+<div class="stat-strip">
+<div class="stat-chip"><span class="stat-chip-label">Avg / Paying</span><span class="stat-chip-value">₹11,247</span><span class="stat-chip-sub trend-up">+16.0% YoY</span></div>
+<div class="stat-chip"><span class="stat-chip-label">Avg / Total</span><span class="stat-chip-value">₹7,619</span><span class="stat-chip-sub trend-up">+21.6% YoY</span></div>
+<div class="stat-chip"><span class="stat-chip-label">Paying clients</span><span class="stat-chip-value">168</span><span class="stat-chip-sub trend-down">-12.5% YoY</span></div>
+</div>
 <div class="insight-card">
 <div class="insight-num">01</div>
 <div class="insight-body">
@@ -5035,7 +5068,7 @@ body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):n
 </div>
 </div>
 </div>
-<div class="data-pane">
+<div class="data-pane avg-spend-pane">
 <div class="panel-header" style="border-radius: var(--radius) var(--radius) 0 0;">
 <div>
 <div class="panel-title">Bandra · Avg Spend Per Client</div>
@@ -9392,6 +9425,38 @@ window.SALES_CATEGORY_MATRIX = {"months":["2026-08","2026-07","2026-06","2026-05
   });
   track.addEventListener('pause', function () { setPlaying(false); window.dispatchEvent(new CustomEvent('p57-active-audio-change')); });
   track.addEventListener('ended', function () { setPlaying(false); track.currentTime = 0; });
+}());
+</script>
+<script>
+(function () {
+  var subsections = document.querySelectorAll('.subsection');
+  subsections.forEach(function (sub) {
+    var title = sub.querySelector('.subsection-title');
+    if (!title) return;
+    var body = [];
+    var node = sub.nextElementSibling;
+    while (node && !node.classList.contains('subsection') && node.tagName !== 'SECTION') {
+      body.push(node);
+      node = node.nextElementSibling;
+    }
+    if (!body.length) return;
+    var toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'subsection-collapse-btn';
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Collapse section');
+    toggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>';
+    title.classList.add('subsection-title-collapsible');
+    title.appendChild(toggle);
+    function setCollapsed(collapsed) {
+      sub.classList.toggle('collapsed', collapsed);
+      toggle.setAttribute('aria-expanded', String(!collapsed));
+      body.forEach(function (el) { el.style.display = collapsed ? 'none' : ''; });
+    }
+    title.addEventListener('click', function (e) {
+      setCollapsed(!sub.classList.contains('collapsed'));
+    });
+  });
 }());
 </script>
 <script src="./section-audio.js?v=3"></script>

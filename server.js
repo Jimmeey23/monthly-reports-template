@@ -1110,4 +1110,8 @@ if (require.main === module) {
   startServer(PORT);
 }
 
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
 module.exports = { app, server, io };
+}

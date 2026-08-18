@@ -52,6 +52,10 @@
   host.style.background = 'transparent';
   document.body.appendChild(host);
 
+  var bodyShiftStyle = document.createElement('style');
+  bodyShiftStyle.textContent = 'body{transition:background-color 200ms ease,color 200ms ease,padding-right 280ms cubic-bezier(.16,1,.3,1)!important}';
+  document.head.appendChild(bodyShiftStyle);
+
   var root = host.attachShadow({ mode: 'open' });
   var style = document.createElement('style');
   style.textContent = [
@@ -68,29 +72,63 @@
     '.p57-sfx-board.is-open.has-active-audio .p57-sfx-mini{bottom:488px!important}',
     '@media(max-height:620px){.p57-sfx-board.is-open .p57-sfx-mini{bottom:calc(min(420px,calc(100vh - 104px)) + 72px)!important}}',
     '@media(max-height:620px){.p57-sfx-board.is-open .p57-speaker-toggle{bottom:calc(min(420px,calc(100vh - 104px)) + 22px)!important}}',
-    '.p57-speaker-panel{position:absolute!important;right:58px!important;bottom:0!important;display:none!important;width:min(390px,calc(100vw - 92px))!important;max-height:min(560px,calc(100vh - 36px))!important;overflow:hidden!important;margin:0!important;border:1px solid rgba(217,224,236,.76)!important;border-radius:8px!important;background:rgba(255,255,255,.78)!important;backdrop-filter:blur(18px) saturate(1.15)!important;-webkit-backdrop-filter:blur(18px) saturate(1.15)!important;box-shadow:0 18px 48px rgba(15,44,94,.24)!important;color:#0b1a33!important;transform:none!important}',
+    '.p57-speaker-panel{position:fixed!important;top:0!important;right:0!important;bottom:0!important;left:auto!important;display:none!important;width:min(380px,100vw)!important;height:100vh!important;min-width:300px!important;max-width:100vw!important;overflow:hidden!important;margin:0!important;border:0!important;border-left:1px solid rgba(24,32,48,.09)!important;border-radius:0!important;background:rgba(252,253,254,.98)!important;backdrop-filter:blur(16px) saturate(1.05)!important;-webkit-backdrop-filter:blur(16px) saturate(1.05)!important;box-shadow:-16px 0 34px rgba(29,36,54,.13)!important;color:#0b1a33!important;transform:none!important}',
     '.p57-speaker-panel.is-open{display:flex!important;flex-direction:column!important}',
-    '.p57-speaker-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;padding:10px 12px!important;border-bottom:1px solid rgba(217,224,236,.78)!important;background:rgba(255,255,255,.62)!important;cursor:move!important;touch-action:none!important;user-select:none!important}',
-    '.p57-speaker-title{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font:400 13px/1.25 sans-serif!important;color:#0b1a33!important}',
-    '.p57-speaker-close{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:30px!important;height:30px!important;border:1px solid #d9e0ec!important;border-radius:999px!important;background:#fff!important;color:#0b1a33!important;font:400 16px/1 sans-serif!important;cursor:pointer!important}',
-    '.p57-speaker-body{display:flex!important;flex-direction:column!important;gap:10px!important;padding:12px!important;overflow:auto!important}',
-    '.p57-speaker-kicker{margin:0 0 8px!important;color:#526174!important;font:400 11px/1.35 sans-serif!important;text-transform:uppercase!important;letter-spacing:.08em!important}',
-    '.p57-speaker-h{margin:0 0 8px!important;color:#0b1a33!important;font:400 15px/1.28 sans-serif!important}',
-    '.p57-speaker-script{width:100%!important;min-height:300px!important;margin:0!important;padding:12px!important;border:1px solid rgba(217,224,236,.92)!important;border-radius:8px!important;background:rgba(255,255,255,.72)!important;color:#1d2b44!important;font:400 13px/1.48 sans-serif!important;outline:none!important;white-space:normal!important}',
-    '.p57-speaker-script:focus{border-color:#0f2c5e!important;box-shadow:0 0 0 3px rgba(15,44,94,.12)!important}',
-    '.p57-speaker-script h3{margin:14px 0 9px!important;color:#0b1a33!important;font:600 16px/1.22 sans-serif!important;letter-spacing:0!important}',
-    '.p57-speaker-script h4{margin:12px 0 8px!important;color:#0f2c5e!important;font:600 13px/1.28 sans-serif!important;letter-spacing:.02em!important;text-transform:uppercase!important}',
-    '.p57-speaker-script p{margin:0 0 10px!important;color:#1d2b44!important;font:400 13px/1.5 sans-serif!important}',
+    '.p57-speaker-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;padding:9px 10px!important;border-bottom:1px solid rgba(24,32,48,.07)!important;background:rgba(255,255,255,.68)!important;user-select:none!important}',
+    '.p57-speaker-title{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font:600 12px/1.25 sans-serif!important;color:#3c4a60!important;letter-spacing:-.01em!important}',
+    '.p57-speaker-head-tools{display:flex!important;align-items:center!important;gap:6px!important}',
+    '.p57-speaker-mode{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:28px!important;padding:6px 9px!important;border:1px solid rgba(24,32,48,.1)!important;border-radius:999px!important;background:#fff!important;color:#647089!important;font:600 10.5px/1 sans-serif!important;cursor:pointer!important;transition:background .18s ease,color .18s ease!important}',
+    '.p57-speaker-mode:hover{background:#f3f5f8!important;color:#0f2c5e!important}',
+    '.p57-speaker-mode.is-active{background:#0f2c5e!important;color:#fff!important;border-color:transparent!important;box-shadow:0 4px 10px rgba(15,44,94,.22)!important}',
+    '.p57-speaker-close{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:26px!important;height:26px!important;border:1px solid #e1e6ef!important;border-radius:999px!important;background:#fff!important;color:#647089!important;font:400 14px/1 sans-serif!important;cursor:pointer!important}',
+    '.p57-speaker-body{display:flex!important;flex-direction:column!important;gap:9px!important;padding:12px!important;overflow:auto!important}',
+    '.p57-speaker-context{padding:10px 12px!important;border:1px solid rgba(24,32,48,.07)!important;border-left:3px solid rgba(15,44,94,.32)!important;border-radius:8px!important;background:#f7f8fa!important}',
+    '.p57-speaker-kicker{margin:0 0 4px!important;color:#647089!important;font:700 9.5px/1.35 sans-serif!important;text-transform:uppercase!important;letter-spacing:.09em!important}',
+    '.p57-speaker-h{margin:0!important;color:#0b1a33!important;font:700 15.5px/1.3 Georgia,"Times New Roman",serif!important;letter-spacing:-.01em!important}',
+    '.p57-speaker-script{width:100%!important;min-height:0!important;flex:1!important;margin:0!important;padding:15px 16px!important;border:1px solid rgba(24,32,48,.07)!important;border-radius:10px!important;background:#fff!important;color:#1d2b44!important;font:400 13.5px/1.62 sans-serif!important;outline:none!important;overflow:auto!important;white-space:normal!important;box-shadow:none!important}',
+    '.p57-speaker-script:focus{border-color:rgba(15,44,94,.4)!important;box-shadow:0 0 0 3px rgba(15,44,94,.08)!important}',
+    '.p57-speaker-script h3{margin:13px 0 8px!important;color:#0b1a33!important;font:600 15px/1.22 sans-serif!important;letter-spacing:0!important}',
+    '.p57-speaker-script h4{margin:11px 0 7px!important;color:#0f2c5e!important;font:600 12px/1.28 sans-serif!important;letter-spacing:.02em!important;text-transform:uppercase!important}',
+    '.p57-speaker-script p{margin:0 0 12px!important;color:#1d2b44!important;font:400 13.5px/1.62 sans-serif!important}',
     '.p57-speaker-script strong{font-weight:700!important;color:#0b1a33!important}',
-    '.p57-speaker-script .p57-cue{margin:0 0 10px!important;padding:6px 8px!important;border-left:3px solid rgba(15,44,94,.38)!important;border-radius:5px!important;background:rgba(15,44,94,.07)!important;color:#526174!important;font:400 12px/1.42 sans-serif!important;font-style:italic!important}',
-    '.p57-speaker-script .p57-break{height:8px!important}',
-    '.p57-speaker-meta{margin:0!important;color:#526174!important;font:400 11px/1.35 sans-serif!important}',
-    '.p57-speaker-actions{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;padding:10px 12px!important;border-top:1px solid rgba(217,224,236,.78)!important;background:rgba(255,255,255,.62)!important}',
+    '.p57-speaker-script .p57-cue{margin:0 0 10px!important;padding:6px 8px!important;border-left:3px solid rgba(15,44,94,.3)!important;border-radius:5px!important;background:rgba(15,44,94,.05)!important;color:#647089!important;font:400 11.5px/1.42 sans-serif!important;font-style:italic!important}',
+    '.p57-speaker-script .p57-break{height:7px!important}',
+    '.p57-speaker-actions{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;padding:8px 10px!important;border-top:1px solid rgba(24,32,48,.07)!important;background:rgba(255,255,255,.68)!important}',
+    '.p57-speaker-resize{position:absolute!important;z-index:8!important;left:-5px!important;top:0!important;width:10px!important;height:100%!important;border:0!important;background:transparent!important;cursor:ew-resize!important;touch-action:none!important}',
+    '.p57-speaker-resize::before{content:""!important;position:absolute!important;left:3px!important;top:50%!important;width:3px!important;height:40px!important;transform:translateY(-50%)!important;border-radius:3px!important;background:rgba(82,97,116,.22)!important;transition:background .15s ease!important}',
+    '.p57-speaker-resize:hover::before,.p57-speaker-resize:focus-visible::before{background:#0f2c5e!important}',
     '.p57-speaker-action-group{display:flex!important;align-items:center!important;gap:6px!important}',
-    '.p57-speaker-nav{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:30px!important;min-width:64px!important;padding:6px 10px!important;border:1px solid #d9e0ec!important;border-radius:999px!important;background:#fff!important;color:#0b1a33!important;font:400 12px/1 sans-serif!important;text-align:center!important;cursor:pointer!important}',
-    '.p57-speaker-count{font:400 11px/1 sans-serif!important;color:#526174!important}',
-    '.p57-speaker-save{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:30px!important;min-width:52px!important;padding:6px 10px!important;border:1px solid #0f2c5e!important;border-radius:999px!important;background:#0f2c5e!important;color:#fff!important;font:400 12px/1 sans-serif!important;text-align:center!important;cursor:pointer!important}',
-    '.p57-speaker-reset{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:30px!important;min-width:52px!important;padding:6px 10px!important;border:1px solid #d9e0ec!important;border-radius:999px!important;background:#fff!important;color:#0b1a33!important;font:400 12px/1 sans-serif!important;text-align:center!important;cursor:pointer!important}',
+    '.p57-speaker-nav{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:28px!important;min-width:58px!important;padding:5px 9px!important;border:1px solid #e1e6ef!important;border-radius:999px!important;background:#fff!important;color:#3c4a60!important;font:400 11.5px/1 sans-serif!important;text-align:center!important;cursor:pointer!important}',
+    '.p57-speaker-count{font:400 10.5px/1 sans-serif!important;color:#8891a2!important}',
+    '.p57-speaker-save{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:28px!important;min-width:48px!important;padding:5px 9px!important;border:1px solid #0f2c5e!important;border-radius:999px!important;background:#0f2c5e!important;color:#fff!important;font:400 11.5px/1 sans-serif!important;text-align:center!important;cursor:pointer!important}',
+    '.p57-speaker-reset{appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:28px!important;min-width:48px!important;padding:5px 9px!important;border:1px solid #e1e6ef!important;border-radius:999px!important;background:#fff!important;color:#3c4a60!important;font:400 11.5px/1 sans-serif!important;text-align:center!important;cursor:pointer!important}',
+    '.p57-speaker-panel.is-teleprompt{width:min(340px,100vw)!important;border-color:rgba(255,255,255,.09)!important;background:rgba(17,20,29,.98)!important;box-shadow:-16px 0 34px rgba(0,0,0,.22)!important;color:#fff!important;backdrop-filter:blur(20px) saturate(1.08)!important}',
+    '.p57-speaker-panel.is-teleprompt .p57-speaker-resize::before{background:rgba(255,255,255,.28)!important}',
+    '.p57-speaker-panel.is-teleprompt .p57-speaker-resize:hover::before,.p57-speaker-panel.is-teleprompt .p57-speaker-resize:focus-visible::before{background:#5aa9ff!important}',
+    '.p57-speaker-panel.is-teleprompt .p57-speaker-head{padding:14px 18px!important;border-color:rgba(255,255,255,.1)!important;background:rgba(18,21,32,.78)!important}',
+    '.p57-speaker-panel.is-teleprompt .p57-speaker-title{color:#fff!important;font-weight:600!important}',
+    '.p57-speaker-panel.is-teleprompt .p57-speaker-close{border-color:rgba(255,255,255,.14)!important;background:rgba(255,255,255,.08)!important;color:#fff!important}',
+    '.p57-speaker-panel.is-teleprompt .p57-speaker-body{flex:1!important;justify-content:center!important;padding:24px 22px!important;overflow:hidden!important}',
+    '.p57-teleprompter{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:18px!important;width:100%!important;margin:auto!important}',
+    '.p57-tele-kicker{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important;margin:0!important;color:#aeb5c7!important;font:700 11px/1.3 sans-serif!important;letter-spacing:.1em!important;text-transform:uppercase!important}',
+    '.p57-tele-live{display:inline-flex!important;align-items:center!important;gap:7px!important;padding:6px 10px!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:999px!important;background:rgba(255,255,255,.06)!important;color:#c4cad8!important;letter-spacing:.04em!important}',
+    '.p57-tele-live::before{content:""!important;width:7px!important;height:7px!important;border-radius:50%!important;background:#7d8495!important}',
+    '.p57-tele-live.is-listening{color:#bcdcff!important;border-color:rgba(120,180,255,.32)!important;background:rgba(15,44,94,.32)!important}',
+    '.p57-tele-live.is-listening::before{background:#5aa9ff!important;box-shadow:0 0 0 5px rgba(90,169,255,.13)!important;animation:p57TelePulse 1.4s ease infinite!important}',
+    '.p57-tele-current{display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:4!important;overflow:hidden!important;margin:0!important;color:#f6f7fb!important;font:500 clamp(21px,1.9vw,29px)/1.38 Georgia,"Times New Roman",serif!important;letter-spacing:-.02em!important;text-wrap:balance!important}',
+    '.p57-tele-current .p57-word{color:#747b8c!important;transition:color .16s ease,text-shadow .16s ease!important}',
+    '.p57-tele-current .p57-word.is-spoken{color:#8fd0ff!important;text-shadow:0 0 20px rgba(143,208,255,.2)!important}',
+    '.p57-tele-current .p57-word.is-active{color:#fff!important}',
+    '.p57-tele-next{display:-webkit-box!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;overflow:hidden!important;margin:0!important;padding-top:16px!important;border-top:1px solid rgba(255,255,255,.09)!important;color:#7f8798!important;font:400 17px/1.45 Georgia,"Times New Roman",serif!important;letter-spacing:-.01em!important}',
+    '.p57-tele-controls{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;padding:14px 18px!important;border-top:1px solid rgba(255,255,255,.1)!important;background:rgba(18,21,32,.82)!important}',
+    '.p57-tele-control-group{display:flex!important;align-items:center!important;gap:8px!important}',
+    '.p57-tele-btn{appearance:none!important;min-height:42px!important;padding:9px 15px!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:999px!important;background:rgba(255,255,255,.07)!important;color:#fff!important;font:600 12px/1 sans-serif!important;cursor:pointer!important}',
+    '.p57-tele-btn:hover{background:rgba(255,255,255,.14)!important}',
+    '.p57-tele-btn.is-primary{border-color:transparent!important;background:#1f4f8f!important;box-shadow:0 6px 18px rgba(31,79,143,.32)!important}',
+    '.p57-tele-progress{min-width:100px!important;color:#aeb5c7!important;font:500 12px/1 sans-serif!important;text-align:center!important}',
+    '@keyframes p57TelePulse{50%{opacity:.45;transform:scale(.82)}}',
+    '@media(max-width:720px){.p57-speaker-resize{display:none!important}.p57-speaker-panel{width:100vw!important;min-width:0!important}.p57-speaker-panel.is-teleprompt{width:100vw!important}.p57-speaker-panel.is-teleprompt .p57-speaker-body{padding:20px 18px!important}.p57-tele-current{font-size:clamp(22px,6.8vw,32px)!important;-webkit-line-clamp:3!important}.p57-tele-next{font-size:16px!important;-webkit-line-clamp:1!important}.p57-tele-controls{flex-wrap:wrap!important}.p57-tele-control-group{flex:1!important}.p57-tele-btn{flex:1!important;padding-inline:10px!important}.p57-tele-progress{order:-1!important;width:100%!important}}',
+    '@media(prefers-reduced-motion:reduce){.p57-tele-live.is-listening::before{animation:none!important}.p57-tele-current .p57-word{transition:none!important}}',
     '.p57-sfx-menu{position:absolute!important;right:0!important;bottom:66px!important;display:none!important;width:min(340px,calc(100vw - 36px))!important;height:auto!important;max-height:min(500px,calc(100vh - 104px))!important;overflow:auto!important;margin:0!important;padding:12px!important;border:1px solid #d9e0ec!important;border-radius:8px!important;background:rgba(255,255,255,.98)!important;box-shadow:0 18px 48px rgba(15,44,94,.22)!important;color:#0b1a33!important;transform:none!important}',
     '.p57-sfx-board.is-open .p57-sfx-menu{display:block!important}',
     '.p57-sfx-menu h2{margin:0 0 10px!important;font:400 14px/1.2 sans-serif!important;color:#0b1a33!important}',
@@ -106,7 +144,8 @@
     '<button class="p57-sfx-mini" type="button" aria-label="Pause active audio" title="Pause active audio">Ⅱ</button>' +
     '<button class="p57-speaker-toggle" type="button" aria-expanded="false" aria-controls="p57-speaker-panel" title="Speaker notes">SN</button>' +
     '<aside class="p57-speaker-panel" id="p57-speaker-panel" aria-label="Speaker notes">' +
-      '<div class="p57-speaker-head"><div class="p57-speaker-title">Speaker Notes</div><button class="p57-speaker-close" type="button" aria-label="Close speaker notes">×</button></div>' +
+      '<button class="p57-speaker-resize" type="button" aria-label="Resize speaker notes panel width" title="Drag left/right to resize, or use arrow keys"></button>' +
+      '<div class="p57-speaker-head"><div class="p57-speaker-title">Speaker Notes</div><div class="p57-speaker-head-tools"><button class="p57-speaker-mode" type="button" aria-pressed="false">Teleprompter</button><button class="p57-speaker-close" type="button" aria-label="Close speaker notes">×</button></div></div>' +
       '<div class="p57-speaker-body"></div>' +
       '<div class="p57-speaker-actions"><div class="p57-speaker-action-group"><button class="p57-speaker-nav" type="button" data-p57-note-prev>Previous</button><button class="p57-speaker-nav" type="button" data-p57-note-next>Next</button></div><span class="p57-speaker-count"></span><div class="p57-speaker-action-group"><button class="p57-speaker-reset" type="button" data-p57-note-reset>Reset</button><button class="p57-speaker-save" type="button" data-p57-note-save>Save</button></div></div>' +
     '</aside>' +
@@ -125,15 +164,27 @@
   var notesToggle = board.querySelector('.p57-speaker-toggle');
   var notesPanel = board.querySelector('.p57-speaker-panel');
   var notesHead = board.querySelector('.p57-speaker-head');
+  var notesResize = board.querySelector('.p57-speaker-resize');
   var notesBody = board.querySelector('.p57-speaker-body');
   var notesCount = board.querySelector('.p57-speaker-count');
+  var notesModeButton = board.querySelector('.p57-speaker-mode');
+  var notesActions = board.querySelector('.p57-speaker-actions');
   var noteIndex = 0;
   var activeTextarea = null;
-  var dragState = null;
+  var resizeState = null;
   var externalNotesLoaded = false;
   var externalNotesPromise = null;
   var player = new Audio();
   var activeController = null;
+  var teleprompterMode = false;
+  var teleprompterIndex = 0;
+  var teleprompterStatements = [];
+  var speechRecognition = null;
+  var speechListening = false;
+  var speechTranscript = '';
+  var speechResultOffset = 0;
+  var lastSpeechResultCount = 0;
+  var teleprompterAdvanceTimer = null;
 
   function cleanText(text) {
     return String(text || '').replace(/\s+/g, ' ').trim();
@@ -152,7 +203,7 @@
   }
 
   function storageKey(suffix) {
-    return 'p57-speaker-notes-v3:' + window.location.pathname + ':' + suffix;
+    return 'p57-speaker-notes-v5:' + window.location.pathname + ':' + suffix;
   }
 
   function safeGet(key) {
@@ -187,8 +238,13 @@
   }
 
   function reportScriptUrl() {
-    var text = (window.location.pathname + ' ' + document.title + ' ' + cleanText(document.body && document.body.textContent)).toLowerCase();
-    var fileName = text.indexOf('bandra') !== -1 || text.indexOf('supreme') !== -1 ? 'speaker-notes-bandra.md' : 'speaker-notes-kwality.md';
+    var path = window.location.pathname.toLowerCase();
+    var footer = cleanText(document.querySelector('.footer-brand-text') && document.querySelector('.footer-brand-text').textContent).toLowerCase();
+    var title = cleanText(document.title).toLowerCase();
+    var identity = [path, footer, title].join(' ');
+    var fileName = /\/july-report\/supreme\b|supreme-hq-bandra|bandra pulse|supreme hq/i.test(identity)
+      ? 'speaker-notes-bandra.md'
+      : 'speaker-notes-kwality.md';
     return new URL('/revised-july/' + fileName, window.location.origin).href;
   }
 
@@ -360,13 +416,209 @@
     return safeGet(noteKey(note)) || markdownToHtml(note.defaultScript || '');
   }
 
-  function saveCurrentNote() {
+  function normalizeSpeech(text) {
+    return cleanText(text).toLowerCase().replace(/[^a-z0-9\s]/g, '');
+  }
+
+  function statementList(note) {
+    var holder = document.createElement('div');
+    holder.innerHTML = getNoteScript(note);
+    var blocks = Array.prototype.slice.call(holder.querySelectorAll('p, .p57-cue'));
+    var output = [];
+    blocks.forEach(function (block) {
+      var text = cleanText(block.textContent).replace(/^\d+\.\s*/, '');
+      if (!text || /^what i would say verbatim:?$/i.test(text) || /^how to explain it to the room:?$/i.test(text)) return;
+      var sentences = text.match(/[^.!?]+[.!?]+(?:[”"])?|[^.!?]+$/g) || [text];
+      sentences.forEach(function (sentence) {
+        var item = cleanText(sentence).replace(/^['"]|['"]$/g, '');
+        if (item.length > 2) output.push(item);
+      });
+    });
+    return output.length ? output : ['No teleprompter statements are available for this section.'];
+  }
+
+  function spokenWordCount(statement, transcript) {
+    var words = normalizeSpeech(statement).split(/\s+/).filter(Boolean);
+    var heard = normalizeSpeech(transcript).split(/\s+/).filter(Boolean);
+    if (!words.length || !heard.length) return 0;
+    var cursor = 0;
+    heard.forEach(function (heardWord) {
+      for (var i = cursor; i < Math.min(words.length, cursor + 5); i++) {
+        if (words[i] === heardWord || (heardWord.length > 4 && words[i].indexOf(heardWord) === 0)) {
+          cursor = i + 1;
+          break;
+        }
+      }
+    });
+    return cursor;
+  }
+
+  function statementWordsHtml(statement, spokenCount) {
+    return String(statement || '').split(/\s+/).map(function (word, index) {
+      var state = index < spokenCount ? ' is-spoken' : (index === spokenCount ? ' is-active' : '');
+      return '<span class="p57-word' + state + '">' + escapeRawHtml(word) + '</span>';
+    }).join(' ');
+  }
+
+  function renderTeleprompter() {
+    if (!notes[noteIndex]) return;
+    teleprompterStatements = statementList(notes[noteIndex]);
+    teleprompterIndex = Math.max(0, Math.min(teleprompterIndex, teleprompterStatements.length - 1));
+    var current = teleprompterStatements[teleprompterIndex] || '';
+    var next = teleprompterStatements[teleprompterIndex + 1] || 'End of this section — move to the next report section when ready.';
+    var spoken = spokenWordCount(current, speechTranscript);
+    notesBody.innerHTML =
+      '<div class="p57-teleprompter" aria-live="polite">' +
+        '<p class="p57-tele-kicker"><span>' + escapeHtml(notes[noteIndex].eyebrow) + '</span><span class="p57-tele-live' + (speechListening ? ' is-listening' : '') + '">' + (speechListening ? 'Listening live' : 'Manual mode') + '</span></p>' +
+        '<p class="p57-tele-current">' + statementWordsHtml(current, spoken) + '</p>' +
+        '<p class="p57-tele-next"><strong>Next</strong> · ' + escapeRawHtml(next) + '</p>' +
+      '</div>';
+    notesCount.textContent = (noteIndex + 1) + ' of ' + notes.length;
+    var controls = notesPanel.querySelector('.p57-tele-controls');
+    if (!controls) {
+      controls = document.createElement('div');
+      controls.className = 'p57-tele-controls';
+      controls.innerHTML = '<div class="p57-tele-control-group"><button class="p57-tele-btn" type="button" data-p57-tele-prev>Previous</button><button class="p57-tele-btn is-primary" type="button" data-p57-tele-next>Next statement</button></div><span class="p57-tele-progress"></span><div class="p57-tele-control-group"><button class="p57-tele-btn" type="button" data-p57-tele-mic>Start live listening</button><button class="p57-tele-btn" type="button" data-p57-tele-exit>Exit</button></div>';
+      notesPanel.appendChild(controls);
+      controls.querySelector('[data-p57-tele-prev]').addEventListener('click', previousTeleprompterStatement);
+      controls.querySelector('[data-p57-tele-next]').addEventListener('click', nextTeleprompterStatement);
+      controls.querySelector('[data-p57-tele-mic]').addEventListener('click', toggleSpeechListening);
+      controls.querySelector('[data-p57-tele-exit]').addEventListener('click', exitTeleprompter);
+    }
+    controls.querySelector('.p57-tele-progress').textContent = (teleprompterIndex + 1) + ' / ' + teleprompterStatements.length;
+    controls.querySelector('[data-p57-tele-mic]').textContent = speechListening ? 'Stop listening' : 'Start live listening';
+  }
+
+  function nextTeleprompterStatement() {
+    if (!teleprompterMode) return;
+    if (teleprompterAdvanceTimer) { window.clearTimeout(teleprompterAdvanceTimer); teleprompterAdvanceTimer = null; }
+    if (teleprompterIndex < teleprompterStatements.length - 1) {
+      teleprompterIndex += 1;
+      speechTranscript = '';
+      speechResultOffset = lastSpeechResultCount;
+      renderTeleprompter();
+    } else if (noteIndex < notes.length - 1) {
+      noteIndex += 1;
+      teleprompterIndex = 0;
+      speechTranscript = '';
+      speechResultOffset = lastSpeechResultCount;
+      renderTeleprompter();
+    }
+  }
+
+  function previousTeleprompterStatement() {
+    if (!teleprompterMode) return;
+    if (teleprompterIndex > 0) teleprompterIndex -= 1;
+    else if (noteIndex > 0) { noteIndex -= 1; teleprompterIndex = Math.max(0, statementList(notes[noteIndex]).length - 1); }
+    speechTranscript = '';
+    speechResultOffset = lastSpeechResultCount;
+    renderTeleprompter();
+  }
+
+  function stopSpeechListening() {
+    speechListening = false;
+    if (speechRecognition) {
+      try { speechRecognition.stop(); } catch (error) {}
+    }
+    speechRecognition = null;
+  }
+
+  function toggleSpeechListening() {
+    if (speechListening) {
+      stopSpeechListening();
+      renderTeleprompter();
+      return;
+    }
+    var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) {
+      window.alert('Live speech recognition is not supported in this browser. Use Space or the Next statement button to advance.');
+      return;
+    }
+    speechRecognition = new Recognition();
+    speechRecognition.continuous = true;
+    speechRecognition.interimResults = true;
+    speechRecognition.maxAlternatives = 1;
+    speechRecognition.lang = 'en-IN';
+    speechRecognition.onresult = function (event) {
+      var finalTranscript = '';
+      var interimTranscript = '';
+      lastSpeechResultCount = event.results.length;
+      for (var i = speechResultOffset; i < event.results.length; i++) {
+        if (event.results[i].isFinal) finalTranscript += ' ' + event.results[i][0].transcript;
+        else interimTranscript += ' ' + event.results[i][0].transcript;
+      }
+      speechTranscript = finalTranscript + ' ' + interimTranscript;
+      var current = teleprompterStatements[teleprompterIndex] || '';
+      var currentWords = normalizeSpeech(current).split(/\s+/).filter(Boolean);
+      var spoken = spokenWordCount(current, speechTranscript);
+      var currentNode = notesBody.querySelector('.p57-tele-current');
+      if (currentNode) currentNode.innerHTML = statementWordsHtml(current, spoken);
+      if (currentWords.length && spoken / currentWords.length >= .72 && !teleprompterAdvanceTimer) {
+        teleprompterAdvanceTimer = window.setTimeout(nextTeleprompterStatement, 120);
+      }
+    };
+    speechRecognition.onerror = function (event) {
+      if (event.error !== 'no-speech') stopSpeechListening();
+      if (teleprompterMode) renderTeleprompter();
+    };
+    speechRecognition.onend = function () {
+      if (speechListening && teleprompterMode) {
+        try { speechRecognition.start(); } catch (error) { stopSpeechListening(); }
+      }
+    };
+    speechListening = true;
+    speechTranscript = '';
+    speechResultOffset = 0;
+    lastSpeechResultCount = 0;
+    try { speechRecognition.start(); } catch (error) { stopSpeechListening(); }
+    renderTeleprompter();
+  }
+
+  function enterTeleprompter() {
+    saveCurrentNote();
+    teleprompterMode = true;
+    teleprompterIndex = 0;
+    speechTranscript = '';
+    notesPanel.style.removeProperty('width');
+    notesPanel.classList.add('is-teleprompt');
+    applySavedPanelSize();
+    notesModeButton.classList.add('is-active');
+    notesModeButton.setAttribute('aria-pressed', 'true');
+    notesModeButton.textContent = 'Notes view';
+    notesActions.style.setProperty('display', 'none', 'important');
+    syncBodyShift();
+    renderTeleprompter();
+  }
+
+  function exitTeleprompter() {
+    stopSpeechListening();
+    teleprompterMode = false;
+    speechTranscript = '';
+    notesPanel.classList.remove('is-teleprompt');
+    notesPanel.style.removeProperty('width');
+    notesModeButton.classList.remove('is-active');
+    notesModeButton.setAttribute('aria-pressed', 'false');
+    notesModeButton.textContent = 'Teleprompter';
+    notesActions.style.removeProperty('display');
+    var controls = notesPanel.querySelector('.p57-tele-controls');
+    if (controls) controls.remove();
+    applySavedPanelSize();
+    syncBodyShift();
+    renderNote();
+  }
+
+  var noteDirty = false;
+
+  function saveCurrentNote(force) {
     if (!activeTextarea || !notes[noteIndex]) return;
+    if (!force && !noteDirty) return;
     safeSet(noteKey(notes[noteIndex]), activeTextarea.innerHTML);
+    noteDirty = false;
     notesCount.textContent = (noteIndex + 1) + ' of ' + notes.length + ' · saved';
   }
 
   function renderNote() {
+    if (teleprompterMode) { renderTeleprompter(); return; }
     if (!notes.length) {
       notesBody.innerHTML = '<p class="p57-speaker-script">No report sections were found for speaker notes.</p>';
       notesCount.textContent = '0 of 0';
@@ -376,23 +628,25 @@
     if (noteIndex >= notes.length) noteIndex = 0;
     var note = notes[noteIndex];
     notesBody.innerHTML =
-      '<p class="p57-speaker-kicker">' + escapeHtml(note.eyebrow) + '</p>' +
-      '<h2 class="p57-speaker-h">' + escapeHtml(note.title) + '</h2>' +
-      '<div class="p57-speaker-script" contenteditable="true" spellcheck="true" aria-label="Editable speaker notes">' + getNoteScript(note) + '</div>' +
-      '<p class="p57-speaker-meta">Drag the header to move this panel. Save keeps edits for this report and section.</p>';
+      '<div class="p57-speaker-context"><p class="p57-speaker-kicker">' + escapeHtml(note.eyebrow) + '</p>' +
+      '<h2 class="p57-speaker-h">' + escapeHtml(note.title) + '</h2></div>' +
+      '<div class="p57-speaker-script" contenteditable="true" spellcheck="true" aria-label="Editable speaker notes">' + getNoteScript(note) + '</div>';
     activeTextarea = notesBody.querySelector('.p57-speaker-script');
+    noteDirty = false;
     activeTextarea.addEventListener('input', function () {
+      noteDirty = true;
       notesCount.textContent = (noteIndex + 1) + ' of ' + notes.length + ' · unsaved';
     });
     notesCount.textContent = (noteIndex + 1) + ' of ' + notes.length;
   }
 
   function openNotesPanel() {
-    applySavedPanelPosition();
+    applySavedPanelSize();
     noteIndex = visibleNoteIndex();
     renderNote();
     notesPanel.classList.add('is-open');
     notesToggle.setAttribute('aria-expanded', 'true');
+    syncBodyShift();
     if (!externalNotesLoaded) {
       notesCount.textContent = (noteIndex + 1) + ' of ' + notes.length + ' · loading script';
       loadExternalNotes().then(function () {
@@ -402,9 +656,11 @@
   }
 
   function closeNotesPanel() {
+    if (teleprompterMode) exitTeleprompter();
     saveCurrentNote();
     notesPanel.classList.remove('is-open');
     notesToggle.setAttribute('aria-expanded', 'false');
+    syncBodyShift();
   }
 
   function switchNote(targetIndex) {
@@ -435,31 +691,79 @@
   function syncNoteToViewport() {
     if (!notesPanel.classList.contains('is-open')) return;
     var nextIndex = visibleNoteIndex();
-    if (nextIndex !== noteIndex) switchNote(nextIndex);
+    if (nextIndex === noteIndex) return;
+    if (teleprompterMode) {
+      if (speechListening) return;
+      noteIndex = nextIndex;
+      teleprompterIndex = 0;
+      speechTranscript = '';
+      speechResultOffset = lastSpeechResultCount;
+      renderTeleprompter();
+    } else {
+      switchNote(nextIndex);
+    }
   }
 
-  function constrainPanel(left, top) {
-    var rect = notesPanel.getBoundingClientRect();
-    var width = rect.width || 390;
-    var height = rect.height || 480;
-    return {
-      left: Math.max(12, Math.min(left, window.innerWidth - width - 12)),
-      top: Math.max(12, Math.min(top, window.innerHeight - height - 12))
-    };
+  function sizeStorageKey() {
+    return storageKey(teleprompterMode ? 'panel-width-teleprompter' : 'panel-width-notes');
   }
 
-  function applySavedPanelPosition() {
-    var raw = safeGet(storageKey('panel-position'));
-    if (!raw) return;
+  function constrainPanelWidth(width) {
+    return Math.max(300, Math.min(width, window.innerWidth - 24));
+  }
+
+  function applyPanelWidth(width) {
+    var constrained = constrainPanelWidth(width);
+    notesPanel.style.setProperty('width', constrained + 'px', 'important');
+    syncBodyShift();
+    return constrained;
+  }
+
+  function applySavedPanelSize() {
+    var raw = safeGet(sizeStorageKey());
+    if (!raw || window.innerWidth <= 720) return;
     try {
       var parsed = JSON.parse(raw);
-      var pos = constrainPanel(parsed.left, parsed.top);
-      notesPanel.style.setProperty('position', 'fixed', 'important');
-      notesPanel.style.setProperty('left', pos.left + 'px', 'important');
-      notesPanel.style.setProperty('top', pos.top + 'px', 'important');
-      notesPanel.style.setProperty('right', 'auto', 'important');
-      notesPanel.style.setProperty('bottom', 'auto', 'important');
+      if (Number(parsed.width)) applyPanelWidth(Number(parsed.width));
     } catch (error) {}
+  }
+
+  function contentRightEdge() {
+    var maxRight = 0;
+    document.querySelectorAll('.container, .hero-content').forEach(function (el) {
+      var rect = el.getBoundingClientRect();
+      if (rect.right > maxRight) maxRight = rect.right;
+    });
+    return maxRight;
+  }
+
+  function syncBodyShift() {
+    var body = document.body;
+    if (!(notesPanel.classList.contains('is-open') && window.innerWidth > 720)) {
+      body.style.removeProperty('padding-right');
+      return;
+    }
+    var panelWidth = notesPanel.getBoundingClientRect().width;
+    var buffer = 20;
+    var prevPadding = body.style.getPropertyValue('padding-right');
+    body.style.setProperty('transition', 'none', 'important');
+
+    var padding = panelWidth;
+    for (var i = 0; i < 5; i++) {
+      body.style.setProperty('padding-right', padding + 'px', 'important');
+      void body.offsetHeight;
+      var panelLeft = window.innerWidth - panelWidth;
+      var gap = panelLeft - contentRightEdge();
+      if (gap >= 0 && gap <= buffer) break;
+      padding = Math.max(0, Math.min(panelWidth, Math.round(padding - (gap - buffer))));
+    }
+    var finalWidth = padding;
+
+    if (prevPadding) body.style.setProperty('padding-right', prevPadding);
+    else body.style.removeProperty('padding-right');
+    void body.offsetHeight;
+    body.style.removeProperty('transition');
+    body.style.setProperty('padding-right', finalWidth + 'px', 'important');
   }
 
   var noteScrollTicking = false;
@@ -473,11 +777,16 @@
   }, { passive: true });
 
   window.addEventListener('resize', function () {
-    applySavedPanelPosition();
+    if (window.innerWidth <= 720) {
+      notesPanel.style.removeProperty('width');
+    } else {
+      applySavedPanelSize();
+    }
+    syncBodyShift();
     syncNoteToViewport();
   });
 
-  window.addEventListener('beforeunload', saveCurrentNote);
+  window.addEventListener('beforeunload', function () { saveCurrentNote(); });
 
   function unlockNotes() {
     try {
@@ -529,13 +838,17 @@
   });
 
   board.querySelector('.p57-speaker-close').addEventListener('click', closeNotesPanel);
+  notesModeButton.addEventListener('click', function () {
+    if (teleprompterMode) exitTeleprompter();
+    else enterTeleprompter();
+  });
   board.querySelector('[data-p57-note-prev]').addEventListener('click', function () {
     switchNote(noteIndex - 1);
   });
   board.querySelector('[data-p57-note-next]').addEventListener('click', function () {
     switchNote(noteIndex + 1);
   });
-  board.querySelector('[data-p57-note-save]').addEventListener('click', saveCurrentNote);
+  board.querySelector('[data-p57-note-save]').addEventListener('click', function () { saveCurrentNote(true); });
   board.querySelector('[data-p57-note-reset]').addEventListener('click', function () {
     if (!notes[noteIndex]) return;
     safeRemove(noteKey(notes[noteIndex]));
@@ -543,38 +856,55 @@
     notesCount.textContent = (noteIndex + 1) + ' of ' + notes.length + ' · reset';
   });
 
-  notesHead.addEventListener('pointerdown', function (event) {
-    if (event.target.closest('button')) return;
+  notesResize.addEventListener('pointerdown', function (event) {
+    if (window.innerWidth <= 720) return;
+    event.preventDefault();
+    event.stopPropagation();
     var rect = notesPanel.getBoundingClientRect();
-    dragState = {
+    resizeState = {
       pointerId: event.pointerId,
-      offsetX: event.clientX - rect.left,
-      offsetY: event.clientY - rect.top
+      startX: event.clientX,
+      width: rect.width
     };
-    notesHead.setPointerCapture(event.pointerId);
+    notesResize.setPointerCapture(event.pointerId);
   });
 
-  notesHead.addEventListener('pointermove', function (event) {
-    if (!dragState || dragState.pointerId !== event.pointerId) return;
-    var pos = constrainPanel(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY);
-    notesPanel.style.setProperty('position', 'fixed', 'important');
-    notesPanel.style.setProperty('left', pos.left + 'px', 'important');
-    notesPanel.style.setProperty('top', pos.top + 'px', 'important');
-    notesPanel.style.setProperty('right', 'auto', 'important');
-    notesPanel.style.setProperty('bottom', 'auto', 'important');
+  notesResize.addEventListener('pointermove', function (event) {
+    if (!resizeState || resizeState.pointerId !== event.pointerId) return;
+    applyPanelWidth(resizeState.width + (resizeState.startX - event.clientX));
   });
 
-  notesHead.addEventListener('pointerup', function (event) {
-    if (!dragState || dragState.pointerId !== event.pointerId) return;
+  notesResize.addEventListener('pointerup', function (event) {
+    if (!resizeState || resizeState.pointerId !== event.pointerId) return;
     var rect = notesPanel.getBoundingClientRect();
-    safeSet(storageKey('panel-position'), JSON.stringify({ left: rect.left, top: rect.top }));
-    dragState = null;
-    notesHead.releasePointerCapture(event.pointerId);
+    safeSet(sizeStorageKey(), JSON.stringify({ width: Math.round(rect.width) }));
+    resizeState = null;
+    notesResize.releasePointerCapture(event.pointerId);
   });
 
-  notesHead.addEventListener('pointercancel', function (event) {
-    if (!dragState || dragState.pointerId !== event.pointerId) return;
-    dragState = null;
+  notesResize.addEventListener('pointercancel', function () { resizeState = null; });
+  notesResize.addEventListener('keydown', function (event) {
+    if (window.innerWidth <= 720 || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+    event.preventDefault();
+    var rect = notesPanel.getBoundingClientRect();
+    var step = event.shiftKey ? 32 : 12;
+    var width = rect.width + (event.key === 'ArrowLeft' ? step : -step);
+    var constrained = applyPanelWidth(width);
+    safeSet(sizeStorageKey(), JSON.stringify({ width: constrained }));
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (!teleprompterMode || !notesPanel.classList.contains('is-open')) return;
+    if (event.key === ' ' || event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      nextTeleprompterStatement();
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      previousTeleprompterStatement();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      exitTeleprompter();
+    }
   });
 
   board.querySelectorAll('[data-p57-sfx]').forEach(function (button) {

@@ -1273,8 +1273,6 @@ body::before {
   overflow: hidden;
   border-block: 1px solid var(--border);
   background: color-mix(in srgb, var(--bg-soft) 52%, transparent);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
 .marquee-track {
   display: flex;
@@ -1652,8 +1650,7 @@ details.appendix-details > summary.section-hero { cursor: pointer; }
 .reveal {
   opacity: 0;
   transform: translateY(28px);
-  filter: blur(5px);
-  transition: opacity 760ms ease, transform 800ms cubic-bezier(.16,1,.3,1), filter 760ms ease;
+  transition: opacity 760ms ease, transform 800ms cubic-bezier(.16,1,.3,1);
 }
 .reveal.reveal-left { transform: translateX(-24px); }
 .reveal.is-visible { opacity: 1; transform: none; filter: none; }
@@ -1838,8 +1835,6 @@ body::before { background-image: radial-gradient(color-mix(in srgb, #005fef 30%,
   border-radius: 0 0 19px 19px;
   background: #005fef;
   box-shadow: 0 16px 40px rgba(0,95,239,.13);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
 }
 .section-marquee::before,
 .section-marquee::after {
@@ -3069,6 +3064,85 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
     min-width: 1120px;
   }
 }
+
+.mom-info-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--text-subtle);
+  font: italic 600 11px/1 Georgia, 'Times New Roman', serif; cursor: pointer;
+  transition: border-color .15s, color .15s, opacity .15s; flex-shrink: 0; opacity: .75;
+}
+.mom-info-btn:hover { border-color: var(--accent); color: var(--accent); opacity: 1; background: transparent; }
+.mom-info-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.mom-modal-overlay {
+  position: fixed; inset: 0; background: rgba(10, 14, 22, 0.55); backdrop-filter: blur(3px);
+  display: none; align-items: center; justify-content: center; z-index: 900; padding: 24px;
+}
+.mom-modal-overlay.is-open { display: flex; }
+.mom-modal {
+  position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.28); max-width: min(94vw, 1180px); max-height: 86vh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.mom-modal-beam { position: absolute; pointer-events: none; z-index: 5; }
+.mom-modal-beam.is-top {
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent) 45%, var(--accent-2, var(--accent)) 55%, transparent);
+  background-size: 60% 100%; background-repeat: no-repeat;
+  animation: momBeamX 2.6s linear infinite;
+}
+.mom-modal-beam.is-left, .mom-modal-beam.is-right {
+  top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, transparent, var(--accent) 45%, var(--accent-2, var(--accent)) 55%, transparent);
+  background-size: 100% 60%; background-repeat: no-repeat;
+  animation: momBeamY 2.6s linear infinite;
+}
+.mom-modal-beam.is-left { left: 0; }
+.mom-modal-beam.is-right { right: 0; animation-delay: -1.3s; }
+@keyframes momBeamX { 0% { background-position: -60% 0; } 100% { background-position: 160% 0; } }
+@keyframes momBeamY { 0% { background-position: 0 -60%; } 100% { background-position: 0 160%; } }
+@media (prefers-reduced-motion: reduce) {
+  .mom-modal-beam { animation: none; }
+}
+.mom-modal-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding: 20px 24px; border-bottom: 1px solid var(--border); background: var(--bg-soft);
+}
+.mom-modal-eyebrow { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+.mom-modal-title { font-size: 18px; font-weight: 700; color: var(--text); margin: 0; }
+.mom-modal-close {
+  border: none; background: transparent; color: var(--text-muted); font-size: 22px; line-height: 1;
+  cursor: pointer; padding: 4px 8px; border-radius: 6px; flex-shrink: 0;
+}
+.mom-modal-close:hover { background: var(--bg-inset); color: var(--text); }
+.mom-modal-body { overflow: auto; padding: 0; }
+table.mom-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+table.mom-table thead th {
+  position: sticky; top: 0; background: var(--bg-soft); color: var(--text-muted);
+  font-size: 10px; letter-spacing: .07em; text-transform: uppercase; font-weight: 700;
+  padding: 13px 18px; text-align: right; border-bottom: 1px solid var(--border-strong); white-space: nowrap;
+  z-index: 2;
+}
+table.mom-table thead th:first-child { text-align: left; position: sticky; left: 0; z-index: 3; background: var(--bg-soft); }
+table.mom-table tbody tr:nth-child(even) td { background: var(--bg-soft); }
+table.mom-table tbody tr:nth-child(even) td:first-child { background: var(--bg-soft); }
+table.mom-table tbody td {
+  padding: 12px 18px; text-align: right; border-bottom: 1px solid var(--border); color: var(--text); white-space: nowrap; font-size: 13px;
+}
+table.mom-table tbody td:first-child {
+  text-align: left; font-weight: 600; color: var(--text-muted); position: sticky; left: 0;
+  background: var(--bg-card); border-right: 1px solid var(--border); font-size: 12.5px;
+}
+table.mom-table tbody tr:hover td { background: var(--bg-card-hover); }
+table.mom-table tbody tr:hover td:first-child { background: var(--bg-inset); }
+table.mom-table th.mom-total-col, table.mom-table td.mom-total-col {
+  font-weight: 700; color: var(--accent); background: var(--accent-soft); border-left: 1px solid var(--border-strong);
+}
+table.mom-table td.mom-total-col { color: var(--text); }
+table.mom-table thead th.mom-total-col { position: sticky; top: 0; z-index: 2; }
+table.mom-table tbody tr:last-child td { border-bottom: none; }
+.mom-modal-foot { padding: 12px 24px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--text-subtle); }
 </style>
 </head>
 <body class="kwality-report">
@@ -3255,6 +3329,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="section-deck">Headline revenue closed at <strong>₹24.54L net</strong> (₹25.80L gross, ₹1.70L discount), which is <strong>+18.2% vs Jun 2026</strong> (M-1), <strong>+6.2% vs May 2026</strong> (M-2), <strong>+5.9% vs 2026 Avg (excl. Jul)</strong>, and <strong>+37.1% vs Jul 2025</strong> (YoY). Trial conversion is 28.9% (35 of 121 trials), down -2.2pp MoM. Churn rate stands at 22.5%, improving -11.2pp MoM. Discount efficiency is ₹15.19 of revenue collected per ₹1 discounted.</p>
 </div>
 <div class="section-header-right">
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="exec">i</button>
 <div class="section-anchor">Section 1 / 07</div>
 </div>
 </div>
@@ -3268,7 +3343,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 </div>
 </div><p class="ai-compact-intro">July’s revenue momentum is healthy; the management question is whether conversion and retention quality can keep pace with that growth.</p>
 <div class="ai-list-block">
-<div class="ai-block-heading">💡 What the Numbers Mean — in Plain English (5)</div>
+<div class="ai-block-heading">💡 What the Numbers Mean</div>
 <ul class="ai-bullet-list">
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot">💡</div>
@@ -3726,6 +3801,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="section-deck">July 2026 closed at <strong>₹24.54L net</strong> on 349 transactions, an ATV of <strong>₹7,393</strong>. Memberships and Class Packages together account for <strong>81% of revenue</strong>. Discount value of ₹1.70L represents 6.6% of gross. Payment mix: Custom (59%), Cash (21%), Stripe (14%).</p>
 </div>
 <div class="section-header-right">
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="commercial">i</button>
 <div class="section-anchor">Section 2 / 07</div>
 </div>
 </div>
@@ -3743,7 +3819,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="ai-summary-para">July’s ₹24.54L net is genuine growth, but its <em>quality</em> is mixed. The studio shook off the April anniversary hangover (₹50.0L peak → ₹24.3L in May → ₹21.8L in June) on the back of record transactions (349, +23.8% MoM), while ATV slid to ₹7,393 (-4.4% MoM, -22% vs the H1 average of ₹9,538) because single classes (+52.1% YoY) and newcomer specials grew fastest. Memberships surged +44.3% MoM to ₹12.17L — powered by price rises (3-Month +21.2%, Annual +6.0%) rather than volume (-26.2% units YoY) — and three annual closes alone delivered 19.2% of the month. Payment discipline (85.8% fee-free channels, ~₹62K saved) and the leanest discounting of the year (6.5%) protected margin. Two exposures now need board attention: the applied GST rate moved 18% → 5% (collections -61.7% YoY) and 47.8% of POS rows carry a duplicated placeholder transaction ID.</p>
 </div>
 <div class="ai-list-block">
-<div class="ai-block-heading">💡 What the Numbers Mean — in Plain English (5)</div>
+<div class="ai-block-heading">💡 What the Numbers Mean</div>
 <ul class="ai-bullet-list">
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot">💡</div>
@@ -4527,6 +4603,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="section-deck">The conversion story in July 2026: 154 leads generated, 121 first visits / trials, 35 converted (28.9% conversion rate), and 35 retained (28.9% of trials). Leads are +20.3% MoM, conversions -13.5% MoM. The referral channel is the highest-quality lead source. Below we walk the funnel source-by-source with all available metrics.</p>
 </div>
 <div class="section-header-right">
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="funnel">i</button>
 <div class="section-anchor">Section 3 / 07</div>
 </div>
 </div>
@@ -4544,7 +4621,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="ai-summary-para">154 leads (+20.3% MoM, +87.8% YoY) and 121 trials (+59.2% YoY) prove that marketing reach is not the constraint. The constraint is what happens around the trial: of the leads who completed a trial, <strong>43.2% converted</strong>, versus under 1% for those who never did — the on-floor experience is genuinely persuasive. Yet the July conversion cohort bought small: average LTV of converted leads collapsed to <strong>₹2,558 (-66% MoM)</strong>, and only 1 of 32 converted trialers took an unlimited membership. Meanwhile 37 hosted-class leads returned 2 conversions (5.4%), the website produced 25 leads at 12.0%, 29 leads sit parked at ‘Trial Completed’ without follow-up, and 350 CRM records marked ‘Membership Sold’ show ₹0 purchases — overstating pipeline truth and hiding the follow-up queue.</p>
 </div>
 <div class="ai-list-block">
-<div class="ai-block-heading">💡 What the Numbers Mean — in Plain English (6)</div>
+<div class="ai-block-heading">💡 What the Numbers Mean</div>
 <ul class="ai-bullet-list">
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot">💡</div>
@@ -5001,6 +5078,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="section-deck">The session portfolio delivered <strong>₹21.03L of session-attributed revenue</strong> across 18 distinct class formats in July. Average class size is 6.6 visits per session. Studio Strength Lab (Full Body) fill rate at 89.0% makes it the supply-constrained hero. Unknown Class at 2.2% fill is the structural underperformer.</p>
 </div>
 <div class="section-header-right">
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="sessions">i</button>
 <div class="section-anchor">Section 4 / 07</div>
 </div>
 </div>
@@ -5018,7 +5096,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="ai-summary-para">The +41% YoY schedule build-out looked like a dilution risk, yet occupancy <em>rose</em> to 47.3% (from 43.5% LY) because average class capacity was deliberately cut from 16.8 to 14.0 seats — smaller rooms, premium pricing, and <strong>₹865 revenue per visit (+17.8% YoY)</strong>. The 100%-Barre studio of 2025 is now 58% Barre / 25% Cycle / 17% Strength, and Strength Lab (79.8–89.0% fill) plus PowerCycle Express (88.0%) are capacity-constrained rather than demand-constrained. The costs of expansion show up in the tail: 16 sessions ran completely empty (4.35% of the schedule vs 1.53% LY), Cardio Barre variants sit at 23.9–34.2% fill, and an ‘Unknown Class’ mapping bucket is leaking schedule accuracy across 18 sessions. Instructor-wise, Rohan Dahima (8.56 avg class, zero empties, 72.7% new-client retention) and Cauveri Vikrant (41 sessions, 12.2% empty, 11.1% retention) are carrying identical loads with opposite returns.</p>
 </div>
 <div class="ai-list-block">
-<div class="ai-block-heading">💡 What the Numbers Mean — in Plain English (6)</div>
+<div class="ai-block-heading">💡 What the Numbers Mean</div>
 <ul class="ai-bullet-list">
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot">💡</div>
@@ -5786,6 +5864,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="section-deck">July’s expiration book had <strong>120 memberships reach end-of-life</strong>: <strong>83 renewed (69.2%)</strong>, <strong>27 lapsed (22.5%)</strong>, <strong>10 frozen</strong>. Churn rate is -11.2pp MoM and +0.6pp vs the 2026 Avg (excl. Jul) baseline. Renewal rate is improving. The cumulative lapsed book now stands at 482 unique lapsed members.</p>
 </div>
 <div class="section-header-right">
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="retention">i</button>
 <div class="section-anchor">Section 5 / 07</div>
 </div>
 </div>
@@ -5803,7 +5882,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="ai-summary-para">History says Kwality retains: <strong>77.2% of 10,458 known-outcome contracts renewed</strong>. But the live book tells a different story — of 208 currently active clients, 71 are flagged high-risk and 30 medium-risk: <strong>48.5% of the active base is in danger of lapsing right now</strong>, representing roughly ₹10–14L of monthly spend at stake. The triggers are mechanical, not emotional: lapsed clients averaged 3.04 sessions before drifting (vs 5.38 for renewers), cancelled 14.6% of bookings (vs 8.6%), and hover at 0.8–1.2 visits per week. Risk spikes at the 7th and 21st class milestones. Notably, price is not the problem — discounted contracts renew at 78.7% vs 77.0% for full price — while seller behaviour matters: historic renewal of sold contracts spans 92.8% (Jimmeey Gondaa) to 51.9% (Saniya Makwana), with top revenue-closer Vahishta at 67.6%, indicating some oversized deals are being sold to mismatched clients.</p>
 </div>
 <div class="ai-list-block">
-<div class="ai-block-heading">💡 What the Numbers Mean — in Plain English (6)</div>
+<div class="ai-block-heading">💡 What the Numbers Mean</div>
 <ul class="ai-bullet-list">
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot">💡</div>
@@ -6632,7 +6711,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="ai-summary-para">Everything in Sections 1–5 compresses into a short memo. July’s growth is real but thinning in quality: ATV -4.4% MoM, new-buyer expected LTV -74% YoY, and a 74% post-trial exodus. Critically, the highest-leverage fixes are operational rather than expensive — a 48-hour post-trial close protocol, trial slots re-weighted to proven instructor-closers, a hosted-events budget swap into referrals, systematic reactivation of the 482-member lapsed book, and schedule pruning of empty and under-filled classes. And two non-revenue items carry outsized downside and must precede everything else: the GST-rate question (18% → 5%) and the POS/CRM data repairs, both detailed in Section 02 and Section 03.</p>
 </div>
 <div class="ai-list-block">
-<div class="ai-block-heading">🎯 Priority Recommendations (6)</div>
+<div class="ai-block-heading">🎯 Priority Recommendations</div>
 <ul class="ai-bullet-list">
 <li class="ai-bullet-item">
 <div class="ai-bullet-dot rec-dot">✅</div>
@@ -6918,7 +6997,7 @@ html[data-theme='light'] .insights-pane { box-shadow:0 18px 50px rgba(15,24,39,.
 <p class="ai-summary-para">The base case (₹23.3–24.5L) assumes July’s structure persists: healthy acquisition, soft conversion value, and an unmanaged at-risk book. The risk distribution is asymmetric. Downside items are policy and statutory — a GST reassessment (~₹3L+/mo if 18% applies) and a 101-client at-risk pool carrying roughly ₹10–14L/mo of spend. Upside levers are operational and already proven in-studio: the post-trial close, instructor re-slotting, lapsed reactivation, late-cancel policy and schedule pruning sum to an estimated ₹4.9–7.7L/month — comfortably covering the gap to the ₹27–28.2L August upside case and making the ₹30–34.8L steady state credible by October.</p>
 </div>
 <div class="ai-list-block">
-<div class="ai-block-heading">💡 What the Numbers Mean — in Plain English</div>
+<div class="ai-block-heading">💡 What the Numbers Mean</div>
 <ul class="ai-bullet-list">
 <li class="ai-bullet-item plain-language-insight">
 <div class="ai-bullet-dot">💡</div>
@@ -8475,7 +8554,136 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 </div>
 </div>
 </footer>
+<div class="mom-modal-overlay" id="mom-modal-overlay">
+<div class="mom-modal" role="dialog" aria-modal="true" aria-labelledby="mom-modal-title">
+<div class="mom-modal-beam is-top" aria-hidden="true"></div>
+<div class="mom-modal-beam is-left" aria-hidden="true"></div>
+<div class="mom-modal-beam is-right" aria-hidden="true"></div>
+<div class="mom-modal-head">
+<div>
+<div class="mom-modal-eyebrow" id="mom-modal-eyebrow"></div>
+<h3 class="mom-modal-title" id="mom-modal-title"></h3>
+</div>
+<button class="mom-modal-close" id="mom-modal-close" aria-label="Close">&times;</button>
+</div>
+<div class="mom-modal-body"><table class="mom-table" id="mom-modal-table"></table></div>
+<div class="mom-modal-foot">Figures are computed month-by-month from studio transaction, session, lead and membership records for Kwality House, Kemps Corner.</div>
+</div>
+</div>
+<script>
+window.MOM_DATA = {
+  exec: {
+    eyebrow: '01 · Executive Summary', title: 'Executive Summary — Month on Month',
+    months: ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'],
+    rows: [
+      { label: 'Gross Sales', fmt: 'currency', agg: 'sum', values: [2744705, 1921110, 2018321, 5001388, 2428386, 2180716, 2580030] },
+      { label: 'Net Sales', fmt: 'currency', agg: 'sum', values: [2708936, 1890154, 2004696, 4949264, 2375293, 2123253, 2550363] },
+      { label: 'Transactions', fmt: 'int', agg: 'sum', values: [258, 280, 279, 328, 264, 282, 349] },
+      { label: 'Average Transaction Value', fmt: 'currency', agg: 'avg', values: [10638, 6861, 7234, 15248, 9198, 7733, 7393] },
+      { label: 'Visits', fmt: 'int', agg: 'sum', values: [2060, 1919, 2284, 2165, 2307, 2281, 2432] },
+      { label: 'Fill Rate', fmt: 'pct', agg: 'avg', values: [45.0, 43.9, 48.6, 45.7, 47.2, 46.3, 47.3] }
+    ]
+  },
+  commercial: {
+    eyebrow: '02 · Commercial Revenue Performance', title: 'Commercial Revenue — Month on Month',
+    months: ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'],
+    rows: [
+      { label: 'Gross Sales', fmt: 'currency', agg: 'sum', values: [2744705, 1921110, 2018321, 5001388, 2428386, 2180716, 2580030] },
+      { label: 'Net Sales', fmt: 'currency', agg: 'sum', values: [2708936, 1890154, 2004696, 4949264, 2375293, 2123253, 2550363] },
+      { label: 'Transactions', fmt: 'int', agg: 'sum', values: [258, 280, 279, 328, 264, 282, 349] },
+      { label: 'Average Transaction Value', fmt: 'currency', agg: 'avg', values: [10638, 6861, 7234, 15248, 9198, 7733, 7393] }
+    ]
+  },
+  funnel: {
+    eyebrow: '03 · Acquisition Funnel Performance', title: 'Acquisition Funnel — Month on Month',
+    months: ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'],
+    rows: [
+      { label: 'Leads', fmt: 'int', agg: 'sum', values: [177, 160, 163, 166, 127, 128, 151] },
+      { label: 'Trials', fmt: 'int', agg: 'sum', values: [80, 53, 65, 64, 58, 62, 85] },
+      { label: 'Conversions', fmt: 'int', agg: 'sum', values: [106, 86, 94, 94, 91, 111, 126] },
+      { label: 'Retained', fmt: 'int', agg: 'sum', values: [23, 27, 33, 20, 27, 38, 30] }
+    ]
+  },
+  sessions: {
+    eyebrow: '04 · Delivery, Formats & Instructor Performance', title: 'Sessions & Delivery — Month on Month',
+    months: ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'],
+    rows: [
+      { label: 'Sessions', fmt: 'int', agg: 'sum', values: [332, 309, 332, 338, 348, 352, 368] },
+      { label: 'Visits', fmt: 'int', agg: 'sum', values: [2060, 1919, 2284, 2165, 2307, 2281, 2432] },
+      { label: 'Fill Rate', fmt: 'pct', agg: 'avg', values: [45.0, 43.9, 48.6, 45.7, 47.2, 46.3, 47.3] },
+      { label: 'Late Cancellations', fmt: 'int', agg: 'sum', values: [295, 208, 304, 239, 271, 257, 295] }
+    ]
+  },
+  retention: {
+    eyebrow: '05 · Retention & Churn Dynamics', title: 'Retention & Churn — Month on Month',
+    months: ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'],
+    rows: [
+      { label: 'New Lapsed Members', fmt: 'int', agg: 'sum', values: [25, 13, 20, 23, 23, 35, 27] },
+      { label: 'Reactivated Members', fmt: 'int', agg: 'sum', values: [3, 1, 3, 3, 3, 5, 4] },
+      { label: 'Net Change', fmt: 'int', agg: 'sum', values: [22, 12, 17, 20, 20, 30, 23] }
+    ]
+  }
+};
+(function () {
+  function fmtCurrency(n) {
+    n = Math.round(n || 0);
+    var neg = n < 0; n = Math.abs(n);
+    var out;
+    if (n >= 10000000) out = (n / 10000000).toFixed(2) + 'Cr';
+    else if (n >= 100000) out = (n / 100000).toFixed(2) + 'L';
+    else {
+      var s = String(n), last3 = s.slice(-3), rest = s.slice(0, -3);
+      if (rest !== '') last3 = ',' + last3;
+      out = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + last3;
+    }
+    return (neg ? '-' : '') + '₹' + out;
+  }
+  function fmtInt(n) { return Math.round(n || 0).toLocaleString('en-IN'); }
+  function fmtPct(n) { return (Math.round((n || 0) * 10) / 10).toFixed(1) + '%'; }
+  function fmtValue(v, fmt) {
+    if (fmt === 'currency') return fmtCurrency(v);
+    if (fmt === 'pct') return fmtPct(v);
+    return fmtInt(v);
+  }
+  function aggregate(values, agg) {
+    var nums = values.map(Number).filter(function (n) { return !isNaN(n); });
+    if (!nums.length) return 0;
+    var sum = nums.reduce(function (a, b) { return a + b; }, 0);
+    return agg === 'avg' ? sum / nums.length : sum;
+  }
+  function buildTable(section) {
+    var table = document.getElementById('mom-modal-table');
+    var thead = '<thead><tr><th>Metric</th>' + section.months.map(function (m) { return '<th>' + m + '</th>'; }).join('') +
+      '<th class="mom-total-col">' + (section.totalHeader || 'Total / Avg') + '</th></tr></thead>';
+    var tbody = '<tbody>' + section.rows.map(function (row) {
+      var monthCells = row.values.map(function (v) { return '<td>' + fmtValue(v, row.fmt) + '</td>'; }).join('');
+      var totalCell = '<td class="mom-total-col">' + fmtValue(aggregate(row.values, row.agg || 'sum'), row.fmt) + '</td>';
+      return '<tr><td>' + row.label + '</td>' + monthCells + totalCell + '</tr>';
+    }).join('') + '</tbody>';
+    table.innerHTML = thead + tbody;
+  }
+  window.openMomModal = function (key) {
+    var section = window.MOM_DATA[key];
+    if (!section) return;
+    document.getElementById('mom-modal-eyebrow').textContent = section.eyebrow || '';
+    document.getElementById('mom-modal-title').textContent = section.title || 'Month on Month';
+    buildTable(section);
+    document.getElementById('mom-modal-overlay').classList.add('is-open');
+  };
+  function closeMomModal() {
+    document.getElementById('mom-modal-overlay').classList.remove('is-open');
+  }
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.mom-info-btn');
+    if (btn) { window.openMomModal(btn.getAttribute('data-mom')); return; }
+    if (e.target.id === 'mom-modal-overlay' || e.target.id === 'mom-modal-close') closeMomModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeMomModal();
+  });
+})();
+</script>
 <script src="./section-audio.js?v=1"></script>
-<script src="./sfx-soundboard.js?v=6"></script>
+<script src="./sfx-soundboard.js?v=10"></script>
 </body>
 </html>

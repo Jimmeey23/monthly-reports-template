@@ -2,7 +2,7 @@
   if (window.__p57CardNotesLoaded) return;
   window.__p57CardNotesLoaded = true;
 
-  var CARD_SELECTOR = '.kpi-card, .insight-card, .worked-card, .ai-bullet-item';
+  var CARD_SELECTOR = '.kpi-card, .worked-card, .insights-pane, .data-pane:not(.headline-kpi-matrix), .ai-result-v2';
   var STORE_PREFIX = 'p57-card-notes-v1:' + window.location.pathname + ':';
 
   function safeGet(key) {
@@ -22,16 +22,18 @@
   }
 
   function cardLabel(card) {
-    var heading = card.querySelector('.kpi-back-title, .insight-title, .worked-title, .ai-bullet-title, h3, h4');
+    var heading = card.querySelector('.kpi-back-title, .pane-title, .panel-title, .ai-result-header-title, .worked-title, h3, h4');
     var text = heading ? heading.textContent : card.textContent;
     return String(text || '').replace(/\s+/g, ' ').trim().slice(0, 60) || 'This card';
   }
 
   function cardType(card) {
     if (card.classList.contains('kpi-card')) return 'kpi';
-    if (card.classList.contains('insight-card')) return 'insight';
     if (card.classList.contains('worked-card')) return 'worked';
-    return 'bullet';
+    if (card.classList.contains('insights-pane')) return 'insights';
+    if (card.classList.contains('data-pane')) return 'data';
+    if (card.classList.contains('ai-result-v2')) return 'ai-result';
+    return 'card';
   }
 
   function buildCardIds() {
@@ -84,11 +86,12 @@
 
   var style = document.createElement('style');
   style.textContent = [
-    '.p57-cardnote-btn{all:initial;box-sizing:border-box;position:absolute;z-index:6;top:8px;right:8px;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:1px solid color-mix(in srgb, var(--primary) 32%, var(--border));border-radius:50%;background:var(--bg-card);color:var(--primary);font:700 12px/1 Georgia,"Times New Roman",serif;font-style:italic;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.1);transition:transform .15s ease,background .15s ease;}',
-    '.p57-cardnote-btn:hover{transform:scale(1.12);background:color-mix(in srgb, var(--primary) 12%, var(--bg-card));}',
-    '.p57-cardnote-btn.has-note{background:var(--primary);color:#fff;border-color:var(--primary);}',
-    '.p57-cardnote-btn.has-note::after{content:"";position:absolute;top:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--good, #18835a);border:1.5px solid var(--bg-card);}',
-    '.kpi-card,.insight-card,.worked-card,.ai-bullet-item{position:relative;}',
+    '.p57-cardnote-btn{all:initial;box-sizing:border-box;position:absolute;z-index:6;top:9px;right:9px;display:flex;align-items:center;justify-content:center;width:18px;height:18px;border:1px solid var(--border);border-radius:50%;background:color-mix(in srgb, var(--bg-card) 70%, transparent);color:var(--text-subtle);font:600 10.5px/1 Georgia,"Times New Roman",serif;font-style:italic;cursor:pointer;opacity:.45;box-shadow:none;transition:opacity .15s ease,transform .15s ease,background .15s ease,color .15s ease,border-color .15s ease;}',
+    '.p57-cardnote-btn:hover{opacity:1;transform:scale(1.1);background:var(--bg-card);color:var(--primary);border-color:color-mix(in srgb, var(--primary) 35%, var(--border));box-shadow:0 3px 8px rgba(0,0,0,.1);}',
+    '.p57-cardnote-btn.has-note{opacity:.85;background:var(--bg-card);color:var(--primary);border-color:color-mix(in srgb, var(--primary) 30%, var(--border));}',
+    '.p57-cardnote-btn.has-note:hover{opacity:1;}',
+    '.p57-cardnote-btn.has-note::after{content:"";position:absolute;top:-2px;right:-2px;width:6px;height:6px;border-radius:50%;background:var(--good, #18835a);border:1.5px solid var(--bg-card);}',
+    '.kpi-card,.worked-card,.insights-pane,.data-pane,.ai-result-v2{position:relative;}',
     '.p57-cardnote-overlay{position:fixed;inset:0;z-index:2147483200;display:none;align-items:center;justify-content:center;background:rgba(10,12,18,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}',
     '.p57-cardnote-overlay.is-open{display:flex;}',
     '.p57-cardnote-modal{display:flex;flex-direction:column;width:min(480px,calc(100vw - 32px));max-height:min(620px,calc(100vh - 40px));border:1px solid var(--border);border-radius:16px;background:var(--bg-card);color:var(--text);box-shadow:0 30px 80px rgba(0,0,0,.28);overflow:hidden;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}',
@@ -206,6 +209,7 @@
   buildCardIds().forEach(function (entry) {
     var card = entry.card;
     var id = entry.id;
+    if (card.querySelector('.mom-info-btn, .p57-cardnote-btn, [id^="sales-matrix-"]')) return;
     var button = document.createElement('button');
     button.type = 'button';
     button.className = 'p57-cardnote-btn';

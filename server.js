@@ -706,7 +706,7 @@ app.get('/july-report/:studio', (req, res) => {
     .replace('</head>', `${embeddedCss}</head>`);
   const bodyCloseIndex = html.lastIndexOf('</body>');
   if (bodyCloseIndex >= 0) {
-    html = `${html.slice(0, bodyCloseIndex)}${embeddedScript}<script src="/revised-july/section-audio.js?v=1"></script><script src="/revised-july/sfx-soundboard.js?v=16"></script><script src="/revised-july/card-notes.js?v=2"></script>${routeControlsScript}${presenterScript}${html.slice(bodyCloseIndex)}`;
+    html = `${html.slice(0, bodyCloseIndex)}${embeddedScript}<script src="/revised-july/section-audio.js?v=2"></script><script src="/revised-july/sfx-soundboard.js?v=19"></script><script src="/revised-july/card-notes.js?v=5"></script>${routeControlsScript}${presenterScript}${html.slice(bodyCloseIndex)}`;
   }
   res.type('html').send(html);
 });

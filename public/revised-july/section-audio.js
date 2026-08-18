@@ -18,6 +18,9 @@
     '.section-audio-btn svg{width:12px;height:12px;pointer-events:none}' +
     '.section-audio-btn.is-playing{color:white;border-color:var(--accent);background:var(--accent);box-shadow:0 10px 28px color-mix(in srgb,var(--accent) 28%,transparent)}' +
     '.section-audio-btn.is-loading{animation:p57SectionAudioPulse 900ms ease-in-out infinite}' +
+    '.section-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}' +
+    '.section-info-popover{width:min(320px,calc(100vw - 40px));padding:13px 14px;border:1px solid var(--border);border-radius:12px;background:var(--bg-card);color:var(--text-muted);box-shadow:0 16px 38px rgba(15,23,42,.14);font-size:11px;line-height:1.55;text-align:left}' +
+    '.section-info-popover[hidden]{display:none}' +
     '@keyframes p57SectionAudioPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.72;transform:scale(.96)}}';
   document.head.appendChild(style);
 
@@ -52,8 +55,8 @@
     window.dispatchEvent(new CustomEvent('p57-active-audio-change'));
   }
 
-  function attachButton(headerRight, title) {
-    if (!headerRight || headerRight.querySelector('.section-audio-btn')) return;
+  function attachButton(actions, title) {
+    if (!actions || actions.querySelector('.section-audio-btn')) return;
     audioIndex += 1;
     var button = document.createElement('button');
     button.type = 'button';
@@ -63,13 +66,38 @@
     button.setAttribute('aria-label', button.dataset.audioLabel);
     button.title = button.dataset.audioLabel;
     button.innerHTML = playIcon;
-    headerRight.insertBefore(button, headerRight.firstChild);
+    actions.appendChild(button);
   }
 
   document.querySelectorAll('section.report-section .section-hero').forEach(function (hero) {
     var headerRight = hero.querySelector('.section-header-right');
     var titleNode = hero.querySelector('.section-title');
-    attachButton(headerRight, titleNode ? titleNode.textContent.trim() : '');
+    if (!headerRight) return;
+    var anchor = headerRight.querySelector('.section-anchor');
+    var actions = document.createElement('div');
+    actions.className = 'section-header-actions';
+    headerRight.querySelectorAll('.mom-info-btn').forEach(function (button) { actions.appendChild(button); });
+    if (!actions.querySelector('.mom-info-btn')) {
+      var infoButton = document.createElement('button');
+      infoButton.type = 'button';
+      infoButton.className = 'mom-info-btn section-info-btn';
+      infoButton.setAttribute('aria-label', 'View section information');
+      infoButton.setAttribute('aria-expanded', 'false');
+      infoButton.textContent = 'i';
+      actions.appendChild(infoButton);
+      var popover = document.createElement('div');
+      popover.className = 'section-info-popover';
+      popover.hidden = true;
+      popover.textContent = (hero.querySelector('.section-deck') || titleNode || {}).textContent || 'Section information';
+      headerRight.appendChild(popover);
+      infoButton.addEventListener('click', function () {
+        popover.hidden = !popover.hidden;
+        infoButton.setAttribute('aria-expanded', String(!popover.hidden));
+      });
+    }
+    if (anchor) headerRight.insertBefore(anchor, headerRight.firstChild);
+    headerRight.insertBefore(actions, anchor ? anchor.nextSibling : headerRight.firstChild);
+    attachButton(actions, titleNode ? titleNode.textContent.trim() : '');
   });
 
   document.querySelectorAll('.section-audio-btn').forEach(function (button) {

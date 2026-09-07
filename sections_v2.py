@@ -739,6 +739,10 @@ def section_02(ctx):
     top_cat = cats[0] if cats else ("n/a", {'net':0})
     top_cat_name = top_cat[0]
     top_cat_share = (top_cat[1]['net'] / total_net * 100) if total_net else 0
+    top_two_cat_share = (
+        sum(category['net'] for _, category in cats[:2]) / total_net * 100
+        if total_net else 0
+    )
     
     title = (f"{top_cat_name} carry {pct(top_cat_share, 0)} of revenue, "
              f"{'with healthy category diversification across the portfolio' if len(cats) > 4 else 'with concentration in a few lines'}, "
@@ -747,7 +751,7 @@ def section_02(ctx):
     deck = (f"{month_name} {ctx['mo']['year']} closed at <strong>{lakh(s['net'])} net</strong> on {int(s['sales'])} transactions, "
             f"an ATV of <strong>{rupee(s['atv'])}</strong>. "
             f"{top_cat_name} and {cats[1][0] if len(cats)>1 else 'Class Packages'} together account for "
-            f"<strong>{pct((cats[0][1]['net']+cats[1][1]['net'])/total_net*100, 0) if len(cats)>1 else pct(top_cat_share,0)} of revenue</strong>. "
+            f"<strong>{pct(top_two_cat_share, 0)} of revenue</strong>. "
             f"Discount value of {lakh(s['disc'])} represents {pct(ctx['disc_penetration'])} of gross. "
             f"Payment mix: {', '.join(payment_share_str(payments[:3], s['gross']))}.")
     
@@ -2453,6 +2457,10 @@ def build_scheduling_recommendations(ctx):
 def build_discount_recommendations(ctx):
     s = ctx['sales']
     baseline = ctx['baseline']
+    baseline_gross = baseline['sales']['gross']
+    baseline_disc_penetration = (
+        baseline['sales']['disc'] / baseline_gross * 100 if baseline_gross else 0
+    )
     
     insights = []
     
@@ -2460,7 +2468,7 @@ def build_discount_recommendations(ctx):
         f"Discount penetration at {pct(ctx['disc_penetration'])} &mdash; {'above' if ctx['disc_penetration'] > 10 else 'within'} acceptable range.",
         f"Total discount of {lakh(s['disc'])} on {lakh(s['gross'])} gross. "
         f"{'This is above the 10% threshold and warrants a hard cap.' if ctx['disc_penetration'] > 10 else 'This is within the healthy range but should be monitored.'} "
-        f"Baseline penetration: {pct(baseline['sales']['disc']/baseline['sales']['gross']*100)}."))
+        f"Baseline penetration: {pct(baseline_disc_penetration)}."))
     
     bd = get_sales_breakdowns(ctx['loc_key'], ctx['month_key'])
     cat_bd = bd.get('category', {})
@@ -2639,6 +2647,10 @@ def section_07(ctx):
     
     # Steady-state
     steady_state = build_steady_state(ctx, baseline)
+    baseline_gross = baseline['sales']['gross']
+    baseline_disc_penetration = (
+        baseline['sales']['disc'] / baseline_gross * 100 if baseline_gross else 0
+    )
     
     html = f'''
 <section class="report-section" id="predictions{ctx.get('id_suffix', '')}">
@@ -2726,7 +2738,7 @@ def section_07(ctx):
               <tr><td>Fill Rate</td><td class="num">{pct(baseline['sessions']['fill'])}</td><td class="num">{pct(sess['fill'])}</td><td class="num">50%&ndash;55%</td></tr>
               <tr><td>Conversion Rate</td><td class="num">{pct(baseline['new']['rate'])}</td><td class="num">{pct(new['rate'])}</td><td class="num">15%&ndash;20%</td></tr>
               <tr><td>Churn Rate</td><td class="num">{pct(baseline['lapsed']['churn'])}</td><td class="num">{pct(lapsed['churn'])}</td><td class="num">30%&ndash;35%</td></tr>
-              <tr><td>Discount Penetration</td><td class="num">{pct(baseline['sales']['disc']/baseline['sales']['gross']*100)}</td><td class="num">{pct(ctx['disc_penetration'])}</td><td class="num">&le; 8%</td></tr>
+              <tr><td>Discount Penetration</td><td class="num">{pct(baseline_disc_penetration)}</td><td class="num">{pct(ctx['disc_penetration'])}</td><td class="num">&le; 8%</td></tr>
             </tbody>
           </table>
         </div>

@@ -19,3 +19,5 @@ outputs/
 deploy_dir/
 summarized_conversations/
 *.csv
+.vercel
+.env*.local

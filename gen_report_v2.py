@@ -838,24 +838,45 @@ def hero(ctx):
 
 
 def kpi_card(label, value, sub, mom, yoy, baseline_text, higher_is_better=True, is_pp=False):
-    """Generate a KPI card."""
+    """Generate an accessible two-sided KPI card with comparative context."""
     mom_b = badge(mom, higher_is_better) if not is_pp else badge_from_pp(mom, higher_is_better)
     yoy_b = badge(yoy, higher_is_better) if not is_pp else badge_from_pp(yoy, higher_is_better)
-    
-    yoy_html = ""
-    if yoy != "n/a":
-        yoy_html = f'''<span class="kpi-trend"><span class="trend-label">YoY</span> <span class='badge {yoy_b}'>{yoy}</span></span>'''
-    
-    return f'''        <div class="kpi-card">
-          <div class="kpi-label">{label}</div>
-          <div class="kpi-value">{value}</div>
-          <div class="kpi-sub">{sub}</div>
-          <div class="kpi-trends">
-            <span class="kpi-trend"><span class="trend-label">MoM</span> <span class='badge {mom_b}'>{mom}</span></span>
-            {yoy_html}
+
+    def comparison_description(period, change):
+        if change == 'n/a':
+            return f"{period} comparison is unavailable for this reporting period."
+        direction = 'improved' if change.startswith('+') else 'declined' if change.startswith('-') else 'was unchanged'
+        if not higher_is_better and direction != 'was unchanged':
+            implication = 'This reduces operating risk.' if direction == 'declined' else 'This increases operating risk.'
+        else:
+            implication = 'This is positive momentum.' if direction == 'improved' else 'This needs attention.' if direction == 'declined' else 'Performance is stable.'
+        unit = ' percentage points' if is_pp else ''
+        return f"Performance {direction} by {change}{unit} versus {period}. {implication}"
+
+    return f'''        <article class="kpi-card" role="button" tabindex="0" aria-pressed="false" aria-label="{label}: {value}. Flip for growth details">
+          <div class="kpi-card-inner">
+            <div class="kpi-card-face kpi-card-front">
+              <div class="kpi-card-kicker">Current period</div>
+              <div class="kpi-label">{label}</div>
+              <div class="kpi-value">{value}</div>
+              <div class="kpi-sub">{sub}</div>
+              <div class="kpi-card-action">View growth analysis <span aria-hidden="true">&rarr;</span></div>
+            </div>
+            <div class="kpi-card-face kpi-card-back">
+              <div class="kpi-back-header"><span>{label}</span><span class="kpi-back-period">Growth view</span></div>
+              <div class="kpi-comparison">
+                <div class="kpi-comparison-top"><span>Month on month</span><span class="badge {mom_b}">{mom}</span></div>
+                <p>{comparison_description('the previous month', mom)}</p>
+              </div>
+              <div class="kpi-comparison">
+                <div class="kpi-comparison-top"><span>Year on year</span><span class="badge {yoy_b if yoy != 'n/a' else 'neutral'}">{yoy}</span></div>
+                <p>{comparison_description('the same month last year', yoy)}</p>
+              </div>
+              <div class="kpi-benchmark"><span>Benchmark context</span><strong>{baseline_text}</strong></div>
+              <div class="kpi-card-action">Return to current value <span aria-hidden="true">&larr;</span></div>
+            </div>
           </div>
-          <div class="kpi-baseline">{baseline_text}</div>
-        </div>'''
+        </article>'''
 
 
 # Placeholder for section functions - will be implemented next

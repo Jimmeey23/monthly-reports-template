@@ -6,11 +6,11 @@ Comprehensive analysis for 4 reports:
   Supreme HQ, Bandra — June 2026
   Supreme HQ, Bandra — July 2026
 
-Key changes from v1:
-  - Uses Sales file (15) with correct column labels (Payment Status = status, Payment Method = method)
-  - Gross = Sale Total Paid In Currency (deduplicated by Sale ID)
-  - Net = Mrp - Pre Tax (summed per row)
-  - Discount = Sale Item Unit Discount Value (summed per row) — per user request
+Supported sales exports:
+  - Legacy 99-column export and revised 48-column export
+  - Gross = Sale Total Paid In Currency / Payment Value (deduplicated by Sale ID)
+  - Net = Mrp - Pre Tax / Price Excluding VAT In Currency (summed per row)
+  - Discount = Sale Item Unit Discount Value (summed per row)
   - Location filter: Calculated Location contains 'Kwality' or 'Supreme'
   - Separate reports per location and per month
 """
@@ -73,6 +73,40 @@ def _require_column(fieldnames, name):
             f"sales.csv is missing the required column '{name}'. "
             f"Columns found: {', '.join(fieldnames) if fieldnames else '(none — file may be empty)'}"
         )
+
+
+def _require_any_column(fieldnames, metric, names):
+    """Accept equivalent columns from the legacy and revised sales exports."""
+    for name in names:
+        if fieldnames is not None and name in fieldnames:
+            return name
+    raise RuntimeError(
+        f"sales.csv is missing a column for {metric}. Expected one of: "
+        f"{', '.join(names)}. Columns found: "
+        f"{', '.join(fieldnames) if fieldnames else '(none — file may be empty)'}"
+    )
+
+
+def detect_sales_schema(fieldnames):
+    """Map report metrics onto either supported Momence sales export shape."""
+    return {
+        'gross': _require_any_column(
+            fieldnames, 'gross revenue',
+            ('Sale Total Paid In Currency', 'Payment Value'),
+        ),
+        'net': _require_any_column(
+            fieldnames, 'net revenue before VAT',
+            ('Mrp - Pre Tax', 'Price Excluding VAT In Currency'),
+        ),
+        'discount': _require_any_column(
+            fieldnames, 'item discount',
+            ('Sale Item Unit Discount Value', 'Discount Value In Currency'),
+        ),
+        'product': _require_any_column(
+            fieldnames, 'product name',
+            ('Sale Item Name', 'Cleaned Product'),
+        ),
+    }
 
 
 def detect_locations():
@@ -161,7 +195,12 @@ def loc_key_for(location_str):
 
 def to_float(v):
     try:
-        return float(v or '0')
+        cleaned = str(v or '0').strip().replace(',', '').replace('₹', '')
+        if cleaned in ('', '-'):
+            return 0.0
+        if cleaned.startswith('(') and cleaned.endswith(')'):
+            cleaned = '-' + cleaned[1:-1]
+        return float(cleaned)
     except:
         return 0.0
 
@@ -207,6 +246,7 @@ def analyze_sales():
     
     with open(SALES_FILE, encoding='utf-8-sig') as f:
         r = csv.DictReader(f, delimiter=sniff_delimiter(SALES_FILE))
+        schema = detect_sales_schema(r.fieldnames)
         # sales_data[loc_key][month][sale_id] = sale_total_paid
         sales_data = {lk: defaultdict(dict) for lk in LOCATIONS}
         # per-row accumulators
@@ -214,7 +254,7 @@ def analyze_sales():
                    for lk in LOCATIONS}
         
         for row in r:
-            if row.get('Payment Status') != 'succeeded':
+            if (row.get('Payment Status') or '').strip().lower() != 'succeeded':
                 continue
             loc = row.get('Calculated Location', '')
             loc_key = loc_key_for(loc)
@@ -227,9 +267,9 @@ def analyze_sales():
                 continue
             
             sid = row.get('Sale ID', '')
-            stp = to_float(row.get('Sale Total Paid In Currency', '0'))
-            mrp = to_float(row.get('Mrp - Pre Tax', '0'))
-            disc = to_float(row.get('Sale Item Unit Discount Value', '0'))
+            stp = to_float(row.get(schema['gross'], '0'))
+            mrp = to_float(row.get(schema['net'], '0'))
+            disc = to_float(row.get(schema['discount'], '0'))
             
             # Store sale total (deduplicated)
             if sid not in sales_data[loc_key][month]:
@@ -245,7 +285,7 @@ def analyze_sales():
             
             # Breakdowns
             cat = row.get('Cleaned Category', '') or 'Uncategorized'
-            prod = row.get('Sale Item Name', '') or 'Unknown'
+            prod = row.get(schema['product'], '') or 'Unknown'
             seller = row.get('Sold By', '') or 'System / Unattributed'
             pay_method = row.get('Payment Method', '') or 'Unknown'
             
@@ -308,8 +348,9 @@ def analyze_sales():
     
     with open(SALES_FILE, encoding='utf-8-sig') as f:
         r = csv.DictReader(f, delimiter=sniff_delimiter(SALES_FILE))
+        schema = detect_sales_schema(r.fieldnames)
         for row in r:
-            if row.get('Payment Status') != 'succeeded':
+            if (row.get('Payment Status') or '').strip().lower() != 'succeeded':
                 continue
             loc = row.get('Calculated Location', '')
             loc_key = loc_key_for(loc)
@@ -321,10 +362,10 @@ def analyze_sales():
                 continue
             
             sid = row.get('Sale ID', '')
-            mrp = to_float(row.get('Mrp - Pre Tax', '0'))
-            disc = to_float(row.get('Sale Item Unit Discount Value', '0'))
+            mrp = to_float(row.get(schema['net'], '0'))
+            disc = to_float(row.get(schema['discount'], '0'))
             cat = row.get('Cleaned Category', '') or 'Uncategorized'
-            prod = row.get('Sale Item Name', '') or 'Unknown'
+            prod = row.get(schema['product'], '') or 'Unknown'
             seller = row.get('Sold By', '') or 'System / Unattributed'
             pay_method = row.get('Payment Method', '') or 'Unknown'
             

@@ -230,6 +230,7 @@ def section_header(eyebrow, title, deck, section_num, total=7, loc_key='', month
         <div class="section-header-left">
           <span class="section-eyebrow">{eyebrow}</span>
           <h2 class="section-title">{title}</h2>
+          <div class="section-narrative-label">Key highlights &amp; management narrative</div>
           <p class="section-deck">{deck}</p>
         </div>
         <div class="section-header-right">
@@ -357,7 +358,7 @@ def section_01(ctx):
     html = f'''
 <section class="report-section" id="executive-summary{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header(f"01 &middot; Executive Summary", title, deck, 1, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header(f"01 &middot; Management Pulse &mdash; Growth, Conversion &amp; Risk", title, deck, 1, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -744,7 +745,7 @@ def section_02(ctx):
         if total_net else 0
     )
     
-    title = (f"{top_cat_name} carry {pct(top_cat_share, 0)} of revenue, "
+    title = (f"{top_cat_name} carries {pct(top_cat_share, 0)} of revenue, "
              f"{'with healthy category diversification across the portfolio' if len(cats) > 4 else 'with concentration in a few lines'}, "
              f"and the studio&rsquo;s payment mix is {'diverse' if len(payments) > 3 else 'concentrated'} at {len(payments)} methods.")
     
@@ -758,7 +759,7 @@ def section_02(ctx):
     html = f'''
 <section class="report-section" id="revenue-performance{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("02 &middot; Commercial Revenue Performance", title, deck, 2, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("02 &middot; Revenue Story &mdash; Mix, Pricing Power &amp; Discount Yield", title, deck, 2, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection("Sales by Category &mdash; revenue mix and unit economics",
     "The category table below holds every metric available &mdash; revenue, units, ATV, share of revenue &mdash; so each line can be evaluated on absolute size and per-unit economics.")}
@@ -1170,7 +1171,7 @@ def section_03(ctx):
     html = f'''
 <section class="report-section" id="conversion-funnel{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("03 &middot; Acquisition Funnel Performance", title, deck, 3, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("03 &middot; Growth Engine &mdash; Lead Quality, Conversion &amp; Retention", title, deck, 3, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection("Funnel at a glance &mdash; stage-by-stage view",
     "The four-stage visual below traces the headline funnel from leads through retention.")}
@@ -1420,7 +1421,7 @@ def section_04(ctx):
     html = f'''
 <section class="report-section" id="sessions{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("04 &middot; Delivery, Formats &amp; Instructor Performance", title, deck, 4, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("04 &middot; Studio Delivery &mdash; Demand, Capacity &amp; Instructor Impact", title, deck, 4, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection("Format-level view &mdash; Barre, PowerCycle, Strength Lab",
     f"At the format level, the breakdown shows sessions, visits, capacity, revenue, and fill rate for each of the 3 formats: Barre, PowerCycle, and Strength Lab.")}
@@ -1934,7 +1935,7 @@ def section_05(ctx):
     html = f'''
 <section class="report-section" id="lapsed{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("05 &middot; Retention &amp; Churn Dynamics", title, deck, 5, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("05 &middot; Member Health &mdash; Renewals, Churn &amp; Reactivation", title, deck, 5, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {callout("<strong>Exclusions applied in this section (per management guidance):</strong> zero-value memberships, "
     "&lsquo;Newcomers 2 For 1&rsquo; SKUs, &lsquo;Studio Single Class&rsquo; SKUs, and all Private-class memberships. "
@@ -2249,8 +2250,8 @@ def section_06(ctx):
     retention_recs = build_retention_recommendations(ctx)
     ops_recs = build_ops_recommendations(ctx)
     
-    title = (f"Five business decisions for senior management to make this quarter &mdash; "
-             f"each anchored to a {month_name} {ctx['mo']['year']} data point with a target and an owner.")
+    title = (f"Five decisions connect {lakh(s['net'])} in net revenue, {pct(sess['fill'])} studio fill, "
+             f"{leads['total']} leads and {lapsed['lapsed']} lapsed members to accountable next-quarter action.")
     
     deck = (f"The recommendations below consolidate the action items from sections 1&ndash;5 into a single decision-ready view. "
             f"Each recommendation has a quantified opportunity (in &#8377; or members), a target metric, "
@@ -2262,7 +2263,7 @@ def section_06(ctx):
     html = f'''
 <section class="report-section" id="recommendations{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("06 &middot; Data-Driven Recommendations", title, deck, 6, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("06 &middot; Decision Agenda &mdash; Priorities, Owners &amp; Measurable Outcomes", title, deck, 6, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection("Class scheduling &mdash; additions, discontinuations, format-specific moves",
     "The scheduling decisions below are anchored to the Session Intelligence table. Every addition is justified by excess demand (fill &gt; 60%); every discontinuation by structural under-fill (fill &lt; 25%) over a sustained period.")}
@@ -2655,7 +2656,7 @@ def section_07(ctx):
     html = f'''
 <section class="report-section" id="predictions{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("07 &middot; Forward Outlook &amp; Scenario Planning", title, deck, 7, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("07 &middot; Forward View &mdash; Scenarios, Upside &amp; Early Warnings", title, deck, 7, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection(f"{next_name} {ctx['mo']['next_year']} forecast &mdash; base case vs upside case",
     f"The forecast below assumes (a) no major exogenous shock, (b) historical seasonality, and (c) for the upside case, the five decisions beginning to deliver from {next_name} W3.")}

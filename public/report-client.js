@@ -721,6 +721,18 @@ details.appendix-details > summary.section-hero,
 }
 .section-hero.is-stuck .section-title { font-size: inherit !important; }
 .section-hero.is-stuck .section-deck { display: block !important; }
+.section-narrative-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 22px 0 8px !important;
+  color: var(--primary-3) !important;
+  font-size: 9.5px !important;
+  font-weight: 850 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+.section-narrative-label::before { content: '' !important; width: 24px !important; height: 1px !important; background: var(--primary-3) !important; }
 .hero-kpi-grid { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)) !important; grid-auto-rows: minmax(0, auto) !important; gap: 12px !important; align-items: stretch; }
 .kpi-card {
   position: relative !important;
@@ -877,6 +889,124 @@ details.appendix-details > summary.section-hero,
 @keyframes kpiDraw { to { stroke-dashoffset: 0; } }
 @keyframes kpiFade { to { opacity: 1; } }
 @media (max-width: 1500px) { .hero-kpi-grid { grid-template-columns: repeat(5, minmax(180px, 1fr)) !important; } }
+.hero-kpi-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  perspective: 1400px;
+}
+.kpi-card:has(.kpi-card-inner) {
+  min-height: 280px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 20px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  outline: none;
+}
+.kpi-card:has(.kpi-card-inner)::before,
+.kpi-card:has(.kpi-card-inner)::after { display: none !important; }
+.kpi-card:has(.kpi-card-inner):focus-visible .kpi-card-face {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 32%, transparent), var(--shadow-lg) !important;
+}
+.kpi-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  transform-style: preserve-3d;
+  transition: transform 420ms cubic-bezier(.2,.75,.25,1);
+}
+.kpi-card.is-flipped .kpi-card-inner { transform: rotateY(180deg); }
+.kpi-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--bg-card), color-mix(in srgb, var(--bg-inset) 68%, var(--bg-card)));
+  box-shadow: 0 20px 48px -28px rgba(15,23,42,.42), 0 8px 20px -16px rgba(15,23,42,.26);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.kpi-card-face::after {
+  content: '';
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  right: -65px;
+  top: -72px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  pointer-events: none;
+}
+.kpi-card-front { justify-content: flex-start; }
+.kpi-card-back {
+  transform: rotateY(180deg);
+  gap: 13px;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--primary-soft) 44%, var(--bg-card)), var(--bg-card) 58%);
+}
+.kpi-card-kicker, .kpi-back-period {
+  color: var(--text-subtle);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.kpi-card-front .kpi-label { margin-top: 26px !important; font-size: 13px !important; }
+.kpi-card-front .kpi-value { margin-top: 6px !important; font-size: clamp(34px, 3vw, 46px) !important; letter-spacing: -.035em !important; }
+.kpi-card-front .kpi-sub { max-width: 85%; margin-top: 8px !important; line-height: 1.45 !important; }
+.kpi-card-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--primary-3);
+  font-size: 11px;
+  font-weight: 750;
+}
+.kpi-back-header, .kpi-comparison-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.kpi-back-header { color: var(--text); font-size: 13px; font-weight: 750; }
+.kpi-comparison {
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-card) 76%, transparent);
+}
+.kpi-comparison-top > span:first-child {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.kpi-comparison p { margin: 7px 0 0; color: var(--text-muted); font-size: 10.5px; line-height: 1.45; }
+.kpi-benchmark { display: flex; flex-direction: column; gap: 3px; }
+.kpi-benchmark span { color: var(--text-subtle); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.kpi-benchmark strong { color: var(--text); font-size: 11px; line-height: 1.4; }
+.kpi-card-back .kpi-card-action { padding-top: 10px; }
+@media (hover: hover) {
+  .kpi-card:has(.kpi-card-inner):hover .kpi-card-face { border-color: color-mix(in srgb, var(--primary) 38%, var(--border)); }
+}
+@media (max-width: 980px) { .hero-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+@media (max-width: 620px) {
+  .hero-kpi-grid { grid-template-columns: 1fr !important; }
+  .kpi-card:has(.kpi-card-inner), .kpi-card-inner, .kpi-card-face { min-height: 270px !important; }
+}
+@media (prefers-reduced-motion: reduce) { .kpi-card-inner { transition: none; } }
 .presenter-bar {
   position: fixed;
   left: 14px;
@@ -1028,18 +1158,23 @@ body.annotation-erase-mode .annotation-canvas {
       '<path d="M62 24 82 62H42z" fill="var(--accent)" opacity=".3"/><path d="M62 34v18M62 64v2" stroke="var(--primary)" stroke-width="7" stroke-linecap="round"/>',
       '<circle cx="60" cy="50" r="30" fill="none" stroke="var(--primary)" stroke-width="8"/><path d="M60 50 78 34M60 50 46 66" stroke="var(--accent)" stroke-width="7" stroke-linecap="round"/>'
     ];
-    const grid = document.querySelector('.hero-kpi-grid');
-    if (grid) {
-      const labels = ['Active Base', 'Avg Ticket', 'Peak Fill', 'Lead Quality', 'Retention Risk', 'Revenue / Visit', 'Trial Velocity', 'Capacity Gap', 'Discount Guard', 'Next Action'];
-      while (grid.querySelectorAll('.kpi-card').length < 10) {
-        const idx = grid.querySelectorAll('.kpi-card').length;
-        const extra = document.createElement('div');
-        extra.className = 'kpi-card kpi-card-supplemental';
-        extra.innerHTML = `<div class="kpi-label">${labels[idx]}</div><div class="kpi-value">—</div><div class="kpi-sub">Supporting analytics slot</div><div class="kpi-trends"><span class="kpi-trend"><span class="trend-label">View</span> <span class="badge neutral">Drill</span></span></div><div class="kpi-baseline">Click for context</div>`;
-        grid.appendChild(extra);
-      }
-    }
     document.querySelectorAll('.kpi-card').forEach((card, index) => {
+      if (card.querySelector('.kpi-card-inner')) {
+        const toggleCard = () => {
+          const flipped = card.classList.toggle('is-flipped');
+          card.setAttribute('aria-pressed', flipped ? 'true' : 'false');
+        };
+        card.addEventListener('click', (event) => {
+          if (!event.target.closest('a,button,input,select,textarea')) toggleCard();
+        });
+        card.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            toggleCard();
+          }
+        });
+        return;
+      }
       if (card.querySelector('.kpi-chart')) return;
       const path = paths[index % paths.length];
       const label = card.querySelector('.kpi-baseline')?.textContent?.trim() || card.querySelector('.kpi-value')?.textContent?.trim() || '';

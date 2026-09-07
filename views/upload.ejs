@@ -17,18 +17,30 @@
   </div>
 
   <main class="container upload-shell">
-    <div class="upload-hero">
-      <span class="eyebrow">Studio Pulse</span>
-      <h1>Performance Report <span class="accent">Generator</span></h1>
-      <p class="subtitle">Drop all your CSV files at once into the common upload section below. Files will be automatically identified by keyword!</p>
-      
-      <div class="upload-actions">
-        <button type="button" class="btn btn-primary" id="load-july-reports">Load July 2026 Reports</button>
+    <nav class="upload-nav" aria-label="Report tools">
+      <a class="upload-brand" href="/" aria-label="Studio Pulse home">
+        <span class="upload-brand-mark" aria-hidden="true"><span></span></span>
+        <span>Studio Pulse<small>Performance intelligence</small></span>
+      </a>
+      <div class="upload-nav-actions">
+        <button type="button" class="icon-button" id="upload-theme-toggle" aria-label="Switch to dark theme" title="Change theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        </button>
+        <button type="button" class="btn btn-secondary btn-compact" id="load-july-reports">View July reports</button>
       </div>
+    </nav>
 
-      <div style="margin-top:12px; display:flex; gap:8px; justify-content:center; align-items:center;">
-        <input type="text" id="join-code" placeholder="6-digit code" maxlength="6" style="padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg-card); color:var(--text); font-family:var(--font-mono); font-size:16px; text-align:center; width:140px; letter-spacing:2px;" />
-        <button type="button" class="btn btn-secondary" onclick="const code = document.getElementById('join-code').value.trim(); if(code.length === 6) window.location.href = '/join/' + code;">Join Session</button>
+    <div class="upload-hero">
+      <span class="eyebrow">Monthly reporting workspace</span>
+      <h1>Turn studio data into a <span class="accent">clear performance story.</span></h1>
+      <p class="subtitle">Upload the seven source exports together. Studio Pulse identifies each file, validates the set, and prepares your report.</p>
+      <div class="join-session-panel">
+        <div class="join-session-copy"><strong>Joining a live review?</strong><span>Enter the six-digit presenter code.</span></div>
+        <div class="join-session-controls">
+          <label class="sr-only" for="join-code">Six-digit session code</label>
+          <input type="text" id="join-code" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+          <button type="button" class="btn btn-secondary btn-compact" id="join-session-button">Join session</button>
+        </div>
       </div>
     </div>
 
@@ -39,21 +51,21 @@
     <% } %>
 
     <!-- Saved Upload Sessions Section -->
-    <div id="saved-sessions-wrapper" style="display:none; margin-bottom: 32px;">
-      <div class="slots-header" style="margin-bottom: 12px;">
-        <span>📂 Previous Upload Sessions (Persisted)</span>
+    <div id="saved-sessions-wrapper" class="saved-sessions-wrapper" hidden>
+      <div class="slots-header">
+        <span>Previous upload sessions</span>
         <span class="slots-subtitle">Click any session to reload report options without re-uploading</span>
       </div>
-      <div id="saved-sessions-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;"></div>
+      <div id="saved-sessions-grid" class="saved-sessions-grid"></div>
     </div>
 
     <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" novalidate>
       <div class="master-dropzone" id="master-dropzone" tabindex="0">
-        <div class="master-dz-icon">📂</div>
+        <div class="master-dz-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 8 5-5 5 5"></path><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"></path></svg></div>
         <div class="master-dz-body">
-          <div class="master-dz-title">Drop all CSV files here</div>
-          <div class="master-dz-sub">Select multiple CSV files at once — we'll automatically identify Sales, Sessions, Checkins, Leads, New/Trials, Lapsed &amp; Active based on keywords in the filenames.</div>
-          <div class="master-dz-badge" id="master-dz-status">Click or drag &amp; drop CSV files</div>
+          <div class="master-dz-title">Drop your report exports here</div>
+          <div class="master-dz-sub">Select all seven CSV files at once. We’ll identify and assign each export automatically.</div>
+          <div class="master-dz-badge" id="master-dz-status">Choose files or drag them into this area</div>
         </div>
         <input type="file" id="master-file-input" multiple accept=".csv" />
       </div>
@@ -64,10 +76,9 @@
       </div>
 
       <div class="dropzones" id="dropzones">
-        <% const icons = { sales: '💳', sessions: '🗓️', checkins: '✅', leads: '📞', new: '✨', lapsed: '📉', active: '👥' };
-           slots.forEach(function(slot, i) { %>
+        <% slots.forEach(function(slot, i) { %>
           <label class="dropzone" data-field="<%= slot.field %>" style="--i: <%= i %>" tabindex="0">
-            <div class="dz-icon"><%= icons[slot.field] || '📄' %></div>
+            <div class="dz-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8M8 17h6"></path></svg></div>
             <div class="dz-body">
               <span class="dz-label"><%= slot.label %></span>
               <span class="dz-file">CSV file &middot; drag or click</span>
@@ -133,6 +144,8 @@
     const masterZone = document.getElementById('master-dropzone');
     const masterInput = document.getElementById('master-file-input');
     const masterStatus = document.getElementById('master-dz-status');
+    const themeToggle = document.getElementById('upload-theme-toggle');
+    const joinSessionButton = document.getElementById('join-session-button');
 
     const KEYWORD_MAP = {
       sales: ['sale', 'sales', 'revenue', 'transaction', 'invoice', 'billing', 'payment', 'gross', 'net'],
@@ -163,6 +176,24 @@
     const julyPanels = Array.from(document.querySelectorAll('[data-report-panel]'));
     let julyReportsLoaded = false;
     let julySwitcherTimer = null;
+
+    const savedTheme = localStorage.getItem('kh-theme') || 'light';
+    applyUploadTheme(savedTheme);
+    themeToggle.addEventListener('click', () => {
+      const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      applyUploadTheme(nextTheme);
+      localStorage.setItem('kh-theme', nextTheme);
+    });
+    function applyUploadTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      const isDark = theme === 'dark';
+      themeToggle.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+      themeToggle.classList.toggle('is-dark', isDark);
+    }
+    joinSessionButton.addEventListener('click', () => {
+      const code = document.getElementById('join-code').value.trim();
+      if (/^\d{6}$/.test(code)) window.location.href = '/join/' + code;
+    });
 
     julyLoadBtn.addEventListener('click', () => {
       const activeMode = (julyTabs.find((tab) => tab.getAttribute('aria-pressed') === 'true') || julyTabs[0])?.dataset.reportMode || 'kwality';
@@ -256,13 +287,13 @@
     function refreshMasterStatus() {
       const filled = dropzones.filter((z) => z.classList.contains('filled')).length;
       if (filled === total) {
-        masterStatus.textContent = '🎉 All 7 required CSV slots auto-matched!';
+        masterStatus.textContent = 'All 7 required CSV files are ready';
         masterStatus.classList.add('all-matched');
       } else if (filled > 0) {
-        masterStatus.textContent = `✓ ${filled} of 7 slots assigned. Please drop or pick missing files below.`;
+        masterStatus.textContent = `${filled} of 7 files assigned — add the remaining exports below`;
         masterStatus.classList.remove('all-matched');
       } else {
-        masterStatus.textContent = 'Click or drag & drop CSV files';
+        masterStatus.textContent = 'Choose files or drag them into this area';
         masterStatus.classList.remove('all-matched');
       }
     }
@@ -437,21 +468,21 @@
         if (validSessions.length > 0) {
           const wrapper = document.getElementById('saved-sessions-wrapper');
           const grid = document.getElementById('saved-sessions-grid');
-          wrapper.style.display = 'block';
+          wrapper.hidden = false;
           grid.innerHTML = validSessions.map(s => {
             const locs = (s.locNames && s.locNames.length > 0) ? s.locNames.join(', ') : 'Studio Session';
             const months = (s.months && s.months.length > 0) ? `${s.months[s.months.length-1]} to ${s.months[0]}` : 'Multi-month';
             const dateStr = s.created ? new Date(s.created).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
             return `
-              <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <article class="saved-session-card">
                 <div>
-                  <div style="font-weight: 700; color: var(--text); font-size: 15px;">🏢 ${locs}</div>
-                  <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">🗓️ ${months} &middot; ${dateStr}</div>
+                  <div class="saved-session-title">${locs}</div>
+                  <div class="saved-session-meta">${months} &middot; ${dateStr}</div>
                 </div>
-                <button type="button" class="btn btn-secondary" style="font-size: 13px; padding: 6px 12px; align-self: flex-start; margin-top: 4px;" onclick="window.location.href='/select?sessionId=${encodeURIComponent(s.sessionId)}'">
-                  Reload Session &rarr;
+                <button type="button" class="btn btn-secondary btn-compact" onclick="window.location.href='/select?sessionId=${encodeURIComponent(s.sessionId)}'">
+                  Reopen session <span aria-hidden="true">&rarr;</span>
                 </button>
-              </div>`;
+              </article>`;
           }).join('');
         }
       } catch (e) {}

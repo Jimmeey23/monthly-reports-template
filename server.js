@@ -716,8 +716,72 @@ app.get('/api/saved-sessions', (req, res) => {
   res.json({ sessions: manifest });
 });
 
+function previousMonthDetails(referenceDate = new Date()) {
+  const date = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, 1);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return {
+    key: `${year}-${month}`,
+    label: date.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+  };
+}
+
+app.get('/previous-month-reports', (req, res) => {
+  const previousMonth = previousMonthDetails();
+  const sessionSummary = loadManifest().find((item) =>
+    item && item.sessionId && Array.isArray(item.months) && item.months.includes(previousMonth.key)
+  );
+
+  if (!sessionSummary) {
+    return res.status(404).send(`No persisted dataset contains ${previousMonth.label}. Upload the latest exports first.`);
+  }
+
+  const session = getSession(sessionSummary.sessionId);
+  if (!session) return res.status(404).send('The previous-month upload session could not be loaded.');
+
+  const preferredStudioKeys = ['kwality', 'supreme'];
+  const locKeys = preferredStudioKeys.filter((key) => session.locations && session.locations[key]);
+  if (!locKeys.length) return res.status(404).send('No studios were detected in the previous-month dataset.');
+
+  const safeMonth = previousMonth.label.replace(/\s+/g, '_');
+  const outputFilename = `All_Studios_Performance_Report_${safeMonth}.html`;
+  const outputPath = path.join(session.dir, outputFilename);
+
+  const openReport = () => res.redirect(`/report/${session.sessionId}/${encodeURIComponent(outputFilename)}`);
+  if (fs.existsSync(outputPath)) return openReport();
+
+  runPythonScript(
+    GEN_REPORT_SCRIPT,
+    [session.analysisPath, locKeys.join(','), previousMonth.key, outputPath],
+    (err, stdout, stderr) => {
+      if (err) {
+        console.error(stderr || err.message);
+        return res.status(500).send(`Previous-month report generation failed: ${stderr || err.message}`);
+      }
+
+      try {
+        const html = fs.readFileSync(outputPath, 'utf8');
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+        const host = req.headers.host || `localhost:${activePort}`;
+        const bootstrap = `<script>window.__REPORT_CTX__ = ${JSON.stringify({
+          sessionId: session.sessionId,
+          loc: locKeys[0],
+          month: previousMonth.key,
+          filename: outputFilename,
+          serverUrl: process.env.SERVER_URL || `${protocol}://${host}`,
+        })};</script>\n<script src="/socket.io/socket.io.js"></script>\n<script src="/report-client.js"></script>`;
+        fs.writeFileSync(outputPath, html.replace('<!-- REPORT_CLIENT_PLACEHOLDER -->', bootstrap));
+      } catch (spliceErr) {
+        console.error('Could not inject previous-month report client:', spliceErr.message);
+      }
+
+      openReport();
+    }
+  );
+});
+
 app.get('/', (req, res) => {
-  res.render('upload', { slots: CSV_SLOTS, error: null });
+  res.render('upload', { slots: CSV_SLOTS, error: null, previousMonth: previousMonthDetails() });
 });
 
 app.get('/select', (req, res) => {

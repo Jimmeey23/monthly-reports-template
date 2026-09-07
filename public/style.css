@@ -187,7 +187,8 @@ h1 {
   flex-wrap: wrap;
 }
 
-#load-july-reports {
+#load-july-reports,
+#load-previous-month-reports {
   min-height: 32px;
   padding: 7px 12px;
   border-radius: 999px;
@@ -1249,7 +1250,7 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
 @media (max-width: 700px) {
   .upload-page .upload-shell { padding: 12px 16px 48px; }
   .upload-nav { min-height: 58px; }
-  .upload-brand small, .upload-nav #load-july-reports { display: none; }
+  .upload-brand small, .upload-nav #load-july-reports, .upload-nav #load-previous-month-reports { display: none; }
   .upload-page .upload-hero { margin-top: 48px; }
   .upload-page .upload-hero h1 { font-size: clamp(2.5rem, 13vw, 4rem); }
   .join-session-panel { align-items: flex-start; flex-direction: column; }

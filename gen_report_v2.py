@@ -7,6 +7,7 @@ Based on the May 2026 reference report structure with 7 sections.
 import calendar
 import json
 import os
+import re
 import sys
 from datetime import datetime
 
@@ -853,27 +854,38 @@ def kpi_card(label, value, sub, mom, yoy, baseline_text, higher_is_better=True, 
         unit = ' percentage points' if is_pp else ''
         return f"Performance {direction} by {change}{unit} versus {period}. {implication}"
 
+    def change_bar_width(change):
+        match = re.search(r'-?[\d.]+', str(change))
+        if not match:
+            return 8
+        return min(100, max(8, abs(float(match.group())) * 2.4))
+
+    mom_width = change_bar_width(mom)
+    yoy_width = change_bar_width(yoy)
+
     return f'''        <article class="kpi-card" role="button" tabindex="0" aria-pressed="false" aria-label="{label}: {value}. Flip for growth details">
           <div class="kpi-card-inner">
             <div class="kpi-card-face kpi-card-front">
-              <div class="kpi-card-kicker">Current period</div>
               <div class="kpi-label">{label}</div>
               <div class="kpi-value">{value}</div>
-              <div class="kpi-sub">{sub}</div>
-              <div class="kpi-card-action">View growth analysis <span aria-hidden="true">&rarr;</span></div>
+              <div class="kpi-mini-chart" role="img" aria-label="{label} comparison chart">
+                <div class="kpi-chart-row"><span>MoM</span><i class="{mom_b}" style="--bar:{mom_width:.0f}%"></i></div>
+                <div class="kpi-chart-row"><span>YoY</span><i class="{yoy_b if yoy != 'n/a' else 'neutral'}" style="--bar:{yoy_width:.0f}%"></i></div>
+              </div>
+              <div class="kpi-card-action">Details <span aria-hidden="true">&rarr;</span></div>
             </div>
             <div class="kpi-card-face kpi-card-back">
-              <div class="kpi-back-header"><span>{label}</span><span class="kpi-back-period">Growth view</span></div>
+              <div class="kpi-back-header"><span>{label}</span></div>
               <div class="kpi-comparison">
-                <div class="kpi-comparison-top"><span>Month on month</span><span class="badge {mom_b}">{mom}</span></div>
-                <p>{comparison_description('the previous month', mom)}</p>
+                <div class="kpi-comparison-top"><span>MoM</span><strong class="{mom_b}">{mom}</strong></div>
+                <p>{comparison_description('last month', mom)}</p>
               </div>
               <div class="kpi-comparison">
-                <div class="kpi-comparison-top"><span>Year on year</span><span class="badge {yoy_b if yoy != 'n/a' else 'neutral'}">{yoy}</span></div>
-                <p>{comparison_description('the same month last year', yoy)}</p>
+                <div class="kpi-comparison-top"><span>YoY</span><strong class="{yoy_b if yoy != 'n/a' else 'neutral'}">{yoy}</strong></div>
+                <p>{comparison_description('last year', yoy)}</p>
               </div>
-              <div class="kpi-benchmark"><span>Benchmark context</span><strong>{baseline_text}</strong></div>
-              <div class="kpi-card-action">Return to current value <span aria-hidden="true">&larr;</span></div>
+              <div class="kpi-benchmark" title="{baseline_text}"><span>Benchmark</span><strong>{baseline_text}</strong></div>
+              <div class="kpi-card-action">Back <span aria-hidden="true">&larr;</span></div>
             </div>
           </div>
         </article>'''

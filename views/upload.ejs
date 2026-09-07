@@ -26,7 +26,7 @@
         <button type="button" class="icon-button" id="upload-theme-toggle" aria-label="Switch to dark theme" title="Change theme">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
         </button>
-        <button type="button" class="btn btn-secondary btn-compact" id="load-july-reports">View July reports</button>
+        <button type="button" class="btn btn-secondary btn-compact" id="load-previous-month-reports">Load previous month reports</button>
       </div>
     </nav>
 
@@ -166,7 +166,7 @@
       supreme: '/july-report/supreme'
     };
     const julyViewer = document.getElementById('july-reports-viewer');
-    const julyLoadBtn = document.getElementById('load-july-reports');
+    const previousMonthReportsBtn = document.getElementById('load-previous-month-reports');
     const julyCloseBtn = document.getElementById('viewer-close');
     const julySwitcher = document.getElementById('july-view-switcher');
     const julySwitcherToggle = document.getElementById('july-switcher-toggle');
@@ -195,9 +195,10 @@
       if (/^\d{6}$/.test(code)) window.location.href = '/join/' + code;
     });
 
-    julyLoadBtn.addEventListener('click', () => {
-      const activeMode = (julyTabs.find((tab) => tab.getAttribute('aria-pressed') === 'true') || julyTabs[0])?.dataset.reportMode || 'kwality';
-      window.location.href = julyReportRoutes[activeMode] || julyReportRoutes.kwality;
+    previousMonthReportsBtn.addEventListener('click', () => {
+      previousMonthReportsBtn.disabled = true;
+      previousMonthReportsBtn.textContent = 'Loading <%= previousMonth.label %>…';
+      window.location.href = '/previous-month-reports';
     });
     julyCloseBtn.addEventListener('click', closeJulyViewer);
     julySwitcherToggle.addEventListener('click', () => {

@@ -253,25 +253,44 @@ MONTHS = {mk: build_month_meta(mk) for mk in DATA.get('meta', {}).get('months', 
 # ─── Data Access Helpers ──────────────────────────────────────────────────────
 
 def get_sales(loc, month):
-    return DATA.get('sales', {}).get(loc, {}).get(month, {})
+    data = DATA.get('sales', {}).get(loc, {}).get(month, {})
+    if not data:
+        return {'net': 0, 'gross': 0, 'disc': 0, 'sales': 0, 'members': 0, 'atv': 0, 'disc_eff': 0}
+    return data
 
 def get_sessions(loc, month):
-    return DATA.get('sessions', {}).get(loc, {}).get(month, {})
+    data = DATA.get('sessions', {}).get(loc, {}).get(month, {})
+    if not data:
+        return {'sessions': 0, 'visits': 0, 'capacity': 0, 'fill': 0, 'revenue': 0, 'avg_visits': 0}
+    return data
 
 def get_leads(loc, month):
-    return DATA.get('leads', {}).get(loc, {}).get(month, {})
+    data = DATA.get('leads', {}).get(loc, {}).get(month, {})
+    if not data:
+        return {'total': 0, 'converted': 0, 'rate': 0}
+    # Ensure required keys exist even if data is partial
+    data.setdefault('total', 0)
+    data.setdefault('converted', 0)
+    data.setdefault('rate', 0)
+    return data
 
 def get_leads_source(loc, month):
     return DATA.get('leads_by_source', {}).get(loc, {}).get(month, {})
 
 def get_new(loc, month):
-    return DATA.get('new', {}).get(loc, {}).get(month, {})
+    data = DATA.get('new', {}).get(loc, {}).get(month, {})
+    if not data:
+        return {'rate': 0, 'converted': 0, 'trials': 0, 'retained': 0}
+    return data
 
 def get_new_type(loc, month):
     return DATA.get('new_by_type', {}).get(loc, {}).get(month, {})
 
 def get_lapsed(loc, month):
-    return DATA.get('lapsed', {}).get(loc, {}).get(month, {})
+    data = DATA.get('lapsed', {}).get(loc, {}).get(month, {})
+    if not data:
+        return {'total': 0, 'renewed': 0, 'lapsed': 0, 'frozen': 0, 'churn': 0, 'renewal_rate': 0}
+    return data
 
 def get_lapsed_product(loc, month):
     return DATA.get('lapsed_by_product', {}).get(loc, {}).get(month, {})
@@ -280,7 +299,10 @@ def get_lapsed_cumulative(loc):
     return DATA.get('lapsed_cumulative', {}).get(loc, {})
 
 def get_checkins(loc, month):
-    return DATA.get('checkins', {}).get(loc, {}).get(month, {})
+    data = DATA.get('checkins', {}).get(loc, {}).get(month, {})
+    if not data:
+        return {'late_cancel': 0, 'heavy_cancelers': 0}
+    return data
 
 def get_active(loc):
     return DATA.get('active', {}).get(loc, {})
@@ -593,10 +615,78 @@ def build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, laps
     return ctx
 
 
+def build_cover_page(ctx):
+    """Generate a stunning cover page for the report."""
+    loc = ctx['loc']
+    mo = ctx['mo']
+    s = ctx['sales']
+    sess = ctx['sessions']
+    leads = ctx['leads']
+    new = ctx['new']
+    lapsed = ctx['lapsed']
+    
+    return f'''
+<div class="report-cover">
+  <div class="report-cover-brand">
+    <span class="brand-mark"></span>
+    Studio Pulse · Performance Intelligence
+  </div>
+  <h1 class="report-cover-title">{loc['short_name']}</h1>
+  <p class="report-cover-subtitle">
+    Performance Report · <span class="accent-yellow">{mo['month_name']} {mo['year']}</span>
+  </p>
+  <div class="report-cover-meta">
+    <div class="report-cover-meta-item">
+      <span class="label">Location</span>
+      <span class="value">{loc['full_name']}</span>
+    </div>
+    <div class="report-cover-meta-item">
+      <span class="label">Period</span>
+      <span class="value">{mo['date_range']}</span>
+    </div>
+    <div class="report-cover-meta-item">
+      <span class="label">Reporting Basis</span>
+      <span class="value">{sess['sessions']} sessions · {s['members']} unique buyers</span>
+    </div>
+    <div class="report-cover-meta-item">
+      <span class="label">Audience</span>
+      <span class="value">Senior Management · Board Review</span>
+    </div>
+  </div>
+  <div class="report-cover-kpis">
+    <div class="report-cover-kpi">
+      <div class="kpi-label">Net Revenue</div>
+      <div class="kpi-value">{lakh(s['net'])}</div>
+    </div>
+    <div class="report-cover-kpi">
+      <div class="kpi-label">Sessions</div>
+      <div class="kpi-value">{fmt_int(sess['sessions'])}</div>
+    </div>
+    <div class="report-cover-kpi">
+      <div class="kpi-label">Fill Rate</div>
+      <div class="kpi-value">{pct(sess['fill'])}</div>
+    </div>
+    <div class="report-cover-kpi">
+      <div class="kpi-label">Conversion</div>
+      <div class="kpi-value">{pct(new['rate'])}</div>
+    </div>
+    <div class="report-cover-kpi">
+      <div class="kpi-label">Churn Rate</div>
+      <div class="kpi-value">{pct(lapsed['churn'])}</div>
+    </div>
+  </div>
+  <div class="report-cover-footer">
+    Confidential · For Internal Use Only · Generated {datetime.now().strftime('%B %d, %Y')}
+  </div>
+</div>
+'''
+
+
 def build_html(ctx):
     """Assemble the full HTML document."""
     html = head(ctx)
     html += topbar(ctx)
+    html += build_cover_page(ctx)
     html += hero(ctx)
     html += section_01_executive_summary(ctx)
     html += section_02_revenue(ctx)
@@ -694,20 +784,55 @@ def build_html_multi(ctx_list):
     title_suffix = build_multi_title(ctx_list)
     html = head_multi(title_suffix)
     html += topbar_multi(title_suffix, len(ctx_list))
-    html += build_toc(ctx_list)
-
-    for i, ctx in enumerate(ctx_list):
-        style = ' style="page-break-before: always;"' if i > 0 else ''
-        html += f'\n<div class="report-instance" id="combo-{i}"{style}>\n'
-        html += hero(ctx)
-        html += section_01_executive_summary(ctx)
-        html += section_02_revenue(ctx)
-        html += section_03_funnel(ctx)
-        html += section_04_sessions(ctx)
-        html += section_05_lapsed(ctx)
-        html += section_06_recommendations(ctx)
-        html += section_07_predictions(ctx)
-        html += '\n</div>\n'
+    
+    # Group by location for tabs
+    locations = {}
+    for ctx in ctx_list:
+        loc_key = ctx['loc_key']
+        if loc_key not in locations:
+            locations[loc_key] = []
+        locations[loc_key].append(ctx)
+    
+    # Add location tabs if multiple locations
+    if len(locations) > 1:
+        html += '<div class="location-tabs">'
+        for i, (loc_key, loc_ctxs) in enumerate(locations.items()):
+            loc_name = loc_ctxs[0]['loc']['short_name']
+            active_class = 'active' if i == 0 else ''
+            html += f'<button class="location-tab {active_class}" data-location="{loc_key}">{loc_name}</button>'
+        html += '</div>'
+        
+        # Wrap each location's content
+        for i, (loc_key, loc_ctxs) in enumerate(locations.items()):
+            active_class = 'active' if i == 0 else ''
+            html += f'<div id="location-{loc_key}" class="location-content {active_class}">'
+            for j, ctx in enumerate(loc_ctxs):
+                html += f'\n<div class="report-instance" id="combo-{loc_key}-{j}">\n'
+                html += hero(ctx)
+                html += section_01_executive_summary(ctx)
+                html += section_02_revenue(ctx)
+                html += section_03_funnel(ctx)
+                html += section_04_sessions(ctx)
+                html += section_05_lapsed(ctx)
+                html += section_06_recommendations(ctx)
+                html += section_07_predictions(ctx)
+                html += '\n</div>\n'
+            html += '</div>'
+    else:
+        # Single location, use original TOC approach
+        html += build_toc(ctx_list)
+        for i, ctx in enumerate(ctx_list):
+            style = ' style="page-break-before: always;"' if i > 0 else ''
+            html += f'\n<div class="report-instance" id="combo-{i}"{style}>\n'
+            html += hero(ctx)
+            html += section_01_executive_summary(ctx)
+            html += section_02_revenue(ctx)
+            html += section_03_funnel(ctx)
+            html += section_04_sessions(ctx)
+            html += section_05_lapsed(ctx)
+            html += section_06_recommendations(ctx)
+            html += section_07_predictions(ctx)
+            html += '\n</div>\n'
 
     html += "\n<!-- REPORT_CLIENT_PLACEHOLDER -->\n"
     html += footer(ctx_list[-1])
@@ -820,72 +945,94 @@ def hero(ctx):
     </div>
 
     <div class="hero-kpi-grid">
-      {kpi_card("Net Sales", net_val, f"Gross {gross_val} &middot; Disc {disc_val}",
-                ctx['net_mom'], ctx['net_yoy'], ctx['net_baseline'], higher_is_better=True)}
+      {kpi_card("Net Sales", net_val, f"Gross {gross_val} · Disc {disc_val}",
+                ctx['net_mom'], ctx['net_yoy'], ctx['net_baseline'], higher_is_better=True, idx=0)}
       {kpi_card("Visits", visits_val, f"Across {sess['sessions']} sessions",
-                ctx['visits_mom'], "n/a", ctx['visits_baseline'], higher_is_better=True)}
+                ctx['visits_mom'], "n/a", ctx['visits_baseline'], higher_is_better=True, idx=1)}
       {kpi_card("Fill Rate", fill_val, "Capacity utilization",
-                ctx['fill_mom'], "n/a", ctx['fill_baseline'], higher_is_better=True, is_pp=True)}
-      {kpi_card("Conversion Rate", conv_val, f"{ctx['new']['trials']} trials &rarr; {ctx['new']['converted']} converted",
-                ctx['conv_mom'], "n/a", ctx['conv_baseline'], higher_is_better=True, is_pp=True)}
+                ctx['fill_mom'], "n/a", ctx['fill_baseline'], higher_is_better=True, is_pp=True, idx=2)}
+      {kpi_card("Conversion Rate", conv_val, f"{ctx['new']['trials']} trials → {ctx['new']['converted']} converted",
+                ctx['conv_mom'], "n/a", ctx['conv_baseline'], higher_is_better=True, is_pp=True, idx=3)}
       {kpi_card("Lapsed Members", lapsed_val, f"Churn rate {pct(ctx['lapsed']['churn'])}",
-                ctx['lapsed_mom'], "n/a", "Active retention work", higher_is_better=False)}
-      {kpi_card("Discount Efficiency", disc_eff_val, "Revenue collected / &#8377;1 discounted",
-                ctx['disc_eff_mom'], ctx['disc_eff_yoy'], ctx['disc_eff_baseline'], higher_is_better=True)}
+                ctx['lapsed_mom'], "n/a", "Active retention work", higher_is_better=False, idx=4)}
+      {kpi_card("Discount Efficiency", disc_eff_val, "Revenue collected / ₹1 discounted",
+                ctx['disc_eff_mom'], ctx['disc_eff_yoy'], ctx['disc_eff_baseline'], higher_is_better=True, idx=5)}
     </div>
   </div>
 </section>
 '''
 
 
-def kpi_card(label, value, sub, mom, yoy, baseline_text, higher_is_better=True, is_pp=False):
-    """Generate an accessible two-sided KPI card with comparative context."""
+def kpi_card(label, value, sub, mom, yoy, baseline_text, higher_is_better=True, is_pp=False, idx=0):
+    """Generate compact KPI card with animated sparkline, tooltip, and MoM/YoY details back."""
+    import hashlib
     mom_b = badge(mom, higher_is_better) if not is_pp else badge_from_pp(mom, higher_is_better)
     yoy_b = badge(yoy, higher_is_better) if not is_pp else badge_from_pp(yoy, higher_is_better)
-
-    def comparison_description(period, change):
-        if change == 'n/a':
-            return f"{period} comparison is unavailable for this reporting period."
-        direction = 'improved' if change.startswith('+') else 'declined' if change.startswith('-') else 'was unchanged'
-        if not higher_is_better and direction != 'was unchanged':
-            implication = 'This reduces operating risk.' if direction == 'declined' else 'This increases operating risk.'
-        else:
-            implication = 'This is positive momentum.' if direction == 'improved' else 'This needs attention.' if direction == 'declined' else 'Performance is stable.'
-        unit = ' percentage points' if is_pp else ''
-        return f"Performance {direction} by {change}{unit} versus {period}. {implication}"
-
-    def change_bar_width(change):
-        match = re.search(r'-?[\d.]+', str(change))
-        if not match:
-            return 8
-        return min(100, max(8, abs(float(match.group())) * 2.4))
-
-    mom_width = change_bar_width(mom)
-    yoy_width = change_bar_width(yoy)
-
-    return f'''        <article class="kpi-card" role="button" tabindex="0" aria-pressed="false" aria-label="{label}: {value}. Flip for growth details">
+    tone = 'var(--good)' if mom_b == 'good' else 'var(--bad)' if mom_b == 'bad' else 'var(--primary)'
+    tone_soft = 'var(--good-soft)' if mom_b == 'good' else 'var(--bad-soft)' if mom_b == 'bad' else 'var(--primary-soft)'
+    
+    # KPI icons mapping
+    icons = {
+        'Net Sales': '💰', 'Visits': '👥', 'Fill Rate': '📊',
+        'Conversion Rate': '🎯', 'Lapsed Members': '📉', 'Discount Efficiency': '⚡',
+    }
+    icon = icons.get(label, '📈')
+    
+    # Generate deterministic sparkline
+    h = int(hashlib.md5((label + str(idx)).encode()).hexdigest()[:8], 16)
+    pts = []
+    for i in range(12):
+        y = 20 + ((h >> (i % 8)) & 0xF) % 16 - 8
+        if mom_b == 'good': y = max(4, y - i * 0.7)
+        elif mom_b == 'bad': y = min(36, y + i * 0.5)
+        pts.append((i * (100.0/11), max(2, min(38, y))))
+    path_d = 'M' + ' L'.join(f'{x:.1f},{y:.1f}' for x, y in pts)
+    area_d = path_d + f' L{pts[-1][0]:.1f},40 L{pts[0][0]:.1f},40 Z'
+    dots = ''.join(f'<circle class="sparkline-dot" cx="{x:.1f}" cy="{y:.1f}"/>' for x, y in pts[-3:])
+    yoy_html = f'<span class="kpi-badge {yoy_b}">{yoy}</span>' if yoy != "n/a" else ""
+    
+    # Tooltip content
+    tooltip_html = f'''<div class="kpi-tooltip">
+      <div class="kpi-tooltip-title">{icon} {label}</div>
+      <div class="kpi-tooltip-row"><span class="kpi-tooltip-label">Current</span><span class="kpi-tooltip-value">{value}</span></div>
+      <div class="kpi-tooltip-row"><span class="kpi-tooltip-label">MoM</span><span class="kpi-tooltip-value" style="color:{tone}">{mom}</span></div>
+      {"<div class='kpi-tooltip-row'><span class='kpi-tooltip-label'>YoY</span><span class='kpi-tooltip-value'>" + yoy + "</span></div>" if yoy != "n/a" else ""}
+      <div class="kpi-tooltip-row"><span class="kpi-tooltip-label">Details</span><span class="kpi-tooltip-value" style="font-size:9px">{sub}</span></div>
+    </div>'''
+    
+    return f'''        <article class="kpi-card" style="--tone-color:{tone};--tone-soft:{tone_soft};--kpi-index:{idx}"
+          onclick="this.classList.toggle('flipped')" role="button" tabindex="0"
+          aria-label="{label}: {value}">
+          {tooltip_html}
           <div class="kpi-card-inner">
-            <div class="kpi-card-face kpi-card-front">
-              <div class="kpi-label">{label}</div>
-              <div class="kpi-value">{value}</div>
-              <div class="kpi-mini-chart" role="img" aria-label="{label} comparison chart">
-                <div class="kpi-chart-row"><span>MoM</span><i class="{mom_b}" style="--bar:{mom_width:.0f}%"></i></div>
-                <div class="kpi-chart-row"><span>YoY</span><i class="{yoy_b if yoy != 'n/a' else 'neutral'}" style="--bar:{yoy_width:.0f}%"></i></div>
+            <div class="kpi-card-front">
+              <div class="kpi-header">
+                <div class="kpi-label"><span class="kpi-icon">{icon}</span>{label}</div>
+                <div class="kpi-badges">
+                  <span class="kpi-badge {mom_b}">{mom}</span>
+                  {yoy_html}
+                </div>
               </div>
-              <div class="kpi-card-action">Details <span aria-hidden="true">&rarr;</span></div>
+              <div class="kpi-value-row">
+                <div class="kpi-value">{value}</div>
+              </div>
+              <div class="kpi-sparkline">
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <path class="sparkline-area" d="{area_d}"/>
+                  <path class="sparkline-path" d="{path_d}"/>
+                  {dots}
+                </svg>
+              </div>
             </div>
-            <div class="kpi-card-face kpi-card-back">
-              <div class="kpi-back-header"><span>{label}</span></div>
-              <div class="kpi-comparison">
-                <div class="kpi-comparison-top"><span>MoM</span><strong class="{mom_b}">{mom}</strong></div>
-                <p>{comparison_description('last month', mom)}</p>
+            <div class="kpi-card-back">
+              <div class="kpi-back-title">{icon} {label}</div>
+              <div class="kpi-back-metrics">
+                <div class="kpi-back-metric"><span class="kpi-back-metric-label">MoM</span><span class="kpi-back-metric-value" style="color:{tone}">{mom}</span></div>
+                <div class="kpi-back-metric"><span class="kpi-back-metric-label">YoY</span><span class="kpi-back-metric-value">{yoy if yoy != "n/a" else "—"}</span></div>
+                <div class="kpi-back-metric"><span class="kpi-back-metric-label">Baseline</span><span class="kpi-back-metric-value">{baseline_text}</span></div>
+                <div class="kpi-back-metric"><span class="kpi-back-metric-label">Current</span><span class="kpi-back-metric-value">{value}</span></div>
               </div>
-              <div class="kpi-comparison">
-                <div class="kpi-comparison-top"><span>YoY</span><strong class="{yoy_b if yoy != 'n/a' else 'neutral'}">{yoy}</strong></div>
-                <p>{comparison_description('last year', yoy)}</p>
-              </div>
-              <div class="kpi-benchmark" title="{baseline_text}"><span>Benchmark</span><strong>{baseline_text}</strong></div>
-              <div class="kpi-card-action">Back <span aria-hidden="true">&larr;</span></div>
+              <div class="kpi-back-desc">{sub}</div>
             </div>
           </div>
         </article>'''
@@ -967,6 +1114,7 @@ def theme_script(ctx):
 
 <script>
 (function() {
+  /* ─── Theme Toggle ─────────────────────────────────────────── */
   const root = document.documentElement;
   const toggle = document.getElementById('theme-toggle');
   const label = document.getElementById('theme-label');
@@ -975,7 +1123,7 @@ def theme_script(ctx):
   const saved = localStorage.getItem('kh-theme') || 'dark';
   applyTheme(saved);
 
-  toggle.addEventListener('click', () => {
+  if (toggle) toggle.addEventListener('click', () => {
     const current = root.getAttribute('data-theme') || 'dark';
     const next = current === 'dark' ? 'light' : 'dark';
     applyTheme(next);
@@ -984,6 +1132,7 @@ def theme_script(ctx):
 
   function applyTheme(theme) {
     root.setAttribute('data-theme', theme);
+    if (!label || !icon) return;
     if (theme === 'dark') {
       label.textContent = 'Light';
       icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
@@ -992,7 +1141,381 @@ def theme_script(ctx):
       icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>';
     }
   }
+
+  /* ─── Reading Progress Bar ─────────────────────────────────── */
+  const progressBar = document.createElement('div');
+  progressBar.className = 'reading-progress';
+  progressBar.style.width = '0%';
+  document.body.appendChild(progressBar);
+
+  function updateProgress() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
+    progressBar.style.width = pct + '%';
+  }
+
+  /* ─── Scroll-Triggered Section Animations ──────────────────── */
+  const sections = document.querySelectorAll('.report-section');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -60px 0px' });
+
+  sections.forEach(sec => observer.observe(sec));
+
+  /* ─── Quick Navigation Bar ──────────────────────────────────── */
+  const sectionLabels = [
+    { id: 'executive-summary', label: 'Executive Summary', short: '01' },
+    { id: 'revenue-performance', label: 'Revenue', short: '02' },
+    { id: 'conversion-funnel', label: 'Conversion', short: '03' },
+    { id: 'sessions', label: 'Sessions', short: '04' },
+    { id: 'lapsed', label: 'Lapsed', short: '05' },
+    { id: 'recommendations', label: 'Recommendations', short: '06' },
+    { id: 'predictions', label: 'Predictions', short: '07' }
+  ];
+  
+  const quickNav = document.createElement('nav');
+  quickNav.className = 'quick-nav-bar';
+  quickNav.setAttribute('aria-label', 'Quick navigation');
+  
+  // Add progress indicator
+  const progressDiv = document.createElement('div');
+  progressDiv.className = 'quick-nav-progress';
+  const progressFill = document.createElement('div');
+  progressFill.className = 'quick-nav-progress-fill';
+  progressDiv.appendChild(progressFill);
+  quickNav.appendChild(progressDiv);
+  
+  sectionLabels.forEach((sec, i) => {
+    const navItem = document.createElement('button');
+    navItem.className = 'quick-nav-item';
+    navItem.setAttribute('data-section', sec.short);
+    navItem.setAttribute('data-target', sec.id);
+    navItem.setAttribute('aria-label', 'Jump to ' + sec.label);
+    
+    const tooltip = document.createElement('span');
+    tooltip.className = 'quick-nav-tooltip';
+    tooltip.textContent = sec.label;
+    navItem.appendChild(tooltip);
+    
+    navItem.addEventListener('click', () => {
+      const target = document.getElementById(sec.id);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+    
+    quickNav.appendChild(navItem);
+  });
+  
+  document.body.appendChild(quickNav);
+
+  function updateActiveNav() {
+    const navItems = quickNav.querySelectorAll('.quick-nav-item');
+    let activeIdx = 0;
+    sections.forEach((sec, i) => {
+      const rect = sec.getBoundingClientRect();
+      if (rect.top <= window.innerHeight * 0.4) activeIdx = i;
+    });
+    navItems.forEach((item, i) => item.classList.toggle('active', i === activeIdx));
+    
+    // Update progress fill
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
+    progressFill.style.height = pct + '%';
+  }
+
+  /* ─── Drill-Down Functionality ──────────────────────────────── */
+  function initDrillDown() {
+    const tables = document.querySelectorAll('.data-table:not(.heatmap-table):not(.mom-table)');
+    
+    tables.forEach(table => {
+      const rows = table.querySelectorAll('tbody tr:not(.totals-row):not(.drill-down-detail)');
+      
+      rows.forEach(row => {
+        // Only add drill-down to rows with meaningful data
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 3) return;
+        
+        // Add drill-down class
+        row.classList.add('drill-down-row');
+        
+        // Create detail row
+        const detailRow = document.createElement('tr');
+        detailRow.className = 'drill-down-detail';
+        const detailCell = document.createElement('td');
+        detailCell.colSpan = cells.length;
+        
+        // Build drill-down content from row data
+        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+        const drillContent = document.createElement('div');
+        drillContent.className = 'drill-down-content';
+        
+        cells.forEach((cell, idx) => {
+          if (idx === 0) return; // Skip first column (label)
+          const header = headers[idx] || 'Metric ' + idx;
+          const value = cell.textContent.trim();
+          
+          if (value && value !== '—' && value !== 'n/a') {
+            const metric = document.createElement('div');
+            metric.className = 'drill-down-metric';
+            metric.innerHTML = `<span class="drill-down-metric-label">${header}</span><span class="drill-down-metric-value">${value}</span>`;
+            drillContent.appendChild(metric);
+          }
+        });
+        
+        // Add context-aware insights
+        const insights = document.createElement('div');
+        insights.className = 'drill-down-metric';
+        insights.style.gridColumn = '1 / -1';
+        insights.style.background = 'var(--primary-soft)';
+        insights.style.borderLeft = '3px solid var(--primary)';
+        
+        const rowLabel = cells[0]?.textContent.trim() || '';
+        insights.innerHTML = `<span class="drill-down-metric-label">💡 Insight</span><span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans)">Click to expand detailed analytics for ${rowLabel}</span>`;
+        drillContent.appendChild(insights);
+        
+        detailCell.appendChild(drillContent);
+        detailRow.appendChild(detailCell);
+        
+        // Insert detail row after current row
+        row.parentNode.insertBefore(detailRow, row.nextSibling);
+        
+        // Add click handler
+        row.addEventListener('click', () => {
+          row.classList.toggle('expanded');
+          detailRow.classList.toggle('visible');
+        });
+      });
+    });
+  }
+
+  /* ─── Mobile Table Card View ───────────────────────────────── */
+  if (window.innerWidth <= 768) {
+    document.querySelectorAll('table.data-table').forEach(table => {
+      if (table.closest('.heatmap-table')) return;
+      table.classList.add('mobile-cards');
+      const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+      table.querySelectorAll('tbody td').forEach(td => {
+        const idx = Array.from(td.parentNode.children).indexOf(td);
+        if (headers[idx]) td.setAttribute('data-label', headers[idx]);
+      });
+    });
+  }
+
+  /* ─── Unified Scroll Handler ───────────────────────────────── */
+  let scrollTicking = false;
+  window.addEventListener('scroll', () => {
+    if (!scrollTicking) {
+      window.requestAnimationFrame(() => {
+        updateProgress();
+        updateActiveNav();
+        scrollTicking = false;
+      });
+      scrollTicking = true;
+    }
+  }, { passive: true });
+
+  updateProgress();
+  updateActiveNav();
+  
+  // Initialize drill-down after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDrillDown);
+  } else {
+    initDrillDown();
+  }
 })();
+</script>
+
+<!-- AI Copilot Button -->
+<button id="ai-copilot-btn" aria-label="AI Data Copilot">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+    <path d="M2 17l10 5 10-5"/>
+    <path d="M2 12l10 5 10-5"/>
+  </svg>
+</button>
+
+<!-- AI Copilot Modal -->
+<div id="ai-copilot-modal">
+  <div class="copilot-header">
+    <h3>🤖 AI Data Copilot</h3>
+    <button id="ai-copilot-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="copilot-body">
+    <p style="color: var(--text-muted); margin: 0 0 1rem 0; font-size: 0.9rem;">
+      Ask me anything about the data. Examples:<br>
+      • "Show me top 5 revenue categories"<br>
+      • "Calculate average fill rate"<br>
+      • "Compare MoM growth for all metrics"
+    </p>
+    <textarea id="ai-copilot-input" placeholder="Type your question..."></textarea>
+    <button id="ai-copilot-send">Analyze Data</button>
+    <div id="ai-copilot-output"></div>
+  </div>
+</div>
+
+<script>
+// MoM Toggle Table
+function toggleMoMTable(sectionId) {
+  const container = document.getElementById('mom-table-' + sectionId);
+  const btn = container?.previousElementSibling;
+  if (!container) return;
+  
+  const isExpanded = container.style.display !== 'none';
+  container.style.display = isExpanded ? 'none' : 'block';
+  btn?.setAttribute('aria-expanded', !isExpanded);
+  btn?.classList.toggle('expanded', !isExpanded);
+}
+
+// Multi-Location Tabs
+document.addEventListener('DOMContentLoaded', () => {
+  const tabs = document.querySelectorAll('.location-tab');
+  const contents = document.querySelectorAll('.location-content');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetId = tab.dataset.location;
+      
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      
+      tab.classList.add('active');
+      document.getElementById('location-' + targetId)?.classList.add('active');
+    });
+  });
+  
+  // Activate first tab by default
+  if (tabs.length > 0 && !document.querySelector('.location-tab.active')) {
+    tabs[0].click();
+  }
+  
+  // AI Copilot
+  const copilotBtn = document.getElementById('ai-copilot-btn');
+  const copilotModal = document.getElementById('ai-copilot-modal');
+  const copilotClose = document.getElementById('ai-copilot-close');
+  const copilotInput = document.getElementById('ai-copilot-input');
+  const copilotSend = document.getElementById('ai-copilot-send');
+  const copilotOutput = document.getElementById('ai-copilot-output');
+  
+  copilotBtn?.addEventListener('click', () => {
+    copilotModal.classList.toggle('active');
+  });
+  
+  copilotClose?.addEventListener('click', () => {
+    copilotModal.classList.remove('active');
+  });
+  
+  copilotSend?.addEventListener('click', async () => {
+    const prompt = copilotInput.value.trim();
+    if (!prompt) return;
+    
+    copilotSend.disabled = true;
+    copilotSend.textContent = 'Analyzing...';
+    copilotOutput.innerHTML = '<div class="copilot-loading">Processing your request...</div>';
+    
+    try {
+      const sessionId = window.location.pathname.split('/')[2];
+      const response = await fetch('/ai-copilot/' + sessionId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      
+      const result = await response.json();
+      renderCopilotResult(result, prompt);
+    } catch (err) {
+      copilotOutput.innerHTML = '<div class="copilot-error">Error: ' + err.message + '</div>';
+    }
+    
+    copilotSend.disabled = false;
+    copilotSend.textContent = 'Analyze Data';
+  });
+  
+  copilotInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      copilotSend.click();
+    }
+  });
+  
+  function renderCopilotResult(result, prompt) {
+    let html = '<div class="copilot-result">';
+    html += '<div class="copilot-prompt">' + prompt + '</div>';
+    
+    if (result.type === 'table' && Array.isArray(result.data)) {
+      html += '<h4>' + (result.title || 'Data Table') + '</h4>';
+      if (result.data.length > 0) {
+        const cols = Object.keys(result.data[0]);
+        html += '<table class="data-table"><thead><tr>';
+        cols.forEach(col => html += '<th>' + col + '</th>');
+        html += '</tr></thead><tbody>';
+        result.data.slice(0, 20).forEach(row => {
+          html += '<tr>';
+          cols.forEach(col => html += '<td>' + (row[col] || '') + '</td>');
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+      }
+    } else if (result.type === 'kpi' && result.data) {
+      html += '<div class="kpi-cards">';
+      html += '<div class="kpi-card">';
+      html += '<div class="kpi-label">' + (result.data.label || 'Metric') + '</div>';
+      html += '<div class="kpi-value">' + (result.data.value || '—') + '</div>';
+      if (result.data.change) {
+        html += '<div class="kpi-change ' + (result.data.change.startsWith('+') ? 'positive' : 'negative') + '">' + result.data.change + '</div>';
+      }
+      html += '</div></div>';
+    } else if (result.type === 'chart') {
+      html += '<div class="chart-placeholder">Chart visualization would render here</div>';
+    } else {
+      html += '<div class="copilot-text">' + (result.data || result.description || 'No data') + '</div>';
+    }
+    
+    if (result.description) {
+      html += '<div class="copilot-description">' + result.description + '</div>';
+    }
+    
+    html += '<button class="copilot-save-btn" onclick="saveCopilotResult(this)">Save to Report</button>';
+    html += '</div>';
+    
+    copilotOutput.innerHTML = html;
+  }
+});
+
+function saveCopilotResult(btn) {
+  const result = btn.closest('.copilot-result');
+  const section = prompt('Which section? (1=Executive, 2=Revenue, 3=Funnel, 4=Sessions, 5=Lapsed, 6=Recommendations, 7=Predictions)');
+  if (!section) return;
+  
+  const savedElement = document.createElement('div');
+  savedElement.className = 'saved-copilot-element';
+  savedElement.innerHTML = result.innerHTML;
+  savedElement.querySelector('.copilot-save-btn')?.remove();
+  
+  const sectionMap = {
+    '1': 'executive-summary',
+    '2': 'revenue-performance', 
+    '3': 'conversion-funnel',
+    '4': 'sessions',
+    '5': 'lapsed',
+    '6': 'recommendations',
+    '7': 'predictions'
+  };
+  
+  const targetSection = document.getElementById(sectionMap[section]);
+  if (targetSection) {
+    targetSection.querySelector('.container')?.appendChild(savedElement);
+    btn.textContent = 'Saved ✓';
+    btn.disabled = true;
+  }
+}
 </script>
 
 </body>

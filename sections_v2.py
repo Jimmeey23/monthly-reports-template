@@ -355,10 +355,23 @@ def section_01(ctx):
         f"Discount efficiency is &#8377;{s['disc_eff']:.2f} of revenue collected per &#8377;1 discounted."
     )
     
+    # Build MoM toggle data
+    mom_data = {
+        'Net Sales': {'current': lakh(s['net']), 'mom': ctx['net_mom'], 'yoy': ctx['net_yoy']},
+        'Gross Sales': {'current': lakh(s['gross']), 'mom': ctx['gross_mom'], 'yoy': ctx['gross_yoy']},
+        'Transactions': {'current': fmt_int(s['sales']), 'mom': ctx['sales_count_mom'], 'yoy': 'n/a'},
+        'Fill Rate': {'current': pct(sess['fill']), 'mom': ctx['fill_mom'], 'yoy': 'n/a'},
+        'Conversion Rate': {'current': pct(new['rate']), 'mom': ctx['conv_mom'], 'yoy': 'n/a'},
+        'Churn Rate': {'current': pct(lapsed['churn']), 'mom': ctx['churn_mom'], 'yoy': 'n/a'},
+    }
+    mom_toggle = mom_toggle_table(ctx, mom_data, f'executive-summary{ctx.get("id_suffix", "")}')
+    
     html = f'''
 <section class="report-section" id="executive-summary{ctx.get('id_suffix', '')}">
   <div class="container">
 {section_header(f"01 &middot; Management Pulse &mdash; Growth, Conversion &amp; Risk", title, deck, 1, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+
+{mom_toggle}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -756,10 +769,23 @@ def section_02(ctx):
             f"Discount value of {lakh(s['disc'])} represents {pct(ctx['disc_penetration'])} of gross. "
             f"Payment mix: {', '.join(payment_share_str(payments[:3], s['gross']))}.")
     
+    # Build MoM toggle data
+    mom_data = {
+        'Net Sales': {'current': lakh(s['net']), 'mom': ctx['net_mom'], 'yoy': ctx['net_yoy']},
+        'Gross Sales': {'current': lakh(s['gross']), 'mom': ctx['gross_mom'], 'yoy': ctx['gross_yoy']},
+        'Discount': {'current': lakh(s['disc']), 'mom': ctx['disc_mom'], 'yoy': 'n/a'},
+        'Transactions': {'current': fmt_int(s['sales']), 'mom': ctx['sales_count_mom'], 'yoy': 'n/a'},
+        'ATV': {'current': rupee(s['atv']), 'mom': ctx['atv_mom'], 'yoy': 'n/a'},
+        'Disc Efficiency': {'current': f"₹{s['disc_eff']:.2f}", 'mom': ctx['disc_eff_mom'], 'yoy': ctx['disc_eff_yoy']},
+    }
+    mom_toggle = mom_toggle_table(ctx, mom_data, f'revenue-performance{ctx.get("id_suffix", "")}')
+    
     html = f'''
 <section class="report-section" id="revenue-performance{ctx.get('id_suffix', '')}">
   <div class="container">
 {section_header("02 &middot; Revenue Story &mdash; Mix, Pricing Power &amp; Discount Yield", title, deck, 2, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+
+{mom_toggle}
 
 {subsection("Sales by Category &mdash; revenue mix and unit economics",
     "The category table below holds every metric available &mdash; revenue, units, ATV, share of revenue &mdash; so each line can be evaluated on absolute size and per-unit economics.")}
@@ -896,7 +922,7 @@ def build_category_table(ctx, cats, total_net):
     total_disc = sum(v['disc'] for v in cat_bd_values(cats))
     total_rows = sum(v['rows'] for v in cat_bd_values(cats))
     
-    rows.append(f'''            <tr class="total-row">
+    rows.append(f'''            <tr class="totals-row">
               <td>Total</td>
               <td class="num">{lakh(total_net)}</td>
               <td class="num">{lakh(total_gross)}</td>
@@ -1168,10 +1194,22 @@ def section_03(ctx):
     # Build trial type breakdown
     trial_type_html = build_trial_type_section(ctx, trial_types, trial_count)
     
+    # Build MoM toggle data
+    mom_data = {
+        'Leads': {'current': fmt_int(leads['total']), 'mom': ctx['leads_mom'], 'yoy': 'n/a'},
+        'Trials': {'current': fmt_int(new['trials']), 'mom': ctx['trials_mom'], 'yoy': 'n/a'},
+        'Converted': {'current': fmt_int(new['converted']), 'mom': ctx['converted_mom'], 'yoy': 'n/a'},
+        'Conversion Rate': {'current': pct(new['rate']), 'mom': ctx['conv_mom'], 'yoy': 'n/a'},
+        'Retained': {'current': fmt_int(new['retained']), 'mom': ctx['retained_mom'], 'yoy': 'n/a'},
+    }
+    mom_toggle = mom_toggle_table(ctx, mom_data, f'conversion-funnel{ctx.get("id_suffix", "")}')
+    
     html = f'''
 <section class="report-section" id="conversion-funnel{ctx.get('id_suffix', '')}">
   <div class="container">
 {section_header("03 &middot; Growth Engine &mdash; Lead Quality, Conversion &amp; Retention", title, deck, 3, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+
+{mom_toggle}
 
 {subsection("Funnel at a glance &mdash; stage-by-stage view",
     "The four-stage visual below traces the headline funnel from leads through retention.")}
@@ -1272,7 +1310,7 @@ def build_lead_source_table(ctx, sources_sorted, total_leads):
             </tr>''')
     
     total_conv = sum(v['converted'] for _, v in sources_sorted)
-    rows.append(f'''            <tr class="total-row">
+    rows.append(f'''            <tr class="totals-row">
               <td>Total</td>
               <td class="num">{total_leads}</td>
               <td class="num">{total_conv}</td>
@@ -1418,10 +1456,21 @@ def section_04(ctx):
             f"{best_fill_str} "
             f"{worst_fill_str}")
     
+    # Build MoM toggle data
+    mom_data = {
+        'Sessions': {'current': fmt_int(sess['sessions']), 'mom': ctx['sessions_mom'], 'yoy': 'n/a'},
+        'Visits': {'current': fmt_int(sess['visits']), 'mom': ctx['visits_mom'], 'yoy': 'n/a'},
+        'Fill Rate': {'current': pct(sess['fill']), 'mom': ctx['fill_mom'], 'yoy': 'n/a'},
+        'Revenue': {'current': lakh(sess['revenue']), 'mom': ctx['sess_rev_mom'], 'yoy': 'n/a'},
+    }
+    mom_toggle = mom_toggle_table(ctx, mom_data, f'sessions{ctx.get("id_suffix", "")}')
+    
     html = f'''
 <section class="report-section" id="sessions{ctx.get('id_suffix', '')}">
   <div class="container">
 {section_header("04 &middot; Studio Delivery &mdash; Demand, Capacity &amp; Instructor Impact", title, deck, 4, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+
+{mom_toggle}
 
 {subsection("Format-level view &mdash; Barre, PowerCycle, Strength Lab",
     f"At the format level, the breakdown shows sessions, visits, capacity, revenue, and fill rate for each of the 3 formats: Barre, PowerCycle, and Strength Lab.")}
@@ -1559,10 +1608,11 @@ def build_format_table(ctx, formats_sorted):
     tot_conv_pct = (tot_converted / tot_new * 100) if tot_new else 0
     tot_ret_pct = (tot_retained / tot_new * 100) if tot_new else 0
 
-    rows.append(f'''            <tr class="total-row">
+    avg_total = total_visits / total_sessions if total_sessions else 0
+    rows.append(f'''            <tr class="totals-row">
               <td>Total</td>
               <td class="num">{total_sessions}</td>
-              <td class="num">{total_visits/total_sessions:.1f}</td>
+              <td class="num">{avg_total:.1f}</td>
               <td class="num">{pct(fill_total)}</td>
               <td class="num">{tot_cancels}</td>
               <td class="num">{tot_new}</td>
@@ -1814,6 +1864,7 @@ def build_heatmap_section(ctx):
     
     # Find max visits for color scaling
     max_visits = max(day_time_data.values()) if day_time_data else 1
+    total_visits_all = sum(day_time_data.values()) if day_time_data else 1
     
     # Build heatmap HTML
     insights = []
@@ -1847,18 +1898,35 @@ def build_heatmap_section(ctx):
             else:
                 intensity = v / max_visits if max_visits else 0
                 cls = 'heat-cell'
+                intensity_label = 'Low'
                 if intensity > 0.75:
                     cls += ' hot'
+                    intensity_label = 'Peak'
                 elif intensity > 0.5:
                     cls += ' warm'
+                    intensity_label = 'High'
                 elif intensity > 0.25:
                     cls += ' cool'
+                    intensity_label = 'Moderate'
                 else:
                     cls += ' cold'
+                    intensity_label = 'Low'
                 top_format, top_trainer = day_time_meta.get((day, t), (None, None))
                 sub_bits = [b for b in [top_format, top_trainer] if b]
                 sub_html = f"<span class='heat-sub'>{' &middot; '.join(sub_bits)}</span>" if sub_bits else ""
-                cells += f"<td class='{cls}'>{v}{sub_html}</td>"
+                
+                # Build tooltip
+                pct_share = (v / total_visits_all * 100) if total_visits_all else 0
+                tooltip_html = f"""<div class='heat-cell-tooltip'>
+                    <div class='heat-tooltip-title'>{day} @ {t}</div>
+                    <div class='heat-tooltip-row'><span class='heat-tooltip-label'>Visits</span><span class='heat-tooltip-value'>{v}</span></div>
+                    <div class='heat-tooltip-row'><span class='heat-tooltip-label'>Share</span><span class='heat-tooltip-value'>{pct_share:.1f}%</span></div>
+                    <div class='heat-tooltip-row'><span class='heat-tooltip-label'>Demand</span><span class='heat-tooltip-value'>{intensity_label}</span></div>
+                    {'<div class="heat-tooltip-row"><span class="heat-tooltip-label">Format</span><span class="heat-tooltip-value">' + (top_format or "—") + '</span></div>' if top_format else ''}
+                    {'<div class="heat-tooltip-row"><span class="heat-tooltip-label">Trainer</span><span class="heat-tooltip-value">' + (top_trainer or "—") + '</span></div>' if top_trainer else ''}
+                </div>"""
+                
+                cells += f"<td class='{cls}'>{v}{sub_html}{tooltip_html}</td>"
         body_rows.append(f"            <tr>{cells}</tr>")
 
     return f'''
@@ -1932,10 +2000,22 @@ def section_05(ctx):
             f"{'Renewal rate is improving' if ctx['renewal_mom'].startswith('+') else 'Renewal rate needs attention'}. "
             f"The cumulative lapsed book now stands at {fmt_int(ctx['cumulative_lapsed'])} unique lapsed members.")
     
+    # Build MoM toggle data
+    mom_data = {
+        'Total Expiring': {'current': fmt_int(lapsed['total']), 'mom': ctx['lapsed_total_mom'], 'yoy': 'n/a'},
+        'Renewed': {'current': fmt_int(lapsed['renewed']), 'mom': 'n/a', 'yoy': 'n/a'},
+        'Lapsed': {'current': fmt_int(lapsed['lapsed']), 'mom': ctx['lapsed_mom'], 'yoy': 'n/a'},
+        'Renewal Rate': {'current': pct(lapsed['renewal_rate']), 'mom': ctx['renewal_mom'], 'yoy': 'n/a'},
+        'Churn Rate': {'current': pct(lapsed['churn']), 'mom': ctx['churn_mom'], 'yoy': 'n/a'},
+    }
+    mom_toggle = mom_toggle_table(ctx, mom_data, f'lapsed{ctx.get("id_suffix", "")}')
+    
     html = f'''
 <section class="report-section" id="lapsed{ctx.get('id_suffix', '')}">
   <div class="container">
 {section_header("05 &middot; Member Health &mdash; Renewals, Churn &amp; Reactivation", title, deck, 5, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+
+{mom_toggle}
 
 {callout("<strong>Exclusions applied in this section (per management guidance):</strong> zero-value memberships, "
     "&lsquo;Newcomers 2 For 1&rsquo; SKUs, &lsquo;Studio Single Class&rsquo; SKUs, and all Private-class memberships. "
@@ -2025,7 +2105,7 @@ def build_lapsed_status_table(ctx):
               <td class="num">{count}</td>
               <td class="num">{pct(share)}</td>
             </tr>''')
-    rows.append(f'''            <tr class="total-row">
+    rows.append(f'''            <tr class="totals-row">
               <td>Total</td>
               <td class="num">{total}</td>
               <td class="num">100%</td>
@@ -2094,7 +2174,7 @@ def build_lapsed_product_table(ctx, prod_sorted):
               <td class="num">{pct(churn)}</td>
             </tr>''')
     
-    rows.append(f'''            <tr class="total-row">
+    rows.append(f'''            <tr class="totals-row">
               <td>Total</td>
               <td class="num">{total_total}</td>
               <td class="num">{total_renewed}</td>
@@ -2260,10 +2340,23 @@ def section_06(ctx):
             f"{'baseline-plus to baseline-strong' if s['net'] > ctx['baseline']['sales']['net'] else 'baseline to baseline-plus'} "
             f"by {mo['next_month_name']} {ctx['mo']['next_year']}.")
     
+    # Build MoM toggle data
+    mom_data = {
+        'Net Sales': {'current': lakh(s['net']), 'mom': ctx['net_mom'], 'yoy': ctx['net_yoy']},
+        'Sessions': {'current': fmt_int(sess['sessions']), 'mom': ctx['sessions_mom'], 'yoy': 'n/a'},
+        'Fill Rate': {'current': pct(sess['fill']), 'mom': ctx['fill_mom'], 'yoy': 'n/a'},
+        'Leads': {'current': fmt_int(leads['total']), 'mom': ctx['leads_mom'], 'yoy': 'n/a'},
+        'Lapsed': {'current': fmt_int(lapsed['lapsed']), 'mom': ctx['lapsed_mom'], 'yoy': 'n/a'},
+        'Late Cancels': {'current': fmt_int(checkins['late_cancel']), 'mom': ctx['late_cancel_mom'], 'yoy': 'n/a'},
+    }
+    mom_toggle = mom_toggle_table(ctx, mom_data, f'recommendations{ctx.get("id_suffix", "")}')
+    
     html = f'''
 <section class="report-section" id="recommendations{ctx.get('id_suffix', '')}">
   <div class="container">
 {section_header("06 &middot; Decision Agenda &mdash; Priorities, Owners &amp; Measurable Outcomes", title, deck, 6, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+
+{mom_toggle}
 
 {subsection("Class scheduling &mdash; additions, discontinuations, format-specific moves",
     "The scheduling decisions below are anchored to the Session Intelligence table. Every addition is justified by excess demand (fill &gt; 60%); every discontinuation by structural under-fill (fill &lt; 25%) over a sustained period.")}
@@ -2653,10 +2746,23 @@ def section_07(ctx):
         baseline['sales']['disc'] / baseline_gross * 100 if baseline_gross else 0
     )
     
+    # Build MoM toggle data
+    mom_data = {
+        'Net Sales': {'current': lakh(s['net']), 'mom': ctx['net_mom'], 'yoy': ctx['net_yoy']},
+        'Sessions': {'current': fmt_int(sess['sessions']), 'mom': ctx['sessions_mom'], 'yoy': 'n/a'},
+        'Fill Rate': {'current': pct(sess['fill']), 'mom': ctx['fill_mom'], 'yoy': 'n/a'},
+        'Leads': {'current': fmt_int(leads['total']), 'mom': ctx['leads_mom'], 'yoy': 'n/a'},
+        'Conversion Rate': {'current': pct(new['rate']), 'mom': ctx['conv_mom'], 'yoy': 'n/a'},
+        'Churn Rate': {'current': pct(lapsed['churn']), 'mom': ctx['churn_mom'], 'yoy': 'n/a'},
+    }
+    mom_toggle = mom_toggle_table(ctx, mom_data, f'predictions{ctx.get("id_suffix", "")}')
+    
     html = f'''
 <section class="report-section" id="predictions{ctx.get('id_suffix', '')}">
   <div class="container">
 {section_header("07 &middot; Forward View &mdash; Scenarios, Upside &amp; Early Warnings", title, deck, 7, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+
+{mom_toggle}
 
 {subsection(f"{next_name} {ctx['mo']['next_year']} forecast &mdash; base case vs upside case",
     f"The forecast below assumes (a) no major exogenous shock, (b) historical seasonality, and (c) for the upside case, the five decisions beginning to deliver from {next_name} W3.")}
@@ -2843,10 +2949,11 @@ def build_steady_state(ctx, baseline):
         f"A 30-50% step-up from the {ctx['baseline_label']} baseline of {lakh(baseline['sales']['net'])}. "
         f"This would represent a structural improvement in studio economics, not a one-month spike."))
     
+    fill_value_per_pp = sess['revenue'] / sess['capacity'] * 0.01 / 1e5 if sess.get('capacity') else 0
     insights.append(insight_card("02",
         f"Fill rate target: 50&ndash;55% (from {pct(baseline['sessions']['fill'])} baseline).",
         f"Schedule rebalancing from low-fill to high-fill formats would lift overall fill rate by 5-10pp. "
-        f"Each percentage point of fill rate is worth approximately &#8377;{sess['revenue']/sess['capacity']*0.01/1e5:.2f}L in incremental revenue."))
+        f"Each percentage point of fill rate is worth approximately &#8377;{fill_value_per_pp:.2f}L in incremental revenue."))
     
     insights.append(insight_card("03",
         f"Conversion rate target: 15&ndash;20% (from {pct(baseline.get('new',{}).get('rate',0))} baseline).",
@@ -2859,3 +2966,82 @@ def build_steady_state(ctx, baseline):
         f"would reduce churn by 5-10pp. Each percentage point of churn reduction retains approximately {int(lapsed['total']*0.01)} members/month."))
     
     return "\n".join(insights)
+
+
+def mom_toggle_table(ctx, metrics_data, section_id):
+    """Generate MoM/YoY toggle table for a section."""
+    rows = []
+    for metric_name, values in metrics_data.items():
+        current = values.get('current', '—')
+        mom = values.get('mom', '—')
+        yoy = values.get('yoy', '—')
+        mom_class = 'positive' if isinstance(mom, str) and mom.startswith('+') else 'negative' if isinstance(mom, str) and mom.startswith('-') else ''
+        yoy_class = 'positive' if isinstance(yoy, str) and yoy.startswith('+') else 'negative' if isinstance(yoy, str) and yoy.startswith('-') else ''
+        rows.append(f'''
+        <tr>
+          <td class="metric-name">{metric_name}</td>
+          <td>{current}</td>
+          <td class="{mom_class}">{mom}</td>
+          <td class="{yoy_class}">{yoy}</td>
+        </tr>''')
+    
+    return f'''
+    <div class="mom-toggle-wrapper">
+      <button class="mom-toggle-btn" onclick="toggleMoMTable('{section_id}')" aria-expanded="false">
+        <span>Month-on-Month Analysis</span>
+        <svg class="mom-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M4 6l4 4 4-4"/>
+        </svg>
+      </button>
+      <div id="mom-table-{section_id}" class="mom-table-container" style="display:none;">
+        <table class="data-table mom-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Current</th>
+              <th>MoM Change</th>
+              <th>YoY Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"".join(rows)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    '''
+
+
+def raw_data_table(data, table_id, title="Raw Data"):
+    """Generate hidden raw data table."""
+    if not data:
+        return ''
+    
+    # Auto-detect columns from first row
+    if isinstance(data, list) and len(data) > 0:
+        columns = list(data[0].keys()) if isinstance(data[0], dict) else []
+    else:
+        return ''
+    
+    headers = ''.join(f'<th>{col}</th>' for col in columns)
+    rows = []
+    for row in data[:50]:  # Limit to 50 rows
+        cells = ''.join(f'<td>{row.get(col, "")}</td>' for col in columns)
+        rows.append(f'<tr>{cells}</tr>')
+    
+    return f'''
+    <details class="raw-data-details" id="raw-{table_id}">
+      <summary class="raw-data-summary">
+        <span>{title} ({len(data)} rows)</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M4 6l4 4 4-4"/>
+        </svg>
+      </summary>
+      <div class="raw-data-container">
+        <table class="data-table raw-data-table">
+          <thead><tr>{headers}</tr></thead>
+          <tbody>{"".join(rows)}</tbody>
+        </table>
+      </div>
+    </details>
+    '''

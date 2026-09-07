@@ -1179,3 +1179,110 @@ if (process.env.VERCEL) {
 } else {
 module.exports = { app, server, io };
 }
+
+// ─── AI Copilot Endpoint ─────────────────────────────────────────
+app.post('/ai-copilot/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+  const { prompt } = req.body;
+  
+  if (!prompt) return res.status(400).json({ error: 'Prompt required' });
+  
+  const session = getSession(sessionId);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  
+  try {
+    // Load analysis data
+    const analysisPath = path.join(session.dir, 'analysis.json');
+    let analysisData = {};
+    if (fs.existsSync(analysisPath)) {
+      analysisData = JSON.parse(fs.readFileSync(analysisPath, 'utf8'));
+    }
+    
+    // Build context for AI
+    const systemPrompt = `You are a data analyst copilot for a fitness studio performance report. 
+You have access to the following data categories: sales, sessions, leads, new members, lapsed members, check-ins.
+Data is organized by location and month.
+Available locations: ${Object.keys(analysisData.meta?.locations || {}).join(', ')}
+Available months: ${(analysisData.meta?.months || []).slice(-6).join(', ')}
+
+When the user asks for data, respond with JSON containing:
+- "type": "table" | "chart" | "text" | "kpi"
+- "title": string
+- "data": the actual data (for tables: array of objects, for charts: {labels, datasets}, for text: string, for kpi: {value, label, change})
+- "description": brief explanation
+
+If asked to calculate metrics, do so accurately from the available data.
+Always respond with valid JSON.`;
+
+    const dataSummary = JSON.stringify({
+      locations: analysisData.meta?.locations || {},
+      months: (analysisData.meta?.months || []).slice(-6),
+      sample_sales: Object.entries(analysisData.sales || {}).slice(0, 1).reduce((acc, [loc, months]) => {
+        const lastMonth = Object.keys(months).sort().pop();
+        acc[loc] = lastMonth ? months[lastMonth] : {};
+        return acc;
+      }, {}),
+      sample_sessions: Object.entries(analysisData.sessions || {}).slice(0, 1).reduce((acc, [loc, months]) => {
+        const lastMonth = Object.keys(months).sort().pop();
+        acc[loc] = lastMonth ? months[lastMonth] : {};
+        return acc;
+      }, {})
+    });
+    
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Available data: ${dataSummary}\n\nUser request: ${prompt}` }
+        ],
+        temperature: 0.3,
+        max_tokens: 2000
+      })
+    });
+    
+    const result = await response.json();
+    const content = result.choices?.[0]?.message?.content || '{}';
+    
+    // Try to parse as JSON
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (e) {
+      parsed = { type: 'text', title: 'AI Response', data: content, description: '' };
+    }
+    
+    // Save to persistent storage
+    const copilotPath = path.join(session.dir, 'copilot_saves.json');
+    let saves = [];
+    if (fs.existsSync(copilotPath)) {
+      saves = JSON.parse(fs.readFileSync(copilotPath, 'utf8'));
+    }
+    saves.push({ prompt, result: parsed, timestamp: new Date().toISOString() });
+    fs.writeFileSync(copilotPath, JSON.stringify(saves, null, 2));
+    
+    res.json(parsed);
+  } catch (err) {
+    console.error('AI Copilot error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get saved copilot elements
+app.get('/ai-copilot/:sessionId/saves', (req, res) => {
+  const { sessionId } = req.params;
+  const session = getSession(sessionId);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  
+  const copilotPath = path.join(session.dir, 'copilot_saves.json');
+  if (fs.existsSync(copilotPath)) {
+    res.json(JSON.parse(fs.readFileSync(copilotPath, 'utf8')));
+  } else {
+    res.json([]);
+  }
+});

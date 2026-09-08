@@ -1944,7 +1944,9 @@ body { padding-top: 40px !important; }
 }
 
 .mom-table-container.expanded {
-  max-height: 1200px;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 /* The toggle script marks the button, not the wrapper — keep both paths working. */
@@ -2004,6 +2006,135 @@ body { padding-top: 40px !important; }
 .mom-table .metric-name {
   font-weight: 600;
   color: var(--primary);
+}
+
+/* ─── MoM grid: metric tabs + months across the columns ───────── */
+.mom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin: 0 0 var(--space-3);
+}
+
+.mom-metric-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mom-metric-tab,
+.mom-range-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 6px 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.mom-metric-tab:hover,
+.mom-range-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.mom-metric-tab.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.mom-range-tabs {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.mom-range-btn {
+  padding: 5px 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  border-radius: 6px;
+}
+
+.mom-range-btn.is-active {
+  background: var(--bg-inset);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.mom-table th.mom-corner,
+.mom-table th[scope="row"] {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  background: var(--bg-inset);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.mom-table th.is-current,
+.mom-table td.is-current {
+  background: var(--primary-soft);
+}
+
+.mom-table th.is-current {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.mom-table tbody.mom-panel {
+  display: none;
+}
+
+.mom-table tbody.mom-panel.is-active {
+  display: table-row-group;
+}
+
+.mom-table td.mom-cell {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mom-table td.mom-cell:hover {
+  background: var(--bg-inset);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+.mom-table td.mom-cell.is-selected {
+  background: var(--primary-soft);
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.mom-drill-panel {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+}
+
+.mom-drill-panel .drill-down-metric:first-child {
+  padding-left: 0;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 /* Every MoM row drills into per-metric analytics (horizontal strip, in place) */

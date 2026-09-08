@@ -1383,6 +1383,146 @@ function toggleMoMTable(sectionId) {
   btn?.classList.toggle('expanded', !isExpanded);
 }
 
+/* ─── MoM grid: metric tabs, month range, per-cell analytics ─────── */
+function momFmtValue(v, fmt) {
+  if (v === null || v === undefined || isNaN(v)) return '\u2014';
+  if (fmt === 'pct') return (Math.round(v * 10) / 10).toFixed(1) + '%';
+  if (fmt === 'num') return v.toFixed(2);
+  if (fmt === 'money') {
+    var a = Math.abs(v);
+    if (a >= 1e7) return '\u20b9' + (v / 1e7).toFixed(2) + 'Cr';
+    if (a >= 1e5) return '\u20b9' + (v / 1e5).toFixed(2) + 'L';
+    return '\u20b9' + Math.round(v).toLocaleString('en-IN');
+  }
+  return Math.round(v).toLocaleString('en-IN');
+}
+
+function momFmtDelta(cur, prev, fmt) {
+  if (prev === null || prev === undefined || isNaN(prev) || !prev) return '\u2014';
+  // Rate metrics are stored as percentages already, so their movement is in
+  // percentage points; everything else is a relative change.
+  var d = fmt === 'pct' ? (cur - prev) : (cur - prev) / Math.abs(prev) * 100;
+  var txt = (d >= 0 ? '+' : '') + d.toFixed(1);
+  return txt + (fmt === 'pct' ? 'pp' : '%');
+}
+
+function momCellDrill(container, cell) {
+  var panel = container.querySelector('.mom-drill-panel');
+  if (!panel) return;
+  var body = cell.closest('tbody');
+  var row = cell.closest('tr');
+  var fmt = cell.dataset.fmt || 'int';
+  var metric = body ? body.dataset.metric : '';
+
+  container.querySelectorAll('.mom-cell.is-selected').forEach(function (c) { c.classList.remove('is-selected'); });
+  cell.classList.add('is-selected');
+
+  var cells = Array.prototype.slice.call(row.querySelectorAll('td.mom-cell[data-v]'))
+    .filter(function (c) { return !c.hidden && c.dataset.v !== ''; });
+  var entries = cells.map(function (c) { return { month: c.dataset.month, v: Number(c.dataset.v) }; })
+    .filter(function (e) { return !isNaN(e.v); });
+  if (!entries.length) return;
+
+  var cur = Number(cell.dataset.v);
+  var i = entries.findIndex(function (e) { return e.month === cell.dataset.month; });
+  var prev = i > 0 ? entries[i - 1].v : null;
+  var vals = entries.map(function (e) { return e.v; });
+  var total = vals.reduce(function (a, b) { return a + b; }, 0);
+  var mean = total / vals.length;
+  var best = entries.reduce(function (a, b) { return b.v > a.v ? b : a; });
+  var worst = entries.reduce(function (a, b) { return b.v < a.v ? b : a; });
+  var rank = vals.slice().sort(function (a, b) { return b - a; }).indexOf(cur) + 1;
+  var spread = mean ? Math.abs(best.v - worst.v) / Math.abs(mean) * 100 : 0;
+
+  function tile(label, value, note) {
+    return '<div class="drill-down-metric">' +
+      '<span class="drill-down-metric-label">' + label + '</span>' +
+      '<span class="drill-down-metric-value">' + value + '</span>' +
+      (note ? '<span class="drill-down-metric-label">' + note + '</span>' : '') +
+      '</div>';
+  }
+
+  var html = '<div class="drill-down-content">' +
+    tile(metric || 'Value', momFmtValue(cur, fmt), cell.dataset.month) +
+    tile('vs previous month', momFmtDelta(cur, prev, fmt), prev === null ? 'first month shown' : 'vs ' + entries[i - 1].month) +
+    tile('Rank in window', rank + ' of ' + entries.length, 'highest = 1') +
+    (fmt === 'pct' ? '' : tile('Share of window', (total ? (cur / total * 100) : 0).toFixed(1) + '%', 'of ' + entries.length + ' months')) +
+    tile('Window average', momFmtValue(mean, fmt), fmt === 'pct' ? entries.length + ' months' : momFmtValue(total, fmt) + ' total') +
+    tile('Highest', momFmtValue(best.v, fmt), best.month) +
+    tile('Lowest', momFmtValue(worst.v, fmt), worst.month) +
+    '<div class="drill-down-metric drill-down-insight" style="flex:1 1 100%;margin-top:var(--space-2);border-left:3px solid var(--primary);background:var(--primary-soft);padding:8px 14px">' +
+    '<span class="drill-down-metric-label">Analytics</span>' +
+    '<span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans);font-weight:500">' +
+    (metric || 'Metric') + ' in ' + cell.dataset.month + ' is ' + momFmtValue(cur, fmt) +
+    (prev !== null ? ', ' + momFmtDelta(cur, prev, fmt) + ' against ' + entries[i - 1].month : '') +
+    '. It ranks ' + rank + ' of ' + entries.length + ' months in view and sits ' +
+    (cur >= mean ? (mean ? ((cur / mean - 1) * 100).toFixed(1) : '0') + '% above' : ((1 - cur / mean) * 100).toFixed(1) + '% below') +
+    ' the window average of ' + momFmtValue(mean, fmt) +
+    '. Spread between best and worst is ' + spread.toFixed(0) + '% of the mean \u2014 ' +
+    (spread < 15 ? 'a tight, predictable band.' : spread > 40 ? 'a wide swing, so treat single months with care.' : 'moderate month-to-month variation.') +
+    '</span></div></div>';
+
+  panel.innerHTML = html;
+  panel.hidden = false;
+}
+
+function initMoMGrids() {
+  document.querySelectorAll('.mom-table-container').forEach(function (container) {
+    var panels = Array.prototype.slice.call(container.querySelectorAll('tbody.mom-panel'));
+    if (!panels.length) return;
+
+    function clearDrill() {
+      var drill = container.querySelector('.mom-drill-panel');
+      if (drill) { drill.hidden = true; drill.innerHTML = ''; }
+      container.querySelectorAll('.mom-cell.is-selected').forEach(function (c) { c.classList.remove('is-selected'); });
+    }
+
+    container.querySelectorAll('.mom-metric-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        container.querySelectorAll('.mom-metric-tab').forEach(function (t) { t.classList.remove('is-active'); });
+        panels.forEach(function (p) { p.classList.remove('is-active'); });
+        tab.classList.add('is-active');
+        var target = document.getElementById(tab.dataset.panel);
+        if (target) target.classList.add('is-active');
+        clearDrill();
+      });
+    });
+
+    function applyRange(range) {
+      var heads = container.querySelectorAll('thead th[data-col]');
+      var total = heads.length;
+      var keep = range === 'all' ? total : Math.min(parseInt(range, 10) || 12, total);
+      var first = total - keep;
+      container.querySelectorAll('[data-col]').forEach(function (cell) {
+        cell.hidden = Number(cell.dataset.col) < first;
+      });
+      clearDrill();
+    }
+
+    container.querySelectorAll('.mom-range-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        container.querySelectorAll('.mom-range-btn').forEach(function (b) { b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        container.dataset.range = btn.dataset.range;
+        applyRange(btn.dataset.range);
+      });
+    });
+    applyRange(container.dataset.range || '12');
+
+    container.querySelectorAll('td.mom-cell[data-v]').forEach(function (cell) {
+      cell.addEventListener('click', function () { momCellDrill(container, cell); });
+    });
+  });
+}
+
+
+// The MoM grid lives in a later script block, so wire it up from here.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMoMGrids);
+} else {
+  initMoMGrids();
+}
+
 // Multi-Location Tabs
 document.addEventListener('DOMContentLoaded', () => {
   const tabs = document.querySelectorAll('.location-tab');

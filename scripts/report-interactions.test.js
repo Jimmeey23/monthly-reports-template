@@ -70,20 +70,53 @@ const URL_ = process.argv[2]
     row.click();
   }
 
-  // 2b — drill-down analytics inside the MoM table itself
-  const momRow = d.querySelector('.mom-table tr.drill-down-row');
-  check('MoM rows are drillable', !!momRow);
-  if (momRow) {
-    const detail = momRow.nextElementSibling;
-    check('MoM row starts collapsed', !/visible/.test(detail.className));
-    momRow.click();
+  // 2b — the MoM grid: months across the columns, metric tabs above
+  const box = d.querySelector('.mom-table-container');
+  const tabs = Array.from(box.querySelectorAll('.mom-metric-tab'));
+  const monthHeads = Array.from(box.querySelectorAll('thead th[data-col]'));
+  const visible = () => monthHeads.filter(th => !th.hidden).length;
+  check('MoM grid has metric tabs', tabs.length >= 2, tabs.length + ' tabs');
+  check('MoM grid has one column per month', monthHeads.length >= 12, monthHeads.length + ' months');
+  check('default range shows 12 months', visible() === 12, String(visible()));
+
+  const firstPanel = box.querySelector('tbody.mom-panel.is-active');
+  check('one metric panel is visible', !!firstPanel, firstPanel && firstPanel.dataset.metric);
+  if (tabs.length > 1) {
+    tabs[1].click();
     await new Promise(r => setTimeout(r, 60));
-    check('MoM row opens its analytics', /visible/.test(detail.className), detail.className);
-    const tiles = detail.querySelectorAll('.drill-down-metric');
-    check('MoM analytics shows M-1 / M-2 / YoY / avg', tiles.length >= 4, tiles.length + ' tiles');
-    check('MoM analytics has an insight chip', !!detail.querySelector('.drill-down-insight'));
-    console.log('     e.g. ' + (tiles[0] ? tiles[0].textContent.trim() : '') +
-      ' | ' + (detail.querySelector('.drill-down-insight') || { textContent: '' }).textContent.trim().slice(0, 110));
+    const nowActive = box.querySelector('tbody.mom-panel.is-active');
+    check('clicking a tab switches the metric',
+      nowActive && nowActive.dataset.metric === tabs[1].textContent.trim(),
+      nowActive && nowActive.dataset.metric);
+  }
+
+  const rangeBtns = Array.from(box.querySelectorAll('.mom-range-btn'));
+  const pick = r => rangeBtns.find(b => b.dataset.range === r);
+  if (pick('6')) {
+    pick('6').click();
+    await new Promise(r => setTimeout(r, 60));
+    check('6M range narrows the columns', visible() === 6, String(visible()));
+    pick('all').click();
+    await new Promise(r => setTimeout(r, 60));
+    check('All range shows every month', visible() === monthHeads.length, String(visible()));
+    pick('12').click();
+    await new Promise(r => setTimeout(r, 60));
+  }
+
+  // per-cell analytics
+  const drill = box.querySelector('.mom-drill-panel');
+  const cell = Array.from(box.querySelectorAll('td.mom-cell[data-v]'))
+    .filter(c => !c.hidden && c.dataset.v !== '').pop();
+  if (cell && drill) {
+    check('drill panel starts hidden', drill.hidden === true);
+    cell.click();
+    await new Promise(r => setTimeout(r, 80));
+    check('clicking a month cell opens analytics', drill.hidden === false);
+    const tiles = drill.querySelectorAll('.drill-down-metric');
+    check('cell analytics has tiles', tiles.length >= 5, tiles.length + ' tiles');
+    check('cell analytics ranks the month',
+      /Rank in window/.test(drill.textContent) && /of \d+ months/.test(drill.textContent));
+    console.log('     e.g. ' + drill.textContent.replace(/\s+/g, ' ').trim().slice(0, 160));
   }
 
   // 3 — copilot request payload

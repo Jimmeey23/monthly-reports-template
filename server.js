@@ -917,12 +917,12 @@ app.post('/generate', async (req, res) => {
 
     // We'll store a big map of locKey|monthKey|section -> insights
     const aiContext = {};
-    const promises = [];
+    const aiTasks = [];
 
     for (const loc of selectedLocs) {
       for (const month of selectedMonths) {
         for (const sec of sections) {
-          promises.push((async () => {
+          aiTasks.push(async () => {
             try {
               const res = await generateInsights(analysis, loc, month, sec);
               const key = loc + '|' + month + '|' + sec;
@@ -930,12 +930,22 @@ app.post('/generate', async (req, res) => {
             } catch (err) {
               console.error('Failed to generate AI for ' + sec, err.message);
             }
-          })());
+          });
         }
       }
     }
 
-    await Promise.all(promises);
+    // Keep generation below provider TPM limits while still doing a small amount
+    // of work in parallel. A failed optional narrative must not block the report.
+    const workerCount = Math.min(2, aiTasks.length);
+    let nextTask = 0;
+    await Promise.all(Array.from({ length: workerCount }, async () => {
+      while (nextTask < aiTasks.length) {
+        const task = aiTasks[nextTask];
+        nextTask += 1;
+        await task();
+      }
+    }));
 
     // Save context to pass to Python
     const aiContextPath = path.join(session.dir, 'ai_context_' + Date.now() + '.json');

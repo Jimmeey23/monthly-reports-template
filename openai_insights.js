@@ -666,13 +666,7 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
   const sectionLabel = SECTION_LABELS[section] || section;
   const angle = ANALYTICAL_ANGLES[Math.floor(Math.random() * ANALYTICAL_ANGLES.length)];
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
+  const requestBody = JSON.stringify({
       model,
       response_format: { type: 'json_object' },
       messages: [
@@ -685,19 +679,49 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
       temperature: 0.5,
       presence_penalty: 0.5,
       frequency_penalty: 0.4,
-      max_tokens: 4096, // Reduced to standard max_tokens for gpt-4o compatibility
-    }),
-  });
+      max_tokens: 2200,
+    });
 
-  if (!res.ok) {
-    const errText = await res.text().catch(() => res.statusText);
-    throw new Error(`OpenAI API error ${res.status}: ${errText}`);
+  let parsed;
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: requestBody,
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.statusText);
+      lastError = new Error(`OpenAI API error ${res.status}: ${errText}`);
+      if (res.status !== 429 || attempt === 2) throw lastError;
+      const retryAfter = Number(res.headers.get('retry-after'));
+      const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.ceil(retryAfter * 1000)
+        : 1000 * Math.pow(3, attempt);
+      await new Promise(resolve => setTimeout(resolve, Math.min(delayMs, 10000)));
+      continue;
+    }
+
+    const json = await res.json();
+    const content = json.choices?.[0]?.message?.content;
+    if (!content) {
+      lastError = new Error('OpenAI returned no content');
+    } else {
+      try {
+        const cleaned = content.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+        parsed = JSON.parse(cleaned);
+        break;
+      } catch (error) {
+        lastError = new Error(`OpenAI returned invalid JSON: ${error.message}`);
+      }
+    }
+    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 750 * (attempt + 1)));
   }
-
-  const json = await res.json();
-  const content = json.choices?.[0]?.message?.content;
-  if (!content) throw new Error('OpenAI returned no content');
-  const parsed = JSON.parse(content);
+  if (!parsed) throw lastError || new Error('OpenAI insight generation failed');
 
   // ── Sanitize title & detailed_summary ──
   parsed.title = parsed.title || `Executive Strategic Analysis — ${month}`;
@@ -761,4 +785,3 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
 }
 
 module.exports = { generateInsights, SECTION_LABELS };
-

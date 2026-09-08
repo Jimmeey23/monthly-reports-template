@@ -252,44 +252,30 @@ MONTHS = {mk: build_month_meta(mk) for mk in DATA.get('meta', {}).get('months', 
 # ─── Data Access Helpers ──────────────────────────────────────────────────────
 
 def get_sales(loc, month):
-    data = DATA.get('sales', {}).get(loc, {}).get(month, {})
-    if not data:
-        return {'net': 0, 'gross': 0, 'disc': 0, 'sales': 0, 'members': 0, 'atv': 0, 'disc_eff': 0}
-    return data
+    defaults = {'net': 0, 'gross': 0, 'disc': 0, 'sales': 0, 'members': 0, 'atv': 0, 'disc_eff': 0}
+    return {**defaults, **(DATA.get('sales', {}).get(loc, {}).get(month, {}) or {})}
 
 def get_sessions(loc, month):
-    data = DATA.get('sessions', {}).get(loc, {}).get(month, {})
-    if not data:
-        return {'sessions': 0, 'visits': 0, 'capacity': 0, 'fill': 0, 'revenue': 0, 'avg_visits': 0}
-    return data
+    defaults = {'sessions': 0, 'visits': 0, 'capacity': 0, 'fill': 0, 'revenue': 0, 'avg_visits': 0}
+    return {**defaults, **(DATA.get('sessions', {}).get(loc, {}).get(month, {}) or {})}
 
 def get_leads(loc, month):
-    data = DATA.get('leads', {}).get(loc, {}).get(month, {})
-    if not data:
-        return {'total': 0, 'converted': 0, 'rate': 0}
-    # Ensure required keys exist even if data is partial
-    data.setdefault('total', 0)
-    data.setdefault('converted', 0)
-    data.setdefault('rate', 0)
-    return data
+    defaults = {'total': 0, 'converted': 0, 'rate': 0}
+    return {**defaults, **(DATA.get('leads', {}).get(loc, {}).get(month, {}) or {})}
 
 def get_leads_source(loc, month):
     return DATA.get('leads_by_source', {}).get(loc, {}).get(month, {})
 
 def get_new(loc, month):
-    data = DATA.get('new', {}).get(loc, {}).get(month, {})
-    if not data:
-        return {'rate': 0, 'converted': 0, 'trials': 0, 'retained': 0}
-    return data
+    defaults = {'rate': 0, 'converted': 0, 'trials': 0, 'retained': 0}
+    return {**defaults, **(DATA.get('new', {}).get(loc, {}).get(month, {}) or {})}
 
 def get_new_type(loc, month):
     return DATA.get('new_by_type', {}).get(loc, {}).get(month, {})
 
 def get_lapsed(loc, month):
-    data = DATA.get('lapsed', {}).get(loc, {}).get(month, {})
-    if not data:
-        return {'total': 0, 'renewed': 0, 'lapsed': 0, 'frozen': 0, 'churn': 0, 'renewal_rate': 0}
-    return data
+    defaults = {'total': 0, 'renewed': 0, 'lapsed': 0, 'frozen': 0, 'churn': 0, 'renewal_rate': 0}
+    return {**defaults, **(DATA.get('lapsed', {}).get(loc, {}).get(month, {}) or {})}
 
 def get_lapsed_product(loc, month):
     return DATA.get('lapsed_by_product', {}).get(loc, {}).get(month, {})
@@ -298,10 +284,8 @@ def get_lapsed_cumulative(loc):
     return DATA.get('lapsed_cumulative', {}).get(loc, {})
 
 def get_checkins(loc, month):
-    data = DATA.get('checkins', {}).get(loc, {}).get(month, {})
-    if not data:
-        return {'late_cancel': 0, 'heavy_cancelers': 0}
-    return data
+    defaults = {'total': 0, 'late_cancel': 0, 'heavy_cancelers': 0, 'lc_member_count': 0}
+    return {**defaults, **(DATA.get('checkins', {}).get(loc, {}).get(month, {}) or {})}
 
 def get_active(loc):
     return DATA.get('active', {}).get(loc, {})
@@ -336,7 +320,12 @@ def compute_year_avg(loc_key, month_key):
 
     if not other_months:
         return {
-            'sales': {}, 'sessions': {}, 'leads': {}, 'new': {}, 'lapsed': {}, 'checkins': {},
+            'sales': get_sales(loc_key, '__missing__'),
+            'sessions': get_sessions(loc_key, '__missing__'),
+            'leads': get_leads(loc_key, '__missing__'),
+            'new': get_new(loc_key, '__missing__'),
+            'lapsed': get_lapsed(loc_key, '__missing__'),
+            'checkins': get_checkins(loc_key, '__missing__'),
             'months_count': 0
         }
 

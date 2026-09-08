@@ -342,9 +342,15 @@ def section_01(ctx):
 
     title = f"{month_name} delivered {'strong' if net_baseline_diff > 5 else 'steady' if net_baseline_diff > -5 else 'soft'} revenue at {lakh(s['net'])} net &mdash; {'above' if net_baseline_diff > 0 else 'below'} the {ctx['year_avg_label']} average, with {'improving' if ctx['conv_mom'].startswith('+') else 'declining'} trial conversion and {'stabilising' if ctx['churn_mom'].startswith('-') else 'rising'} churn as the key watchpoints."
 
+    # Net is collected revenue excluding VAT, so spell the VAT out: without it
+    # "net (gross, discount)" reads as net = gross - discount, which it isn't.
+    vat = s.get('vat')
+    if vat is None:
+        vat = s['gross'] - s['net']
+
     deck = (
         f"Headline revenue closed at <strong>{lakh(s['net'])} net</strong> "
-        f"({lakh(s['gross'])} gross, {lakh(s['disc'])} discount), which is "
+        f"({lakh(s['gross'])} gross incl. {lakh(vat)} VAT, {lakh(s['disc'])} discount), which is "
         f"<strong>{ctx['net_mom']} vs {prev_name}</strong> (M-1), "
         f"<strong>{ctx['net_m2_mom']} vs {prev2_name}</strong> (M-2), "
         f"<strong>{ctx['net_year_avg']} vs {ctx['year_avg_label']}</strong>, "

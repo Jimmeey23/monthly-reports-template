@@ -8,9 +8,13 @@ Comprehensive analysis for 4 reports:
 
 Supported sales exports:
   - Legacy 99-column export and revised 48-column export
-  - Gross = Sale Total Paid In Currency / Payment Value (deduplicated by Sale ID)
-  - Net = Mrp - Pre Tax / Price Excluding VAT In Currency (summed per row)
+  - Gross = Sale Total Paid In Currency / Payment Value (summed per line item)
+  - Net = Gross - Payment VAT, i.e. collected revenue excluding VAT
+  - List value = Mrp - Pre Tax / Price Excluding VAT In Currency, kept as the
+    separate `list_value` metric (it is a pre-discount, pre-VAT list figure and
+    is deliberately NOT reported as net)
   - Discount = Sale Item Unit Discount Value (summed per row)
+  - Transactions = distinct Payment Transaction ID (not Sale ID)
   - Location filter: Calculated Location contains 'Kwality' or 'Supreme'
   - Separate reports per location and per month
 """
@@ -87,6 +91,14 @@ def _require_any_column(fieldnames, metric, names):
     )
 
 
+def _first_present(fieldnames, names):
+    """Return the first of `names` present in the export, or None."""
+    for name in names:
+        if fieldnames is not None and name in fieldnames:
+            return name
+    return None
+
+
 def detect_sales_schema(fieldnames):
     """Map report metrics onto either supported Momence sales export shape."""
     return {
@@ -102,6 +114,10 @@ def detect_sales_schema(fieldnames):
             fieldnames, 'item discount',
             ('Sale Item Unit Discount Value', 'Discount Value In Currency'),
         ),
+        # Optional: only the revised export carries VAT and a payment
+        # transaction id. Both fall back gracefully when absent.
+        'vat': _first_present(fieldnames, ('Payment VAT', 'Sale Item Unit VAT Amount')),
+        'txn': _first_present(fieldnames, ('Payment Transaction ID', 'Sale ID')),
         'product': _require_any_column(
             fieldnames, 'product name',
             ('Sale Item Name', 'Cleaned Product'),
@@ -237,10 +253,10 @@ def analyze_sales():
     data = {lk: {} for lk in LOCATIONS}
     
     # Also track category, product, seller, payment breakdowns
-    breakdowns = {lk: {m: {'category': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                           'product': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                           'seller': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                           'payment': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()})}
+    breakdowns = {lk: {m: {'category': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                           'product': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                           'seller': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                           'payment': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()})}
                       for m in MONTHS + YOY_MONTHS}
                  for lk in LOCATIONS}
     
@@ -250,7 +266,8 @@ def analyze_sales():
         # sales_data[loc_key][month][sale_id] = sale_total_paid
         sales_data = {lk: defaultdict(dict) for lk in LOCATIONS}
         # per-row accumulators
-        row_data = {lk: defaultdict(lambda: {'net': 0, 'disc': 0, 'rows': 0, 'members': set(), 'sale_ids': set()})
+        row_data = {lk: defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0,
+                                             'members': set(), 'sale_ids': set(), 'txn_ids': set()})
                    for lk in LOCATIONS}
         
         for row in r:
@@ -270,18 +287,28 @@ def analyze_sales():
             stp = to_float(row.get(schema['gross'], '0'))
             mrp = to_float(row.get(schema['net'], '0'))
             disc = to_float(row.get(schema['discount'], '0'))
-            
-            # Store sale total (deduplicated)
+            vat = to_float(row.get(schema['vat'], '0')) if schema.get('vat') else 0.0
+            txn_id = row.get(schema['txn'], sid) if schema.get('txn') else sid
+
+            # Sale ID -> first row's payment, kept for reference only.
             if sid not in sales_data[loc_key][month]:
                 sales_data[loc_key][month][sid] = stp
-            
-            # Accumulate per-row
+
+            # Payment Value is a per-line-item amount, not a sale total
+            # repeated on every row (a sale with a Studio Single Class at
+            # 1,942 plus a Retail Product at 160 sums to 2,102, which is also
+            # unit-price x qty). So every row is counted; keeping only the
+            # first row per Sale ID dropped the extra line items — 30 of 339
+            # sales in Aug 2026, worth Rs 1.36L or 4.5% of revenue.
             rd = row_data[loc_key][month]
-            rd['net'] += mrp
+            rd['gross'] += stp
+            rd['net'] += stp - vat      # collected revenue, VAT exclusive
+            rd['list_value'] += mrp     # pre-VAT list value of every line
             rd['disc'] += disc
             rd['rows'] += 1
             rd['members'].add(row.get('Paying Member ID', ''))
             rd['sale_ids'].add(sid)
+            rd['txn_ids'].add(txn_id)
             
             # Breakdowns
             cat = row.get('Cleaned Category', '') or 'Uncategorized'
@@ -300,16 +327,19 @@ def analyze_sales():
         # Compute gross from deduplicated sales
         for loc_key in LOCATIONS:
             for month in MONTHS + YOY_MONTHS:
-                gross = sum(sales_data[loc_key][month].values())
                 rd = row_data[loc_key][month]
+                gross = rd['gross']
                 net = rd['net']
                 disc = rd['disc']
-                sales_count = len(rd['sale_ids'])
+                # Transactions are payment transactions, not Sale IDs: one
+                # payment can cover several sale rows (349 vs 340 in Jul 2026,
+                # and 349 is the count the published July report prints).
+                sales_count = len(rd['txn_ids']) or len(rd['sale_ids'])
                 members = len(rd['members'])
                 atv = gross / sales_count if sales_count else 0
                 # Discount efficiency = actual revenue collected per rupee discounted
                 disc_eff = gross / disc if disc > 0 else 0
-                
+
                 data[loc_key][month] = {
                     'gross': gross,
                     'net': net,
@@ -319,6 +349,8 @@ def analyze_sales():
                     'atv': atv,
                     'disc_eff': disc_eff,
                     'rows': rd['rows'],
+                    'list_value': rd['list_value'],
+                    'vat': gross - net,
                 }
                 
                 # Fill breakdown gross from sales_data
@@ -335,10 +367,10 @@ def analyze_sales():
         # Let's redo this more carefully
     
     # Re-read for breakdowns with gross per sale
-    breakdown_data = {lk: {m: {'category': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                                'product': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                                'seller': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                                'payment': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()})}
+    breakdown_data = {lk: {m: {'category': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                                'product': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                                'seller': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                                'payment': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()})}
                       for m in MONTHS + YOY_MONTHS}
                      for lk in LOCATIONS}
     
@@ -362,8 +394,10 @@ def analyze_sales():
                 continue
             
             sid = row.get('Sale ID', '')
+            stp = to_float(row.get(schema['gross'], '0'))
             mrp = to_float(row.get(schema['net'], '0'))
             disc = to_float(row.get(schema['discount'], '0'))
+            vat = to_float(row.get(schema['vat'], '0')) if schema.get('vat') else 0.0
             cat = row.get('Cleaned Category', '') or 'Uncategorized'
             prod = row.get(schema['product'], '') or 'Unknown'
             seller = row.get('Sold By', '') or 'System / Unattributed'
@@ -376,22 +410,16 @@ def analyze_sales():
             
             for btype, bval in [('category', cat), ('product', prod), ('seller', seller), ('payment', pay_method)]:
                 bd = breakdown_data[loc_key][month][btype][bval]
-                bd['net'] += mrp
+                bd['gross'] += stp
+                bd['net'] += stp - vat
+                bd['list_value'] += mrp
                 bd['disc'] += disc
                 bd['rows'] += 1
                 bd['sales'].add(sid)
     
-    # Now fill gross per breakdown from sales_data
-    for loc_key in LOCATIONS:
-        for month in MONTHS + YOY_MONTHS:
-            for btype in ['category', 'product', 'seller', 'payment']:
-                for bval, bd in breakdown_data[loc_key][month][btype].items():
-                    # Gross = sum of sale totals for sales that have this breakdown value
-                    gross = 0
-                    for sid in bd['sales']:
-                        gross += sales_data[loc_key][month].get(sid, 0)
-                    bd['gross'] = gross
-    
+    # Gross is attributed per line item above, so every breakdown bucket adds
+    # back up to the month's headline gross (the old pass assigned the whole
+    # deduplicated sale total to each bucket, which double counted).
     return data, breakdown_data, sales_data
 
 

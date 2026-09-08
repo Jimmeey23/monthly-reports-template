@@ -225,6 +225,7 @@ def render_ai_result(result):
 def section_header(eyebrow, title, deck, section_num, total=7, loc_key='', month_key='', id_suffix=''):
     section_id = SECTION_IDS.get(section_num, f'section-{section_num}')
     slot_id = f'ai-slot-{section_id}{id_suffix}'
+    mom_key = f'{loc_key}|{month_key}|{section_num}'
     return f'''    <div class="section-hero" data-num="{section_num:02d}">
       <div class="section-header">
         <div class="section-header-left">
@@ -235,6 +236,7 @@ def section_header(eyebrow, title, deck, section_num, total=7, loc_key='', month
         </div>
         <div class="section-header-right">
           <div class="section-anchor">Section {section_num} / {total:02d}</div>
+          <button class="mom-info-btn" type="button" data-mom-key="{mom_key}" aria-label="View month-on-month data for section {section_num}">i</button>
         </div>
       </div>
     </div>

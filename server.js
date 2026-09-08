@@ -25,6 +25,7 @@ if (fs.existsSync(path.join(__dirname, '.env'))) {
 
 const { generateInsights } = require('./openai_insights');
 const { renderReportToPdf } = require('./pdf_export');
+const { answerCopilot, buildDataset } = require('./copilot_engine');
 
 const PORT = Number(process.env.PORT) || 3000;
 let activePort = PORT;
@@ -1181,9 +1182,65 @@ module.exports = { app, server, io };
 }
 
 // ─── AI Copilot Endpoint ─────────────────────────────────────────
+/* Answers are computed straight from analysis.json (copilot_engine.js), so the
+   copilot works with or without an OpenAI key. When a key IS configured, and
+   the question is open-ended (why / recommend / explain), the model is used
+   with the full dataset instead of a one-row sample. */
+async function askOpenAI(prompt, analysisData, ctx) {
+  if (!process.env.OPENAI_API_KEY) return null;
+  const dataset = buildDataset(analysisData, ctx, { months: 14 });
+  const systemPrompt = [
+    'You are a data analyst copilot inside a fitness-studio performance report.',
+    'DATA below is the studio\'s real analysis output (JSON). Answer ONLY from it.',
+    'Never say you have no data: if a figure is genuinely absent, list the metrics you DO have.',
+    'Respond with strict JSON: {"type":"table"|"kpi"|"text","title":string,"data":<array of row objects for tables | {label,value,change} for kpi | string for text>,"description":string}.',
+    'Prefer type "table" for anything with more than one row. Keep numbers formatted with \u20b9 and Indian grouping.',
+  ].join(' ');
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `DATA: ${JSON.stringify(dataset)}\n\nScope: ${JSON.stringify(dataset.scope)}\n\nQuestion: ${prompt}` },
+      ],
+      temperature: 0.2,
+      max_tokens: 2000,
+    }),
+  });
+
+  const result = await response.json();
+  if (!result || !result.choices || !result.choices.length) {
+    throw new Error(result && result.error && result.error.message ? result.error.message : 'OpenAI returned no completion');
+  }
+  const content = result.choices[0].message.content || '{}';
+  const cleaned = content.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  const parsed = JSON.parse(cleaned);
+  if (!parsed || !parsed.type) return null;
+  if (parsed.type === 'table' && (!Array.isArray(parsed.data) || !parsed.data.length)) return null;
+  return parsed;
+}
+
+function saveCopilotAnswer(sessionDir, prompt, result) {
+  try {
+    const copilotPath = path.join(sessionDir, 'copilot_saves.json');
+    let saves = [];
+    if (fs.existsSync(copilotPath)) saves = JSON.parse(fs.readFileSync(copilotPath, 'utf8'));
+    saves.push({ prompt, result, timestamp: new Date().toISOString() });
+    fs.writeFileSync(copilotPath, JSON.stringify(saves, null, 2));
+  } catch (e) {
+    console.error('Could not persist copilot answer:', e.message);
+  }
+}
+
 app.post('/ai-copilot/:sessionId', async (req, res) => {
   const { sessionId } = req.params;
-  const { prompt } = req.body;
+  const { prompt, loc, month } = req.body || {};
 
   if (!prompt) return res.status(400).json({ error: 'Prompt required' });
 
@@ -1191,82 +1248,32 @@ app.post('/ai-copilot/:sessionId', async (req, res) => {
   if (!session) return res.status(404).json({ error: 'Session not found' });
 
   try {
-    // Load analysis data
     const analysisPath = path.join(session.dir, 'analysis.json');
     let analysisData = {};
     if (fs.existsSync(analysisPath)) {
       analysisData = JSON.parse(fs.readFileSync(analysisPath, 'utf8'));
     }
 
-    // Build context for AI
-    const systemPrompt = `You are a data analyst copilot for a fitness studio performance report.
-You have access to the following data categories: sales, sessions, leads, new members, lapsed members, check-ins.
-Data is organized by location and month.
-Available locations: ${Object.keys(analysisData.meta?.locations || {}).join(', ')}
-Available months: ${(analysisData.meta?.months || []).slice(-6).join(', ')}
+    const ctx = { loc, month };
+    const local = answerCopilot(prompt, analysisData, ctx);
 
-When the user asks for data, respond with JSON containing:
-- "type": "table" | "chart" | "text" | "kpi"
-- "title": string
-- "data": the actual data (for tables: array of objects, for charts: {labels, datasets}, for text: string, for kpi: {value, label, change})
-- "description": brief explanation
-
-If asked to calculate metrics, do so accurately from the available data.
-Always respond with valid JSON.`;
-
-    const dataSummary = JSON.stringify({
-      locations: analysisData.meta?.locations || {},
-      months: (analysisData.meta?.months || []).slice(-6),
-      sample_sales: Object.entries(analysisData.sales || {}).slice(0, 1).reduce((acc, [loc, months]) => {
-        const lastMonth = Object.keys(months).sort().pop();
-        acc[loc] = lastMonth ? months[lastMonth] : {};
-        return acc;
-      }, {}),
-      sample_sessions: Object.entries(analysisData.sessions || {}).slice(0, 1).reduce((acc, [loc, months]) => {
-        const lastMonth = Object.keys(months).sort().pop();
-        acc[loc] = lastMonth ? months[lastMonth] : {};
-        return acc;
-      }, {})
-    });
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Available data: ${dataSummary}\n\nUser request: ${prompt}` }
-        ],
-        temperature: 0.3,
-        max_tokens: 2000
-      })
-    });
-
-    const result = await response.json();
-    const content = result.choices?.[0]?.message?.content || '{}';
-
-    // Try to parse as JSON
-    let parsed;
-    try {
-      parsed = JSON.parse(content);
-    } catch (e) {
-      parsed = { type: 'text', title: 'AI Response', data: content, description: '' };
+    // Open-ended questions benefit from the model — but only when it is configured.
+    const wantsAI = /\b(why|recommend|explain|strategy|advice|insight|should we|how do we|what would)\b/i.test(prompt)
+      || local.confidence !== 'high';
+    if (wantsAI && process.env.OPENAI_API_KEY) {
+      try {
+        const ai = await askOpenAI(prompt, analysisData, ctx);
+        if (ai) {
+          saveCopilotAnswer(session.dir, prompt, ai);
+          return res.json(Object.assign(ai, { source: 'openai' }));
+        }
+      } catch (err) {
+        console.error('OpenAI copilot fallback:', err.message);
+      }
     }
 
-    // Save to persistent storage
-    const copilotPath = path.join(session.dir, 'copilot_saves.json');
-    let saves = [];
-    if (fs.existsSync(copilotPath)) {
-      saves = JSON.parse(fs.readFileSync(copilotPath, 'utf8'));
-    }
-    saves.push({ prompt, result: parsed, timestamp: new Date().toISOString() });
-    fs.writeFileSync(copilotPath, JSON.stringify(saves, null, 2));
-
-    res.json(parsed);
+    saveCopilotAnswer(session.dir, prompt, local);
+    res.json(local);
   } catch (err) {
     console.error('AI Copilot error:', err);
     res.status(500).json({ error: err.message });

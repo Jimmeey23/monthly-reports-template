@@ -2968,8 +2968,131 @@ def build_steady_state(ctx, baseline):
     return "\n".join(insights)
 
 
+# metric label → (ctx group, field, format) so every MoM row can be drilled into
+MOM_DRILL_MAP = {
+    'Net Sales': ('sales', 'net', 'money'),
+    'Gross Sales': ('sales', 'gross', 'money'),
+    'Discount': ('sales', 'disc', 'money'),
+    'Discount Efficiency': ('sales', 'disc_eff', 'num'),
+    'Transactions': ('sales', 'sales', 'int'),
+    'Avg Transaction Value': ('sales', 'atv', 'money'),
+    'ATV': ('sales', 'atv', 'money'),
+    'Sessions': ('sessions', 'sessions', 'int'),
+    'Visits': ('sessions', 'visits', 'int'),
+    'Fill Rate': ('sessions', 'fill', 'pct'),
+    'Capacity': ('sessions', 'capacity', 'int'),
+    'Revenue': ('sessions', 'revenue', 'money'),
+    'Leads': ('leads', 'total', 'int'),
+    'Lead Conversion': ('leads', 'rate', 'pct'),
+    'Lead Conversions': ('leads', 'converted', 'int'),
+    'Trials': ('new', 'trials', 'int'),
+    'Conversions': ('new', 'converted', 'int'),
+    'Conversion Rate': ('new', 'rate', 'pct'),
+    'Lapsed': ('lapsed', 'total', 'int'),
+    'Lapsed Members': ('lapsed', 'lapsed', 'int'),
+    'Renewals': ('lapsed', 'renewed', 'int'),
+    'Renewal Rate': ('lapsed', 'renewal_rate', 'pct'),
+    'Churn Rate': ('lapsed', 'churn', 'pct'),
+    'Frozen': ('lapsed', 'frozen', 'int'),
+    'Check-ins': ('checkins', 'total', 'int'),
+    'Late Cancels': ('checkins', 'late_cancel', 'int'),
+}
+
+
+def _fmt_drill(v, kind):
+    if v is None:
+        return '—'
+    if kind == 'money':
+        return lakh(v)
+    if kind == 'pct':
+        return pct(v)
+    if kind == 'num':
+        return f'{v:,.2f}'
+    return fmt_int(v)
+
+
+def _drill_delta(cur, base, kind):
+    """How the current value relates to a comparison window."""
+    if cur is None or base is None or not base:
+        return '—'
+    if kind == 'pct':
+        d = (cur - base) * 100
+        return f'{d:+.1f}pp'
+    d = (cur - base) / abs(base) * 100
+    return f'{d:+.1f}%'
+
+
+def _mom_drill_cell(ctx, metric_name):
+    """Build the per-cell analytics strip shown when a MoM row is expanded."""
+    spec = MOM_DRILL_MAP.get(metric_name)
+    if not spec:
+        return None
+    group, field, kind = spec
+
+    def raw(prefix):
+        if prefix == 'avg':
+            node = (ctx.get('year_avg') or {}).get(group) or {}
+        else:
+            node = ctx.get(prefix + group) or {}
+        if isinstance(node, dict):
+            v = node.get(field)
+            return v if isinstance(v, (int, float)) else None
+        return None
+
+    cur = raw('')
+    if cur is None:
+        return None
+
+    mo = ctx.get('mo') or {}
+    windows = [
+        (f"M-1 · {mo.get('prev_month_name', 'M-1')}", raw('prev_')),
+        (f"M-2 · {mo.get('prev2_month_name', 'M-2')}", raw('prev2_')),
+        (f"YoY · {mo.get('yoy_month_name', 'YoY')}", raw('yoy_')),
+        (ctx.get('year_avg_label', 'Year Avg'), raw('avg')),
+    ]
+    windows = [(label, v) for label, v in windows if v is not None]
+    if not windows:
+        return None
+
+    tiles = []
+    for label, v in windows:
+        tiles.append(
+            f'<div class="drill-down-metric">'
+            f'<span class="drill-down-metric-label">{label}</span>'
+            f'<span class="drill-down-metric-value">{_fmt_drill(v, kind)}</span>'
+            f'<span class="drill-down-metric-label">{_drill_delta(cur, v, kind)} vs current</span>'
+            f'</div>'
+        )
+
+    vals = [v for _, v in windows] + [cur]
+    lo, hi = min(vals), max(vals)
+    mean = sum(vals) / len(vals)
+    spread = (abs(hi - lo) / abs(mean) * 100) if mean else 0
+    above = sum(1 for v in vals[:-1] if v < cur)
+    insight = (
+        f"{_fmt_drill(cur, kind)} in {mo.get('month_short', '')} {mo.get('year', '')} — "
+        f"{above} of {len(vals) - 1} comparison windows sit below it. "
+        f"Range {_fmt_drill(lo, kind)}–{_fmt_drill(hi, kind)} across M-1 / M-2 / YoY / avg "
+        f"(spread {spread:.0f}% of mean); "
+        f"{'tight, predictable band' if spread < 15 else 'wide swing — trend is volatile' if spread > 40 else 'moderate variation month to month'}."
+    )
+    tiles.append(
+        f'<div class="drill-down-metric drill-down-insight" style="flex:1 1 100%;margin-top:var(--space-2);'
+        f'border-left:3px solid var(--primary);background:var(--primary-soft);padding:8px 14px">'
+        f'<span class="drill-down-metric-label">Analytics</span>'
+        f'<span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans);font-weight:500">{insight}</span>'
+        f'</div>'
+    )
+
+    return (
+        f'<tr class="drill-down-detail">'
+        f'<td colspan="4"><div class="drill-down-content">{"".join(tiles)}</div></td>'
+        f'</tr>'
+    )
+
+
 def mom_toggle_table(ctx, metrics_data, section_id):
-    """Generate MoM/YoY toggle table for a section."""
+    """Generate MoM/YoY toggle table for a section (each row drills into analytics)."""
     rows = []
     for metric_name, values in metrics_data.items():
         current = values.get('current', '—')
@@ -2977,13 +3100,18 @@ def mom_toggle_table(ctx, metrics_data, section_id):
         yoy = values.get('yoy', '—')
         mom_class = 'positive' if isinstance(mom, str) and mom.startswith('+') else 'negative' if isinstance(mom, str) and mom.startswith('-') else ''
         yoy_class = 'positive' if isinstance(yoy, str) and yoy.startswith('+') else 'negative' if isinstance(yoy, str) and yoy.startswith('-') else ''
+        detail = _mom_drill_cell(ctx, metric_name)
+        row_class = ' class="drill-down-row"' if detail else ''
+        onclick = (' onclick="this.classList.toggle(\'expanded\');'
+                   'this.nextElementSibling.classList.toggle(\'visible\')"'
+                   ' title="Click for drill-down analytics"') if detail else ''
         rows.append(f'''
-        <tr>
+        <tr{row_class}{onclick}>
           <td class="metric-name">{metric_name}</td>
           <td>{current}</td>
           <td class="{mom_class}">{mom}</td>
           <td class="{yoy_class}">{yoy}</td>
-        </tr>''')
+        </tr>''' + (detail or ''))
 
     return f'''
     <div class="mom-toggle-wrapper">

@@ -1267,10 +1267,11 @@ def theme_script(ctx):
 
         // Add context-aware insights
         const insights = document.createElement('div');
-        insights.className = 'drill-down-metric';
-        insights.style.gridColumn = '1 / -1';
+        insights.className = 'drill-down-metric drill-down-insight';
+        insights.style.flex = '1 1 100%';
         insights.style.background = 'var(--primary-soft)';
         insights.style.borderLeft = '3px solid var(--primary)';
+        insights.style.marginTop = 'var(--space-2)';
 
         const rowLabel = cells[0]?.textContent.trim() || '';
         insights.innerHTML = `<span class="drill-down-metric-label">💡 Insight</span><span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans)">Click to expand detailed analytics for ${rowLabel}</span>`;
@@ -1361,12 +1362,24 @@ def theme_script(ctx):
 // MoM Toggle Table
 function toggleMoMTable(sectionId) {
   const container = document.getElementById('mom-table-' + sectionId);
-  const btn = container?.previousElementSibling;
   if (!container) return;
+  const btn = container.closest('.mom-toggle-wrapper')?.querySelector('.mom-toggle-btn, .mom-toggle')
+    || container.previousElementSibling;
 
-  const isExpanded = container.style.display !== 'none';
-  container.style.display = isExpanded ? 'none' : 'block';
-  btn?.setAttribute('aria-expanded', !isExpanded);
+  // The wrapper is collapsed with `max-height: 0`, so the .expanded class has to
+  // land on the CONTAINER (not just the button) or nothing becomes visible.
+  const isExpanded = container.classList.contains('expanded')
+    || (container.style.display !== 'none' && container.style.maxHeight !== '0px');
+
+  if (isExpanded) {
+    container.classList.remove('expanded');
+    container.style.display = 'none';
+  } else {
+    container.classList.add('expanded');
+    container.style.display = 'block';
+    container.style.maxHeight = 'none';
+  }
+  btn?.setAttribute('aria-expanded', String(!isExpanded));
   btn?.classList.toggle('expanded', !isExpanded);
 }
 
@@ -1418,10 +1431,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const sessionId = window.location.pathname.split('/')[2];
+      const ctx = window.__REPORT_CTX__ || {};
       const response = await fetch('/ai-copilot/' + sessionId, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt, loc: ctx.loc, month: ctx.month })
       });
 
       const result = await response.json();

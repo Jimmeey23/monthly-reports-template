@@ -8554,22 +8554,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 </div>
 </div>
 </footer>
-<div class="mom-modal-overlay" id="mom-modal-overlay">
-<div class="mom-modal" role="dialog" aria-modal="true" aria-labelledby="mom-modal-title">
-<div class="mom-modal-beam is-top" aria-hidden="true"></div>
-<div class="mom-modal-beam is-left" aria-hidden="true"></div>
-<div class="mom-modal-beam is-right" aria-hidden="true"></div>
-<div class="mom-modal-head">
-<div>
-<div class="mom-modal-eyebrow" id="mom-modal-eyebrow"></div>
-<h3 class="mom-modal-title" id="mom-modal-title"></h3>
-</div>
-<button class="mom-modal-close" id="mom-modal-close" aria-label="Close">&times;</button>
-</div>
-<div class="mom-modal-body"><table class="mom-table" id="mom-modal-table"></table></div>
-<div class="mom-modal-foot">Figures are computed month-by-month from studio transaction, session, lead and membership records for Kwality House, Kemps Corner.</div>
-</div>
-</div>
 <script>
 window.MOM_DATA = {
   exec: {
@@ -8624,65 +8608,8 @@ window.MOM_DATA = {
     ]
   }
 };
-(function () {
-  function fmtCurrency(n) {
-    n = Math.round(n || 0);
-    var neg = n < 0; n = Math.abs(n);
-    var out;
-    if (n >= 10000000) out = (n / 10000000).toFixed(2) + 'Cr';
-    else if (n >= 100000) out = (n / 100000).toFixed(2) + 'L';
-    else {
-      var s = String(n), last3 = s.slice(-3), rest = s.slice(0, -3);
-      if (rest !== '') last3 = ',' + last3;
-      out = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + last3;
-    }
-    return (neg ? '-' : '') + '₹' + out;
-  }
-  function fmtInt(n) { return Math.round(n || 0).toLocaleString('en-IN'); }
-  function fmtPct(n) { return (Math.round((n || 0) * 10) / 10).toFixed(1) + '%'; }
-  function fmtValue(v, fmt) {
-    if (fmt === 'currency') return fmtCurrency(v);
-    if (fmt === 'pct') return fmtPct(v);
-    return fmtInt(v);
-  }
-  function aggregate(values, agg) {
-    var nums = values.map(Number).filter(function (n) { return !isNaN(n); });
-    if (!nums.length) return 0;
-    var sum = nums.reduce(function (a, b) { return a + b; }, 0);
-    return agg === 'avg' ? sum / nums.length : sum;
-  }
-  function buildTable(section) {
-    var table = document.getElementById('mom-modal-table');
-    var thead = '<thead><tr><th>Metric</th>' + section.months.map(function (m) { return '<th>' + m + '</th>'; }).join('') +
-      '<th class="mom-total-col">' + (section.totalHeader || 'Total / Avg') + '</th></tr></thead>';
-    var tbody = '<tbody>' + section.rows.map(function (row) {
-      var monthCells = row.values.map(function (v) { return '<td>' + fmtValue(v, row.fmt) + '</td>'; }).join('');
-      var totalCell = '<td class="mom-total-col">' + fmtValue(aggregate(row.values, row.agg || 'sum'), row.fmt) + '</td>';
-      return '<tr><td>' + row.label + '</td>' + monthCells + totalCell + '</tr>';
-    }).join('') + '</tbody>';
-    table.innerHTML = thead + tbody;
-  }
-  window.openMomModal = function (key) {
-    var section = window.MOM_DATA[key];
-    if (!section) return;
-    document.getElementById('mom-modal-eyebrow').textContent = section.eyebrow || '';
-    document.getElementById('mom-modal-title').textContent = section.title || 'Month on Month';
-    buildTable(section);
-    document.getElementById('mom-modal-overlay').classList.add('is-open');
-  };
-  function closeMomModal() {
-    document.getElementById('mom-modal-overlay').classList.remove('is-open');
-  }
-  document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.mom-info-btn');
-    if (btn) { window.openMomModal(btn.getAttribute('data-mom')); return; }
-    if (e.target.id === 'mom-modal-overlay' || e.target.id === 'mom-modal-close') closeMomModal();
-  });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeMomModal();
-  });
-})();
 </script>
+<script src="/revised-july/mom-panel.js?v=1"></script>
 <script src="./section-audio.js?v=1"></script>
 <script src="./sfx-soundboard.js?v=10"></script>
 </body>

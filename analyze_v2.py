@@ -435,24 +435,89 @@ def classify_format(class_name):
 
 
 # ===================== SESSIONS =====================
+def _truthy(v):
+    return str(v or '').strip().upper() in ('TRUE', '1', 'YES', 'Y', 'T')
+
+
+def detect_sessions_schema(fieldnames):
+    """Map the three session export shapes we see onto one vocabulary.
+
+    roster   (checkins.csv): one row per member per class — Session ID,
+                             Capacity, Checked In, Date (IST), Location
+    bookings (sessions.csv): one row per booking — Location Name,
+                             Session Date, Attended, Time Slot (no capacity)
+    legacy                 : one row per class — Location, Date, Capacity,
+                             CheckedIn, Revenue, Class, Trainer, Day, Time
+    """
+    def first(*names):
+        for n in names:
+            if fieldnames and n in fieldnames:
+                return n
+        return None
+
+    return {
+        'location':  first('Location', 'Location Name', 'Center'),
+        'date':      first('Date (IST)', 'Session Date', 'Date'),
+        'sid':       first('Session ID', 'Session Id'),
+        'capacity':  first('Capacity'),
+        'visits':    first('Checked In', 'Attended', 'CheckedIn'),
+        'revenue':   first('Paid', 'Sale Value', 'Revenue'),
+        'cls':       first('Cleaned Class', 'Session Name', 'Class'),
+        'trainer':   first('Teacher Name', 'Trainer'),
+        'day':       first('Day of Week', 'Day'),
+        'time':      first('Time', 'Time Slot'),
+        'host':      first('Host ID', 'Host Id'),
+    }
+
+
+def sessions_source():
+    """Pick the export that can actually answer fill-rate questions.
+
+    Fill rate needs capacity, and only the roster export carries it, so a
+    bookings-only upload would otherwise leave sessions at zero.
+    """
+    candidates = [SESSIONS_FILE, CHECKINS_FILE]
+    fallback = None
+    for path in candidates:
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, encoding='utf-8-sig') as f:
+                cols = csv.DictReader(f, delimiter=sniff_delimiter(path)).fieldnames or []
+        except OSError:
+            continue
+        sch = detect_sessions_schema(cols)
+        if not (sch['location'] and sch['date']):
+            continue
+        if sch['capacity'] and sch['visits']:
+            return path, sch
+        if fallback is None:
+            fallback = (path, sch)
+    if fallback:
+        return fallback
+    return None, None
+
+
 def analyze_sessions():
-    """Analyze sessions for all locations and months."""
+    """Analyze sessions for all locations and months.
+
+    Rows are bookings, not classes, in every export we receive, so rows are
+    first collapsed into one record per class (Session ID, or date + time +
+    class + host when the export has no id) and only then aggregated.
+    """
     data = {lk: {} for lk in LOCATIONS}
-    # Also track by class, trainer, time slot for heatmap
-    by_class = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0, 'empty': 0})
+    by_class = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0, 'empty': 0})
                     for m in MONTHS}
                for lk in LOCATIONS}
-    by_trainer = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0})
+    by_trainer = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0})
                       for m in MONTHS}
                  for lk in LOCATIONS}
-    by_format = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0, 'empty': 0})
+    by_format = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0, 'empty': 0})
                      for m in MONTHS}
                 for lk in LOCATIONS}
-    # Trainer x format specialization: {trainer: {format: {'sessions', 'visits', 'capacity'}}}
     by_trainer_format = {lk: {m: defaultdict(lambda: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0}))
                              for m in MONTHS}
                         for lk in LOCATIONS}
-    # Heatmap now also tracks which formats/trainers made up each cell
     heatmap = {lk: {m: defaultdict(lambda: defaultdict(lambda: {
                         'visits': 0, 'capacity': 0, 'sessions': 0,
                         'formats': defaultdict(int), 'trainers': defaultdict(int),
@@ -460,79 +525,106 @@ def analyze_sessions():
                    for m in MONTHS}
               for lk in LOCATIONS}
 
-    with open(SESSIONS_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f, delimiter=sniff_delimiter(SESSIONS_FILE))
+    path, sch = sessions_source()
+    if not path:
+        print('  ! no usable sessions export (need a Location and a Date column)')
+        return data, by_class, by_trainer, by_format, heatmap, by_trainer_format
+
+    # (loc_key, month, session id) -> one class
+    sessions = {}
+
+    with open(path, encoding='utf-8-sig') as f:
+        r = csv.DictReader(f, delimiter=sniff_delimiter(path))
         for row in r:
-            loc = row.get('Location', '')
-            loc_key = loc_key_for(loc)
+            loc_key = loc_key_for(row.get(sch['location'], '') or '')
             if not loc_key:
                 continue
-            d = row.get('Date', '')
+            d = row.get(sch['date'], '') or ''
             month = month_key(d)
             if month not in MONTHS:
                 continue
 
-            cap = to_int(row.get('Capacity', '0'))
-            chk = to_int(row.get('CheckedIn', '0'))
-            rev = to_float(row.get('Revenue', '0'))
-            cls = row.get('Class', '') or 'Unknown Class'
-            trainer = row.get('Trainer', '') or 'Unknown'
-            day = row.get('Day', '')
-            time = row.get('Time', '')
-            fmt_name = classify_format(cls)
+            raw_sid = (row.get(sch['sid'], '') or '').strip() if sch['sid'] else ''
+            cls = (row.get(sch['cls'], '') if sch['cls'] else '') or 'Unknown Class'
+            trainer = (row.get(sch['trainer'], '') if sch['trainer'] else '') or 'Unknown'
+            time_slot = (row.get(sch['time'], '') if sch['time'] else '') or 'Unknown'
+            day = (row.get(sch['day'], '') if sch['day'] else '') or 'Unknown'
+            host = (row.get(sch['host'], '') if sch['host'] else '') or ''
+            sid = raw_sid or '|'.join([d, time_slot, cls, trainer, host])
 
-            if month not in data[loc_key]:
-                data[loc_key][month] = {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0, 'empty': 0}
+            key = (loc_key, month, sid)
+            rec = sessions.get(key)
+            if rec is None:
+                rec = sessions[key] = {
+                    'visits': 0, 'capacity': 0, 'revenue': 0.0,
+                    'cls': cls, 'trainer': trainer, 'day': day,
+                    'time': time_slot, 'fmt': classify_format(cls),
+                }
 
-            dm = data[loc_key][month]
-            dm['sessions'] += 1
-            dm['visits'] += chk
-            dm['capacity'] += cap
-            dm['revenue'] += rev
-            if chk == 0:
-                dm['empty'] += 1
+            # Visits: the roster export flags each attendee (TRUE/FALSE); the
+            # legacy export already gives a per-class headcount.
+            raw_visits = (row.get(sch['visits'], '') if sch['visits'] else '') or ''
+            if _truthy(raw_visits):
+                rec['visits'] += 1
+            else:
+                n = to_int(raw_visits)
+                if n and not _truthy(raw_visits):
+                    rec['visits'] += n
 
-            # By class (uses the 'Class' column, not 'SessionName')
-            bc = by_class[loc_key][month][cls]
-            bc['sessions'] += 1
-            bc['visits'] += chk
-            bc['capacity'] += cap
-            bc['revenue'] += rev
-            if chk == 0:
-                bc['empty'] += 1
+            # Capacity repeats on every row of a class — take it once.
+            if sch['capacity']:
+                cap = to_int(row.get(sch['capacity'], '0'))
+                if cap > rec['capacity']:
+                    rec['capacity'] = cap
 
-            # By trainer
-            bt = by_trainer[loc_key][month][trainer]
-            bt['sessions'] += 1
-            bt['visits'] += chk
-            bt['capacity'] += cap
-            bt['revenue'] += rev
+            if sch['revenue']:
+                rec['revenue'] += to_float(row.get(sch['revenue'], '0'))
 
-            # By format: Barre / PowerCycle / Strength Lab
-            bf = by_format[loc_key][month][fmt_name]
-            bf['sessions'] += 1
-            bf['visits'] += chk
-            bf['capacity'] += cap
-            bf['revenue'] += rev
-            if chk == 0:
-                bf['empty'] += 1
+    for (loc_key, month, _sid), rec in sessions.items():
+        dm = data[loc_key].setdefault(
+            month, {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0, 'empty': 0})
+        dm['sessions'] += 1
+        dm['visits'] += rec['visits']
+        dm['capacity'] += rec['capacity']
+        dm['revenue'] += rec['revenue']
+        if rec['visits'] == 0:
+            dm['empty'] += 1
 
-            # Trainer x format specialization
-            btf = by_trainer_format[loc_key][month][trainer][fmt_name]
-            btf['sessions'] += 1
-            btf['visits'] += chk
-            btf['capacity'] += cap
+        bc = by_class[loc_key][month][rec['cls']]
+        bc['sessions'] += 1
+        bc['visits'] += rec['visits']
+        bc['capacity'] += rec['capacity']
+        bc['revenue'] += rec['revenue']
+        if rec['visits'] == 0:
+            bc['empty'] += 1
 
-            # Heatmap: time slot x day of week, plus format/trainer composition
-            time_slot = time[:5] if time else 'Unknown'
-            hm = heatmap[loc_key][month][time_slot][day]
-            hm['visits'] += chk
-            hm['capacity'] += cap
-            hm['sessions'] += 1
-            hm['formats'][fmt_name] += 1
-            hm['trainers'][trainer] += 1
+        bt = by_trainer[loc_key][month][rec['trainer']]
+        bt['sessions'] += 1
+        bt['visits'] += rec['visits']
+        bt['capacity'] += rec['capacity']
+        bt['revenue'] += rec['revenue']
 
-    # Compute fill rates
+        bf = by_format[loc_key][month][rec['fmt']]
+        bf['sessions'] += 1
+        bf['visits'] += rec['visits']
+        bf['capacity'] += rec['capacity']
+        bf['revenue'] += rec['revenue']
+        if rec['visits'] == 0:
+            bf['empty'] += 1
+
+        btf = by_trainer_format[loc_key][month][rec['trainer']][rec['fmt']]
+        btf['sessions'] += 1
+        btf['visits'] += rec['visits']
+        btf['capacity'] += rec['capacity']
+
+        slot = rec['time'][:5] if rec['time'] else 'Unknown'
+        hm = heatmap[loc_key][month][slot][rec['day']]
+        hm['visits'] += rec['visits']
+        hm['capacity'] += rec['capacity']
+        hm['sessions'] += 1
+        hm['formats'][rec['fmt']] += 1
+        hm['trainers'][rec['trainer']] += 1
+
     for loc_key in LOCATIONS:
         for month in MONTHS:
             if month in data[loc_key]:
@@ -541,6 +633,7 @@ def analyze_sessions():
                 dm['avg_visits'] = dm['visits'] / dm['sessions'] if dm['sessions'] else 0
 
     return data, by_class, by_trainer, by_format, heatmap, by_trainer_format
+
 
 
 # ===================== LEADS / FUNNEL =====================

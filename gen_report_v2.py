@@ -7,7 +7,6 @@ Based on the May 2026 reference report structure with 7 sections.
 import calendar
 import json
 import os
-import re
 import sys
 from datetime import datetime
 
@@ -777,6 +776,11 @@ def hero(ctx):
     conv_val = pct(ctx['new']['rate'])
     lapsed_val = fmt_int(ctx['lapsed']['lapsed'])
     disc_eff_val = f"&#8377;{s['disc_eff']:.2f}"
+
+    available_months = sorted(m for m in DATA.get('meta', {}).get('months', []) if m <= ctx['month_key'])[-12:]
+
+    def history(getter, field):
+        return [(month, float(getter(ctx['loc_key'], month).get(field, 0) or 0)) for month in available_months]
     
     return f'''
 <section class="hero">
@@ -821,24 +825,24 @@ def hero(ctx):
 
     <div class="hero-kpi-grid">
       {kpi_card("Net Sales", net_val, f"Gross {gross_val} &middot; Disc {disc_val}",
-                ctx['net_mom'], ctx['net_yoy'], ctx['net_baseline'], higher_is_better=True)}
+                ctx['net_mom'], ctx['net_yoy'], ctx['net_baseline'], higher_is_better=True, chart_values=history(get_sales, 'net'))}
       {kpi_card("Visits", visits_val, f"Across {sess['sessions']} sessions",
-                ctx['visits_mom'], "n/a", ctx['visits_baseline'], higher_is_better=True)}
+                ctx['visits_mom'], "n/a", ctx['visits_baseline'], higher_is_better=True, chart_values=history(get_sessions, 'visits'))}
       {kpi_card("Fill Rate", fill_val, "Capacity utilization",
-                ctx['fill_mom'], "n/a", ctx['fill_baseline'], higher_is_better=True, is_pp=True)}
+                ctx['fill_mom'], "n/a", ctx['fill_baseline'], higher_is_better=True, is_pp=True, chart_values=history(get_sessions, 'fill'))}
       {kpi_card("Conversion Rate", conv_val, f"{ctx['new']['trials']} trials &rarr; {ctx['new']['converted']} converted",
-                ctx['conv_mom'], "n/a", ctx['conv_baseline'], higher_is_better=True, is_pp=True)}
+                ctx['conv_mom'], "n/a", ctx['conv_baseline'], higher_is_better=True, is_pp=True, chart_values=history(get_new, 'rate'))}
       {kpi_card("Lapsed Members", lapsed_val, f"Churn rate {pct(ctx['lapsed']['churn'])}",
-                ctx['lapsed_mom'], "n/a", "Active retention work", higher_is_better=False)}
+                ctx['lapsed_mom'], "n/a", "Active retention work", higher_is_better=False, chart_values=history(get_lapsed, 'lapsed'))}
       {kpi_card("Discount Efficiency", disc_eff_val, "Revenue collected / &#8377;1 discounted",
-                ctx['disc_eff_mom'], ctx['disc_eff_yoy'], ctx['disc_eff_baseline'], higher_is_better=True)}
+                ctx['disc_eff_mom'], ctx['disc_eff_yoy'], ctx['disc_eff_baseline'], higher_is_better=True, chart_values=history(get_sales, 'disc_eff'))}
     </div>
   </div>
 </section>
 '''
 
 
-def kpi_card(label, value, sub, mom, yoy, baseline_text, higher_is_better=True, is_pp=False):
+def kpi_card(label, value, sub, mom, yoy, baseline_text, higher_is_better=True, is_pp=False, chart_values=None):
     """Generate an accessible two-sided KPI card with comparative context."""
     mom_b = badge(mom, higher_is_better) if not is_pp else badge_from_pp(mom, higher_is_better)
     yoy_b = badge(yoy, higher_is_better) if not is_pp else badge_from_pp(yoy, higher_is_better)
@@ -854,34 +858,48 @@ def kpi_card(label, value, sub, mom, yoy, baseline_text, higher_is_better=True, 
         unit = ' percentage points' if is_pp else ''
         return f"Performance {direction} by {change}{unit} versus {period}. {implication}"
 
-    def change_bar_width(change):
-        match = re.search(r'-?[\d.]+', str(change))
-        if not match:
-            return 8
-        return min(100, max(8, abs(float(match.group())) * 2.4))
-
-    mom_width = change_bar_width(mom)
-    yoy_width = change_bar_width(yoy)
+    icons = {
+        'Net Sales': '<path d="M5 8h14M7 5h10M8 12c0 2 1.8 3.5 4 3.5s4-1.5 4-3.5-1.8-3.5-4-3.5S8 7 8 5"/>',
+        'Visits': '<path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 20v-2a4 4 0 0 0-3-3.87M16 2.13a4 4 0 0 1 0 7.75"/>',
+        'Fill Rate': '<path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16V4"/>',
+        'Conversion Rate': '<path d="M3 12h13M12 7l5 5-5 5M21 5v14"/>',
+        'Lapsed Members': '<path d="M12 8v4l3 2M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/>',
+        'Discount Efficiency': '<path d="M19 5 5 19M7 5h.01M17 19h.01M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6M17 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>',
+    }
+    icon = icons.get(label, '<path d="M4 19V5M4 19h16M8 15l3-3 3 2 5-7"/>')
+    chart_values = chart_values or []
+    chart_max = max((point[1] for point in chart_values), default=0)
+    bar_heights = [max(8, value / chart_max * 94) if chart_max else 8 for _, value in chart_values]
+    bars = ''.join(
+        f'<span class="kpi-bar-column{(" is-current" if i == len(bar_heights) - 1 else "")}" '
+        f'title="{chart_values[i][0]}: {chart_values[i][1]:,.1f}"><i style="--height:{height:.1f}%"></i>'
+        f'<small>{datetime.strptime(chart_values[i][0], "%Y-%m").strftime("%b")[0]}</small></span>'
+        for i, height in enumerate(bar_heights)
+    )
 
     return f'''        <article class="kpi-card" role="button" tabindex="0" aria-pressed="false" aria-label="{label}: {value}. Flip for growth details">
           <div class="kpi-card-inner">
             <div class="kpi-card-face kpi-card-front">
-              <div class="kpi-label">{label}</div>
-              <div class="kpi-value">{value}</div>
-              <div class="kpi-mini-chart" role="img" aria-label="{label} comparison chart">
-                <div class="kpi-chart-row"><span>MoM</span><i class="{mom_b}" style="--bar:{mom_width:.0f}%"></i></div>
-                <div class="kpi-chart-row"><span>YoY</span><i class="{yoy_b if yoy != 'n/a' else 'neutral'}" style="--bar:{yoy_width:.0f}%"></i></div>
+              <div class="kpi-ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+              <div class="kpi-front-header">
+                <div class="kpi-title-lockup"><span class="kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24">{icon}</svg></span><div class="kpi-label">{label}</div></div>
+                <div class="kpi-value">{value}</div>
               </div>
-              <div class="kpi-card-action">Details <span aria-hidden="true">&rarr;</span></div>
+              <div class="kpi-front-body">
+                <div class="kpi-chart-heading"><span>12-month trend</span><strong>{chart_values[0][0] if chart_values else ''} &ndash; {chart_values[-1][0] if chart_values else ''}</strong></div>
+                <div class="kpi-mini-chart" role="img" aria-label="12-month bar chart for {label}">{bars}</div>
+              </div>
+              <div class="kpi-card-action">View growth details <span aria-hidden="true">&rarr;</span></div>
             </div>
             <div class="kpi-card-face kpi-card-back">
-              <div class="kpi-back-header"><span>{label}</span></div>
+              <div class="kpi-back-header"><span>{label}</span><b aria-hidden="true">&times;</b></div>
+              <p class="kpi-back-description">{sub}</p>
               <div class="kpi-comparison">
-                <div class="kpi-comparison-top"><span>MoM</span><strong class="{mom_b}">{mom}</strong></div>
+                <div class="kpi-comparison-top"><span>MoM</span><strong class="badge {mom_b}">{mom}</strong></div>
                 <p>{comparison_description('last month', mom)}</p>
               </div>
               <div class="kpi-comparison">
-                <div class="kpi-comparison-top"><span>YoY</span><strong class="{yoy_b if yoy != 'n/a' else 'neutral'}">{yoy}</strong></div>
+                <div class="kpi-comparison-top"><span>YoY</span><strong class="badge {yoy_b if yoy != 'n/a' else 'neutral'}">{yoy}</strong></div>
                 <p>{comparison_description('last year', yoy)}</p>
               </div>
               <div class="kpi-benchmark" title="{baseline_text}"><span>Benchmark</span><strong>{baseline_text}</strong></div>

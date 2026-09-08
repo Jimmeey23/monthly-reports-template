@@ -3877,7 +3877,7 @@ body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):n
 <p class="section-deck">Headline revenue closed at <strong>₹17.97L net</strong> (₹18.89L gross, ₹1.76L discount), which is <strong>+31.2% vs Jun 2026</strong> (M-1), <strong>+26.2% vs May 2026</strong> (M-2), <strong>+23.2% vs 2026 Avg (excl. Jul)</strong>, and <strong>+14.5% vs Jul 2025</strong> (YoY). Trial conversion is 24.8% (38 of 153 trials), up +1.6pp MoM. Churn rate stands at 26.8%, deteriorating +5.3pp MoM. Discount efficiency is ₹10.72 of revenue collected per ₹1 discounted.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="exec">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="exec" type="button">i</button>
 <div class="section-anchor">Section 1 / 07</div>
 </div>
 </div>
@@ -4392,7 +4392,7 @@ body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):n
 <p class="section-deck">July 2026 closed at <strong>₹17.97L net</strong> on 231 transactions, an ATV of <strong>₹8,179</strong>. Memberships and Class Packages together account for <strong>89% of revenue</strong>. Discount value of ₹1.76L represents 9.3% of gross. Payment mix: Custom (55%), Cash (24%), Stripe (15%).</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="commercial">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="commercial" type="button">i</button>
 <div class="section-anchor">Section 2 / 07</div>
 </div>
 </div>
@@ -5112,7 +5112,7 @@ body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):n
 <p class="section-deck">The conversion story in July 2026: 220 leads generated, 153 first visits / trials, 38 converted (24.8% conversion rate), and 38 retained (24.8% of trials). Leads are +37.5% MoM, conversions +66.7% MoM. The referral channel is the highest-quality lead source. Below we walk the funnel source-by-source with all available metrics.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="funnel">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="funnel" type="button">i</button>
 <button aria-label="View new client purchases and client-type detail" class="mom-info-btn" data-extra="funnel">i</button>
 <div class="section-anchor">Section 3 / 07</div>
 </div>
@@ -5526,7 +5526,7 @@ body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):n
 <p class="section-deck">The session portfolio delivered <strong>₹12.62L of session-attributed revenue</strong> across 13 distinct class formats in July. Average class size is 5.3 visits per session. Studio PowerCycle Express fill rate at 78.8% makes it the supply-constrained hero. Unknown Class at 0.0% fill is the structural underperformer.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="sessions">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="sessions" type="button">i</button>
 <button aria-label="View teacher scorecard and trainer month-on-month detail" class="mom-info-btn" data-extra="sessions">i</button>
 <div class="section-anchor">Section 4 / 07</div>
 </div>
@@ -6231,7 +6231,7 @@ body.bandra-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):n
 <p class="section-deck">July’s expiration book had <strong>71 memberships reach end-of-life</strong>: <strong>43 renewed (60.6%)</strong>, <strong>19 lapsed (26.8%)</strong>, <strong>9 frozen</strong>. Churn rate is +5.3pp MoM and +6.1pp vs the 2026 Avg (excl. Jul) baseline. Renewal rate needs attention. The cumulative lapsed book now stands at 347 unique lapsed members.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="retention">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="retention" type="button">i</button>
 <div class="section-anchor">Section 5 / 07</div>
 </div>
 </div>
@@ -9020,9 +9020,12 @@ window.MOM_DATA = {
     document.body.style.overflow = '';
     if (lastModalTrigger && typeof lastModalTrigger.focus === 'function') lastModalTrigger.focus();
   }
+  document.querySelectorAll('.mom-info-btn[data-mom]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      window.openMomModal(button.getAttribute('data-mom'));
+    });
+  });
   document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.mom-info-btn');
-    if (btn) { window.openMomModal(btn.getAttribute('data-mom')); return; }
     if (e.target.id === 'mom-modal-overlay' || e.target.id === 'mom-modal-close') closeMomModal();
   });
   document.addEventListener('keydown', function (e) {

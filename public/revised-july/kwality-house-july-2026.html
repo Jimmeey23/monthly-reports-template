@@ -3329,7 +3329,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">Headline revenue closed at <strong>₹24.54L net</strong> (₹25.80L gross, ₹1.70L discount), which is <strong>+18.2% vs Jun 2026</strong> (M-1), <strong>+6.2% vs May 2026</strong> (M-2), <strong>+5.9% vs 2026 Avg (excl. Jul)</strong>, and <strong>+37.1% vs Jul 2025</strong> (YoY). Trial conversion is 28.9% (35 of 121 trials), down -2.2pp MoM. Churn rate stands at 22.5%, improving -11.2pp MoM. Discount efficiency is ₹15.19 of revenue collected per ₹1 discounted.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="exec">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="exec" type="button">i</button>
 <div class="section-anchor">Section 1 / 07</div>
 </div>
 </div>
@@ -3801,7 +3801,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">July 2026 closed at <strong>₹24.54L net</strong> on 349 transactions, an ATV of <strong>₹7,393</strong>. Memberships and Class Packages together account for <strong>81% of revenue</strong>. Discount value of ₹1.70L represents 6.6% of gross. Payment mix: Custom (59%), Cash (21%), Stripe (14%).</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="commercial">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="commercial" type="button">i</button>
 <div class="section-anchor">Section 2 / 07</div>
 </div>
 </div>
@@ -4603,7 +4603,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">The conversion story in July 2026: 154 leads generated, 121 first visits / trials, 35 converted (28.9% conversion rate), and 35 retained (28.9% of trials). Leads are +20.3% MoM, conversions -13.5% MoM. The referral channel is the highest-quality lead source. Below we walk the funnel source-by-source with all available metrics.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="funnel">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="funnel" type="button">i</button>
 <div class="section-anchor">Section 3 / 07</div>
 </div>
 </div>
@@ -5078,7 +5078,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">The session portfolio delivered <strong>₹21.03L of session-attributed revenue</strong> across 18 distinct class formats in July. Average class size is 6.6 visits per session. Studio Strength Lab (Full Body) fill rate at 89.0% makes it the supply-constrained hero. Unknown Class at 2.2% fill is the structural underperformer.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="sessions">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="sessions" type="button">i</button>
 <div class="section-anchor">Section 4 / 07</div>
 </div>
 </div>
@@ -5864,7 +5864,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">July’s expiration book had <strong>120 memberships reach end-of-life</strong>: <strong>83 renewed (69.2%)</strong>, <strong>27 lapsed (22.5%)</strong>, <strong>10 frozen</strong>. Churn rate is -11.2pp MoM and +0.6pp vs the 2026 Avg (excl. Jul) baseline. Renewal rate is improving. The cumulative lapsed book now stands at 482 unique lapsed members.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="retention">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="retention" type="button">i</button>
 <div class="section-anchor">Section 5 / 07</div>
 </div>
 </div>
@@ -8673,9 +8673,12 @@ window.MOM_DATA = {
   function closeMomModal() {
     document.getElementById('mom-modal-overlay').classList.remove('is-open');
   }
+  document.querySelectorAll('.mom-info-btn[data-mom]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      window.openMomModal(button.getAttribute('data-mom'));
+    });
+  });
   document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.mom-info-btn');
-    if (btn) { window.openMomModal(btn.getAttribute('data-mom')); return; }
     if (e.target.id === 'mom-modal-overlay' || e.target.id === 'mom-modal-close') closeMomModal();
   });
   document.addEventListener('keydown', function (e) {

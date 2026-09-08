@@ -681,6 +681,182 @@ def build_cover_page(ctx):
 '''
 
 
+def _mom_months(ctx):
+    """Return up to 12 real source months ending at the selected report month."""
+    return sorted(
+        month for month in DATA.get('meta', {}).get('months', [])
+        if month <= ctx['month_key']
+    )[-12:]
+
+
+def _mom_row(label, values, fmt='int', agg='sum'):
+    return {'label': label, 'values': values, 'fmt': fmt, 'agg': agg}
+
+
+def build_mom_dataset(ctx):
+    """Build section-specific MoM tables from the same normalized report data."""
+    months = _mom_months(ctx)
+    loc_key = ctx['loc_key']
+    month_labels = [datetime.strptime(month, '%Y-%m').strftime('%b %Y') for month in months]
+
+    def series(getter, field):
+        return [getter(loc_key, month).get(field, 0) or 0 for month in months]
+
+    sales = lambda field: series(get_sales, field)
+    sessions = lambda field: series(get_sessions, field)
+    leads = lambda field: series(get_leads, field)
+    new = lambda field: series(get_new, field)
+    lapsed = lambda field: series(get_lapsed, field)
+    checkins = lambda field: series(get_checkins, field)
+
+    section_rows = {
+        1: [
+            _mom_row('Net Sales', sales('net'), 'currency'),
+            _mom_row('Visits', sessions('visits')),
+            _mom_row('Fill Rate', sessions('fill'), 'pct', 'avg'),
+            _mom_row('Trial Conversion Rate', new('rate'), 'pct', 'avg'),
+            _mom_row('Churn Rate', lapsed('churn'), 'pct', 'avg'),
+        ],
+        2: [
+            _mom_row('Gross Sales', sales('gross'), 'currency'),
+            _mom_row('Net Sales', sales('net'), 'currency'),
+            _mom_row('Discounts', sales('disc'), 'currency'),
+            _mom_row('Transactions', sales('sales')),
+            _mom_row('Unique Buyers', sales('members')),
+            _mom_row('Average Transaction Value', sales('atv'), 'currency', 'avg'),
+            _mom_row('Discount Efficiency', sales('disc_eff'), 'decimal', 'avg'),
+        ],
+        3: [
+            _mom_row('Leads', leads('total')),
+            _mom_row('Trials', new('trials')),
+            _mom_row('Converted', new('converted')),
+            _mom_row('Retained', new('retained')),
+            _mom_row('Trial Conversion Rate', new('rate'), 'pct', 'avg'),
+        ],
+        4: [
+            _mom_row('Sessions', sessions('sessions')),
+            _mom_row('Visits', sessions('visits')),
+            _mom_row('Capacity', sessions('capacity')),
+            _mom_row('Fill Rate', sessions('fill'), 'pct', 'avg'),
+            _mom_row('Session Revenue', sessions('revenue'), 'currency'),
+            _mom_row('Late Cancellations', checkins('late_cancel')),
+        ],
+        5: [
+            _mom_row('Memberships Due', lapsed('total')),
+            _mom_row('Renewed', lapsed('renewed')),
+            _mom_row('New Lapsed Members', lapsed('lapsed')),
+            _mom_row('Frozen', lapsed('frozen')),
+            _mom_row('Renewal Rate', lapsed('renewal_rate'), 'pct', 'avg'),
+            _mom_row('Churn Rate', lapsed('churn'), 'pct', 'avg'),
+        ],
+        6: [
+            _mom_row('Net Sales', sales('net'), 'currency'),
+            _mom_row('Trial Conversion Rate', new('rate'), 'pct', 'avg'),
+            _mom_row('Fill Rate', sessions('fill'), 'pct', 'avg'),
+            _mom_row('New Lapsed Members', lapsed('lapsed')),
+            _mom_row('Late Cancellations', checkins('late_cancel')),
+        ],
+        7: [
+            _mom_row('Net Sales', sales('net'), 'currency'),
+            _mom_row('Leads', leads('total')),
+            _mom_row('Trials', new('trials')),
+            _mom_row('Visits', sessions('visits')),
+            _mom_row('Fill Rate', sessions('fill'), 'pct', 'avg'),
+            _mom_row('Churn Rate', lapsed('churn'), 'pct', 'avg'),
+        ],
+    }
+    titles = {
+        1: 'Executive Summary', 2: 'Revenue Performance', 3: 'Growth & Conversion',
+        4: 'Studio Delivery', 5: 'Member Health', 6: 'Decision Agenda',
+        7: 'Forward Indicators',
+    }
+    return {
+        f'{loc_key}|{ctx["month_key"]}|{section_num}': {
+            'eyebrow': f'Section {section_num:02d} · {ctx["loc"]["short_name"]}',
+            'title': f'{titles[section_num]} — Month on Month',
+            'months': month_labels,
+            'rows': rows,
+        }
+        for section_num, rows in section_rows.items()
+    }
+
+
+def build_mom_tables(ctx_list):
+    datasets = {}
+    for ctx in ctx_list:
+        datasets.update(build_mom_dataset(ctx))
+    payload = json.dumps(datasets, ensure_ascii=False).replace('</', '<\\/')
+    return f'''
+<div class="mom-modal-overlay" id="mom-modal-overlay" aria-hidden="true">
+  <div class="mom-modal" role="dialog" aria-modal="true" aria-labelledby="mom-modal-title" tabindex="-1">
+    <div class="mom-modal-head">
+      <div><div class="mom-modal-eyebrow" id="mom-modal-eyebrow"></div><h3 class="mom-modal-title" id="mom-modal-title"></h3></div>
+      <button class="mom-modal-close" id="mom-modal-close" type="button" aria-label="Close month-on-month table">&times;</button>
+    </div>
+    <div class="mom-modal-body"><table class="mom-table" id="mom-modal-table"></table></div>
+    <div class="mom-modal-foot">Computed from the report's normalized source data for the months shown.</div>
+  </div>
+</div>
+<script>
+window.MOM_DATA = Object.assign(window.MOM_DATA || {{}}, {payload});
+(function () {{
+  var overlay = document.getElementById('mom-modal-overlay');
+  var table = document.getElementById('mom-modal-table');
+  var dialog = overlay && overlay.querySelector('.mom-modal');
+  var lastTrigger = null;
+  if (!overlay || !table || !dialog) return;
+  function number(value) {{ return Number(value) || 0; }}
+  function format(value, kind) {{
+    var n = number(value);
+    if (kind === 'currency') return '₹' + Math.round(n).toLocaleString('en-IN');
+    if (kind === 'pct') return n.toFixed(1) + '%';
+    if (kind === 'decimal') return n.toFixed(2);
+    return Math.round(n).toLocaleString('en-IN');
+  }}
+  function aggregate(values, kind) {{
+    var nums = values.map(number);
+    var total = nums.reduce(function (sum, value) {{ return sum + value; }}, 0);
+    return kind === 'avg' && nums.length ? total / nums.length : total;
+  }}
+  function openTable(key, trigger) {{
+    var section = window.MOM_DATA[key];
+    if (!section) return;
+    var last = section.months.length - 1;
+    var head = '<thead><tr><th>Metric</th>' + section.months.map(function (month, index) {{
+      return '<th' + (index === last ? ' class="mom-current-col"' : '') + '>' + month + '</th>';
+    }}).join('') + '<th class="mom-total-col">Total / Avg</th></tr></thead>';
+    var body = '<tbody>' + section.rows.map(function (row) {{
+      var cells = row.values.map(function (value, index) {{
+        return '<td' + (index === last ? ' class="mom-current-col"' : '') + '>' + format(value, row.fmt) + '</td>';
+      }}).join('');
+      return '<tr><td>' + row.label + '</td>' + cells + '<td class="mom-total-col">' + format(aggregate(row.values, row.agg), row.fmt) + '</td></tr>';
+    }}).join('') + '</tbody>';
+    table.innerHTML = head + body;
+    document.getElementById('mom-modal-eyebrow').textContent = section.eyebrow;
+    document.getElementById('mom-modal-title').textContent = section.title;
+    lastTrigger = trigger;
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    dialog.focus();
+  }}
+  function closeTable() {{
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastTrigger) lastTrigger.focus();
+  }}
+  document.querySelectorAll('.mom-info-btn[data-mom-key]').forEach(function (button) {{
+    button.addEventListener('click', function () {{ openTable(button.dataset.momKey, button); }});
+  }});
+  document.getElementById('mom-modal-close').addEventListener('click', closeTable);
+  overlay.addEventListener('click', function (event) {{ if (event.target === overlay) closeTable(); }});
+  document.addEventListener('keydown', function (event) {{ if (event.key === 'Escape' && overlay.classList.contains('is-open')) closeTable(); }});
+}}());
+</script>
+'''
+
+
 def build_html(ctx):
     """Assemble the full HTML document."""
     html = head(ctx)
@@ -694,6 +870,7 @@ def build_html(ctx):
     html += section_05_lapsed(ctx)
     html += section_06_recommendations(ctx)
     html += section_07_predictions(ctx)
+    html += build_mom_tables([ctx])
     html += "\n<!-- REPORT_CLIENT_PLACEHOLDER -->\n"
     html += footer(ctx)
     html += theme_script(ctx)
@@ -833,6 +1010,7 @@ def build_html_multi(ctx_list):
             html += section_07_predictions(ctx)
             html += '\n</div>\n'
 
+    html += build_mom_tables(ctx_list)
     html += "\n<!-- REPORT_CLIENT_PLACEHOLDER -->\n"
     html += footer(ctx_list[-1])
     html += theme_script(ctx_list[-1])

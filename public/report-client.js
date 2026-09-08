@@ -18,421 +18,6 @@
       .replace(/>/g, '&gt;');
   }
 
-  // ───────────────────────── Editor toolbar ─────────────────────────
-
-  const FONT_FAMILIES = [
-    ['Inter (default)', "'Inter','Helvetica Neue',Helvetica,Arial,sans-serif"],
-    ['Source Serif', "'Source Serif Pro',Georgia,serif"],
-    ['Georgia', 'Georgia, serif'],
-    ['Arial', 'Arial, Helvetica, sans-serif'],
-    ['Courier New', "'Courier New', monospace"],
-    ['Verdana', 'Verdana, Geneva, sans-serif'],
-  ];
-  const FONT_SIZES = [9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56];
-  const BORDER_STYLES = [
-    ['None', 'none'],
-    ['Thin solid', '1px solid'],
-    ['Medium solid', '2px solid'],
-    ['Thick solid', '3px solid'],
-    ['Dashed', '2px dashed'],
-    ['Dotted', '2px dotted'],
-  ];
-
-  function iconBtn(command, title, label) {
-    return `<button type="button" class="format-btn" data-command="${command}" title="${title}">${label}</button>`;
-  }
-
-  const toolbar = document.createElement('div');
-  toolbar.className = 'editor-toolbar';
-  toolbar.id = 'editor-toolbar';
-  toolbar.innerHTML =
-    '<div class="editor-tools-left">' +
-      '<button type="button" id="edit-toggle-btn">&#9998; Edit</button>' +
-      '<button type="button" id="save-btn" disabled>&#128190; Save</button>' +
-      '<button type="button" id="toolbar-collapse-btn" class="format-btn" title="Collapse Toolbar">&#9650; Collapse</button>' +
-      '<span class="editor-status" id="editor-status"></span>' +
-    '</div>' +
-    '<div class="editor-format-tools" id="format-tools" style="display:none;">' +
-
-      '<div class="fmt-group">' +
-        iconBtn('undo', 'Undo', '&#8630;') +
-        iconBtn('redo', 'Redo', '&#8631;') +
-      '</div>' +
-
-      '<div class="fmt-group">' +
-        `<select id="font-family-select" class="fmt-select" title="Font family">` +
-          `<option value="">Font</option>` +
-          FONT_FAMILIES.map(([label, val]) => `<option value="${val}">${label}</option>`).join('') +
-        `</select>` +
-        `<select id="font-size-select" class="fmt-select fmt-select-sm" title="Font size">` +
-          `<option value="">Size</option>` +
-          FONT_SIZES.map((sz) => `<option value="${sz}">${sz}px</option>`).join('') +
-        `</select>` +
-      '</div>' +
-
-      '<div class="fmt-group">' +
-        iconBtn('bold', 'Bold', '<b>B</b>') +
-        iconBtn('italic', 'Italic', '<i>I</i>') +
-        iconBtn('underline', 'Underline', '<u>U</u>') +
-        iconBtn('strikeThrough', 'Strikethrough', '<s>S</s>') +
-      '</div>' +
-
-      '<div class="fmt-group">' +
-        `<label class="fmt-color-swatch" title="Text color">A<input type="color" id="text-color-input" value="#0b1a33"></label>` +
-        `<label class="fmt-color-swatch" title="Highlight color">&#9635;<input type="color" id="highlight-color-input" value="#fff7d6"></label>` +
-      '</div>' +
-
-      '<div class="fmt-group">' +
-        iconBtn('justifyLeft', 'Align left', '&#8676;') +
-        iconBtn('justifyCenter', 'Align center', '&#8596;') +
-        iconBtn('justifyRight', 'Align right', '&#8677;') +
-        iconBtn('justifyFull', 'Justify', '&#9776;') +
-      '</div>' +
-
-      '<div class="fmt-group">' +
-        `<select id="line-height-select" class="fmt-select fmt-select-sm" title="Line height">` +
-          `<option value="">Line</option>` +
-          `<option value="1.1">1.1</option>` +
-          `<option value="1.25">1.25</option>` +
-          `<option value="1.5">1.5</option>` +
-          `<option value="1.75">1.75</option>` +
-          `<option value="2">2.0</option>` +
-        `</select>` +
-      '</div>' +
-
-      '<div class="fmt-group">' +
-        iconBtn('insertUnorderedList', 'Bullet list', '&#8226;&#8226;&#8226;') +
-        iconBtn('insertOrderedList', 'Numbered list', '1.2.3.') +
-        iconBtn('outdent', 'Decrease indent (Shift+Tab)', '&#8676;&#124;') +
-        iconBtn('indent', 'Increase indent / nest list (Tab)', '&#124;&#8677;') +
-      '</div>' +
-
-      '<div class="fmt-group">' +
-        `<select id="border-style-select" class="fmt-select fmt-select-sm" title="Border style">` +
-          BORDER_STYLES.map(([label, val]) => `<option value="${val}">${label}</option>`).join('') +
-        `</select>` +
-        `<label class="fmt-color-swatch" title="Border color">&#9633;<input type="color" id="border-color-input" value="#0f2c5e"></label>` +
-        `<button type="button" id="apply-border-btn" class="format-btn" title="Apply border to selection">Border</button>` +
-      '</div>' +
-
-      '<div class="fmt-group">' +
-        `<button type="button" id="insert-image-btn" class="format-btn" title="Insert Image">&#128444; Image</button>` +
-        `<select id="insert-shape-select" class="fmt-select" title="Insert Visual Shape">` +
-          `<option value="">+ Shape</option>` +
-          `<option value="callout">Callout Box</option>` +
-          `<option value="badge">Stat Badge</option>` +
-          `<option value="card">Highlight Card</option>` +
-          `<option value="divider">Divider Line</option>` +
-        `</select>` +
-      '</div>' +
-
-      '<div class="fmt-group">' +
-        `<button type="button" id="add-global-section-btn" class="format-btn" title="Add New Section">+ Section</button>` +
-        `<button type="button" id="clear-format-btn" class="format-btn" title="Clear formatting">Clear</button>` +
-      '</div>' +
-
-    '</div>';
-  document.body.appendChild(toolbar);
-
-  const editBtn = document.getElementById('edit-toggle-btn');
-  const saveBtn = document.getElementById('save-btn');
-  const collapseBtn = document.getElementById('toolbar-collapse-btn');
-  const statusEl = document.getElementById('editor-status');
-  let editing = false;
-  let isToolbarCollapsed = false;
-  let savedRange = null;
-
-  collapseBtn.addEventListener('click', () => {
-    isToolbarCollapsed = !isToolbarCollapsed;
-    toolbar.classList.toggle('is-collapsed', isToolbarCollapsed);
-    collapseBtn.innerHTML = isToolbarCollapsed ? '&#9660; Expand' : '&#9650; Collapse';
-    if (formatTools && editing) {
-      formatTools.style.display = isToolbarCollapsed ? 'none' : 'flex';
-    }
-  });
-
-  function renderSectionControls() {
-    document.querySelectorAll('.report-section').forEach((sec) => {
-      let bar = sec.querySelector('.section-edit-bar');
-      if (editing) {
-        if (!bar) {
-          bar = document.createElement('div');
-          bar.className = 'section-edit-bar';
-          bar.setAttribute('contenteditable', 'false');
-          bar.innerHTML =
-            '<span class="sec-bar-title">&#9776; Section Controls</span>' +
-            '<button type="button" class="sec-bar-btn move-up-btn" title="Move Section Up">&#8593; Move Up</button>' +
-            '<button type="button" class="sec-bar-btn move-down-btn" title="Move Section Down">&#8595; Move Down</button>' +
-            '<button type="button" class="sec-bar-btn add-sec-btn" title="Add Section Below">+ Add Section</button>' +
-            '<button type="button" class="sec-bar-btn del-sec-btn danger" title="Delete Section">&#128465; Delete</button>';
-          sec.insertBefore(bar, sec.firstChild);
-
-          bar.querySelector('.move-up-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            const prev = sec.previousElementSibling;
-            if (prev && prev.classList.contains('report-section')) {
-              sec.parentNode.insertBefore(sec, prev);
-            }
-          });
-
-          bar.querySelector('.move-down-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            const next = sec.nextElementSibling;
-            if (next && next.classList.contains('report-section')) {
-              sec.parentNode.insertBefore(next, sec);
-            }
-          });
-
-          bar.querySelector('.add-sec-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            createNewSection(sec);
-          });
-
-          bar.querySelector('.del-sec-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Are you sure you want to delete this section?')) {
-              sec.remove();
-            }
-          });
-        }
-        bar.style.display = 'flex';
-      } else if (bar) {
-        bar.style.display = 'none';
-      }
-    });
-  }
-
-  function createNewSection(afterElem) {
-    const titleText = prompt('Enter section title:', 'New Performance Section') || 'New Performance Section';
-    const subText = prompt('Enter section deck/subtitle:', 'Detailed analysis and strategic recommendations.') || 'Detailed analysis and strategic recommendations.';
-
-    const newSec = document.createElement('section');
-    newSec.className = 'report-section custom-added-section';
-    newSec.innerHTML =
-      '<div class="container" contenteditable="true">' +
-        '<div class="section-header">' +
-          '<div class="eyebrow">CUSTOM SECTION</div>' +
-          `<h2 class="section-title">${escapeHtml(titleText)}</h2>` +
-          `<p class="section-deck">${escapeHtml(subText)}</p>` +
-        '</div>' +
-        '<div class="card" style="padding:24px; margin-top:20px; background:var(--bg-card); border:1px solid var(--border); border-radius:12px;">' +
-          '<p>Click here to type your new section content, add tables, or insert images and visual shapes.</p>' +
-        '</div>' +
-      '</div>';
-
-    if (afterElem && afterElem.parentNode) {
-      afterElem.parentNode.insertBefore(newSec, afterElem.nextElementSibling);
-    } else {
-      const main = document.querySelector('main') || document.body;
-      main.appendChild(newSec);
-    }
-    renderSectionControls();
-  }
-
-  document.getElementById('add-global-section-btn').addEventListener('click', (e) => {
-    e.preventDefault();
-    createNewSection(null);
-  });
-
-  function setEditing(on) {
-    editing = on;
-    document.documentElement.setAttribute('data-editing', on ? 'true' : 'false');
-    document.querySelectorAll('.container').forEach((el) => {
-      el.setAttribute('contenteditable', on ? 'true' : 'false');
-    });
-    editBtn.classList.toggle('is-active', on);
-    editBtn.innerHTML = on ? '&#9998; Editing&hellip;' : '&#9998; Edit';
-    saveBtn.disabled = !on;
-    if (formatTools) formatTools.style.display = (on && !isToolbarCollapsed) ? 'flex' : 'none';
-    renderSectionControls();
-    if (on) {
-      try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
-    }
-  }
-
-  editBtn.addEventListener('click', () => setEditing(!editing));
-
-  saveBtn.addEventListener('click', async () => {
-    if (!ctx.sessionId) {
-      statusEl.textContent = 'Error: Missing session ID';
-      return;
-    }
-    saveBtn.disabled = true;
-    statusEl.textContent = 'Saving…';
-    try {
-      const html = '<!doctype html>\n' + document.documentElement.outerHTML;
-      const saveUrl = resolveApiUrl(`/save-report/${ctx.sessionId}/${encodeURIComponent(ctx.filename || 'report.html')}`);
-      const res = await fetch(saveUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html }),
-      });
-      const data = await res.json();
-      statusEl.textContent = data.ok ? 'Saved ✓' : `Error: ${data.error || 'unknown'}`;
-    } catch (e) {
-      statusEl.textContent = `Error: ${e.message}`;
-    }
-    saveBtn.disabled = false;
-    setTimeout(() => {
-      statusEl.textContent = '';
-    }, 3000);
-  });
-
-
-  // ─── Format Toolbar Logic ─────────────────────────
-  const formatTools = document.getElementById('format-tools');
-
-  function isInsideEditableContainer(node) {
-    return !!(node && node.closest && node.closest('.container[contenteditable="true"]'));
-  }
-
-  // The page's own selection collapses when focus moves to a toolbar control
-  // (a <select> or <input type="color">), so remember the last real range made
-  // inside the editable content and restore it before running a command.
-  document.addEventListener('selectionchange', () => {
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      const range = sel.getRangeAt(0);
-      if (isInsideEditableContainer(range.commonAncestorContainer)) {
-        savedRange = range.cloneRange();
-      }
-    }
-  });
-
-  function restoreSelection() {
-    if (!savedRange) return null;
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(savedRange);
-    return sel;
-  }
-
-  // Wrap the current selection in a <span> carrying the given inline styles.
-  // Used for controls execCommand has no clean equivalent for (font size, border).
-  function wrapSelectionWithStyle(styleObj) {
-    const sel = restoreSelection();
-    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-    const range = sel.getRangeAt(0);
-    const span = document.createElement('span');
-    Object.assign(span.style, styleObj);
-    const frag = range.extractContents();
-    span.appendChild(frag);
-    range.insertNode(span);
-    sel.removeAllRanges();
-    const newRange = document.createRange();
-    newRange.selectNodeContents(span);
-    sel.addRange(newRange);
-    savedRange = newRange.cloneRange();
-  }
-
-  document.querySelectorAll('.format-btn[data-command]').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      restoreSelection();
-      document.execCommand(btn.dataset.command, false, null);
-    });
-  });
-
-  const fontFamilySelect = document.getElementById('font-family-select');
-  fontFamilySelect.addEventListener('change', () => {
-    if (!fontFamilySelect.value) return;
-    restoreSelection();
-    document.execCommand('fontName', false, fontFamilySelect.value);
-    fontFamilySelect.value = '';
-  });
-
-  const fontSizeSelect = document.getElementById('font-size-select');
-  fontSizeSelect.addEventListener('change', () => {
-    if (!fontSizeSelect.value) return;
-    wrapSelectionWithStyle({ fontSize: fontSizeSelect.value + 'px' });
-    fontSizeSelect.value = '';
-  });
-
-  const lineHeightSelect = document.getElementById('line-height-select');
-  lineHeightSelect.addEventListener('change', () => {
-    if (!lineHeightSelect.value) return;
-    wrapSelectionWithStyle({ lineHeight: lineHeightSelect.value });
-    lineHeightSelect.value = '';
-  });
-
-  const textColorInput = document.getElementById('text-color-input');
-  textColorInput.addEventListener('input', () => {
-    restoreSelection();
-    document.execCommand('foreColor', false, textColorInput.value);
-  });
-
-  const highlightColorInput = document.getElementById('highlight-color-input');
-  highlightColorInput.addEventListener('input', () => {
-    restoreSelection();
-    if (!document.execCommand('hiliteColor', false, highlightColorInput.value)) {
-      document.execCommand('backColor', false, highlightColorInput.value);
-    }
-  });
-
-  const borderStyleSelect = document.getElementById('border-style-select');
-  const borderColorInput = document.getElementById('border-color-input');
-  document.getElementById('apply-border-btn').addEventListener('click', (e) => {
-    e.preventDefault();
-    const style = borderStyleSelect.value || '1px solid';
-    if (style === 'none') {
-      wrapSelectionWithStyle({ border: 'none' });
-      return;
-    }
-    wrapSelectionWithStyle({
-      border: `${style} ${borderColorInput.value}`,
-      borderRadius: '4px',
-      padding: '2px 6px',
-      display: 'inline-block',
-    });
-  });
-
-  document.getElementById('clear-format-btn').addEventListener('click', (e) => {
-    e.preventDefault();
-    restoreSelection();
-    document.execCommand('removeFormat', false, null);
-  });
-
-  document.getElementById('insert-image-btn').addEventListener('click', (e) => {
-    e.preventDefault();
-    const url = prompt('Enter Image URL (or paste image web link):');
-    if (url) {
-      restoreSelection();
-      document.execCommand('insertImage', false, url);
-    }
-  });
-
-  const insertShapeSelect = document.getElementById('insert-shape-select');
-  insertShapeSelect.addEventListener('change', () => {
-    const shape = insertShapeSelect.value;
-    if (!shape) return;
-    restoreSelection();
-    let html = '';
-    if (shape === 'callout') {
-      html = '<div class="report-callout" style="padding:16px 20px; background:var(--bg-inset, #f0f4f9); border-left:4px solid var(--primary, #0f2c5e); border-radius:8px; margin:16px 0;"><strong>💡 Key Takeaway:</strong> Type your custom callout text here.</div>';
-    } else if (shape === 'badge') {
-      html = '<span class="report-badge" style="display:inline-block; padding:4px 12px; background:var(--accent-soft, #e6f0ff); color:var(--primary, #0f2c5e); font-weight:700; border-radius:999px; font-size:12px;">★ Highlight Badge</span>';
-    } else if (shape === 'card') {
-      html = '<div class="report-card" style="padding:20px; border:1px solid var(--border, #e2e8f0); border-radius:12px; background:var(--bg-card, #ffffff); margin:16px 0;"><h4 style="margin:0 0 8px 0; font-size:16px;">Highlight Card Title</h4><p style="margin:0;">Add key details or descriptions inside this highlight card block.</p></div>';
-    } else if (shape === 'divider') {
-      html = '<hr style="border:none; border-top:2px dashed var(--border, #cbd5e1); margin:24px 0;" />';
-    }
-    if (html) {
-      document.execCommand('insertHTML', false, html);
-    }
-    insertShapeSelect.value = '';
-  });
-
-  // Tab / Shift+Tab inside a list nests/un-nests it; inside a plain paragraph
-  // it indents/outdents the block. Without this, Tab just moves focus away.
-  document.addEventListener('keydown', (e) => {
-    if (!editing || e.key !== 'Tab') return;
-    if (!isInsideEditableContainer(document.activeElement)) return;
-    e.preventDefault();
-    document.execCommand(e.shiftKey ? 'outdent' : 'indent', false, null);
-  });
-
-  setEditing(false);
-
   // ───────────────────────── Per-section AI insights ─────────────────────────
 
   const CLASS_COLORS = {
@@ -440,7 +25,6 @@
     healthy: '#3b82f6',
     opportunity: '#f59e0b',
     watch: '#ef4444',
-    // legacy fallbacks
     warning: '#f59e0b',
     critical: '#ef4444',
   };
@@ -524,7 +108,6 @@
     const insights = result.key_insights || result.insights || [];
     const highlights = result.highlights || [];
     const recs = result.recommendations || [];
-    const summaryTitle = (ps && ps.title) ? ps.title : 'Performance Overview';
     const narrative = ps && ps.narrative ? `<div class="ai-summary-narrative">${escapeHtml(ps.narrative)}</div>` : '';
     const patternList = (ps && ps.patterns && ps.patterns.length)
       ? `<div class="ai-patterns-wrap"><div class="ai-sub-label">Identified Patterns &amp; Behaviours</div>${ps.patterns.map(p => `
@@ -621,39 +204,14 @@
     });
   });
 
-  // ─── Inject V2 CSS ─────────────────────────
+  // ─── Inject minimal CSS for AI insights ─────────
   const styleEl = document.createElement('style');
   styleEl.textContent = `
-/* ───────────────────────── AI Insights V2 ───────────────────────── */
-
-.editor-tools-left { display: flex; gap: 8px; align-items: center; }
-.editor-format-tools { display: flex; gap: 10px; align-items: center; padding-left: 10px; margin-left: 4px; border-left: 1px solid var(--border); flex-wrap: wrap; row-gap: 6px; }
-.fmt-group { display: flex; gap: 3px; align-items: center; padding: 2px 6px; background: var(--bg-inset); border: 1px solid var(--border); border-radius: 7px; }
-.editor-toolbar .format-btn { background: transparent; border: 1px solid transparent; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); font-size: 12px; font-weight: 500; white-space: nowrap; }
-.editor-toolbar .format-btn:hover { background: var(--bg-card); border-color: var(--border); transform: none; }
-.fmt-select {
-  height: 26px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-card);
-  color: var(--text); font-size: 11.5px; padding: 0 4px; cursor: pointer; max-width: 108px;
-}
-.fmt-select-sm { max-width: 68px; }
-.fmt-color-swatch {
-  position: relative; display: flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 4px; border: 1px solid var(--border);
-  background: var(--bg-card); cursor: pointer; font-size: 11px; font-weight: 700; color: var(--text-muted);
-  overflow: hidden;
-}
-.fmt-color-swatch:hover { border-color: var(--border-strong); }
-.fmt-color-swatch input[type="color"] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; border: none; padding: 0;
-}
-
-
 .ai-info-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); font-family: var(--font-serif); font-style: italic; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; padding: 0; box-shadow: var(--shadow-sm); }
 .ai-info-btn:hover { color: var(--primary); border-color: var(--primary); transform: scale(1.05); }
 .ai-info-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .ai-info-btn .spinner { animation: ai-spin 1s linear infinite; font-style: normal; }
 .ai-slot { min-height: 0; transition: all 0.3s ease; }
-
 .ai-result-v2 { background: linear-gradient(180deg, var(--bg-card), var(--bg-inset)); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; position: relative; overflow: hidden; animation: ai-fade-in 400ms ease both; box-shadow: var(--shadow-sm); }
 .ai-result-v2::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, var(--accent), var(--primary)); }
 .ai-result-header { display: flex; gap: 16px; margin-bottom: 20px; align-items: center; }
@@ -1314,102 +872,10 @@ body.annotation-erase-mode .annotation-canvas {
   pointer-events: auto;
   cursor: crosshair;
 }
+@keyframes ai-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 `;
   document.head.appendChild(styleEl);
 
-  function decorateMetricCards() {
-    const paths = [
-      'M10 66 C32 54 38 30 58 38 C78 46 78 18 100 26 C122 34 126 16 146 24',
-      'M10 58 C34 66 40 30 62 34 C84 38 84 58 104 46 C124 34 130 26 146 20',
-      'M10 62 C30 44 44 48 62 36 C82 22 90 52 110 40 C130 28 136 20 146 26',
-      'M10 54 C28 30 44 34 60 44 C76 54 86 22 106 28 C126 34 132 52 146 38'
-    ];
-    const icons = [
-      '<path d="M22 58h76M34 44h52M46 30h28" stroke="var(--primary)" stroke-width="7" stroke-linecap="round"/><circle cx="84" cy="28" r="16" fill="var(--accent)"/><path d="M78 28h12M84 22v12" stroke="var(--bg-card)" stroke-width="4" stroke-linecap="round"/>',
-      '<path d="M30 70 52 44l17 15 25-32" fill="none" stroke="var(--primary)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M83 27h11v11" fill="none" stroke="var(--primary)" stroke-width="7" stroke-linecap="round"/>',
-      '<circle cx="58" cy="50" r="28" fill="var(--accent)" opacity=".25"/><path d="M58 28v22l18 12" fill="none" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>',
-      '<rect x="30" y="28" width="64" height="50" rx="14" fill="var(--accent)" opacity=".22"/><path d="M42 62h40M42 48h30M42 36h18" stroke="var(--primary)" stroke-width="7" stroke-linecap="round"/>',
-      '<path d="M38 74c5-30 18-46 38-50 10 17 8 34-4 50" fill="none" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/><circle cx="76" cy="24" r="12" fill="var(--accent)"/>',
-      '<path d="M30 34h60v42H30z" fill="var(--accent)" opacity=".2"/><path d="M40 66V48M58 66V36M76 66V54" stroke="var(--primary)" stroke-width="8" stroke-linecap="round"/>',
-      '<path d="M28 54c18-24 42-24 64 0-22 24-46 24-64 0Z" fill="var(--accent)" opacity=".2"/><circle cx="60" cy="54" r="14" fill="none" stroke="var(--primary)" stroke-width="7"/>',
-      '<path d="M34 70h52M42 58h36M50 46h20" stroke="var(--primary)" stroke-width="7" stroke-linecap="round"/><path d="M36 26h48l10 18H26z" fill="var(--accent)" opacity=".25"/>',
-      '<path d="M62 24 82 62H42z" fill="var(--accent)" opacity=".3"/><path d="M62 34v18M62 64v2" stroke="var(--primary)" stroke-width="7" stroke-linecap="round"/>',
-      '<circle cx="60" cy="50" r="30" fill="none" stroke="var(--primary)" stroke-width="8"/><path d="M60 50 78 34M60 50 46 66" stroke="var(--accent)" stroke-width="7" stroke-linecap="round"/>'
-    ];
-    document.querySelectorAll('.kpi-card').forEach((card, index) => {
-      card.style.setProperty('--card-index', index);
-      if (card.querySelector('.kpi-card-inner')) {
-        const toggleCard = () => {
-          const flipped = card.classList.toggle('is-flipped');
-          card.setAttribute('aria-pressed', flipped ? 'true' : 'false');
-        };
-        card.addEventListener('click', (event) => {
-          if (!event.target.closest('a,button,input,select,textarea')) toggleCard();
-        });
-        card.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            toggleCard();
-          }
-        });
-        return;
-      }
-      if (card.querySelector('.kpi-chart')) return;
-      const path = paths[index % paths.length];
-      const label = card.querySelector('.kpi-baseline')?.textContent?.trim() || card.querySelector('.kpi-value')?.textContent?.trim() || '';
-      const metricName = card.querySelector('.kpi-label')?.textContent?.trim() || 'Metric';
-      const metricValue = card.querySelector('.kpi-value')?.textContent?.trim() || '';
-      const metricSub = card.querySelector('.kpi-sub')?.textContent?.trim() || '';
-      const trends = Array.from(card.querySelectorAll('.kpi-trend')).map((node) => node.textContent.trim());
-      const chart = document.createElement('div');
-      chart.className = 'kpi-chart';
-      chart.innerHTML = `
-        <svg viewBox="0 0 156 82" aria-hidden="true" focusable="false">
-          <defs>
-            <linearGradient id="kpiArea${index}" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.25"></stop>
-              <stop offset="62%" stop-color="currentColor" stop-opacity="0.09"></stop>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"></stop>
-            </linearGradient>
-          </defs>
-          <line class="kpi-chart-grid" x1="10" y1="18" x2="146" y2="18"></line>
-          <line class="kpi-chart-grid" x1="10" y1="42" x2="146" y2="42"></line>
-          <line class="kpi-chart-grid" x1="10" y1="66" x2="146" y2="66"></line>
-          <path class="kpi-chart-area" d="${path} L146 72 L10 72 Z"></path>
-          <path class="kpi-chart-line" d="${path}"></path>
-          <circle class="kpi-chart-dot" cx="106" cy="${index % 2 ? 46 : 28}" r="6"></circle>
-        </svg>
-        <span class="kpi-chart-tip">${escapeHtml(label.slice(0, 16))}</span>`;
-      const illustration = document.createElement('div');
-      illustration.className = 'kpi-illustration';
-      illustration.innerHTML = `
-        <svg viewBox="0 0 120 96" aria-hidden="true" focusable="false">
-          <path d="M24 48c12-25 45-36 70-20 19 12 24 39 8 55-17 17-50 13-70-5-9-8-13-19-8-30Z" fill="var(--accent)" opacity=".18"/>
-          ${icons[index % icons.length]}
-        </svg>`;
-      const baseline = card.querySelector('.kpi-baseline');
-      if (baseline) card.insertBefore(chart, baseline);
-      else card.appendChild(chart);
-      card.appendChild(illustration);
-      const tooltip = document.createElement('div');
-      tooltip.className = 'kpi-hover-tooltip';
-      tooltip.textContent = `Click for drill-down: ${metricName} · ${metricValue}${metricSub ? ` · ${metricSub}` : ''}`;
-      card.appendChild(tooltip);
-      const drill = document.createElement('div');
-      drill.className = 'kpi-drill';
-      drill.innerHTML =
-        `<div class="kpi-drill-item"><span>Metric</span><strong>${escapeHtml(metricName)}</strong></div>` +
-        `<div class="kpi-drill-item"><span>Current</span><strong>${escapeHtml(metricValue)}</strong></div>` +
-        `<div class="kpi-drill-item"><span>Analytics</span><strong>${escapeHtml(trends.join(' · ') || label || 'No trend')}</strong></div>`;
-      card.appendChild(drill);
-      card.addEventListener('click', (event) => {
-        if (event.target.closest('button,a,input,select,textarea')) return;
-        card.classList.toggle('is-drilled');
-      });
-    });
-  }
-
-  decorateMetricCards();
   // ───────────────────────── Presenter View ─────────────────────────
   if (typeof io !== 'undefined') {
     const pBar = document.createElement('div');
@@ -1595,7 +1061,7 @@ body.annotation-erase-mode .annotation-canvas {
       myRole = role;
       myCode = code;
       socket.emit('join_room', { role, code, reportUrl: window.location.pathname });
-      
+
       document.getElementById('p-code').textContent = 'Code: ' + code;
       document.getElementById('p-code').style.display = 'inline-block';
       document.getElementById('p-host-btn').style.display = 'none';
@@ -1622,7 +1088,7 @@ body.annotation-erase-mode .annotation-canvas {
 
     document.getElementById('p-join-btn').addEventListener('click', () => pModal.classList.add('is-open'));
     document.getElementById('p-cancel').addEventListener('click', () => pModal.classList.remove('is-open'));
-    
+
     document.getElementById('p-submit').addEventListener('click', () => {
       const code = document.getElementById('p-input').value.trim();
       if (code.length === 6) {

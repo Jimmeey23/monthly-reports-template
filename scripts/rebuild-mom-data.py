@@ -51,6 +51,18 @@ PINS = {
             'Retained':     {'May 2026': 37, 'Jun 2026': 47, 'Jul 2026': 35},
         },
     },
+    'supreme-hq-bandra-july-2026.html': {
+        'location': 'Supreme HQ, Bandra',
+        'months': ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026',
+                   'May 2026', 'Jun 2026', 'Jul 2026'],
+        'rows': {
+            'Net Sales':    {'May 2026': 1424000, 'Jun 2026': 1370000, 'Jul 2026': 1797000},
+            'Leads':        {'May 2026': 162, 'Jun 2026': 160, 'Jul 2026': 220},
+            'Trials':       {'May 2026': 141, 'Jun 2026': 102, 'Jul 2026': 153},
+            'Conversions':  {'May 2026': 27, 'Jun 2026': 15, 'Jul 2026': 38},
+            'Retained':     {'May 2026': 47, 'Jun 2026': 29, 'Jul 2026': 38},
+        },
+    },
 }
 
 MONTH_LABEL = {

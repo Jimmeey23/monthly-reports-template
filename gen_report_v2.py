@@ -1445,10 +1445,11 @@ def theme_script(ctx):
 
         // Add context-aware insights
         const insights = document.createElement('div');
-        insights.className = 'drill-down-metric';
-        insights.style.gridColumn = '1 / -1';
+        insights.className = 'drill-down-metric drill-down-insight';
+        insights.style.flex = '1 1 100%';
         insights.style.background = 'var(--primary-soft)';
         insights.style.borderLeft = '3px solid var(--primary)';
+        insights.style.marginTop = 'var(--space-2)';
 
         const rowLabel = cells[0]?.textContent.trim() || '';
         insights.innerHTML = `<span class="drill-down-metric-label">💡 Insight</span><span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans)">Click to expand detailed analytics for ${rowLabel}</span>`;
@@ -1517,20 +1518,25 @@ def theme_script(ctx):
 </button>
 
 <!-- AI Copilot Modal -->
-<div id="ai-copilot-modal">
+<div id="ai-copilot-backdrop" aria-hidden="true"></div>
+<div id="ai-copilot-modal" role="dialog" aria-modal="true" aria-label="AI Data Copilot">
   <div class="copilot-header">
     <h3>🤖 AI Data Copilot</h3>
     <button id="ai-copilot-close" aria-label="Close">&times;</button>
   </div>
+  <div class="copilot-modes" role="tablist" aria-label="Copilot mode">
+    <button class="copilot-mode-btn is-active" id="copilot-mode-build" data-mode="build" role="tab" aria-selected="true">Build</button>
+    <button class="copilot-mode-btn" id="copilot-mode-chat" data-mode="chat" role="tab" aria-selected="false">Chat</button>
+    <span class="copilot-scope" id="copilot-scope"></span>
+  </div>
   <div class="copilot-body">
-    <p style="color: var(--text-muted); margin: 0 0 1rem 0; font-size: 0.9rem;">
-      Ask me anything about the data. Examples:<br>
-      • "Show me top 5 revenue categories"<br>
-      • "Calculate average fill rate"<br>
-      • "Compare MoM growth for all metrics"
-    </p>
-    <textarea id="ai-copilot-input" placeholder="Type your question..."></textarea>
-    <button id="ai-copilot-send">Analyze Data</button>
+    <p class="copilot-hint" id="copilot-hint"></p>
+    <div id="ai-copilot-transcript" hidden></div>
+    <textarea id="ai-copilot-input" placeholder="Describe the table or KPI you want..."></textarea>
+    <div class="copilot-actions">
+      <button id="ai-copilot-send">Build element</button>
+      <button id="ai-copilot-clear" class="copilot-ghost-btn" title="Clear this conversation">Clear</button>
+    </div>
     <div id="ai-copilot-output"></div>
   </div>
 </div>
@@ -1539,13 +1545,165 @@ def theme_script(ctx):
 // MoM Toggle Table
 function toggleMoMTable(sectionId) {
   const container = document.getElementById('mom-table-' + sectionId);
-  const btn = container?.previousElementSibling;
   if (!container) return;
+  const btn = container.closest('.mom-toggle-wrapper')?.querySelector('.mom-toggle-btn, .mom-toggle')
+    || container.previousElementSibling;
 
-  const isExpanded = container.style.display !== 'none';
-  container.style.display = isExpanded ? 'none' : 'block';
-  btn?.setAttribute('aria-expanded', !isExpanded);
+  // The wrapper is collapsed with `max-height: 0`, so the .expanded class has to
+  // land on the CONTAINER (not just the button) or nothing becomes visible.
+  const isExpanded = container.classList.contains('expanded')
+    || (container.style.display !== 'none' && container.style.maxHeight !== '0px');
+
+  if (isExpanded) {
+    container.classList.remove('expanded');
+    container.style.display = 'none';
+  } else {
+    container.classList.add('expanded');
+    container.style.display = 'block';
+    container.style.maxHeight = 'none';
+  }
+  btn?.setAttribute('aria-expanded', String(!isExpanded));
   btn?.classList.toggle('expanded', !isExpanded);
+}
+
+/* ─── MoM grid: metric tabs, month range, per-cell analytics ─────── */
+function momFmtValue(v, fmt) {
+  if (v === null || v === undefined || isNaN(v)) return '\u2014';
+  if (fmt === 'pct') return (Math.round(v * 10) / 10).toFixed(1) + '%';
+  if (fmt === 'num') return v.toFixed(2);
+  if (fmt === 'money') {
+    var a = Math.abs(v);
+    if (a >= 1e7) return '\u20b9' + (v / 1e7).toFixed(2) + 'Cr';
+    if (a >= 1e5) return '\u20b9' + (v / 1e5).toFixed(2) + 'L';
+    return '\u20b9' + Math.round(v).toLocaleString('en-IN');
+  }
+  return Math.round(v).toLocaleString('en-IN');
+}
+
+function momFmtDelta(cur, prev, fmt) {
+  if (prev === null || prev === undefined || isNaN(prev) || !prev) return '\u2014';
+  // Rate metrics are stored as percentages already, so their movement is in
+  // percentage points; everything else is a relative change.
+  var d = fmt === 'pct' ? (cur - prev) : (cur - prev) / Math.abs(prev) * 100;
+  var txt = (d >= 0 ? '+' : '') + d.toFixed(1);
+  return txt + (fmt === 'pct' ? 'pp' : '%');
+}
+
+function momCellDrill(container, cell) {
+  var panel = container.querySelector('.mom-drill-panel');
+  if (!panel) return;
+  var body = cell.closest('tbody');
+  var row = cell.closest('tr');
+  var fmt = cell.dataset.fmt || 'int';
+  var metric = body ? body.dataset.metric : '';
+
+  container.querySelectorAll('.mom-cell.is-selected').forEach(function (c) { c.classList.remove('is-selected'); });
+  cell.classList.add('is-selected');
+
+  var cells = Array.prototype.slice.call(row.querySelectorAll('td.mom-cell[data-v]'))
+    .filter(function (c) { return !c.hidden && c.dataset.v !== ''; });
+  var entries = cells.map(function (c) { return { month: c.dataset.month, v: Number(c.dataset.v) }; })
+    .filter(function (e) { return !isNaN(e.v); });
+  if (!entries.length) return;
+
+  var cur = Number(cell.dataset.v);
+  var i = entries.findIndex(function (e) { return e.month === cell.dataset.month; });
+  var prev = i > 0 ? entries[i - 1].v : null;
+  var vals = entries.map(function (e) { return e.v; });
+  var total = vals.reduce(function (a, b) { return a + b; }, 0);
+  var mean = total / vals.length;
+  var best = entries.reduce(function (a, b) { return b.v > a.v ? b : a; });
+  var worst = entries.reduce(function (a, b) { return b.v < a.v ? b : a; });
+  var rank = vals.slice().sort(function (a, b) { return b - a; }).indexOf(cur) + 1;
+  var spread = mean ? Math.abs(best.v - worst.v) / Math.abs(mean) * 100 : 0;
+
+  function tile(label, value, note) {
+    return '<div class="drill-down-metric">' +
+      '<span class="drill-down-metric-label">' + label + '</span>' +
+      '<span class="drill-down-metric-value">' + value + '</span>' +
+      (note ? '<span class="drill-down-metric-label">' + note + '</span>' : '') +
+      '</div>';
+  }
+
+  var html = '<div class="drill-down-content">' +
+    tile(metric || 'Value', momFmtValue(cur, fmt), cell.dataset.month) +
+    tile('vs previous month', momFmtDelta(cur, prev, fmt), prev === null ? 'first month shown' : 'vs ' + entries[i - 1].month) +
+    tile('Rank in window', rank + ' of ' + entries.length, 'highest = 1') +
+    (fmt === 'pct' ? '' : tile('Share of window', (total ? (cur / total * 100) : 0).toFixed(1) + '%', 'of ' + entries.length + ' months')) +
+    tile('Window average', momFmtValue(mean, fmt), fmt === 'pct' ? entries.length + ' months' : momFmtValue(total, fmt) + ' total') +
+    tile('Highest', momFmtValue(best.v, fmt), best.month) +
+    tile('Lowest', momFmtValue(worst.v, fmt), worst.month) +
+    '<div class="drill-down-metric drill-down-insight" style="flex:1 1 100%;margin-top:var(--space-2);border-left:3px solid var(--primary);background:var(--primary-soft);padding:8px 14px">' +
+    '<span class="drill-down-metric-label">Analytics</span>' +
+    '<span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans);font-weight:500">' +
+    (metric || 'Metric') + ' in ' + cell.dataset.month + ' is ' + momFmtValue(cur, fmt) +
+    (prev !== null ? ', ' + momFmtDelta(cur, prev, fmt) + ' against ' + entries[i - 1].month : '') +
+    '. It ranks ' + rank + ' of ' + entries.length + ' months in view and sits ' +
+    (cur >= mean ? (mean ? ((cur / mean - 1) * 100).toFixed(1) : '0') + '% above' : ((1 - cur / mean) * 100).toFixed(1) + '% below') +
+    ' the window average of ' + momFmtValue(mean, fmt) +
+    '. Spread between best and worst is ' + spread.toFixed(0) + '% of the mean \u2014 ' +
+    (spread < 15 ? 'a tight, predictable band.' : spread > 40 ? 'a wide swing, so treat single months with care.' : 'moderate month-to-month variation.') +
+    '</span></div></div>';
+
+  panel.innerHTML = html;
+  panel.hidden = false;
+}
+
+function initMoMGrids() {
+  document.querySelectorAll('.mom-table-container').forEach(function (container) {
+    var panels = Array.prototype.slice.call(container.querySelectorAll('tbody.mom-panel'));
+    if (!panels.length) return;
+
+    function clearDrill() {
+      var drill = container.querySelector('.mom-drill-panel');
+      if (drill) { drill.hidden = true; drill.innerHTML = ''; }
+      container.querySelectorAll('.mom-cell.is-selected').forEach(function (c) { c.classList.remove('is-selected'); });
+    }
+
+    container.querySelectorAll('.mom-metric-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        container.querySelectorAll('.mom-metric-tab').forEach(function (t) { t.classList.remove('is-active'); });
+        panels.forEach(function (p) { p.classList.remove('is-active'); });
+        tab.classList.add('is-active');
+        var target = document.getElementById(tab.dataset.panel);
+        if (target) target.classList.add('is-active');
+        clearDrill();
+      });
+    });
+
+    function applyRange(range) {
+      var heads = container.querySelectorAll('thead th[data-col]');
+      var total = heads.length;
+      var keep = range === 'all' ? total : Math.min(parseInt(range, 10) || 12, total);
+      var first = total - keep;
+      container.querySelectorAll('[data-col]').forEach(function (cell) {
+        cell.hidden = Number(cell.dataset.col) < first;
+      });
+      clearDrill();
+    }
+
+    container.querySelectorAll('.mom-range-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        container.querySelectorAll('.mom-range-btn').forEach(function (b) { b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        container.dataset.range = btn.dataset.range;
+        applyRange(btn.dataset.range);
+      });
+    });
+    applyRange(container.dataset.range || '12');
+
+    container.querySelectorAll('td.mom-cell[data-v]').forEach(function (cell) {
+      cell.addEventListener('click', function () { momCellDrill(container, cell); });
+    });
+  });
+}
+
+
+// The MoM grid lives in a later script block, so wire it up from here.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMoMGrids);
+} else {
+  initMoMGrids();
 }
 
 // Multi-Location Tabs
@@ -1570,20 +1728,84 @@ document.addEventListener('DOMContentLoaded', () => {
     tabs[0].click();
   }
 
-  // AI Copilot
+  // AI Copilot — two modes: Build (an element for the report) and Chat (Q&A)
   const copilotBtn = document.getElementById('ai-copilot-btn');
   const copilotModal = document.getElementById('ai-copilot-modal');
+  const copilotBackdrop = document.getElementById('ai-copilot-backdrop');
   const copilotClose = document.getElementById('ai-copilot-close');
   const copilotInput = document.getElementById('ai-copilot-input');
   const copilotSend = document.getElementById('ai-copilot-send');
+  const copilotClear = document.getElementById('ai-copilot-clear');
   const copilotOutput = document.getElementById('ai-copilot-output');
+  const copilotTranscript = document.getElementById('ai-copilot-transcript');
+  const copilotHint = document.getElementById('copilot-hint');
+  let copilotMode = 'build';
 
-  copilotBtn?.addEventListener('click', () => {
-    copilotModal.classList.toggle('active');
+  function openCopilot() {
+    copilotModal.classList.add('active');
+    copilotBackdrop.classList.add('active');
+    copilotInput.focus();
+  }
+
+  // Escape, and any click that lands outside the panel, shut it immediately.
+  function closeCopilot() {
+    copilotModal.classList.remove('active');
+    copilotBackdrop.classList.remove('active');
+  }
+
+  copilotBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (copilotModal.classList.contains('active')) closeCopilot();
+    else openCopilot();
   });
 
-  copilotClose?.addEventListener('click', () => {
-    copilotModal.classList.remove('active');
+  copilotClose?.addEventListener('click', closeCopilot);
+  copilotBackdrop?.addEventListener('mousedown', closeCopilot);
+  document.addEventListener('mousedown', (e) => {
+    if (!copilotModal.classList.contains('active')) return;
+    if (copilotModal.contains(e.target) || (copilotBtn && copilotBtn.contains(e.target))) return;
+    closeCopilot();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && copilotModal.classList.contains('active')) {
+      e.preventDefault();
+      closeCopilot();
+    }
+  });
+
+  const COPILOT_HINTS = {
+    build: 'Describe the table, KPI or breakdown you want. It is computed from the uploaded data and can be saved straight into a section of this report.',
+    chat: 'Ask anything about this report\u2019s data. Answers come from the analysis file for this upload, with the supporting table and follow-ups you can click.',
+  };
+
+  function setCopilotMode(mode) {
+    copilotMode = mode === 'chat' ? 'chat' : 'build';
+    document.querySelectorAll('.copilot-mode-btn').forEach((b) => {
+      const on = b.dataset.mode === copilotMode;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+    copilotHint.textContent = COPILOT_HINTS[copilotMode];
+    copilotSend.textContent = copilotMode === 'chat' ? 'Ask' : 'Build element';
+    copilotInput.placeholder = copilotMode === 'chat'
+      ? 'Ask a question about this month\u2019s data...'
+      : 'Describe the table or KPI you want...';
+    copilotTranscript.hidden = copilotMode !== 'chat';
+    copilotOutput.innerHTML = '';
+  }
+
+  document.querySelectorAll('.copilot-mode-btn').forEach((b) => {
+    b.addEventListener('click', () => setCopilotMode(b.dataset.mode));
+  });
+  setCopilotMode('build');
+  const ctxNow = window.__REPORT_CTX__ || {};
+  const scopeEl = document.getElementById('copilot-scope');
+  if (scopeEl && ctxNow.locName) scopeEl.textContent = ctxNow.locName + ' \u00b7 ' + (ctxNow.monthLabel || '');
+
+  copilotClear?.addEventListener('click', () => {
+    copilotOutput.innerHTML = '';
+    if (copilotTranscript) copilotTranscript.innerHTML = '';
+    copilotInput.value = '';
   });
 
   copilotSend?.addEventListener('click', async () => {
@@ -1596,10 +1818,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const sessionId = window.location.pathname.split('/')[2];
+      const ctx = window.__REPORT_CTX__ || {};
       const response = await fetch('/ai-copilot/' + sessionId, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt, loc: ctx.loc, month: ctx.month, mode: copilotMode })
       });
 
       const result = await response.json();
@@ -1619,7 +1842,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+
+  function renderTable(rows) {
+    if (!Array.isArray(rows) || !rows.length) return '';
+    const cols = Object.keys(rows[0]);
+    let out = '<div class="copilot-table-wrap"><table class="data-table"><thead><tr>';
+    cols.forEach((c) => { out += '<th>' + esc(c) + '</th>'; });
+    out += '</tr></thead><tbody>';
+    rows.slice(0, 25).forEach((row) => {
+      out += '<tr>';
+      cols.forEach((c) => { out += '<td>' + esc(row[c]) + '</td>'; });
+      out += '</tr>';
+    });
+    out += '</tbody></table></div>';
+    if (rows.length > 25) out += '<p class="copilot-note">' + (rows.length - 25) + ' more rows not shown.</p>';
+    return out;
+  }
+
+  /* Chat mode: a transcript of question / answer turns, with follow-up chips. */
+  function renderChatTurn(result, prompt) {
+    const turn = document.createElement('div');
+    turn.className = 'copilot-turn';
+    let html = '<div class="copilot-user-line">' + esc(prompt) + '</div>';
+    html += '<div class="copilot-answer">';
+    html += '<div class="copilot-answer-title">' + esc(result.title || 'Answer') + '</div>';
+    html += '<div class="copilot-answer-body">' + esc(result.answer || result.description || '') + '</div>';
+    if (result.kpi) {
+      html += '<div class="kpi-cards"><div class="kpi-card">' +
+        '<div class="kpi-label">' + esc(result.kpi.label || 'Metric') + '</div>' +
+        '<div class="kpi-value">' + esc(result.kpi.value || '\u2014') + '</div>' +
+        (result.kpi.change ? '<div class="kpi-change">' + esc(result.kpi.change) + '</div>' : '') +
+        '</div></div>';
+    }
+    if (result.table && Array.isArray(result.table.data)) html += renderTable(result.table.data);
+    if (result.confidence) {
+      html += '<div class="copilot-meta">Answered from this upload\u2019s analysis file \u00b7 confidence: ' + esc(result.confidence) + '</div>';
+    }
+    if (Array.isArray(result.followUps) && result.followUps.length) {
+      html += '<div class="copilot-chips">';
+      result.followUps.forEach((f) => {
+        html += '<button class="copilot-chip" data-q="' + esc(f) + '">' + esc(f) + '</button>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    turn.innerHTML = html;
+    turn.querySelectorAll('.copilot-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        copilotInput.value = chip.dataset.q;
+        copilotSend.click();
+      });
+    });
+    copilotTranscript.hidden = false;
+    copilotTranscript.appendChild(turn);
+    copilotTranscript.scrollTop = copilotTranscript.scrollHeight;
+  }
+
   function renderCopilotResult(result, prompt) {
+    if (result && (result.type === 'chat' || copilotMode === 'chat')) {
+      renderChatTurn(result, prompt);
+      return;
+    }
     let html = '<div class="copilot-result">';
     html += '<div class="copilot-prompt">' + prompt + '</div>';
 
@@ -1656,16 +1942,36 @@ document.addEventListener('DOMContentLoaded', () => {
       html += '<div class="copilot-description">' + result.description + '</div>';
     }
 
-    html += '<button class="copilot-save-btn" onclick="saveCopilotResult(this)">Save to Report</button>';
+    // Build mode: pick the section and drop the element straight in.
+    html += '<div class="copilot-save-row">' +
+      '<select class="copilot-section-select" aria-label="Section to add this to">' +
+      '<option value="">Add to section\u2026</option>' +
+      '<option value="1">1 — Executive summary</option>' +
+      '<option value="2">2 — Revenue performance</option>' +
+      '<option value="3">3 — Conversion funnel</option>' +
+      '<option value="4">4 — Sessions</option>' +
+      '<option value="5">5 — Lapsed members</option>' +
+      '<option value="6">6 — Recommendations</option>' +
+      '<option value="7">7 — Predictions</option>' +
+      '</select>' +
+      '<button class="copilot-save-btn" onclick="saveCopilotResult(this)">Save to Report</button>' +
+      '</div>';
     html += '</div>';
 
     copilotOutput.innerHTML = html;
+    const sel = copilotOutput.querySelector('.copilot-section-select');
+    const saveBtn = copilotOutput.querySelector('.copilot-save-btn');
+    sel?.addEventListener('change', () => {
+      saveBtn.dataset.section = sel.value;
+      saveBtn.disabled = !sel.value;
+    });
+    if (saveBtn) saveBtn.disabled = true;
   }
 });
 
 function saveCopilotResult(btn) {
   const result = btn.closest('.copilot-result');
-  const section = prompt('Which section? (1=Executive, 2=Revenue, 3=Funnel, 4=Sessions, 5=Lapsed, 6=Recommendations, 7=Predictions)');
+  const section = btn.dataset.section || prompt('Which section? (1=Executive, 2=Revenue, 3=Funnel, 4=Sessions, 5=Lapsed, 6=Recommendations, 7=Predictions)');
   if (!section) return;
 
   const savedElement = document.createElement('div');

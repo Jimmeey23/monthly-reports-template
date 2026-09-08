@@ -3329,7 +3329,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">Headline revenue closed at <strong>₹24.54L net</strong> (₹25.80L gross, ₹1.70L discount), which is <strong>+18.2% vs Jun 2026</strong> (M-1), <strong>+6.2% vs May 2026</strong> (M-2), <strong>+5.9% vs 2026 Avg (excl. Jul)</strong>, and <strong>+37.1% vs Jul 2025</strong> (YoY). Trial conversion is 28.9% (35 of 121 trials), down -2.2pp MoM. Churn rate stands at 22.5%, improving -11.2pp MoM. Discount efficiency is ₹15.19 of revenue collected per ₹1 discounted.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="exec" type="button">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="exec">i</button>
 <div class="section-anchor">Section 1 / 07</div>
 </div>
 </div>
@@ -3801,7 +3801,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">July 2026 closed at <strong>₹24.54L net</strong> on 349 transactions, an ATV of <strong>₹7,393</strong>. Memberships and Class Packages together account for <strong>81% of revenue</strong>. Discount value of ₹1.70L represents 6.6% of gross. Payment mix: Custom (59%), Cash (21%), Stripe (14%).</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="commercial" type="button">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="commercial">i</button>
 <div class="section-anchor">Section 2 / 07</div>
 </div>
 </div>
@@ -4603,7 +4603,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">The conversion story in July 2026: 154 leads generated, 121 first visits / trials, 35 converted (28.9% conversion rate), and 35 retained (28.9% of trials). Leads are +20.3% MoM, conversions -13.5% MoM. The referral channel is the highest-quality lead source. Below we walk the funnel source-by-source with all available metrics.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="funnel" type="button">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="funnel">i</button>
 <div class="section-anchor">Section 3 / 07</div>
 </div>
 </div>
@@ -5078,7 +5078,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">The session portfolio delivered <strong>₹21.03L of session-attributed revenue</strong> across 18 distinct class formats in July. Average class size is 6.6 visits per session. Studio Strength Lab (Full Body) fill rate at 89.0% makes it the supply-constrained hero. Unknown Class at 2.2% fill is the structural underperformer.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="sessions" type="button">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="sessions">i</button>
 <div class="section-anchor">Section 4 / 07</div>
 </div>
 </div>
@@ -5864,7 +5864,7 @@ table.mom-table tbody tr:last-child td { border-bottom: none; }
 <p class="section-deck">July’s expiration book had <strong>120 memberships reach end-of-life</strong>: <strong>83 renewed (69.2%)</strong>, <strong>27 lapsed (22.5%)</strong>, <strong>10 frozen</strong>. Churn rate is -11.2pp MoM and +0.6pp vs the 2026 Avg (excl. Jul) baseline. Renewal rate is improving. The cumulative lapsed book now stands at 482 unique lapsed members.</p>
 </div>
 <div class="section-header-right">
-<button aria-label="View month on month data" class="mom-info-btn" data-mom="retention" type="button">i</button>
+<button aria-label="View month on month data" class="mom-info-btn" data-mom="retention">i</button>
 <div class="section-anchor">Section 5 / 07</div>
 </div>
 </div>
@@ -8554,22 +8554,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 </div>
 </div>
 </footer>
-<div class="mom-modal-overlay" id="mom-modal-overlay">
-<div class="mom-modal" role="dialog" aria-modal="true" aria-labelledby="mom-modal-title">
-<div class="mom-modal-beam is-top" aria-hidden="true"></div>
-<div class="mom-modal-beam is-left" aria-hidden="true"></div>
-<div class="mom-modal-beam is-right" aria-hidden="true"></div>
-<div class="mom-modal-head">
-<div>
-<div class="mom-modal-eyebrow" id="mom-modal-eyebrow"></div>
-<h3 class="mom-modal-title" id="mom-modal-title"></h3>
-</div>
-<button class="mom-modal-close" id="mom-modal-close" aria-label="Close">&times;</button>
-</div>
-<div class="mom-modal-body"><table class="mom-table" id="mom-modal-table"></table></div>
-<div class="mom-modal-foot">Figures are computed month-by-month from studio transaction, session, lead and membership records for Kwality House, Kemps Corner.</div>
-</div>
-</div>
 <script>
 window.MOM_DATA = {
   exec: {
@@ -8577,7 +8561,7 @@ window.MOM_DATA = {
     months: ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'],
     rows: [
       { label: 'Gross Sales', fmt: 'currency', agg: 'sum', values: [2744705, 1921110, 2018321, 5001388, 2428386, 2180716, 2580030] },
-      { label: 'Net Sales', fmt: 'currency', agg: 'sum', values: [2708936, 1890154, 2004696, 4949264, 2375293, 2123253, 2550363] },
+      { label: 'Net Sales', fmt: 'currency', agg: 'sum', values: [2614721, 1828940, 1922061, 4764223, 2311000, 2077000, 2454000] },
       { label: 'Transactions', fmt: 'int', agg: 'sum', values: [258, 280, 279, 328, 264, 282, 349] },
       { label: 'Average Transaction Value', fmt: 'currency', agg: 'avg', values: [10638, 6861, 7234, 15248, 9198, 7733, 7393] },
       { label: 'Visits', fmt: 'int', agg: 'sum', values: [2060, 1919, 2284, 2165, 2307, 2281, 2432] },
@@ -8589,7 +8573,7 @@ window.MOM_DATA = {
     months: ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'],
     rows: [
       { label: 'Gross Sales', fmt: 'currency', agg: 'sum', values: [2744705, 1921110, 2018321, 5001388, 2428386, 2180716, 2580030] },
-      { label: 'Net Sales', fmt: 'currency', agg: 'sum', values: [2708936, 1890154, 2004696, 4949264, 2375293, 2123253, 2550363] },
+      { label: 'Net Sales', fmt: 'currency', agg: 'sum', values: [2614721, 1828940, 1922061, 4764223, 2311000, 2077000, 2454000] },
       { label: 'Transactions', fmt: 'int', agg: 'sum', values: [258, 280, 279, 328, 264, 282, 349] },
       { label: 'Average Transaction Value', fmt: 'currency', agg: 'avg', values: [10638, 6861, 7234, 15248, 9198, 7733, 7393] }
     ]
@@ -8598,10 +8582,10 @@ window.MOM_DATA = {
     eyebrow: '03 · Acquisition Funnel Performance', title: 'Acquisition Funnel — Month on Month',
     months: ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'],
     rows: [
-      { label: 'Leads', fmt: 'int', agg: 'sum', values: [177, 160, 163, 166, 127, 128, 151] },
-      { label: 'Trials', fmt: 'int', agg: 'sum', values: [80, 53, 65, 64, 58, 62, 85] },
-      { label: 'Conversions', fmt: 'int', agg: 'sum', values: [106, 86, 94, 94, 91, 111, 126] },
-      { label: 'Retained', fmt: 'int', agg: 'sum', values: [23, 27, 33, 20, 27, 38, 30] }
+      { label: 'Leads', fmt: 'int', agg: 'sum', values: [176, 160, 162, 167, 127, 128, 154] },
+      { label: 'Trials', fmt: 'int', agg: 'sum', values: [121, 105, 95, 91, 117, 129, 121] },
+      { label: 'Conversions', fmt: 'int', agg: 'sum', values: [22, 23, 19, 16, 31, 37, 35] },
+      { label: 'Retained', fmt: 'int', agg: 'sum', values: [29, 33, 28, 23, 37, 47, 35] }
     ]
   },
   sessions: {
@@ -8624,68 +8608,8 @@ window.MOM_DATA = {
     ]
   }
 };
-(function () {
-  function fmtCurrency(n) {
-    n = Math.round(n || 0);
-    var neg = n < 0; n = Math.abs(n);
-    var out;
-    if (n >= 10000000) out = (n / 10000000).toFixed(2) + 'Cr';
-    else if (n >= 100000) out = (n / 100000).toFixed(2) + 'L';
-    else {
-      var s = String(n), last3 = s.slice(-3), rest = s.slice(0, -3);
-      if (rest !== '') last3 = ',' + last3;
-      out = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + last3;
-    }
-    return (neg ? '-' : '') + '₹' + out;
-  }
-  function fmtInt(n) { return Math.round(n || 0).toLocaleString('en-IN'); }
-  function fmtPct(n) { return (Math.round((n || 0) * 10) / 10).toFixed(1) + '%'; }
-  function fmtValue(v, fmt) {
-    if (fmt === 'currency') return fmtCurrency(v);
-    if (fmt === 'pct') return fmtPct(v);
-    return fmtInt(v);
-  }
-  function aggregate(values, agg) {
-    var nums = values.map(Number).filter(function (n) { return !isNaN(n); });
-    if (!nums.length) return 0;
-    var sum = nums.reduce(function (a, b) { return a + b; }, 0);
-    return agg === 'avg' ? sum / nums.length : sum;
-  }
-  function buildTable(section) {
-    var table = document.getElementById('mom-modal-table');
-    var thead = '<thead><tr><th>Metric</th>' + section.months.map(function (m) { return '<th>' + m + '</th>'; }).join('') +
-      '<th class="mom-total-col">' + (section.totalHeader || 'Total / Avg') + '</th></tr></thead>';
-    var tbody = '<tbody>' + section.rows.map(function (row) {
-      var monthCells = row.values.map(function (v) { return '<td>' + fmtValue(v, row.fmt) + '</td>'; }).join('');
-      var totalCell = '<td class="mom-total-col">' + fmtValue(aggregate(row.values, row.agg || 'sum'), row.fmt) + '</td>';
-      return '<tr><td>' + row.label + '</td>' + monthCells + totalCell + '</tr>';
-    }).join('') + '</tbody>';
-    table.innerHTML = thead + tbody;
-  }
-  window.openMomModal = function (key) {
-    var section = window.MOM_DATA[key];
-    if (!section) return;
-    document.getElementById('mom-modal-eyebrow').textContent = section.eyebrow || '';
-    document.getElementById('mom-modal-title').textContent = section.title || 'Month on Month';
-    buildTable(section);
-    document.getElementById('mom-modal-overlay').classList.add('is-open');
-  };
-  function closeMomModal() {
-    document.getElementById('mom-modal-overlay').classList.remove('is-open');
-  }
-  document.querySelectorAll('.mom-info-btn[data-mom]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      window.openMomModal(button.getAttribute('data-mom'));
-    });
-  });
-  document.addEventListener('click', function (e) {
-    if (e.target.id === 'mom-modal-overlay' || e.target.id === 'mom-modal-close') closeMomModal();
-  });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeMomModal();
-  });
-})();
 </script>
+<script src="/revised-july/mom-panel.js?v=1"></script>
 <script src="./section-audio.js?v=1"></script>
 <script src="./sfx-soundboard.js?v=10"></script>
 </body>

@@ -344,9 +344,15 @@ def section_01(ctx):
 
     title = f"{month_name} delivered {'strong' if net_baseline_diff > 5 else 'steady' if net_baseline_diff > -5 else 'soft'} revenue at {lakh(s['net'])} net &mdash; {'above' if net_baseline_diff > 0 else 'below'} the {ctx['year_avg_label']} average, with {'improving' if ctx['conv_mom'].startswith('+') else 'declining'} trial conversion and {'stabilising' if ctx['churn_mom'].startswith('-') else 'rising'} churn as the key watchpoints."
 
+    # Net is collected revenue excluding VAT, so spell the VAT out: without it
+    # "net (gross, discount)" reads as net = gross - discount, which it isn't.
+    vat = s.get('vat')
+    if vat is None:
+        vat = s['gross'] - s['net']
+
     deck = (
         f"Headline revenue closed at <strong>{lakh(s['net'])} net</strong> "
-        f"({lakh(s['gross'])} gross, {lakh(s['disc'])} discount), which is "
+        f"({lakh(s['gross'])} gross incl. {lakh(vat)} VAT, {lakh(s['disc'])} discount), which is "
         f"<strong>{ctx['net_mom']} vs {prev_name}</strong> (M-1), "
         f"<strong>{ctx['net_m2_mom']} vs {prev2_name}</strong> (M-2), "
         f"<strong>{ctx['net_year_avg']} vs {ctx['year_avg_label']}</strong>, "
@@ -2970,48 +2976,314 @@ def build_steady_state(ctx, baseline):
     return "\n".join(insights)
 
 
-def mom_toggle_table(ctx, metrics_data, section_id):
-    """Generate MoM/YoY toggle table for a section."""
-    rows = []
-    for metric_name, values in metrics_data.items():
-        current = values.get('current', '—')
-        mom = values.get('mom', '—')
-        yoy = values.get('yoy', '—')
-        mom_class = 'positive' if isinstance(mom, str) and mom.startswith('+') else 'negative' if isinstance(mom, str) and mom.startswith('-') else ''
-        yoy_class = 'positive' if isinstance(yoy, str) and yoy.startswith('+') else 'negative' if isinstance(yoy, str) and yoy.startswith('-') else ''
-        rows.append(f'''
-        <tr>
-          <td class="metric-name">{metric_name}</td>
-          <td>{current}</td>
-          <td class="{mom_class}">{mom}</td>
-          <td class="{yoy_class}">{yoy}</td>
-        </tr>''')
+# metric label → (ctx group, field, format) so every MoM row can be drilled into
+MOM_DRILL_MAP = {
+    'Net Sales': ('sales', 'net', 'money'),
+    'Gross Sales': ('sales', 'gross', 'money'),
+    'Discount': ('sales', 'disc', 'money'),
+    'Discount Efficiency': ('sales', 'disc_eff', 'num'),
+    'Transactions': ('sales', 'sales', 'int'),
+    'Avg Transaction Value': ('sales', 'atv', 'money'),
+    'ATV': ('sales', 'atv', 'money'),
+    'Sessions': ('sessions', 'sessions', 'int'),
+    'Visits': ('sessions', 'visits', 'int'),
+    'Fill Rate': ('sessions', 'fill', 'pct'),
+    'Capacity': ('sessions', 'capacity', 'int'),
+    'Revenue': ('sessions', 'revenue', 'money'),
+    'Leads': ('leads', 'total', 'int'),
+    'Lead Conversion': ('leads', 'rate', 'pct'),
+    'Lead Conversions': ('leads', 'converted', 'int'),
+    'Trials': ('new', 'trials', 'int'),
+    'Conversions': ('new', 'converted', 'int'),
+    'Conversion Rate': ('new', 'rate', 'pct'),
+    'Lapsed': ('lapsed', 'total', 'int'),
+    'Lapsed Members': ('lapsed', 'lapsed', 'int'),
+    'Renewals': ('lapsed', 'renewed', 'int'),
+    'Renewal Rate': ('lapsed', 'renewal_rate', 'pct'),
+    'Churn Rate': ('lapsed', 'churn', 'pct'),
+    'Frozen': ('lapsed', 'frozen', 'int'),
+    'Check-ins': ('checkins', 'total', 'int'),
+    'Late Cancels': ('checkins', 'late_cancel', 'int'),
+    # labels the MoM tables actually use
+    'Disc Efficiency': ('sales', 'disc_eff', 'num'),
+    'Converted': ('new', 'converted', 'int'),
+    'Retained': ('new', 'retained', 'int'),
+    'Lapsed': ('lapsed', 'lapsed', 'int'),
+    'Renewed': ('lapsed', 'renewed', 'int'),
+    'Total Expiring': ('lapsed', 'total', 'int'),
+}
 
-    return f'''
+MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+
+def month_label(mk):
+    """'2026-08' -> 'Aug 26'."""
+    try:
+        y, m = str(mk).split('-')
+        return '%s %s' % (MONTH_ABBR[int(m) - 1], y[2:])
+    except (ValueError, IndexError):
+        return str(mk)
+
+
+def _mom_months(ctx):
+    """Every month in the upload up to and including the report month."""
+    if _DATA is None:
+        _init_imports()
+    months = (_DATA or {}).get('meta', {}).get('months') or []
+    return [m for m in months if m <= ctx['month_key']]
+
+
+def _metric_series(ctx, label, months):
+    """One value per month for a MoM metric, or None if it isn't mapped."""
+    spec = MOM_DRILL_MAP.get(label)
+    if not spec:
+        return None
+    if _DATA is None:
+        _init_imports()
+    group, field, _fmt = spec
+    src = ((_DATA or {}).get(group) or {}).get(ctx.get('loc_key')) or {}
+    out = []
+    for m in months:
+        node = src.get(m)
+        out.append(node.get(field) if isinstance(node, dict) else None)
+    return out
+
+
+def _fmt_drill(v, kind):
+    if v is None:
+        return '—'
+    if kind == 'money':
+        return lakh(v)
+    if kind == 'pct':
+        return pct(v)
+    if kind == 'num':
+        return f'{v:,.2f}'
+    return fmt_int(v)
+
+
+def _drill_delta(cur, base, kind):
+    """How the current value relates to a comparison window."""
+    if cur is None or base is None or not base:
+        return '—'
+    if kind == 'pct':
+        d = (cur - base) * 100
+        return f'{d:+.1f}pp'
+    d = (cur - base) / abs(base) * 100
+    return f'{d:+.1f}%'
+
+
+def _mom_drill_cell(ctx, metric_name):
+    """Build the per-cell analytics strip shown when a MoM row is expanded."""
+    spec = MOM_DRILL_MAP.get(metric_name)
+    if not spec:
+        return None
+    group, field, kind = spec
+
+    def raw(prefix):
+        if prefix == 'avg':
+            node = (ctx.get('year_avg') or {}).get(group) or {}
+        else:
+            node = ctx.get(prefix + group) or {}
+        if isinstance(node, dict):
+            v = node.get(field)
+            return v if isinstance(v, (int, float)) else None
+        return None
+
+    cur = raw('')
+    if cur is None:
+        return None
+
+    mo = ctx.get('mo') or {}
+    windows = [
+        (f"M-1 · {mo.get('prev_month_name', 'M-1')}", raw('prev_')),
+        (f"M-2 · {mo.get('prev2_month_name', 'M-2')}", raw('prev2_')),
+        (f"YoY · {mo.get('yoy_month_name', 'YoY')}", raw('yoy_')),
+        (ctx.get('year_avg_label', 'Year Avg'), raw('avg')),
+    ]
+    windows = [(label, v) for label, v in windows if v is not None]
+    if not windows:
+        return None
+
+    tiles = []
+    for label, v in windows:
+        tiles.append(
+            f'<div class="drill-down-metric">'
+            f'<span class="drill-down-metric-label">{label}</span>'
+            f'<span class="drill-down-metric-value">{_fmt_drill(v, kind)}</span>'
+            f'<span class="drill-down-metric-label">{_drill_delta(cur, v, kind)} vs current</span>'
+            f'</div>'
+        )
+
+    vals = [v for _, v in windows] + [cur]
+    lo, hi = min(vals), max(vals)
+    mean = sum(vals) / len(vals)
+    spread = (abs(hi - lo) / abs(mean) * 100) if mean else 0
+    above = sum(1 for v in vals[:-1] if v < cur)
+    insight = (
+        f"{_fmt_drill(cur, kind)} in {mo.get('month_short', '')} {mo.get('year', '')} — "
+        f"{above} of {len(vals) - 1} comparison windows sit below it. "
+        f"Range {_fmt_drill(lo, kind)}–{_fmt_drill(hi, kind)} across M-1 / M-2 / YoY / avg "
+        f"(spread {spread:.0f}% of mean); "
+        f"{'tight, predictable band' if spread < 15 else 'wide swing — trend is volatile' if spread > 40 else 'moderate variation month to month'}."
+    )
+    tiles.append(
+        f'<div class="drill-down-metric drill-down-insight" style="flex:1 1 100%;margin-top:var(--space-2);'
+        f'border-left:3px solid var(--primary);background:var(--primary-soft);padding:8px 14px">'
+        f'<span class="drill-down-metric-label">Analytics</span>'
+        f'<span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans);font-weight:500">{insight}</span>'
+        f'</div>'
+    )
+
+    return (
+        f'<tr class="drill-down-detail">'
+        f'<td colspan="4"><div class="drill-down-content">{"".join(tiles)}</div></td>'
+        f'</tr>'
+    )
+
+
+def _fmt_series_value(v, kind):
+    if v is None:
+        return '—'
+    if kind == 'money':
+        return lakh(v)
+    if kind == 'pct':
+        return pct(v)
+    if kind == 'num':
+        return f'{v:,.2f}'
+    return fmt_int(v)
+
+
+def _series_delta(cur, prev, kind):
+    """MoM / YoY cell for one month of a series."""
+    if cur is None or prev is None:
+        return '—', ''
+    if kind == 'pct':
+        txt = pp_change(prev, cur)
+    else:
+        txt = pct_change(prev, cur)
+    if txt in ('n/a',) or txt.startswith('-'):
+        cls = 'negative'
+    elif txt.startswith('+'):
+        cls = 'positive'
+    else:
+        cls = ''
+    return txt, cls
+
+
+def mom_toggle_table(ctx, metrics_data, section_id):
+    """Month-on-Month block for one section.
+
+    Months run across the columns and a row of metric tabs above the grid
+    picks which KPI is in view, so a section's whole history is one table
+    instead of a one-row-per-metric summary.
+    """
+    months = _mom_months(ctx)
+    if not months:
+        months = [ctx['month_key']]
+
+    tabs, panels = [], []
+    for idx, (metric_name, values) in enumerate(metrics_data.items()):
+        series = _metric_series(ctx, metric_name, months)
+        if series is None:
+            continue
+        if not any(v is not None for v in series):
+            continue  # nothing in the upload for this KPI — don't offer a tab
+
+        spec = MOM_DRILL_MAP[metric_name]
+        kind = spec[2]
+        panel_id = 'mom-panel-%s-%d' % (section_id, idx)
+
+        head = []
+        value_cells, mom_cells, yoy_cells = [], [], []
+        for i, mk in enumerate(months):
+            v = series[i]
+            is_current = mk == ctx['month_key']
+            head.append(
+                '<th data-col="%d" class="%s" scope="col">%s</th>'
+                % (i, 'is-current' if is_current else '', month_label(mk)))
+
+            value_cells.append(
+                '<td data-col="%d" class="mom-cell %s" data-v="%s" data-fmt="%s" data-month="%s">%s</td>'
+                % (i, 'is-current' if is_current else '',
+                   '' if v is None else repr(round(float(v), 4)), kind, month_label(mk),
+                   _fmt_series_value(v, kind)))
+
+            prev = series[i - 1] if i > 0 else None
+            txt, cls = _series_delta(v, prev, kind)
+            mom_cells.append('<td data-col="%d" class="%s %s">%s</td>'
+                             % (i, cls, 'is-current' if is_current else '', txt))
+
+            yoy = series[i - 12] if i >= 12 else None
+            txt, cls = _series_delta(v, yoy, kind)
+            yoy_cells.append('<td data-col="%d" class="%s %s">%s</td>'
+                             % (i, cls, 'is-current' if is_current else '', txt))
+
+        active = ' is-active' if not panels else ''
+        tabs.append(
+            '<button type="button" class="mom-metric-tab%s" data-panel="%s" role="tab">%s</button>'
+            % (active, panel_id, metric_name))
+
+        panels.append(
+            '<tbody class="mom-panel%s" id="%s" data-metric="%s" data-fmt="%s">'
+            '<tr><th scope="row">Value</th>%s</tr>'
+            '<tr><th scope="row">MoM</th>%s</tr>'
+            '<tr><th scope="row">YoY</th>%s</tr>'
+            '</tbody>'
+            % (active, panel_id, metric_name, kind,
+               ''.join(value_cells), ''.join(mom_cells), ''.join(yoy_cells)))
+
+    if not tabs:
+        # No mapped series for any KPI here — keep the old headline summary.
+        rows = []
+        for metric_name, values in metrics_data.items():
+            current = values.get('current', '—')
+            mom = values.get('mom', '—')
+            yoy = values.get('yoy', '—')
+            mom_class = 'positive' if str(mom).startswith('+') else 'negative' if str(mom).startswith('-') else ''
+            yoy_class = 'positive' if str(yoy).startswith('+') else 'negative' if str(yoy).startswith('-') else ''
+            rows.append(
+                '<tr><td class="metric-name">%s</td><td>%s</td>'
+                '<td class="%s">%s</td><td class="%s">%s</td></tr>'
+                % (metric_name, current, mom_class, mom, yoy_class, yoy))
+        grid = ('<table class="data-table mom-table"><thead><tr>'
+                '<th>Metric</th><th>Current</th><th>MoM Change</th><th>YoY Change</th>'
+                '</tr></thead><tbody>%s</tbody></table>' % ''.join(rows))
+        controls = ''
+    else:
+        grid = (
+            '<table class="data-table mom-table" data-cols="%d">'
+            '<thead><tr><th class="mom-corner" scope="col">Period</th>%s</tr></thead>'
+            '%s</table>'
+            % (len(months), ''.join(
+                '<th data-col="%d" class="%s" scope="col">%s</th>'
+                % (i, 'is-current' if mk == ctx['month_key'] else '', month_label(mk))
+                for i, mk in enumerate(months)),
+               ''.join(panels)))
+        controls = (
+            '<div class="mom-controls">'
+            '<div class="mom-metric-tabs" role="tablist" aria-label="Metric">%s</div>'
+            '<div class="mom-range-tabs" role="group" aria-label="Range">'
+            '<button type="button" class="mom-range-btn" data-range="6">6M</button>'
+            '<button type="button" class="mom-range-btn is-active" data-range="12">12M</button>'
+            '<button type="button" class="mom-range-btn" data-range="all">All</button>'
+            '</div></div>' % ''.join(tabs))
+
+    return """
     <div class="mom-toggle-wrapper">
-      <button class="mom-toggle-btn" onclick="toggleMoMTable('{section_id}')" aria-expanded="false">
+      <button class="mom-toggle-btn" onclick="toggleMoMTable('%s')" aria-expanded="false">
         <span>Month-on-Month Analysis</span>
         <svg class="mom-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path d="M4 6l4 4 4-4"/>
         </svg>
       </button>
-      <div id="mom-table-{section_id}" class="mom-table-container" style="display:none;">
-        <table class="data-table mom-table">
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th>Current</th>
-              <th>MoM Change</th>
-              <th>YoY Change</th>
-            </tr>
-          </thead>
-          <tbody>
-            {"".join(rows)}
-          </tbody>
-        </table>
+      <div id="mom-table-%s" class="mom-table-container" style="display:none;" data-range="12">
+        %s
+        %s
+        <div class="mom-drill-panel" hidden></div>
       </div>
     </div>
-    '''
+    """ % (section_id, section_id, controls, grid)
 
 
 def raw_data_table(data, table_id, title="Raw Data"):

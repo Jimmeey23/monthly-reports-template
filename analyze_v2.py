@@ -8,9 +8,13 @@ Comprehensive analysis for 4 reports:
 
 Supported sales exports:
   - Legacy 99-column export and revised 48-column export
-  - Gross = Sale Total Paid In Currency / Payment Value (deduplicated by Sale ID)
-  - Net = Mrp - Pre Tax / Price Excluding VAT In Currency (summed per row)
+  - Gross = Sale Total Paid In Currency / Payment Value (summed per line item)
+  - Net = Gross - Payment VAT, i.e. collected revenue excluding VAT
+  - List value = Mrp - Pre Tax / Price Excluding VAT In Currency, kept as the
+    separate `list_value` metric (it is a pre-discount, pre-VAT list figure and
+    is deliberately NOT reported as net)
   - Discount = Sale Item Unit Discount Value (summed per row)
+  - Transactions = distinct Payment Transaction ID (not Sale ID)
   - Location filter: Calculated Location contains 'Kwality' or 'Supreme'
   - Separate reports per location and per month
 """
@@ -87,6 +91,14 @@ def _require_any_column(fieldnames, metric, names):
     )
 
 
+def _first_present(fieldnames, names):
+    """Return the first of `names` present in the export, or None."""
+    for name in names:
+        if fieldnames is not None and name in fieldnames:
+            return name
+    return None
+
+
 def detect_sales_schema(fieldnames):
     """Map report metrics onto either supported Momence sales export shape."""
     return {
@@ -102,6 +114,10 @@ def detect_sales_schema(fieldnames):
             fieldnames, 'item discount',
             ('Sale Item Unit Discount Value', 'Discount Value In Currency'),
         ),
+        # Optional: only the revised export carries VAT and a payment
+        # transaction id. Both fall back gracefully when absent.
+        'vat': _first_present(fieldnames, ('Payment VAT', 'Sale Item Unit VAT Amount')),
+        'txn': _first_present(fieldnames, ('Payment Transaction ID', 'Sale ID')),
         'product': _require_any_column(
             fieldnames, 'product name',
             ('Sale Item Name', 'Cleaned Product'),
@@ -237,10 +253,10 @@ def analyze_sales():
     data = {lk: {} for lk in LOCATIONS}
     
     # Also track category, product, seller, payment breakdowns
-    breakdowns = {lk: {m: {'category': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                           'product': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                           'seller': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                           'payment': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()})}
+    breakdowns = {lk: {m: {'category': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                           'product': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                           'seller': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                           'payment': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()})}
                       for m in MONTHS + YOY_MONTHS}
                  for lk in LOCATIONS}
     
@@ -250,7 +266,8 @@ def analyze_sales():
         # sales_data[loc_key][month][sale_id] = sale_total_paid
         sales_data = {lk: defaultdict(dict) for lk in LOCATIONS}
         # per-row accumulators
-        row_data = {lk: defaultdict(lambda: {'net': 0, 'disc': 0, 'rows': 0, 'members': set(), 'sale_ids': set()})
+        row_data = {lk: defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0,
+                                             'members': set(), 'sale_ids': set(), 'txn_ids': set()})
                    for lk in LOCATIONS}
         
         for row in r:
@@ -270,18 +287,28 @@ def analyze_sales():
             stp = to_float(row.get(schema['gross'], '0'))
             mrp = to_float(row.get(schema['net'], '0'))
             disc = to_float(row.get(schema['discount'], '0'))
-            
-            # Store sale total (deduplicated)
+            vat = to_float(row.get(schema['vat'], '0')) if schema.get('vat') else 0.0
+            txn_id = row.get(schema['txn'], sid) if schema.get('txn') else sid
+
+            # Sale ID -> first row's payment, kept for reference only.
             if sid not in sales_data[loc_key][month]:
                 sales_data[loc_key][month][sid] = stp
-            
-            # Accumulate per-row
+
+            # Payment Value is a per-line-item amount, not a sale total
+            # repeated on every row (a sale with a Studio Single Class at
+            # 1,942 plus a Retail Product at 160 sums to 2,102, which is also
+            # unit-price x qty). So every row is counted; keeping only the
+            # first row per Sale ID dropped the extra line items — 30 of 339
+            # sales in Aug 2026, worth Rs 1.36L or 4.5% of revenue.
             rd = row_data[loc_key][month]
-            rd['net'] += mrp
+            rd['gross'] += stp
+            rd['net'] += stp - vat      # collected revenue, VAT exclusive
+            rd['list_value'] += mrp     # pre-VAT list value of every line
             rd['disc'] += disc
             rd['rows'] += 1
             rd['members'].add(row.get('Paying Member ID', ''))
             rd['sale_ids'].add(sid)
+            rd['txn_ids'].add(txn_id)
             
             # Breakdowns
             cat = row.get('Cleaned Category', '') or 'Uncategorized'
@@ -300,16 +327,19 @@ def analyze_sales():
         # Compute gross from deduplicated sales
         for loc_key in LOCATIONS:
             for month in MONTHS + YOY_MONTHS:
-                gross = sum(sales_data[loc_key][month].values())
                 rd = row_data[loc_key][month]
+                gross = rd['gross']
                 net = rd['net']
                 disc = rd['disc']
-                sales_count = len(rd['sale_ids'])
+                # Transactions are payment transactions, not Sale IDs: one
+                # payment can cover several sale rows (349 vs 340 in Jul 2026,
+                # and 349 is the count the published July report prints).
+                sales_count = len(rd['txn_ids']) or len(rd['sale_ids'])
                 members = len(rd['members'])
                 atv = gross / sales_count if sales_count else 0
                 # Discount efficiency = actual revenue collected per rupee discounted
                 disc_eff = gross / disc if disc > 0 else 0
-                
+
                 data[loc_key][month] = {
                     'gross': gross,
                     'net': net,
@@ -319,6 +349,8 @@ def analyze_sales():
                     'atv': atv,
                     'disc_eff': disc_eff,
                     'rows': rd['rows'],
+                    'list_value': rd['list_value'],
+                    'vat': gross - net,
                 }
                 
                 # Fill breakdown gross from sales_data
@@ -335,10 +367,10 @@ def analyze_sales():
         # Let's redo this more carefully
     
     # Re-read for breakdowns with gross per sale
-    breakdown_data = {lk: {m: {'category': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                                'product': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                                'seller': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()}),
-                                'payment': defaultdict(lambda: {'gross': 0, 'net': 0, 'disc': 0, 'rows': 0, 'sales': set()})}
+    breakdown_data = {lk: {m: {'category': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                                'product': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                                'seller': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
+                                'payment': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()})}
                       for m in MONTHS + YOY_MONTHS}
                      for lk in LOCATIONS}
     
@@ -362,8 +394,10 @@ def analyze_sales():
                 continue
             
             sid = row.get('Sale ID', '')
+            stp = to_float(row.get(schema['gross'], '0'))
             mrp = to_float(row.get(schema['net'], '0'))
             disc = to_float(row.get(schema['discount'], '0'))
+            vat = to_float(row.get(schema['vat'], '0')) if schema.get('vat') else 0.0
             cat = row.get('Cleaned Category', '') or 'Uncategorized'
             prod = row.get(schema['product'], '') or 'Unknown'
             seller = row.get('Sold By', '') or 'System / Unattributed'
@@ -376,22 +410,16 @@ def analyze_sales():
             
             for btype, bval in [('category', cat), ('product', prod), ('seller', seller), ('payment', pay_method)]:
                 bd = breakdown_data[loc_key][month][btype][bval]
-                bd['net'] += mrp
+                bd['gross'] += stp
+                bd['net'] += stp - vat
+                bd['list_value'] += mrp
                 bd['disc'] += disc
                 bd['rows'] += 1
                 bd['sales'].add(sid)
     
-    # Now fill gross per breakdown from sales_data
-    for loc_key in LOCATIONS:
-        for month in MONTHS + YOY_MONTHS:
-            for btype in ['category', 'product', 'seller', 'payment']:
-                for bval, bd in breakdown_data[loc_key][month][btype].items():
-                    # Gross = sum of sale totals for sales that have this breakdown value
-                    gross = 0
-                    for sid in bd['sales']:
-                        gross += sales_data[loc_key][month].get(sid, 0)
-                    bd['gross'] = gross
-    
+    # Gross is attributed per line item above, so every breakdown bucket adds
+    # back up to the month's headline gross (the old pass assigned the whole
+    # deduplicated sale total to each bucket, which double counted).
     return data, breakdown_data, sales_data
 
 
@@ -407,24 +435,89 @@ def classify_format(class_name):
 
 
 # ===================== SESSIONS =====================
+def _truthy(v):
+    return str(v or '').strip().upper() in ('TRUE', '1', 'YES', 'Y', 'T')
+
+
+def detect_sessions_schema(fieldnames):
+    """Map the three session export shapes we see onto one vocabulary.
+
+    roster   (checkins.csv): one row per member per class — Session ID,
+                             Capacity, Checked In, Date (IST), Location
+    bookings (sessions.csv): one row per booking — Location Name,
+                             Session Date, Attended, Time Slot (no capacity)
+    legacy                 : one row per class — Location, Date, Capacity,
+                             CheckedIn, Revenue, Class, Trainer, Day, Time
+    """
+    def first(*names):
+        for n in names:
+            if fieldnames and n in fieldnames:
+                return n
+        return None
+
+    return {
+        'location':  first('Location', 'Location Name', 'Center'),
+        'date':      first('Date (IST)', 'Session Date', 'Date'),
+        'sid':       first('Session ID', 'Session Id'),
+        'capacity':  first('Capacity'),
+        'visits':    first('Checked In', 'Attended', 'CheckedIn'),
+        'revenue':   first('Paid', 'Sale Value', 'Revenue'),
+        'cls':       first('Cleaned Class', 'Session Name', 'Class'),
+        'trainer':   first('Teacher Name', 'Trainer'),
+        'day':       first('Day of Week', 'Day'),
+        'time':      first('Time', 'Time Slot'),
+        'host':      first('Host ID', 'Host Id'),
+    }
+
+
+def sessions_source():
+    """Pick the export that can actually answer fill-rate questions.
+
+    Fill rate needs capacity, and only the roster export carries it, so a
+    bookings-only upload would otherwise leave sessions at zero.
+    """
+    candidates = [SESSIONS_FILE, CHECKINS_FILE]
+    fallback = None
+    for path in candidates:
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, encoding='utf-8-sig') as f:
+                cols = csv.DictReader(f, delimiter=sniff_delimiter(path)).fieldnames or []
+        except OSError:
+            continue
+        sch = detect_sessions_schema(cols)
+        if not (sch['location'] and sch['date']):
+            continue
+        if sch['capacity'] and sch['visits']:
+            return path, sch
+        if fallback is None:
+            fallback = (path, sch)
+    if fallback:
+        return fallback
+    return None, None
+
+
 def analyze_sessions():
-    """Analyze sessions for all locations and months."""
+    """Analyze sessions for all locations and months.
+
+    Rows are bookings, not classes, in every export we receive, so rows are
+    first collapsed into one record per class (Session ID, or date + time +
+    class + host when the export has no id) and only then aggregated.
+    """
     data = {lk: {} for lk in LOCATIONS}
-    # Also track by class, trainer, time slot for heatmap
-    by_class = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0, 'empty': 0})
+    by_class = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0, 'empty': 0})
                     for m in MONTHS}
                for lk in LOCATIONS}
-    by_trainer = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0})
+    by_trainer = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0})
                       for m in MONTHS}
                  for lk in LOCATIONS}
-    by_format = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0, 'empty': 0})
+    by_format = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0, 'empty': 0})
                      for m in MONTHS}
                 for lk in LOCATIONS}
-    # Trainer x format specialization: {trainer: {format: {'sessions', 'visits', 'capacity'}}}
     by_trainer_format = {lk: {m: defaultdict(lambda: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0}))
                              for m in MONTHS}
                         for lk in LOCATIONS}
-    # Heatmap now also tracks which formats/trainers made up each cell
     heatmap = {lk: {m: defaultdict(lambda: defaultdict(lambda: {
                         'visits': 0, 'capacity': 0, 'sessions': 0,
                         'formats': defaultdict(int), 'trainers': defaultdict(int),
@@ -432,79 +525,106 @@ def analyze_sessions():
                    for m in MONTHS}
               for lk in LOCATIONS}
 
-    with open(SESSIONS_FILE, encoding='utf-8-sig') as f:
-        r = csv.DictReader(f, delimiter=sniff_delimiter(SESSIONS_FILE))
+    path, sch = sessions_source()
+    if not path:
+        print('  ! no usable sessions export (need a Location and a Date column)')
+        return data, by_class, by_trainer, by_format, heatmap, by_trainer_format
+
+    # (loc_key, month, session id) -> one class
+    sessions = {}
+
+    with open(path, encoding='utf-8-sig') as f:
+        r = csv.DictReader(f, delimiter=sniff_delimiter(path))
         for row in r:
-            loc = row.get('Location', '')
-            loc_key = loc_key_for(loc)
+            loc_key = loc_key_for(row.get(sch['location'], '') or '')
             if not loc_key:
                 continue
-            d = row.get('Date', '')
+            d = row.get(sch['date'], '') or ''
             month = month_key(d)
             if month not in MONTHS:
                 continue
 
-            cap = to_int(row.get('Capacity', '0'))
-            chk = to_int(row.get('CheckedIn', '0'))
-            rev = to_float(row.get('Revenue', '0'))
-            cls = row.get('Class', '') or 'Unknown Class'
-            trainer = row.get('Trainer', '') or 'Unknown'
-            day = row.get('Day', '')
-            time = row.get('Time', '')
-            fmt_name = classify_format(cls)
+            raw_sid = (row.get(sch['sid'], '') or '').strip() if sch['sid'] else ''
+            cls = (row.get(sch['cls'], '') if sch['cls'] else '') or 'Unknown Class'
+            trainer = (row.get(sch['trainer'], '') if sch['trainer'] else '') or 'Unknown'
+            time_slot = (row.get(sch['time'], '') if sch['time'] else '') or 'Unknown'
+            day = (row.get(sch['day'], '') if sch['day'] else '') or 'Unknown'
+            host = (row.get(sch['host'], '') if sch['host'] else '') or ''
+            sid = raw_sid or '|'.join([d, time_slot, cls, trainer, host])
 
-            if month not in data[loc_key]:
-                data[loc_key][month] = {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0, 'empty': 0}
+            key = (loc_key, month, sid)
+            rec = sessions.get(key)
+            if rec is None:
+                rec = sessions[key] = {
+                    'visits': 0, 'capacity': 0, 'revenue': 0.0,
+                    'cls': cls, 'trainer': trainer, 'day': day,
+                    'time': time_slot, 'fmt': classify_format(cls),
+                }
 
-            dm = data[loc_key][month]
-            dm['sessions'] += 1
-            dm['visits'] += chk
-            dm['capacity'] += cap
-            dm['revenue'] += rev
-            if chk == 0:
-                dm['empty'] += 1
+            # Visits: the roster export flags each attendee (TRUE/FALSE); the
+            # legacy export already gives a per-class headcount.
+            raw_visits = (row.get(sch['visits'], '') if sch['visits'] else '') or ''
+            if _truthy(raw_visits):
+                rec['visits'] += 1
+            else:
+                n = to_int(raw_visits)
+                if n and not _truthy(raw_visits):
+                    rec['visits'] += n
 
-            # By class (uses the 'Class' column, not 'SessionName')
-            bc = by_class[loc_key][month][cls]
-            bc['sessions'] += 1
-            bc['visits'] += chk
-            bc['capacity'] += cap
-            bc['revenue'] += rev
-            if chk == 0:
-                bc['empty'] += 1
+            # Capacity repeats on every row of a class — take it once.
+            if sch['capacity']:
+                cap = to_int(row.get(sch['capacity'], '0'))
+                if cap > rec['capacity']:
+                    rec['capacity'] = cap
 
-            # By trainer
-            bt = by_trainer[loc_key][month][trainer]
-            bt['sessions'] += 1
-            bt['visits'] += chk
-            bt['capacity'] += cap
-            bt['revenue'] += rev
+            if sch['revenue']:
+                rec['revenue'] += to_float(row.get(sch['revenue'], '0'))
 
-            # By format: Barre / PowerCycle / Strength Lab
-            bf = by_format[loc_key][month][fmt_name]
-            bf['sessions'] += 1
-            bf['visits'] += chk
-            bf['capacity'] += cap
-            bf['revenue'] += rev
-            if chk == 0:
-                bf['empty'] += 1
+    for (loc_key, month, _sid), rec in sessions.items():
+        dm = data[loc_key].setdefault(
+            month, {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0, 'empty': 0})
+        dm['sessions'] += 1
+        dm['visits'] += rec['visits']
+        dm['capacity'] += rec['capacity']
+        dm['revenue'] += rec['revenue']
+        if rec['visits'] == 0:
+            dm['empty'] += 1
 
-            # Trainer x format specialization
-            btf = by_trainer_format[loc_key][month][trainer][fmt_name]
-            btf['sessions'] += 1
-            btf['visits'] += chk
-            btf['capacity'] += cap
+        bc = by_class[loc_key][month][rec['cls']]
+        bc['sessions'] += 1
+        bc['visits'] += rec['visits']
+        bc['capacity'] += rec['capacity']
+        bc['revenue'] += rec['revenue']
+        if rec['visits'] == 0:
+            bc['empty'] += 1
 
-            # Heatmap: time slot x day of week, plus format/trainer composition
-            time_slot = time[:5] if time else 'Unknown'
-            hm = heatmap[loc_key][month][time_slot][day]
-            hm['visits'] += chk
-            hm['capacity'] += cap
-            hm['sessions'] += 1
-            hm['formats'][fmt_name] += 1
-            hm['trainers'][trainer] += 1
+        bt = by_trainer[loc_key][month][rec['trainer']]
+        bt['sessions'] += 1
+        bt['visits'] += rec['visits']
+        bt['capacity'] += rec['capacity']
+        bt['revenue'] += rec['revenue']
 
-    # Compute fill rates
+        bf = by_format[loc_key][month][rec['fmt']]
+        bf['sessions'] += 1
+        bf['visits'] += rec['visits']
+        bf['capacity'] += rec['capacity']
+        bf['revenue'] += rec['revenue']
+        if rec['visits'] == 0:
+            bf['empty'] += 1
+
+        btf = by_trainer_format[loc_key][month][rec['trainer']][rec['fmt']]
+        btf['sessions'] += 1
+        btf['visits'] += rec['visits']
+        btf['capacity'] += rec['capacity']
+
+        slot = rec['time'][:5] if rec['time'] else 'Unknown'
+        hm = heatmap[loc_key][month][slot][rec['day']]
+        hm['visits'] += rec['visits']
+        hm['capacity'] += rec['capacity']
+        hm['sessions'] += 1
+        hm['formats'][rec['fmt']] += 1
+        hm['trainers'][rec['trainer']] += 1
+
     for loc_key in LOCATIONS:
         for month in MONTHS:
             if month in data[loc_key]:
@@ -513,6 +633,7 @@ def analyze_sessions():
                 dm['avg_visits'] = dm['visits'] / dm['sessions'] if dm['sessions'] else 0
 
     return data, by_class, by_trainer, by_format, heatmap, by_trainer_format
+
 
 
 # ===================== LEADS / FUNNEL =====================

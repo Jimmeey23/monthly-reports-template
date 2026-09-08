@@ -124,6 +124,91 @@ const URL_ = process.argv[2]
   check('copilot sends location + month', /loc: (ctx|__ctx)\.loc, month: (ctx|__ctx)\.month/.test(live));
   check('toggleMoMTable marks the container', /container\.classList\.add\('expanded'\)/.test(live));
 
+  // 4 — copilot: two modes, and it shuts on Escape / outside click
+  const modal = d.getElementById('ai-copilot-modal');
+  const copilotBtn = d.getElementById('ai-copilot-btn');
+  const backdrop = d.getElementById('ai-copilot-backdrop');
+  const modeBuild = d.getElementById('copilot-mode-build');
+  const modeChat = d.getElementById('copilot-mode-chat');
+  const send = d.getElementById('ai-copilot-send');
+  const input = d.getElementById('ai-copilot-input');
+  const transcript = d.getElementById('ai-copilot-transcript');
+  const open = () => copilotBtn.click();
+  const esc = () => d.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  const outside = (el) => (el || d.body).dispatchEvent(new w.MouseEvent('mousedown', { bubbles: true }));
+
+  check('copilot modal + backdrop exist', !!modal && !!backdrop);
+  check('copilot opens in Build mode', modeBuild.classList.contains('is-active') && send.textContent.trim() === 'Build element');
+
+  open();
+  check('copilot opens on the button', modal.classList.contains('active'));
+  esc();
+  check('Escape shuts the copilot', !modal.classList.contains('active'));
+
+  open();
+  check('reopens after Escape', modal.classList.contains('active'));
+  outside();
+  check('clicking outside shuts the copilot', !modal.classList.contains('active'));
+
+  open();
+  outside(backdrop);
+  check('clicking the backdrop shuts the copilot', !modal.classList.contains('active'));
+
+  open();
+  check('clicking inside keeps it open', (() => {
+    modal.dispatchEvent(new w.MouseEvent('mousedown', { bubbles: true }));
+    return modal.classList.contains('active');
+  })());
+
+  modeChat.click();
+  check('Chat mode takes over',
+    modeChat.classList.contains('is-active') && !modeBuild.classList.contains('is-active') &&
+    modeChat.getAttribute('aria-selected') === 'true');
+  check('send button relabels for chat', send.textContent.trim() === 'Ask');
+
+  // chat turn, with a stubbed answer so the test needs no API key
+  const realFetch = w.fetch;
+  w.fetch = async () => ({
+    json: async () => ({
+      type: 'chat', mode: 'chat', title: 'Churn Rate — Kwality', answer: 'Churn is 26.4%, up 5.1pp on July.',
+      kpi: { label: 'Churn Rate', value: '26.4%', change: '+5.1pp MoM' },
+      table: { title: 'Churn by month', data: [{ Month: 'Jul 26', Churn: '21.2%' }, { Month: 'Aug 26', Churn: '26.4%' }] },
+      followUps: ['Biggest movers', 'Compare August vs July'],
+    }),
+  });
+  input.value = 'what is the churn rate';
+  send.click();
+  await new Promise(r => setTimeout(r, 120));
+  check('chat answer lands in the transcript',
+    transcript.querySelectorAll('.copilot-turn').length === 1 && /26\.4%/.test(transcript.textContent));
+  check('chat answer carries its table',
+    transcript.querySelectorAll('.copilot-answer table tbody tr').length === 2);
+  check('chat offers follow-up chips', transcript.querySelectorAll('.copilot-chip').length === 2);
+
+  // build mode renders an artifact with a section picker
+  w.fetch = async () => ({
+    json: async () => ({
+      type: 'table', title: 'Top 5 products', data: [{ Product: 'Studio 1 Month', 'Net Sales': '₹3.84L' }],
+      description: 'Top 5 by net revenue.', confidence: 'high',
+    }),
+  });
+  modeBuild.click();
+  input.value = 'top 5 products';
+  send.click();
+  await new Promise(r => setTimeout(r, 120));
+  const out = d.getElementById('ai-copilot-output');
+  check('build mode renders an element', out.querySelectorAll('table tbody tr').length === 1);
+  const sel = out.querySelector('.copilot-section-select');
+  check('build mode offers a section picker', !!sel && sel.options.length === 8);
+  check('save stays disabled until a section is picked', out.querySelector('.copilot-save-btn').disabled === true);
+  sel.value = '2';
+  sel.dispatchEvent(new w.Event('change', { bubbles: true }));
+  check('picking a section enables save', out.querySelector('.copilot-save-btn').disabled === false);
+
+  w.fetch = realFetch;
+  d.getElementById('ai-copilot-close')?.click();
+  check('close button shuts the copilot', !modal.classList.contains('active'));
+
   console.log('\n' + (fail ? fail + ' FAILURES' : 'all ' + pass + ' checks passed'));
   process.exit(fail ? 1 : 0);
 })();

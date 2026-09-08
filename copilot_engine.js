@@ -363,6 +363,202 @@ function overviewAnswer(an, ctx) {
 }
 
 /* ------------------------------------------------------------------ public */
+/* ------------------------------------------------- extra intents */
+/* Months up to and including the report month — meta.months can run past it
+   with a partial month, which would poison "highest / lowest month" answers. */
+function uptoMonths(an, ctx) {
+  const all = an.monthsFor(ctx.loc);
+  const idx = all.indexOf(ctx.month);
+  return idx >= 0 ? all.slice(0, idx + 1) : all;
+}
+
+const MONTH_WORDS = [
+  { word: 'january', num: '01' }, { word: 'february', num: '02' }, { word: 'march', num: '03' },
+  { word: 'april', num: '04' }, { word: 'may', num: '05' }, { word: 'june', num: '06' },
+  { word: 'july', num: '07' }, { word: 'august', num: '08' }, { word: 'september', num: '09' },
+  { word: 'october', num: '10' }, { word: 'november', num: '11' }, { word: 'december', num: '12' },
+  { word: 'jan', num: '01' }, { word: 'feb', num: '02' }, { word: 'mar', num: '03' },
+  { word: 'apr', num: '04' }, { word: 'jun', num: '06' }, { word: 'jul', num: '07' },
+  { word: 'aug', num: '08' }, { word: 'sep', num: '09' }, { word: 'oct', num: '10' },
+  { word: 'nov', num: '11' }, { word: 'dec', num: '12' },
+];
+
+/* Which month was the best / worst for a metric. */
+function extremeMonthAnswer(an, ctx, metric, wantLow) {
+  const months = uptoMonths(an, ctx).filter((m) => an.metric(ctx.loc, m, metric.group, metric.key) !== null);
+  if (months.length < 2) return null;
+  const rows = months
+    .map((m) => ({ m, v: Number(an.metric(ctx.loc, m, metric.group, metric.key)) }))
+    .filter((r) => !isNaN(r.v));
+  if (!rows.length) return null;
+  rows.sort((a, b) => (wantLow ? a.v - b.v : b.v - a.v));
+  const fmt = (v) => (metric.fmt === 'money' ? fmtMoney(v) : metric.fmt === 'pct' ? fmtPct(v) : fmtInt(v));
+  const win = rows[0];
+  const mean = rows.reduce((a, r) => a + r.v, 0) / rows.length;
+  const top = rows.slice(0, 5).map((r, i) => ({
+    '#': i + 1,
+    Month: monthLabel(r.m),
+    [metric.label]: fmt(r.v),
+    'vs average': metric.fmt === 'pct'
+      ? `${(r.v - mean >= 0 ? '+' : '')}${(r.v - mean).toFixed(1)}pp`
+      : pctChange(mean, r.v),
+  }));
+  return table(
+    `${wantLow ? 'Lowest' : 'Highest'} ${metric.label.toLowerCase()} months — ${an.locName(ctx.loc)}`,
+    top,
+    `${monthLabel(win.m)} is the ${wantLow ? 'lowest' : 'highest'} month on record for ` +
+    `${metric.label.toLowerCase()} at ${fmt(win.v)}, against an all-month average of ${fmt(mean)} ` +
+    `across ${rows.length} months. The five ${wantLow ? 'lowest' : 'highest'} months are listed above.`,
+    { confidence: 'high' }
+  );
+}
+
+/* Average / total of a metric over a window. */
+function aggregateAnswer(an, prompt, ctx, metric) {
+  const p = String(prompt || '').toLowerCase();
+  const wantTotal = /\b(total|sum|altogether|in total|combined)\b/.test(p);
+  const n = monthsRequested(prompt, 12);
+  const months = uptoMonths(an, ctx)
+    .filter((m) => an.metric(ctx.loc, m, metric.group, metric.key) !== null)
+    .slice(-n);
+  if (months.length < 2) return null;
+  const vals = months.map((m) => Number(an.metric(ctx.loc, m, metric.group, metric.key))).filter((v) => !isNaN(v));
+  if (!vals.length) return null;
+  const total = vals.reduce((a, b) => a + b, 0);
+  const mean = total / vals.length;
+  const fmt = (v) => (metric.fmt === 'money' ? fmtMoney(v) : metric.fmt === 'pct' ? fmtPct(v) : fmtInt(v));
+  const value = wantTotal ? total : mean;
+  return {
+    type: 'kpi',
+    title: `${wantTotal ? 'Total' : 'Average'} ${metric.label.toLowerCase()} — ${an.locName(ctx.loc)} · last ${months.length} months`,
+    data: {
+      label: `${wantTotal ? 'Total' : 'Average'} ${metric.label}`,
+      value: fmt(value),
+      change: `${monthLabel(months[0])} → ${monthLabel(months[months.length - 1])}`,
+    },
+    description: `${wantTotal ? 'Total' : 'Average'} ${metric.label.toLowerCase()} over the ` +
+      `${months.length} months to ${monthLabel(months[months.length - 1])} is ${fmt(value)}` +
+      (metric.fmt === 'pct'
+        ? `, ranging from ${fmt(Math.min(...vals))} to ${fmt(Math.max(...vals))} across the window.`
+        : wantTotal
+          ? `, an average of ${fmt(mean)} per month.`
+          : `, ranging from ${fmt(Math.min(...vals))} to ${fmt(Math.max(...vals))}, totalling ${fmt(total)}.`) +
+      (metric.fmt === 'pct'
+        ? ' Rates are not summed, so the figure above is the unweighted monthly average.'
+        : ''),
+    confidence: 'high',
+  };
+}
+
+/* Compare two named months for every metric that has data in both. */
+function compareMonthsAnswer(an, prompt, ctx) {
+  const p = String(prompt || '').toLowerCase();
+  const months = an.monthsFor(ctx.loc);
+  const named = [];
+  MONTH_WORDS.forEach((mw) => {
+    if (new RegExp('\\b' + mw.word + '\\b').test(p)) {
+      const hit = months.filter((m) => m.slice(5, 7) === mw.num);
+      if (hit.length) named.push(hit[hit.length - 1]);
+    }
+  });
+  const uniq = [...new Set(named)];
+  if (uniq.length < 2) return null;
+  const a = uniq[uniq.length - 2];
+  const b = uniq[uniq.length - 1];
+  const rows = [];
+  METRICS.forEach((m) => {
+    if (rows.some((r) => r.Metric === m.label)) return;
+    const va = an.metric(ctx.loc, a, m.group, m.key);
+    const vb = an.metric(ctx.loc, b, m.group, m.key);
+    if (va === null || vb === null) return;
+    const fmt = (v) => (m.fmt === 'money' ? fmtMoney(v) : m.fmt === 'pct' ? fmtPct(v) : fmtInt(v));
+    rows.push({
+      Metric: m.label,
+      [monthLabel(a)]: fmt(va),
+      [monthLabel(b)]: fmt(vb),
+      Change: m.fmt === 'pct'
+        ? `${(vb - va >= 0 ? '+' : '')}${(vb - va).toFixed(1)}pp`
+        : pctChange(va, vb),
+    });
+  });
+  if (!rows.length) return null;
+  return table(
+    `${monthLabel(a)} vs ${monthLabel(b)} — ${an.locName(ctx.loc)}`,
+    rows,
+    `Side-by-side across the ${rows.length} metrics with data in both months.`
+  );
+}
+
+/* Biggest month-on-month movers. */
+function moversAnswer(an, ctx, limit) {
+  const months = an.monthsFor(ctx.loc);
+  const i = months.indexOf(ctx.month);
+  if (i < 1) return null;
+  const prev = months[i - 1];
+  const cur = ctx.month;
+  const rows = [];
+  METRICS.forEach((m) => {
+    if (rows.some((r) => r.Metric === m.label)) return;
+    const va = an.metric(ctx.loc, prev, m.group, m.key);
+    const vb = an.metric(ctx.loc, cur, m.group, m.key);
+    if (va === null || vb === null || !va) return;
+    const fmt = (v) => (m.fmt === 'money' ? fmtMoney(v) : m.fmt === 'pct' ? fmtPct(v) : fmtInt(v));
+    const delta = m.fmt === 'pct' ? (vb - va) : ((vb - va) / Math.abs(va)) * 100;
+    rows.push({
+      Metric: m.label,
+      [monthLabel(prev)]: fmt(va),
+      [monthLabel(cur)]: fmt(vb),
+      Change: m.fmt === 'pct' ? `${(delta >= 0 ? '+' : '')}${delta.toFixed(1)}pp` : pctChange(va, vb),
+      _abs: Math.abs(delta),
+    });
+  });
+  if (!rows.length) return null;
+  rows.sort((a, b) => b._abs - a._abs);
+  const top = rows.slice(0, limit).map((r) => {
+    const clone = Object.assign({}, r);
+    delete clone._abs;
+    return clone;
+  });
+  return table(
+    `Biggest month-on-month movers — ${an.locName(ctx.loc)} · ${monthLabel(cur)} vs ${monthLabel(prev)}`,
+    top,
+    `Ranked by the absolute size of the move from ${monthLabel(prev)} to ${monthLabel(cur)} across ` +
+    `${rows.length} metrics. ${top[0].Metric} moved the most (${top[0].Change}).`
+  );
+}
+
+/* How a metric is put together — stops the copilot guessing. */
+const DEFINITIONS = {
+  'net sales': 'Net Sales = Σ Payment Value − Payment VAT across every sales line: collected revenue, VAT exclusive.',
+  'gross sales': 'Gross Sales = Σ Payment Value across every sales line: everything collected, VAT included.',
+  discount: 'Discount Value = Σ Sale Item Unit Discount Value: the discount applied at line-item level.',
+  'discount efficiency': 'Discount Efficiency = Gross Sales ÷ Discount Value: rupees collected per rupee discounted.',
+  transactions: 'Transactions = distinct Payment Transaction IDs in the month.',
+  'average transaction value': 'ATV = Gross Sales ÷ Transactions.',
+  'unique buyers': 'Unique Buyers = distinct Paying Member IDs that bought in the month.',
+  'fill rate': 'Fill Rate = Visits ÷ Capacity: attendance as a share of the seats available in booked classes.',
+  visits: 'Visits = bookings marked Checked In / Attended.',
+  sessions: 'Sessions = distinct classes in the month (Session ID, or date + time + class when the export has no id).',
+  'churn rate': 'Churn Rate = Lapsed ÷ Total Expiring × 100 — the share of memberships reaching end-of-life that lapsed.',
+  'renewal rate': 'Renewal Rate = Renewed ÷ Total Expiring × 100.',
+  'trial conversion': 'Trial Conversion = Converted ÷ Trials × 100.',
+  'lead conversion': 'Lead Conversion = Converted Leads ÷ Total Leads × 100.',
+};
+
+function definitionAnswer(prompt) {
+  const p = String(prompt || '').toLowerCase();
+  const hit = Object.keys(DEFINITIONS).sort((a, b) => b.length - a.length).find((k) => p.includes(k));
+  if (!hit) return null;
+  return {
+    type: 'text',
+    title: `How ${hit} is calculated`,
+    data: DEFINITIONS[hit] +
+      ' Every figure here is computed from analysis.json for this upload — nothing is estimated.',
+    description: 'Metric definition',
+    confidence: 'high',
+  };
+}
+
 function answerCopilot(prompt, analysisData, ctx) {
   const an = new Analysis(analysisData);
   const context = {
@@ -383,6 +579,24 @@ function answerCopilot(prompt, analysisData, ctx) {
 
   const p = String(prompt || '').toLowerCase();
   const result = (() => {
+    /* 0. definitions */
+    if (/\b(how (?:is|do you|are)|what does|definition of|define|calculated|formula)\b/.test(p)) {
+      const r = definitionAnswer(prompt);
+      if (r) return r;
+    }
+
+    /* 0b. compare two named months */
+    if (/\b(vs\.?|versus|against|compared to)\b/.test(p)) {
+      const r = compareMonthsAnswer(an, prompt, context);
+      if (r) return r;
+    }
+
+    /* 0c. biggest movers */
+    if (/\b(movers?|changed the most|biggest (?:change|move|shift)|what moved)\b/.test(p)) {
+      const r = moversAnswer(an, context, 8);
+      if (r) return r;
+    }
+
     /* 1. "compare locations" / "across studios" */
     if (/\b(compare|versus|vs\.?|across (?:all )?(?:locations|studios)|by location|each location)\b/.test(p)) {
       const r = compareLocationsAnswer(an, context);
@@ -411,14 +625,33 @@ function answerCopilot(prompt, analysisData, ctx) {
       };
     }
 
-    /* 3. trend questions */
     const metric = findMetric(p);
+
+    /* 3. best / worst month and averages — before trends, because
+       "average churn last 6 months" and "total net sales last 12 months" both
+       mention a window but want one number, not a series. */
+    if (metric) {
+      if (/\b(highest|best|peak|maximum|max)\b/.test(p) && /\b(month|months|ever|record)\b/.test(p)) {
+        const r = extremeMonthAnswer(an, context, metric, false);
+        if (r) return r;
+      }
+      if (/\b(lowest|worst|trough|minimum|min)\b/.test(p) && /\b(month|months|ever|record)\b/.test(p)) {
+        const r = extremeMonthAnswer(an, context, metric, true);
+        if (r) return r;
+      }
+      if (/\b(average|avg|mean|total|sum|altogether)\b/.test(p)) {
+        const r = aggregateAnswer(an, prompt, context, metric);
+        if (r) return r;
+      }
+    }
+
+    /* 4. trend questions */
     if (/\b(trend|over time|month on month|month-on-month|\bmom\b|monthly|history|last \d+ months|past \d+ months|growth|chart|series)\b/.test(p) && metric) {
       const r = trendAnswer(an, prompt, context, metric, monthsRequested(prompt, 12));
       if (r) return r;
     }
 
-    /* 4. single metric questions */
+    /* 5. single metric questions */
     if (metric) {
       if (/\b(trend|month|months|last|history)\b/.test(p)) {
         const r = trendAnswer(an, prompt, context, metric, monthsRequested(prompt, 12));
@@ -428,7 +661,7 @@ function answerCopilot(prompt, analysisData, ctx) {
       if (r) return r;
     }
 
-    /* 5. bare "top N" with no recognised dimension → top products */
+    /* 6. bare "top N" with no recognised dimension → top products */
     if (/\b(top|best|highest)\b/.test(p)) {
       const r = breakdownAnswer(an, prompt, context, BREAKDOWNS[1], countRequested(prompt, 10));
       if (r) return r;
@@ -437,9 +670,12 @@ function answerCopilot(prompt, analysisData, ctx) {
     return null;
   })();
 
-  const answer = result || overviewAnswer(an, context);
-  return Object.assign(answer, {
+  const structured = result || overviewAnswer(an, context);
+  const mode = (ctx && ctx.mode === 'chat') ? 'chat' : 'build';
+
+  const base = Object.assign(structured, {
     source: 'local',
+    mode,
     context: { location: an.locName(context.loc), month: monthLabel(context.month) },
     available: {
       locations: Object.keys(an.locations),
@@ -448,12 +684,78 @@ function answerCopilot(prompt, analysisData, ctx) {
         'top 10 products by revenue',
         'category mix',
         'net sales trend last 12 months',
-        'trainer breakdown',
+        'biggest month-on-month movers',
+        'compare August vs July',
+        'highest net sales month',
         'compare locations',
-        'what is the churn rate',
+        'how is fill rate calculated',
       ],
     },
   });
+
+  return mode === 'chat' ? asChatAnswer(an, context, base, prompt) : base;
+}
+
+/* ------------------------------------------------------------------ modes */
+/* Build mode returns an artifact to drop into the report; chat mode wraps the
+   same computation in prose, keeps the supporting table, and suggests what to
+   ask next. */
+function asChatAnswer(an, context, result, prompt) {
+  const scope = `${an.locName(context.loc)} · ${monthLabel(context.month)}`;
+  const lines = [];
+
+  if (result.type === 'table' && Array.isArray(result.data) && result.data.length) {
+    const cols = Object.keys(result.data[0]).filter((c) => c !== '#');
+    const lead = cols[0] || 'Metric';
+    const rows = result.data.slice(0, 3).map((r) => `${r[lead]} ${r[cols[1]] || ''}`.trim());
+    lines.push(`${result.title}. ${rows.join('; ')}` +
+      (result.data.length > 3 ? `; and ${result.data.length - 3} more rows below.` : '.'));
+  } else if (result.type === 'kpi' && result.data) {
+    lines.push(`${result.data.label} for ${scope} is ${result.data.value}` +
+      (result.data.change ? ` (${result.data.change})` : '') + '.');
+  } else {
+    lines.push(String(result.data || result.description || ''));
+  }
+
+  if (result.description && !String(result.description).startsWith(lines[0].slice(0, 24))) {
+    lines.push(String(result.description));
+  }
+  lines.push(`Scope: ${scope}. Answered from analysis.json for this upload.`);
+
+  return {
+    type: 'chat',
+    mode: 'chat',
+    title: result.title || 'Answer',
+    answer: lines.join(' '),
+    table: result.type === 'table' ? { title: result.title, data: result.data } : null,
+    kpi: result.type === 'kpi' ? result.data : null,
+    description: result.description || '',
+    confidence: result.confidence || 'medium',
+    followUps: followUpsFor(an, context, result),
+    source: 'local',
+    context: result.context,
+    available: result.available,
+  };
+}
+
+function followUpsFor(an, context, result) {
+  const title = String(result.title || '');
+  const scope = an.locName(context.loc);
+  const month = monthLabel(context.month);
+  // Name the metric back to the user when we can recognise it in the title.
+  const m = METRICS.find((mm) => title.toLowerCase().includes(mm.label.toLowerCase()));
+  if (m) {
+    return [
+      `${m.label} trend over the last 12 months`,
+      `Which month had the highest ${m.label.toLowerCase()}?`,
+      `Compare ${month} with the previous month`,
+    ];
+  }
+  return [
+    `Biggest month-on-month movers for ${scope}`,
+    `Compare ${month} with the previous month`,
+    'Category mix this month',
+  ];
 }
 
 /* ------------------------------------------------------- dataset for the LLM */

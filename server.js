@@ -768,6 +768,9 @@ app.get('/previous-month-reports', (req, res) => {
           sessionId: session.sessionId,
           loc: locKeys[0],
           month: previousMonth.key,
+          locName: (session.locations || {})[locKeys[0]] || locKeys[0],
+          monthLabel: new Date(Number(String(previousMonth.key).slice(0, 4)), Number(String(previousMonth.key).slice(5, 7)) - 1, 1)
+            .toLocaleString('en-US', { month: 'short', year: '2-digit' }),
           filename: outputFilename,
           serverUrl: process.env.SERVER_URL || `${protocol}://${host}`,
         })};</script>\n<script src="/socket.io/socket.io.js"></script>\n<script src="/report-client.js"></script>`;
@@ -960,6 +963,9 @@ app.post('/generate', async (req, res) => {
           sessionId,
           loc: selectedLocs[0],
           month: selectedMonths[0],
+          locName: (session.locations || {})[selectedLocs[0]] || selectedLocs[0],
+          monthLabel: new Date(Number(String(selectedMonths[0]).slice(0, 4)), Number(String(selectedMonths[0]).slice(5, 7)) - 1, 1)
+            .toLocaleString('en-US', { month: 'short', year: '2-digit' }),
           filename: outputFilename,
           serverUrl: process.env.SERVER_URL || `${protocol}://${host}`,
         })};</script>\n<script src="/socket.io/socket.io.js"></script>\n<script src="/report-client.js"></script>`;
@@ -1240,7 +1246,7 @@ function saveCopilotAnswer(sessionDir, prompt, result) {
 
 app.post('/ai-copilot/:sessionId', async (req, res) => {
   const { sessionId } = req.params;
-  const { prompt, loc, month } = req.body || {};
+  const { prompt, loc, month, mode } = req.body || {};
 
   if (!prompt) return res.status(400).json({ error: 'Prompt required' });
 
@@ -1254,7 +1260,8 @@ app.post('/ai-copilot/:sessionId', async (req, res) => {
       analysisData = JSON.parse(fs.readFileSync(analysisPath, 'utf8'));
     }
 
-    const ctx = { loc, month };
+    // build = an element for the report, chat = a prose answer in the panel.
+    const ctx = { loc, month, mode: mode === 'chat' ? 'chat' : 'build' };
     const local = answerCopilot(prompt, analysisData, ctx);
 
     // Open-ended questions benefit from the model — but only when it is configured.

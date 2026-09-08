@@ -1340,20 +1340,25 @@ def theme_script(ctx):
 </button>
 
 <!-- AI Copilot Modal -->
-<div id="ai-copilot-modal">
+<div id="ai-copilot-backdrop" aria-hidden="true"></div>
+<div id="ai-copilot-modal" role="dialog" aria-modal="true" aria-label="AI Data Copilot">
   <div class="copilot-header">
     <h3>🤖 AI Data Copilot</h3>
     <button id="ai-copilot-close" aria-label="Close">&times;</button>
   </div>
+  <div class="copilot-modes" role="tablist" aria-label="Copilot mode">
+    <button class="copilot-mode-btn is-active" id="copilot-mode-build" data-mode="build" role="tab" aria-selected="true">Build</button>
+    <button class="copilot-mode-btn" id="copilot-mode-chat" data-mode="chat" role="tab" aria-selected="false">Chat</button>
+    <span class="copilot-scope" id="copilot-scope"></span>
+  </div>
   <div class="copilot-body">
-    <p style="color: var(--text-muted); margin: 0 0 1rem 0; font-size: 0.9rem;">
-      Ask me anything about the data. Examples:<br>
-      • "Show me top 5 revenue categories"<br>
-      • "Calculate average fill rate"<br>
-      • "Compare MoM growth for all metrics"
-    </p>
-    <textarea id="ai-copilot-input" placeholder="Type your question..."></textarea>
-    <button id="ai-copilot-send">Analyze Data</button>
+    <p class="copilot-hint" id="copilot-hint"></p>
+    <div id="ai-copilot-transcript" hidden></div>
+    <textarea id="ai-copilot-input" placeholder="Describe the table or KPI you want..."></textarea>
+    <div class="copilot-actions">
+      <button id="ai-copilot-send">Build element</button>
+      <button id="ai-copilot-clear" class="copilot-ghost-btn" title="Clear this conversation">Clear</button>
+    </div>
     <div id="ai-copilot-output"></div>
   </div>
 </div>
@@ -1545,20 +1550,84 @@ document.addEventListener('DOMContentLoaded', () => {
     tabs[0].click();
   }
 
-  // AI Copilot
+  // AI Copilot — two modes: Build (an element for the report) and Chat (Q&A)
   const copilotBtn = document.getElementById('ai-copilot-btn');
   const copilotModal = document.getElementById('ai-copilot-modal');
+  const copilotBackdrop = document.getElementById('ai-copilot-backdrop');
   const copilotClose = document.getElementById('ai-copilot-close');
   const copilotInput = document.getElementById('ai-copilot-input');
   const copilotSend = document.getElementById('ai-copilot-send');
+  const copilotClear = document.getElementById('ai-copilot-clear');
   const copilotOutput = document.getElementById('ai-copilot-output');
+  const copilotTranscript = document.getElementById('ai-copilot-transcript');
+  const copilotHint = document.getElementById('copilot-hint');
+  let copilotMode = 'build';
 
-  copilotBtn?.addEventListener('click', () => {
-    copilotModal.classList.toggle('active');
+  function openCopilot() {
+    copilotModal.classList.add('active');
+    copilotBackdrop.classList.add('active');
+    copilotInput.focus();
+  }
+
+  // Escape, and any click that lands outside the panel, shut it immediately.
+  function closeCopilot() {
+    copilotModal.classList.remove('active');
+    copilotBackdrop.classList.remove('active');
+  }
+
+  copilotBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (copilotModal.classList.contains('active')) closeCopilot();
+    else openCopilot();
   });
 
-  copilotClose?.addEventListener('click', () => {
-    copilotModal.classList.remove('active');
+  copilotClose?.addEventListener('click', closeCopilot);
+  copilotBackdrop?.addEventListener('mousedown', closeCopilot);
+  document.addEventListener('mousedown', (e) => {
+    if (!copilotModal.classList.contains('active')) return;
+    if (copilotModal.contains(e.target) || (copilotBtn && copilotBtn.contains(e.target))) return;
+    closeCopilot();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && copilotModal.classList.contains('active')) {
+      e.preventDefault();
+      closeCopilot();
+    }
+  });
+
+  const COPILOT_HINTS = {
+    build: 'Describe the table, KPI or breakdown you want. It is computed from the uploaded data and can be saved straight into a section of this report.',
+    chat: 'Ask anything about this report\u2019s data. Answers come from the analysis file for this upload, with the supporting table and follow-ups you can click.',
+  };
+
+  function setCopilotMode(mode) {
+    copilotMode = mode === 'chat' ? 'chat' : 'build';
+    document.querySelectorAll('.copilot-mode-btn').forEach((b) => {
+      const on = b.dataset.mode === copilotMode;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+    copilotHint.textContent = COPILOT_HINTS[copilotMode];
+    copilotSend.textContent = copilotMode === 'chat' ? 'Ask' : 'Build element';
+    copilotInput.placeholder = copilotMode === 'chat'
+      ? 'Ask a question about this month\u2019s data...'
+      : 'Describe the table or KPI you want...';
+    copilotTranscript.hidden = copilotMode !== 'chat';
+    copilotOutput.innerHTML = '';
+  }
+
+  document.querySelectorAll('.copilot-mode-btn').forEach((b) => {
+    b.addEventListener('click', () => setCopilotMode(b.dataset.mode));
+  });
+  setCopilotMode('build');
+  const ctxNow = window.__REPORT_CTX__ || {};
+  const scopeEl = document.getElementById('copilot-scope');
+  if (scopeEl && ctxNow.locName) scopeEl.textContent = ctxNow.locName + ' \u00b7 ' + (ctxNow.monthLabel || '');
+
+  copilotClear?.addEventListener('click', () => {
+    copilotOutput.innerHTML = '';
+    if (copilotTranscript) copilotTranscript.innerHTML = '';
+    copilotInput.value = '';
   });
 
   copilotSend?.addEventListener('click', async () => {
@@ -1575,7 +1644,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/ai-copilot/' + sessionId, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, loc: ctx.loc, month: ctx.month })
+        body: JSON.stringify({ prompt, loc: ctx.loc, month: ctx.month, mode: copilotMode })
       });
 
       const result = await response.json();
@@ -1595,7 +1664,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+
+  function renderTable(rows) {
+    if (!Array.isArray(rows) || !rows.length) return '';
+    const cols = Object.keys(rows[0]);
+    let out = '<div class="copilot-table-wrap"><table class="data-table"><thead><tr>';
+    cols.forEach((c) => { out += '<th>' + esc(c) + '</th>'; });
+    out += '</tr></thead><tbody>';
+    rows.slice(0, 25).forEach((row) => {
+      out += '<tr>';
+      cols.forEach((c) => { out += '<td>' + esc(row[c]) + '</td>'; });
+      out += '</tr>';
+    });
+    out += '</tbody></table></div>';
+    if (rows.length > 25) out += '<p class="copilot-note">' + (rows.length - 25) + ' more rows not shown.</p>';
+    return out;
+  }
+
+  /* Chat mode: a transcript of question / answer turns, with follow-up chips. */
+  function renderChatTurn(result, prompt) {
+    const turn = document.createElement('div');
+    turn.className = 'copilot-turn';
+    let html = '<div class="copilot-user-line">' + esc(prompt) + '</div>';
+    html += '<div class="copilot-answer">';
+    html += '<div class="copilot-answer-title">' + esc(result.title || 'Answer') + '</div>';
+    html += '<div class="copilot-answer-body">' + esc(result.answer || result.description || '') + '</div>';
+    if (result.kpi) {
+      html += '<div class="kpi-cards"><div class="kpi-card">' +
+        '<div class="kpi-label">' + esc(result.kpi.label || 'Metric') + '</div>' +
+        '<div class="kpi-value">' + esc(result.kpi.value || '\u2014') + '</div>' +
+        (result.kpi.change ? '<div class="kpi-change">' + esc(result.kpi.change) + '</div>' : '') +
+        '</div></div>';
+    }
+    if (result.table && Array.isArray(result.table.data)) html += renderTable(result.table.data);
+    if (result.confidence) {
+      html += '<div class="copilot-meta">Answered from this upload\u2019s analysis file \u00b7 confidence: ' + esc(result.confidence) + '</div>';
+    }
+    if (Array.isArray(result.followUps) && result.followUps.length) {
+      html += '<div class="copilot-chips">';
+      result.followUps.forEach((f) => {
+        html += '<button class="copilot-chip" data-q="' + esc(f) + '">' + esc(f) + '</button>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    turn.innerHTML = html;
+    turn.querySelectorAll('.copilot-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        copilotInput.value = chip.dataset.q;
+        copilotSend.click();
+      });
+    });
+    copilotTranscript.hidden = false;
+    copilotTranscript.appendChild(turn);
+    copilotTranscript.scrollTop = copilotTranscript.scrollHeight;
+  }
+
   function renderCopilotResult(result, prompt) {
+    if (result && (result.type === 'chat' || copilotMode === 'chat')) {
+      renderChatTurn(result, prompt);
+      return;
+    }
     let html = '<div class="copilot-result">';
     html += '<div class="copilot-prompt">' + prompt + '</div>';
 
@@ -1632,16 +1764,36 @@ document.addEventListener('DOMContentLoaded', () => {
       html += '<div class="copilot-description">' + result.description + '</div>';
     }
 
-    html += '<button class="copilot-save-btn" onclick="saveCopilotResult(this)">Save to Report</button>';
+    // Build mode: pick the section and drop the element straight in.
+    html += '<div class="copilot-save-row">' +
+      '<select class="copilot-section-select" aria-label="Section to add this to">' +
+      '<option value="">Add to section\u2026</option>' +
+      '<option value="1">1 — Executive summary</option>' +
+      '<option value="2">2 — Revenue performance</option>' +
+      '<option value="3">3 — Conversion funnel</option>' +
+      '<option value="4">4 — Sessions</option>' +
+      '<option value="5">5 — Lapsed members</option>' +
+      '<option value="6">6 — Recommendations</option>' +
+      '<option value="7">7 — Predictions</option>' +
+      '</select>' +
+      '<button class="copilot-save-btn" onclick="saveCopilotResult(this)">Save to Report</button>' +
+      '</div>';
     html += '</div>';
 
     copilotOutput.innerHTML = html;
+    const sel = copilotOutput.querySelector('.copilot-section-select');
+    const saveBtn = copilotOutput.querySelector('.copilot-save-btn');
+    sel?.addEventListener('change', () => {
+      saveBtn.dataset.section = sel.value;
+      saveBtn.disabled = !sel.value;
+    });
+    if (saveBtn) saveBtn.disabled = true;
   }
 });
 
 function saveCopilotResult(btn) {
   const result = btn.closest('.copilot-result');
-  const section = prompt('Which section? (1=Executive, 2=Revenue, 3=Funnel, 4=Sessions, 5=Lapsed, 6=Recommendations, 7=Predictions)');
+  const section = btn.dataset.section || prompt('Which section? (1=Executive, 2=Revenue, 3=Funnel, 4=Sessions, 5=Lapsed, 6=Recommendations, 7=Predictions)');
   if (!section) return;
 
   const savedElement = document.createElement('div');

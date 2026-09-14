@@ -688,75 +688,25 @@ app.get('/july-report/:studio', (req, res) => {
       });
     })();
   </script>`;
-  const presenterScript = `<script src="/socket.io/socket.io.js"></script>
+  /* Presenter mode is the real module now (hosting, roster, laser, spotlight,
+     document-space annotation), not the two-button inline script this route
+     used to carry. ?host=1 / ?roomCode= still work — presenter.js reads them. */
+  const presenterScript = `<link rel="stylesheet" href="/presenter.css?v=1">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/presenter.js?v=1"></script>
   <script>
     (function () {
-      if (typeof io === 'undefined') return;
       var params = new URLSearchParams(window.location.search);
-      var shouldHost = params.get('host') === '1';
-      var roomCode = params.get('roomCode');
-      if (!shouldHost && !roomCode) return;
-
-      var socket = io(${JSON.stringify(serverUrl)});
-      var role = shouldHost ? 'presenter' : 'viewer';
-      var code = shouldHost ? String(Math.floor(100000 + Math.random() * 900000)) : roomCode;
-      var reportUrl = window.location.pathname;
-      var scrollTicking = false;
-
-      var bar = document.createElement('div');
-      bar.className = 'july-presenter-session-bar';
-      bar.innerHTML =
-        '<div><strong>' + (role === 'presenter' ? 'Hosting July report' : 'Joined July report') + '</strong>' +
-        '<span id="july-session-status"></span></div>' +
-        '<div class="july-session-actions"><span class="july-session-code">Code: ' + code + '</span>' +
-        '<button type="button" id="july-copy-code">Copy</button>' +
-        (role === 'presenter' ? '<button type="button" id="july-end-session">End Hosting</button>' : '') +
-        '<button type="button" id="july-leave-session">Leave</button></div>';
-      document.body.appendChild(bar);
-      document.body.classList.add('july-presenter-session-active');
-      if (role === 'viewer') document.body.classList.add('july-viewer-locked');
-
-      socket.emit('join_room', { role: role, code: code, reportUrl: reportUrl });
-      socket.on('room_state', function (state) {
-        var status = document.getElementById('july-session-status');
-        if (status) status.textContent = role === 'presenter' ? ' · ' + state.viewers + ' viewers' : ' · viewing host screen';
-      });
-      socket.on('presenter_sync', function (data) {
-        if (role !== 'viewer') return;
-        if (data.type === 'scroll') window.scrollTo(0, data.scrollY);
-        if (data.type === 'click') {
-          var el = document.elementFromPoint(data.x, data.y);
-          if (el && typeof el.click === 'function' && !el.closest('.july-presenter-session-bar')) el.click();
-        }
-      });
-
-      window.addEventListener('scroll', function () {
-        if (role !== 'presenter' || scrollTicking) return;
-        window.requestAnimationFrame(function () {
-          socket.emit('presenter_event', { type: 'scroll', scrollY: window.scrollY });
-          scrollTicking = false;
-        });
-        scrollTicking = true;
-      });
-      document.addEventListener('click', function (event) {
-        if (role !== 'presenter' || !event.isTrusted || event.target.closest('.july-presenter-session-bar')) return;
-        socket.emit('presenter_event', { type: 'click', x: event.clientX, y: event.clientY });
-      });
-
-      document.getElementById('july-copy-code').addEventListener('click', function () {
-        if (navigator.clipboard) navigator.clipboard.writeText(code);
-      });
-      var endButton = document.getElementById('july-end-session');
-      if (endButton) {
-        endButton.addEventListener('click', function () {
-          socket.emit('leave_room', { code: code, endSession: true });
-          window.location.href = reportUrl;
-        });
-      }
-      document.getElementById('july-leave-session').addEventListener('click', function () {
-        socket.emit('leave_room', { code: code, endSession: role === 'presenter' });
-        window.location.href = role === 'presenter' ? reportUrl : '/july-report/' + (reportUrl.indexOf('supreme') !== -1 ? 'supreme' : 'kwality');
-      });
+      if (params.get('host') !== '1') return;
+      // Auto-host when the launcher sent us here to present.
+      var tries = 0;
+      var timer = setInterval(function () {
+        var api = window.__p57Presenter;
+        if (api && api.state.role === 'idle') {
+          document.querySelector('.p57-presenter-panel [data-act="host"]').click();
+          clearInterval(timer);
+        } else if (++tries > 40) clearInterval(timer);
+      }, 150);
     })();
   </script>`;
   if (isBothView) {
@@ -869,7 +819,7 @@ app.get('/previous-month-reports', (req, res) => {
             .toLocaleString('en-US', { month: 'short', year: '2-digit' }),
           filename: outputFilename,
           serverUrl: process.env.SERVER_URL || `${protocol}://${host}`,
-        })};</script>\n<script src="/socket.io/socket.io.js"></script>\n<script src="/report-client.js"></script>`;
+        })};</script>\n<link rel="stylesheet" href="/presenter.css?v=1">\n<script src="/socket.io/socket.io.js"></script>\n<script src="/report-client.js"></script>\n<script src="/presenter.js?v=1"></script>`;
         fs.writeFileSync(outputPath, html.replace('<!-- REPORT_CLIENT_PLACEHOLDER -->', bootstrap));
       } catch (spliceErr) {
         console.error('Could not inject previous-month report client:', spliceErr.message);
@@ -1085,7 +1035,7 @@ app.post('/generate', async (req, res) => {
             .toLocaleString('en-US', { month: 'short', year: '2-digit' }),
           filename: outputFilename,
           serverUrl: process.env.SERVER_URL || `${protocol}://${host}`,
-        })};</script>\n<script src="/socket.io/socket.io.js"></script>\n<script src="/report-client.js"></script>`;
+        })};</script>\n<link rel="stylesheet" href="/presenter.css?v=1">\n<script src="/socket.io/socket.io.js"></script>\n<script src="/report-client.js"></script>\n<script src="/presenter.js?v=1"></script>`;
         fs.writeFileSync(outputPath, html.replace('<!-- REPORT_CLIENT_PLACEHOLDER -->', bootstrap));
       } catch (spliceErr) {
         console.error('Could not inject report client script:', spliceErr.message);
@@ -1239,18 +1189,45 @@ const io = new Server(server, { cors: { origin: '*' } });
 
 const presenterRooms = {};
 
+/* A presenter room tracks who is in it, not just how many: the host panel
+   lists participants by name, and viewers can raise a hand or ask for the
+   pointer, so every event needs an identity behind it. */
+function roomState(code) {
+  const room = presenterRooms[code];
+  if (!room) return null;
+  const participants = Object.entries(room.participants).map(([id, p]) => ({
+    id, name: p.name, role: p.role, following: p.following !== false, hand: !!p.hand,
+    joinedAt: p.joinedAt
+  }));
+  return {
+    code,
+    presenterId: room.presenterId,
+    presenterName: (room.participants[room.presenterId] || {}).name || 'Host',
+    reportUrl: room.reportUrl,
+    startedAt: room.startedAt,
+    viewers: participants.filter((p) => p.role === 'viewer').length,
+    participants
+  };
+}
+
 io.on('connection', (socket) => {
+  function publish(code) {
+    const state = roomState(code);
+    if (state) io.to(code).emit('room_state', state);
+  }
+
   function leavePresenterRoom({ endSession = false } = {}) {
     const roomCode = socket.roomCode;
-    if (!roomCode || !presenterRooms[roomCode]) return;
+    const room = roomCode && presenterRooms[roomCode];
+    if (!room) return;
 
     if (endSession || socket.role === 'presenter') {
       socket.to(roomCode).emit('presenter_sync', { type: 'session_ended' });
       delete presenterRooms[roomCode];
-    } else if (socket.role === 'viewer') {
-      presenterRooms[roomCode].viewers = Math.max(0, presenterRooms[roomCode].viewers - 1);
-      io.to(roomCode).emit('room_state', presenterRooms[roomCode]);
-      if (!presenterRooms[roomCode].presenterId && presenterRooms[roomCode].viewers === 0) {
+    } else {
+      delete room.participants[socket.id];
+      publish(roomCode);
+      if (!room.presenterId && !Object.keys(room.participants).length) {
         delete presenterRooms[roomCode];
       }
     }
@@ -1260,30 +1237,58 @@ io.on('connection', (socket) => {
     socket.role = null;
   }
 
-  socket.on('join_room', ({ role, code, reportUrl }) => {
+  socket.on('join_room', ({ role, code, reportUrl, name } = {}) => {
     if (!code) return;
     socket.join(code);
     socket.roomCode = code;
     socket.role = role;
 
     if (!presenterRooms[code]) {
-      presenterRooms[code] = { presenterId: null, viewers: 0, reportUrl: null };
+      presenterRooms[code] = {
+        presenterId: null, reportUrl: null, participants: {}, startedAt: Date.now()
+      };
     }
+    const room = presenterRooms[code];
+    room.participants[socket.id] = {
+      name: String(name || (role === 'presenter' ? 'Host' : 'Guest')).slice(0, 40),
+      role, following: true, hand: false, joinedAt: Date.now()
+    };
 
     if (role === 'presenter') {
-      presenterRooms[code].presenterId = socket.id;
-      if (reportUrl) presenterRooms[code].reportUrl = reportUrl;
-    } else {
-      presenterRooms[code].viewers++;
+      room.presenterId = socket.id;
+      if (reportUrl) room.reportUrl = reportUrl;
     }
 
-    io.to(code).emit('room_state', presenterRooms[code]);
+    publish(code);
+    // A viewer arriving mid-session needs the deck's current position and
+    // every annotation drawn so far, so it asks the host for a replay.
+    if (role === 'viewer' && room.presenterId) {
+      io.to(room.presenterId).emit('viewer_event', { type: 'request_state', id: socket.id });
+    }
   });
 
   socket.on('presenter_event', (data) => {
-    if (socket.role === 'presenter' && socket.roomCode) {
-      socket.to(socket.roomCode).emit('presenter_sync', data);
+    if (socket.role !== 'presenter' || !socket.roomCode) return;
+    if (data && data.type === 'state_replay' && data.to) {
+      io.to(data.to).emit('presenter_sync', data);
+      return;
     }
+    socket.to(socket.roomCode).emit('presenter_sync', data);
+  });
+
+  // Viewer-side signals: hand raised, follow toggled, a question typed.
+  socket.on('viewer_event', (data = {}) => {
+    const room = socket.roomCode && presenterRooms[socket.roomCode];
+    if (!room || socket.role !== 'viewer') return;
+    const me = room.participants[socket.id];
+    if (me) {
+      if (data.type === 'hand') me.hand = !!data.raised;
+      if (data.type === 'follow') me.following = !!data.following;
+    }
+    if (room.presenterId) {
+      io.to(room.presenterId).emit('viewer_event', { ...data, id: socket.id, name: me && me.name });
+    }
+    publish(socket.roomCode);
   });
 
   socket.on('leave_room', ({ endSession } = {}) => {

@@ -40,7 +40,7 @@ def _init_imports():
     global _lakh, _lakh_raw, _rupee, _pct, _fmt_int, _pct_change, _pp_change, _badge, _badge_from_pp, _mult, _DATA
     global get_sales_breakdowns, get_sessions_by_class, get_sessions_by_trainer, get_sessions_by_format
     global get_leads_source, get_new_type, get_lapsed_product, get_lapsed_cumulative, get_heatmap
-    global get_sessions_by_trainer_format
+    global get_sessions_by_trainer_format, get_sessions_by_slot, get_lapsed_members
     from gen_report_v2 import (
         lakh as _l, lakh_raw as _lr, rupee as _r, pct as _p, fmt_int as _fi,
         pct_change as _pc, pp_change as _ppc, badge as _b, badge_from_pp as _bfp,
@@ -49,7 +49,8 @@ def _init_imports():
         get_sessions_by_trainer as _gst, get_sessions_by_format as _gsf,
         get_leads_source as _gls, get_new_type as _gnt,
         get_lapsed_product as _glp, get_lapsed_cumulative as _glc, get_heatmap as _gh,
-        get_sessions_by_trainer_format as _gstf
+        get_sessions_by_trainer_format as _gstf,
+        get_sessions_by_slot as _gss, get_lapsed_members as _glm
     )
     _lakh = _l
     _lakh_raw = _lr
@@ -72,6 +73,8 @@ def _init_imports():
     get_lapsed_cumulative = _glc
     get_heatmap = _gh
     get_sessions_by_trainer_format = _gstf
+    get_sessions_by_slot = _gss
+    get_lapsed_members = _glm
 
 def get_top_lead_source(ctx):
     """Get the top lead source by volume."""
@@ -2401,6 +2404,7 @@ def section_04(ctx):
     class_insights = build_class_insights(ctx, classes_sorted, fill_data)
     class_table = build_class_table(ctx, classes_sorted)
     class_rank = build_class_rank_board(ctx, classes_sorted, month_name)
+    slot_board = build_slot_board(ctx)
     class_tiles = build_class_metric_cards(ctx, classes_sorted, sess)
 
     # Trainer insights, scorecard and ranking
@@ -2479,6 +2483,12 @@ def section_04(ctx):
 {_visits_bar_figure(classes_sorted, sess, month_name)}
 
 {class_rank}
+
+{subsection("Recurring slot performance &mdash; class, day and time",
+    "Every recurring slot on the schedule, grouped by class name, day and time, and ranked by the measure you pick. "
+    "Turn on <strong>Split by trainer</strong> to rank the same grid by class, day, time and trainer.")}
+
+{slot_board}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -2934,6 +2944,124 @@ def build_class_table(ctx, classes_sorted):
         table,
         controls=nested_controls())
 
+
+_SLOT_BOARD_SEQ = [0]
+
+# Metrics a recurring slot can be ranked by. (key, label, format, better)
+SLOT_METRICS = [
+    ('fill', 'Fill rate', 'pct', 'high'),
+    ('avg_excl', 'Class average', 'dec1', 'high'),
+    ('visits', 'Total attendees', 'int', 'high'),
+    ('sessions', 'Total sessions', 'int', 'high'),
+    ('empty', 'Empty sessions', 'int', 'low'),
+    ('late', 'Late cancellations', 'int', 'low'),
+    ('revenue', 'Revenue', 'lakh', 'high'),
+    ('rev_per_session', 'Revenue / session', 'rupee', 'high'),
+]
+
+_DAY_ORDER = {d: i for i, d in enumerate(
+    ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])}
+
+
+def _slot_rows(raw, with_trainer):
+    """Turn one slot bucket dict into ranked-table rows."""
+    rows = []
+    for key, v in raw.items():
+        sessions = v.get('sessions', 0) or 0
+        if not sessions:
+            continue
+        visits = v.get('visits', 0) or 0
+        capacity = v.get('capacity', 0) or 0
+        empty = v.get('empty', 0) or 0
+        revenue = v.get('revenue', 0) or 0.0
+        run = max(0, sessions - empty)
+        trainers = v.get('trainers') or []
+        rows.append({
+            'key': key,
+            'cls': v.get('cls', '') or 'Unknown class',
+            'day': v.get('day', '') or 'Unknown',
+            'time': v.get('time', '') or '--:--',
+            'fmt': v.get('fmt', ''),
+            'trainer': (v.get('trainer') or (trainers[0] if with_trainer and trainers else '')),
+            'trainers': trainers,
+            'trainer_count': v.get('trainer_count', len(trainers)),
+            'sessions': sessions,
+            'visits': visits,
+            'capacity': capacity,
+            'empty': empty,
+            'late': v.get('late', 0) or 0,
+            'comps': v.get('comps', 0) or 0,
+            'booked': v.get('booked', 0) or 0,
+            'revenue': round(revenue, 2),
+            'fill': round((visits / capacity * 100) if capacity else 0, 2),
+            'avg_incl': round((visits / sessions) if sessions else 0, 2),
+            'avg_excl': round((visits / run) if run else 0, 2),
+            'rev_per_session': round(revenue / sessions if sessions else 0, 2),
+            'utilisation': round((run / sessions * 100) if sessions else 0, 1),
+        })
+    rows.sort(key=lambda r: (_DAY_ORDER.get(r['day'], 9), r['time'], r['cls']))
+    return rows
+
+
+def build_slot_board(ctx):
+    """Recurring-slot performance: one row per class x day x time, ranked by
+    whichever measure the reader picks, with a toggle that splits the same
+    grid again by trainer."""
+    if _lakh is None: _init_imports()
+    loc_key, month_key = ctx['loc_key'], ctx['month_key']
+    base = _slot_rows(get_sessions_by_slot(loc_key, month_key), False)
+    split = _slot_rows(get_sessions_by_slot(loc_key, month_key, True), True)
+    if not base:
+        return ''
+
+    _SLOT_BOARD_SEQ[0] += 1
+    board_id = f'slot-board-{_SLOT_BOARD_SEQ[0]}'
+    payload = json.dumps({
+        'metrics': [{'key': k, 'label': label, 'fmt': fmt, 'better': better}
+                    for k, label, fmt, better in SLOT_METRICS],
+        'base': base,
+        'trainer': split,
+        'month': f"{ctx['mo']['month_name']} {ctx['mo']['year']}",
+    }, separators=(',', ':')).replace('</', '<\\/')
+
+    chips = ''.join(
+        f'<button type="button" class="chip{" is-active" if i == 0 else ""}" '
+        f'data-slot-metric="{k}">{label}</button>'
+        for i, (k, label, _f, _b) in enumerate(SLOT_METRICS))
+    sizes = ''.join(
+        f'<button type="button" class="chip{" is-active" if n == 15 else ""}" '
+        f'data-slot-size="{n}">{"All" if n == 0 else f"Top {n}"}</button>' for n in (10, 15, 25, 0))
+
+    return f'''    <section class="metric-block slot-board" id="{board_id}" data-slot-board>
+      <script type="application/json" class="slot-board-data">{payload}</script>
+      <div class="metric-block-head slot-board-head">
+        <div>
+          <span class="metric-block-eyebrow">Recurring slot ranking</span>
+          <h3 class="metric-block-title">Every class &middot; day &middot; time on the schedule</h3>
+          <p class="metric-block-note">{len(base)} recurring slots, grouped by class name, day and time
+            at {ctx['loc']['short_name']}. Pick the measure to rank by; switch the toggle to split the same
+            grid by the trainer who taught it ({len(split)} class &middot; day &middot; time &middot; trainer combinations).
+            Open any row for its full breakdown.</p>
+        </div>
+        <label class="switch" title="Group by class, day, time and trainer">
+          <input type="checkbox" data-slot-trainer-toggle>
+          <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+          <span class="switch-label">Split by trainer</span>
+        </label>
+      </div>
+      <div class="slot-board-controls">
+        <div class="chip-row" role="group" aria-label="Rank slots by">{chips}</div>
+        <div class="chip-row chip-row-sizes" role="group" aria-label="How many slots to show">{sizes}</div>
+      </div>
+      <div class="slot-board-summary" data-slot-summary></div>
+      <div class="table-wrap">
+        <table class="data-table slot-board-table">
+          <thead data-slot-head></thead>
+          <tbody data-slot-body></tbody>
+        </table>
+      </div>
+    </section>
+'''
 
 def build_class_metric_cards(ctx, classes_sorted, sess):
     """The class portfolio in five figures, on the report's metric card."""
@@ -3528,11 +3656,11 @@ def build_heatmap_section(ctx):
 {chr(10).join(insights)}
     </div>
 
-    <div class="data-pane full-width-block">
+    <div class="data-pane full-width-block hm-block" data-heatmap-block>
       <div class="panel-header">
         <div>
           <div class="panel-title">Demand Heatmap &middot; {ctx['mo']['month_name']} {ctx['mo']['year']}</div>
-          <div class="panel-subtitle">Showing <strong id="hm-metric-label">Visits (actual check-ins)</strong> &middot; {fmt_int(total_visits_all)} visits mapped {footer_note}</div>
+          <div class="panel-subtitle">Showing <strong class="hm-metric-label" data-hm-metric-label>Visits (actual check-ins)</strong> &middot; {fmt_int(total_visits_all)} visits mapped {footer_note}</div>
         </div>
         <div class="panel-controls hm-controls">
           <button class="hm-btn is-active" data-label="Visits (actual check-ins)" data-metric="visits">Visits</button>
@@ -3562,10 +3690,10 @@ def build_heatmap_section(ctx):
           <button class="hm-spot-btn" data-spot="peak" type="button">Busiest 20%</button>
           <button class="hm-spot-btn" data-spot="quiet" type="button">Quietest 20%</button>
         </div>
-        <div aria-live="polite" class="hm-selection" id="hm-selection"><strong>Select a populated slot</strong> to open its breakdown &mdash; how it compares across the week and within its own day.</div>
+        <div aria-live="polite" class="hm-selection" data-hm-selection><strong>Select a populated slot</strong> to open its breakdown &mdash; how it compares across the week and within its own day.</div>
       </div>
       <div class="table-wrap">
-        <table class="data-table heatmap-table" id="demand-heatmap">
+        <table class="data-table heatmap-table" data-demand-heatmap>
           <thead>
             <tr>
               <th>Day</th>
@@ -3609,6 +3737,8 @@ def section_05(ctx):
 
     # Cumulative trend
     cumul_html = build_cumulative_section(ctx, cumulative)
+    renewal_cohort = build_renewal_cohort_table(ctx)
+    member_book = build_lapsed_member_table(ctx)
 
     # Find top lapsed product
     top_lapsed_prod = max(prod_sorted, key=lambda x: x[1]['lapsed']) if prod_sorted else None
@@ -3646,10 +3776,12 @@ def section_05(ctx):
 
 {mom_toggle}
 
-{callout("<strong>Exclusions applied in this section (per management guidance):</strong> zero-value memberships, "
-    "&lsquo;Newcomers 2 For 1&rsquo; SKUs, &lsquo;Studio Single Class&rsquo; SKUs, and all Private-class memberships. "
-    "Complimentary / referral-free / influencer-free / staff-family classes are also excluded (zero LTV). "
-    "The cleaned table below covers only revenue-bearing memberships where the lapse represents real lost revenue.")}
+{callout("<strong>Exclusions applied in this section:</strong> zero-value memberships (comps, staff and "
+    "corrections) and every non-renewable product &mdash; intro offers and intro packs, &lsquo;2 for 1&rsquo; SKUs, "
+    "single-class and trial products, virtual private, happy hour private and other one-off private formats. "
+    "<strong>Lapsed</strong> means the membership shows as lapsed <em>and</em> is at least 60 days past its end date; "
+    "anything ended more recently is counted as <strong>pending</strong>, still inside the renewal window. "
+    "What remains is the revenue-bearing book where a lapse is real lost revenue.")}
 
 {subsection("Expiration status &mdash; the headline split",
     f"Of {lapsed['total']} memberships that reached end-of-life, {pct(lapsed['renewal_rate'])} renewed, {pct(lapsed['churn'])} lapsed. The renewal rate is {'healthy' if lapsed['renewal_rate'] > 50 else 'below benchmark'}; the lapse count of {lapsed['lapsed']} is the actionable book.")}
@@ -3665,6 +3797,20 @@ def section_05(ctx):
 {status_table}
       </div>
     </div>
+
+{subsection("Renewal cohort by month &mdash; who was up, who renewed, who lapsed",
+    "Every month's expiration cohort side by side: memberships reaching their end date, how many renewed, "
+    "how many lapsed, and how many are still inside the 60-day renewal window.")}
+
+    <div class="full-width-block">
+{renewal_cohort}
+    </div>
+
+{subsection("Member-level detail &mdash; the book behind the numbers",
+    "The individual memberships that make up this month's expiration book, with the attendance and "
+    "cancellation history behind each outcome.")}
+
+{member_book}
 
 {subsection("Lapse by product &mdash; where the churn is concentrated",
     "The product table below shows every membership SKU that reached end-of-life, split by renewal, lapse, and frozen status. The highest-lapse products are the priority reactivation targets.")}
@@ -3690,6 +3836,165 @@ def section_05(ctx):
 </section>
 '''
     return html
+
+
+def build_renewal_cohort_table(ctx):
+    """Every month's renewal cohort: how many memberships came up for renewal,
+    how many renewed, how many lapsed, and what is still inside the window."""
+    if _lakh is None: _init_imports()
+    series = (_DATA.get('lapsed', {}) or {}).get(ctx['loc_key'], {}) or {}
+    if not series:
+        return ''
+    months = sorted(series.keys())[-13:]
+
+    rows = []
+    tot = {'total': 0, 'renewed': 0, 'lapsed': 0, 'pending': 0, 'frozen': 0, 'value': 0.0}
+    for m in months:
+        v = series[m] or {}
+        total = v.get('total', 0) or 0
+        renewed = v.get('renewed', 0) or 0
+        lapsed = v.get('lapsed', 0) or 0
+        pending = v.get('pending', 0) or 0
+        frozen = v.get('frozen', 0) or 0
+        rate = (renewed / total * 100) if total else 0
+        churn = (lapsed / total * 100) if total else 0
+        for k, add in (('total', total), ('renewed', renewed), ('lapsed', lapsed),
+                       ('pending', pending), ('frozen', frozen),
+                       ('value', v.get('value', 0) or 0)):
+            tot[k] += add
+        is_current = m == ctx['month_key']
+        rows.append(f'''            <tr{' class="is-current-row"' if is_current else ''}>
+              <td class="metric-name">{datetime_month_name(m)}{' &middot; this report' if is_current else ''}</td>
+              <td class="num"><strong>{fmt_int(total)}</strong></td>
+              <td class="num is-good">{fmt_int(renewed)}</td>
+              <td class="num is-bad">{fmt_int(lapsed)}</td>
+              <td class="num">{fmt_int(pending)}</td>
+              <td class="num">{fmt_int(frozen)}</td>
+              <td class="num">{share_cell(rate, 'var(--good)')}</td>
+              <td class="num">{share_cell(churn, 'var(--bad)')}</td>
+              <td class="num">{lakh(v.get('value', 0) or 0)}</td>
+            </tr>''')
+
+    rate_all = (tot['renewed'] / tot['total'] * 100) if tot['total'] else 0
+    churn_all = (tot['lapsed'] / tot['total'] * 100) if tot['total'] else 0
+    rows.append(f'''            <tr class="totals-row">
+              <td class="metric-name">All {len(months)} months</td>
+              <td class="num">{fmt_int(tot['total'])}</td>
+              <td class="num">{fmt_int(tot['renewed'])}</td>
+              <td class="num">{fmt_int(tot['lapsed'])}</td>
+              <td class="num">{fmt_int(tot['pending'])}</td>
+              <td class="num">{fmt_int(tot['frozen'])}</td>
+              <td class="num">{pct(rate_all)}</td>
+              <td class="num">{pct(churn_all)}</td>
+              <td class="num">{lakh(tot['value'])}</td>
+            </tr>''')
+
+    table = data_table(
+        ['Month', 'Up for renewal', 'Renewed', 'Lapsed', 'Pending', 'Frozen',
+         'Renewal rate', 'Churn rate', 'Value at stake'],
+        rows, sortable=True)
+    return data_panel(
+        'Renewal cohort by month',
+        'Every membership that reached its end date in the month, and what happened to it. '
+        'A membership counts as lapsed only once it is 60+ days past its end date and still '
+        'shows as lapsed &mdash; anything newer is reported as pending, still inside the renewal window.',
+        table)
+
+
+def build_lapsed_member_table(ctx):
+    """Member-level rows behind this month's expiration book, filterable by
+    outcome and searchable by name, product or seller."""
+    if _lakh is None: _init_imports()
+    members = get_lapsed_members(ctx['loc_key'], ctx['month_key'])
+    if not members:
+        return ''
+
+    counts = {}
+    for m in members:
+        counts[m['status']] = counts.get(m['status'], 0) + 1
+
+    order = [('all', 'All', len(members))] + [
+        (k.lower(), k, counts.get(k, 0))
+        for k in ('Renewed', 'Lapsed', 'Pending', 'Frozen') if counts.get(k)]
+    chips = ''.join(
+        f'<button type="button" class="chip{" is-active" if i == 0 else ""}" '
+        f'data-member-filter="{key}">{label} <span class="chip-count">{n}</span></button>'
+        for i, (key, label, n) in enumerate(order))
+
+    rows = []
+    for m in members:
+        tone = {'Renewed': 'good', 'Lapsed': 'bad', 'Frozen': 'warn'}.get(m['status'], 'muted')
+        last_visit = m.get('last_visit', '') or '—'
+        # Values land inside a JSON attribute that is html-escaped, so the
+        # &#8377; entity rupee() emits would render literally — use the glyph.
+        rs = lambda v: rupee(v).replace('&#8377;', '\u20b9')
+        detail = {
+            'kicker': 'Member record',
+            'title': m['name'],
+            'subtitle': f"{m['product']} · {m['status']}",
+            'footnote': 'Esc or click outside to close.',
+            'stats': [
+                {'label': 'Outcome', 'value': m['status']},
+                {'label': 'Membership', 'value': m['product']},
+                {'label': 'Value', 'value': rs(m['paid'])},
+                {'label': 'Started', 'value': m.get('start') or '—'},
+                {'label': 'Ended', 'value': m.get('end') or '—'},
+                {'label': 'Days past end date', 'value': str(m.get('days_past_end') if m.get('days_past_end') is not None else '—')},
+                {'label': 'Membership length', 'value': f"{fmt_int(m.get('duration_days', 0))} days"},
+                {'label': 'Sessions completed', 'value': fmt_int(m.get('sessions_used', 0))},
+                {'label': 'Sessions remaining', 'value': fmt_int(m.get('remaining', 0))},
+                {'label': 'Attendance rate', 'value': pct(m.get('attendance', 0))},
+                {'label': 'Late cancellations', 'value': fmt_int(m.get('late_cancels', 0))},
+                {'label': 'No-shows', 'value': fmt_int(m.get('no_shows', 0))},
+                {'label': 'Last visit', 'value': last_visit},
+                {'label': 'Days since last visit', 'value': fmt_int(m.get('days_since_visit', 0))},
+                {'label': 'Sold by', 'value': m.get('sold_by') or '—'},
+                {'label': 'Member ID', 'value': m.get('id') or '—'},
+            ],
+        }
+        search = ' '.join([m['name'], m['product'], m.get('sold_by') or '', m['status']]).lower()
+        rows.append(
+            f'<tr class="member-row" data-member-status="{m["status"].lower()}" '
+            f'data-member-search="{html.escape(search, quote=True)}" '
+            f'data-drill="{html.escape(json.dumps(detail), quote=True)}" '
+            f'tabindex="0" role="button">'
+            f'<td class="metric-name">{html.escape(m["name"])}'
+            f'<small class="cell-note">{html.escape(m["product"])}</small></td>'
+            f'<td><span class="status-pill is-{tone}">{m["status"]}</span></td>'
+            f'<td class="num">{rupee(m["paid"])}</td>'
+            f'<td class="num">{fmt_int(m.get("sessions_used", 0))}</td>'
+            f'<td class="num">{pct(m.get("attendance", 0))}</td>'
+            f'<td class="num">{fmt_int(m.get("late_cancels", 0))}</td>'
+            f'<td class="num">{fmt_int(m.get("days_since_visit", 0))}</td>'
+            f'<td class="num">{html.escape((m.get("end") or "—").split(" ")[0])}</td>'
+            f'</tr>')
+
+    table = data_table(
+        ['Member', 'Outcome', 'Value', 'Sessions used', 'Attendance',
+         'Late cancels', 'Days since visit', 'End date'],
+        rows, classes='member-table', sortable=True)
+
+    return f'''    <section class="metric-block member-book" data-member-book>
+      <div class="metric-block-head">
+        <div>
+          <span class="metric-block-eyebrow">Member-level detail</span>
+          <h3 class="metric-block-title">Who is behind the numbers</h3>
+          <p class="metric-block-note">Every revenue-bearing membership that reached its end date in
+            {ctx['mo']['month_name']} {ctx['mo']['year']} at {ctx['loc']['short_name']} &mdash; {len(members)} rows.
+            Filter by outcome, search by member, product or seller, or open a row for the full member record.</p>
+        </div>
+      </div>
+      <div class="member-book-controls">
+        <div class="chip-row" role="group" aria-label="Filter members by outcome">{chips}</div>
+        <label class="member-search">
+          <span class="sr-only">Search members</span>
+          <input type="search" placeholder="Search member, product or seller…" data-member-search-input>
+        </label>
+      </div>
+      <p class="member-book-count" data-member-count></p>
+{table}
+    </section>
+'''
 
 
 def build_lapsed_status_insights(ctx):
@@ -3918,14 +4223,13 @@ def build_cumulative_section(ctx, cumulative):
 {subsection("Cumulative lapsed trend &mdash; the growing reactivation pool",
     "The cumulative lapsed member count tracks the overall pool of un-renewed accounts over time. This detailed breakdown evaluates net additions, win-back reactivations, and overall LTV recovery opportunity.")}
 
-    <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Cumulative Trend Insights</div>
+    <div class="insights-pane full-width-block">
+      <div class="pane-title">Cumulative Trend Insights</div>
 
 {chr(10).join(insights)}
-      </div>
+    </div>
 
-      <div class="data-pane">
+      <div class="data-pane full-width-block">
         <div class="pane-title" style="padding: 16px 16px 8px;">Cumulative Lapsed Members Trend &amp; LTV Sizing</div>
         <div class="table-wrap">
           <table class="data-table">
@@ -3944,8 +4248,7 @@ def build_cumulative_section(ctx, cumulative):
             </tbody>
           </table>
         </div>
-      </div>
-    </div>'''
+      </div>'''
 
 
 def month_offset_label(month_key, n):
@@ -3981,6 +4284,9 @@ def section_06(ctx):
 
     # Build recommendations based on data
     sched_insights, sched_table = build_scheduling_recommendations(ctx)
+    decision_board = build_decision_board(ctx)
+    pattern_panel = build_pattern_panel(ctx)
+    early_warning = build_early_warning_panel(ctx)
     discount_insights = build_discount_recommendations(ctx)
     funnel_recs = build_funnel_recommendations(ctx)
     retention_recs = build_retention_recommendations(ctx)
@@ -4016,6 +4322,27 @@ def section_06(ctx):
                           ("Churn Rate", pct(lapsed['churn']), f"{fmt_int(lapsed['lapsed'])} lapsed")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {mom_toggle}
+
+{subsection("The five decisions &mdash; ranked by what each is worth",
+    "Each decision below is sized from this month's own numbers, names the evidence behind it, and carries the "
+    "owner, horizon and measure that will show whether it worked.")}
+
+{decision_board}
+
+{subsection("Patterns and trends &mdash; what has been building underneath",
+    "The trailing window for every headline measure, with the direction it is moving and how long it has been "
+    "moving that way &mdash; the context the decisions above are made against.")}
+
+    <div class="full-width-block">
+{pattern_panel}
+    </div>
+
+{subsection("Early warnings &mdash; what to watch weekly",
+    "The thresholds that would change the plan, each with where the studio sits against it today.")}
+
+    <div class="full-width-block">
+{early_warning}
+    </div>
 
 {subsection("Class scheduling &mdash; additions, discontinuations, format-specific moves",
     "The scheduling decisions below are anchored to the Session Intelligence table. Every addition is justified by excess demand (fill &gt; 60%); every discontinuation by structural under-fill (fill &lt; 25%) over a sustained period.")}
@@ -4144,6 +4471,369 @@ def section_06(ctx):
 </section>
 '''
     return html
+
+
+# ─── Decision agenda: the five business decisions, sized from the data ───────
+
+def _trailing_months(loc_key, month_key, n=6):
+    """The n months up to and including month_key that exist in the data."""
+    months = sorted((_DATA.get('sales', {}) or {}).get(loc_key, {}).keys())
+    if month_key in months:
+        months = months[:months.index(month_key) + 1]
+    return months[-n:]
+
+
+def _series(loc_key, months, bucket, key, rate=None):
+    """A metric's trailing series; `rate` computes a derived ratio instead."""
+    out = []
+    for m in months:
+        v = (_DATA.get(bucket, {}) or {}).get(loc_key, {}).get(m, {}) or {}
+        out.append(rate(v) if rate else (v.get(key, 0) or 0))
+    return out
+
+
+def _trend(values):
+    """Direction, streak and slope for a short series, in plain words."""
+    if len(values) < 3:
+        return {'label': 'not enough history', 'dir': 'flat', 'streak': 0, 'change': 0.0}
+    first_half = values[:max(1, len(values) // 2)]
+    second_half = values[len(values) // 2:]
+    a = sum(first_half) / len(first_half)
+    b = sum(second_half) / len(second_half)
+    change = ((b - a) / a * 100) if a else 0.0
+    streak, direction = 1, 'flat'
+    for i in range(len(values) - 1, 0, -1):
+        step = values[i] - values[i - 1]
+        this = 'up' if step > 0 else ('down' if step < 0 else 'flat')
+        if direction == 'flat':
+            direction = this
+            if this == 'flat':
+                break
+        elif this == direction:
+            streak += 1
+        else:
+            break
+    if abs(change) < 3:
+        label = 'broadly flat'
+    elif change > 0:
+        label = f'trending up {change:.0f}% across the window'
+    else:
+        label = f'trending down {abs(change):.0f}% across the window'
+    return {'label': label, 'dir': direction, 'streak': streak if direction != 'flat' else 0,
+            'change': change}
+
+
+def decision_agenda_data(ctx):
+    """Size the five decisions from this month's own numbers.
+
+    Every decision carries the evidence it was derived from, the money or
+    members at stake, the metric that proves it worked, and the risk of not
+    acting — so the agenda is arguable against the data rather than generic.
+    """
+    if _lakh is None: _init_imports()
+    loc_key, month_key = ctx['loc_key'], ctx['month_key']
+    s, sess, leads, new = ctx['sales'], ctx['sessions'], ctx['leads'], ctx['new']
+    lapsed, checkins, baseline = ctx['lapsed'], ctx['checkins'], ctx['baseline']
+
+    slots = _slot_rows(get_sessions_by_slot(loc_key, month_key), False)
+    members = get_lapsed_members(loc_key, month_key)
+    rev_per_visit = (s['net'] / sess['visits']) if sess.get('visits') else 0
+
+    # 1 — Schedule: empty and structurally under-filled slots, priced at the
+    # revenue the same seats earn when the slot is working.
+    dead = [r for r in slots if r['sessions'] >= 3 and r['fill'] < 25]
+    hot = [r for r in slots if r['sessions'] >= 3 and r['fill'] >= 70]
+    empty_sessions = sum(r['empty'] for r in slots)
+    avg_paid_visits = (sess['visits'] / max(1, sess['sessions'] - sess.get('empty', 0)))
+    schedule_value = empty_sessions * avg_paid_visits * rev_per_visit
+    hot_headroom = sum(max(0, r['capacity'] / max(1, r['sessions']) - r['avg_excl']) for r in hot) * rev_per_visit
+
+    # 2 — Retention: the money attached to memberships that actually lapsed.
+    lapsed_members = [m for m in members if m['status'] == 'Lapsed']
+    lapsed_value = sum(m['paid'] for m in lapsed_members)
+    pending = [m for m in members if m['status'] == 'Pending']
+    pending_value = sum(m['paid'] for m in pending)
+    # Early-warning cohort: still active on paper, but not visiting.
+    quiet = [m for m in members if m['status'] in ('Renewed', 'Pending') and m['days_since_visit'] >= 30]
+
+    # 3 — Funnel: trials that never converted, at this month's average ticket.
+    unconverted = max(0, (new.get('trials', 0) or 0) - (new.get('converted', 0) or 0))
+    atv = s['gross'] / s['sales'] if s.get('sales') else 0
+    funnel_value = unconverted * atv * 0.12  # a realistic conversion lift, not the whole gap
+
+    # 4 — Discount leak against the baseline penetration.
+    baseline_gross = baseline['sales']['gross'] or 0
+    baseline_pen = (baseline['sales']['disc'] / baseline_gross * 100) if baseline_gross else 0
+    excess_pen = max(0.0, ctx['disc_penetration'] - max(8.0, baseline_pen))
+    discount_value = s['gross'] * excess_pen / 100
+
+    # 5 — Late cancels: seats that were paid for and never used.
+    lc = checkins.get('late_cancel', 0) or 0
+    lc_value = lc * rev_per_visit * 0.5
+
+    decisions = [
+        {
+            'key': 'schedule',
+            'title': 'Rebuild the weakest slots on the schedule',
+            'value': schedule_value + hot_headroom,
+            'unit': 'revenue at stake per month',
+            'evidence': (
+                f"{empty_sessions} sessions ran empty and {len(dead)} recurring slots sit under 25% fill, "
+                f"while {len(hot)} slots are running at 70%+ and turning people away."),
+            'move': (
+                f"Retire or move the {min(len(dead), 5)} weakest slots and re-point those hours at the "
+                f"{min(len(hot), 3)} formats that are already supply-constrained."),
+            'proof': 'Studio fill rate and empty-session count',
+            'target': f"Fill {pct(min(95, sess['fill'] + 4))} (from {pct(sess['fill'])}), empty sessions under {max(2, empty_sessions // 3)}",
+            'owner': 'Scheduling Lead', 'horizon': '30 days',
+            'risk': 'Payroll and rent are paid on every empty session — the leak repeats monthly until the grid changes.',
+            'detail': [(r['cls'] + ' · ' + r['day'] + ' ' + r['time'],
+                        f"{pct(r['fill'])} fill · {r['sessions']} sessions · {r['empty']} empty")
+                       for r in sorted(dead, key=lambda r: r['fill'])[:5]],
+            'detail_title': 'Weakest recurring slots',
+        },
+        {
+            'key': 'retention',
+            'title': 'Work the lapsed book before it cools',
+            'value': lapsed_value,
+            'unit': 'membership value lapsed this month',
+            'evidence': (
+                f"{len(lapsed_members)} memberships lapsed carrying {lakh(lapsed_value)} of value, "
+                f"{len(pending)} more ({lakh(pending_value)}) are inside the renewal window right now, and "
+                f"{len(quiet)} members have not visited in 30+ days."),
+            'move': (
+                'Call the pending cohort this week, then run a structured win-back on the lapsed list — '
+                'highest value first, using each member’s own attendance history as the opening.'),
+            'proof': 'Renewal rate and 30-day reactivation count',
+            'target': f"Renewal rate {pct(min(100, lapsed['renewal_rate'] + 6))} (from {pct(lapsed['renewal_rate'])})",
+            'owner': 'Community Manager', 'horizon': '30 days',
+            'risk': 'A lapsed member who is not contacted inside 60 days rarely returns without a discount.',
+            'detail': [(m['name'], f"{m['product']} · {rupee(m['paid']).replace('&#8377;', chr(8377))} · {m['days_since_visit']}d since visit")
+                       for m in sorted(lapsed_members, key=lambda m: -m['paid'])[:5]],
+            'detail_title': 'Highest-value lapses',
+        },
+        {
+            'key': 'funnel',
+            'title': 'Close the trials already in the building',
+            'value': funnel_value,
+            'unit': 'realistic conversion upside',
+            'evidence': (
+                f"{fmt_int(unconverted)} of {fmt_int(new.get('trials', 0))} trialists did not convert "
+                f"({pct(new.get('rate', 0))} conversion) against {fmt_int(leads['total'])} leads worked."),
+            'move': ('Put a 48-hour follow-up on every first visit and hand the prime trial slots to the '
+                     'instructors whose trialists actually convert.'),
+            'proof': 'Trial-to-member conversion rate',
+            'target': f"Conversion {pct(new.get('rate', 0) + 3)} (from {pct(new.get('rate', 0))})",
+            'owner': 'Sales Lead', 'horizon': 'Immediate',
+            'risk': 'Trial intent decays in days; a lead worked in week three is a different, colder lead.',
+            'detail': [], 'detail_title': '',
+        },
+        {
+            'key': 'discount',
+            'title': 'Hold the discount line',
+            'value': discount_value,
+            'unit': 'margin given away above the baseline',
+            'evidence': (
+                f"Discount penetration is {pct(ctx['disc_penetration'])} of gross against a "
+                f"{pct(baseline_pen)} baseline — {lakh(s['disc'])} discounted on {lakh(s['gross'])} gross."),
+            'move': 'Cap discretionary discount, route anything above ₹5,000 through a single approver, and review the SKUs carrying the deepest cuts.',
+            'proof': 'Discount penetration as a share of gross',
+            'target': f"Penetration under {pct(max(8.0, baseline_pen))}",
+            'owner': 'Studio Manager', 'horizon': 'Immediate',
+            'risk': 'Discount becomes the reason people buy, and the list price stops being credible.',
+            'detail': [], 'detail_title': '',
+        },
+        {
+            'key': 'latecancel',
+            'title': 'Price the late-cancel seat',
+            'value': lc_value,
+            'unit': 'value of seats held and released too late to resell',
+            'evidence': (
+                f"{fmt_int(lc)} late cancellations from {fmt_int(checkins.get('lc_member_count', 0))} members, "
+                f"{fmt_int(checkins.get('heavy_cancelers', 0))} of whom cancelled six or more times."),
+            'move': 'Apply the stated late-cancel charge consistently, and have the front desk speak to repeat cancellers directly.',
+            'proof': 'Late cancellations as a share of bookings',
+            'target': f"Late-cancel rate under {pct(max(6.0, ctx['lc_rate'] - 4))} (from {pct(ctx['lc_rate'])})",
+            'owner': 'Front Desk', 'horizon': '30 days',
+            'risk': 'Every late cancel is a seat a waitlisted member would have taken and paid for.',
+            'detail': [], 'detail_title': '',
+        },
+    ]
+    decisions.sort(key=lambda d: -d['value'])
+    return decisions
+
+
+def build_early_warning_panel(ctx):
+    """Thresholds worth watching weekly, each with today's reading against it."""
+    if _lakh is None: _init_imports()
+    s_, sess, leads = ctx['sales'], ctx['sessions'], ctx['leads']
+    lapsed, checkins, baseline = ctx['lapsed'], ctx['checkins'], ctx['baseline']
+    new = ctx['new']
+
+    baseline_gross = baseline['sales']['gross'] or 0
+    baseline_pen = (baseline['sales']['disc'] / baseline_gross * 100) if baseline_gross else 0
+    lead_floor = baseline['leads']['total'] * 0.8
+    fill_floor = max(0.0, baseline['sessions']['fill'] - 5)
+    churn_ceiling = baseline['lapsed']['churn'] + 5
+    conv_floor = max(0.0, baseline['new'].get('rate', 0) - 3)
+
+    flags = [
+        ('Discount penetration', ctx['disc_penetration'], max(10.0, baseline_pen), 'ceiling', 'pct',
+         'Freeze discretionary discount above ₹2,000 pending approval.'),
+        ('Late-cancel rate', ctx['lc_rate'], 12.0, 'ceiling', 'pct',
+         'Apply the late-cancel charge and call repeat cancellers.'),
+        ('Churn rate', lapsed['churn'], churn_ceiling, 'ceiling', 'pct',
+         'Open the full reactivation campaign on the lapsed book.'),
+        ('Lead pipeline', leads['total'], lead_floor, 'floor', 'int',
+         'Run a two-week acquisition sprint on the channels that convert.'),
+        ('Fill rate', sess['fill'], fill_floor, 'floor', 'pct',
+         'Pull the weakest recurring slots and consolidate the grid.'),
+        ('Trial conversion', new.get('rate', 0), conv_floor, 'floor', 'pct',
+         'Re-run the 48-hour follow-up protocol on every first visit.'),
+    ]
+
+    fmt = {'pct': lambda v: pct(v), 'int': lambda v: fmt_int(v)}
+    rows = []
+    for name, value, threshold, kind, kindfmt, action in flags:
+        breached = value > threshold if kind == 'ceiling' else value < threshold
+        # How much headroom is left before the threshold bites.
+        gap = (value - threshold) if kind == 'ceiling' else (threshold - value)
+        state = 'Breached' if breached else ('Close' if abs(gap) <= abs(threshold) * 0.12 else 'Clear')
+        tone = 'bad' if state == 'Breached' else ('warn' if state == 'Close' else 'good')
+        rows.append(f'''            <tr>
+              <td class="metric-name">{name}</td>
+              <td class="num">{fmt[kindfmt](value)}</td>
+              <td class="num">{'≤ ' if kind == 'ceiling' else '≥ '}{fmt[kindfmt](threshold)}</td>
+              <td><span class="status-pill is-{tone}">{state}</span></td>
+              <td>{action}</td>
+            </tr>''')
+
+    table = data_table(['Signal', 'Now', 'Threshold', 'State', 'If it breaches'], rows,
+                       classes='warning-table')
+    return data_panel(
+        'Early warnings',
+        'Six signals with a stated threshold each. "Close" means the measure is within 12% of its '
+        'threshold — the point to act, rather than after it breaks.',
+        table)
+
+
+def build_decision_board(ctx):
+    """The five decisions, ranked by what each is worth this month."""
+    decisions = decision_agenda_data(ctx)
+    total = sum(d['value'] for d in decisions)
+
+    cards = []
+    for i, d in enumerate(decisions, 1):
+        detail_rows = ''.join(
+            f'<li><span>{html.escape(label)}</span><strong>{html.escape(value)}</strong></li>'
+            for label, value in d['detail'])
+        detail_block = (f'<div class="decision-detail"><span class="decision-detail-title">{d["detail_title"]}</span>'
+                        f'<ul>{detail_rows}</ul></div>') if detail_rows else ''
+        share = (d['value'] / total * 100) if total else 0
+        cards.append(f'''      <article class="decision-card" data-decision="{d['key']}">
+        <div class="decision-rank">{i:02d}</div>
+        <div class="decision-body">
+          <h4 class="decision-title">{d['title']}</h4>
+          <div class="decision-value">
+            <strong>{lakh(d['value']) if d['value'] >= 1000 else 'On track'}</strong>
+            <span>{d['unit'] if d['value'] >= 1000 else 'no gap against the threshold this month &mdash; hold the line'}</span>
+            <span class="decision-share" style="--share:{share:.1f}%"><i></i>{pct(share, 0)} of the month&rsquo;s identified upside</span>
+          </div>
+          <p class="decision-line"><span class="decision-label">What the data shows</span>{d['evidence']}</p>
+          <p class="decision-line"><span class="decision-label">The move</span>{d['move']}</p>
+          <p class="decision-line decision-risk"><span class="decision-label">If nothing changes</span>{d['risk']}</p>
+{detail_block}
+          <dl class="decision-meta">
+            <div><dt>Owner</dt><dd>{d['owner']}</dd></div>
+            <div><dt>Horizon</dt><dd>{d['horizon']}</dd></div>
+            <div><dt>Measured by</dt><dd>{d['proof']}</dd></div>
+            <div><dt>Target</dt><dd>{d['target']}</dd></div>
+          </dl>
+        </div>
+      </article>''')
+
+    return f'''    <section class="metric-block decision-board">
+      <div class="metric-block-head">
+        <div>
+          <span class="metric-block-eyebrow">The decision agenda</span>
+          <h3 class="metric-block-title">Five decisions, ranked by what they are worth</h3>
+          <p class="metric-block-note">Each decision is sized from this month&rsquo;s own numbers at
+            {ctx['loc']['short_name']} &mdash; together they carry <strong>{lakh(total)}</strong> of identified
+            monthly upside. Every card names the evidence, the owner, the horizon and the metric that will
+            show whether it worked.</p>
+        </div>
+      </div>
+      <div class="decision-grid">
+{chr(10).join(cards)}
+      </div>
+    </section>
+'''
+
+
+def build_pattern_panel(ctx):
+    """Patterns and trends across the trailing window, read off the series."""
+    if _lakh is None: _init_imports()
+    loc_key, month_key = ctx['loc_key'], ctx['month_key']
+    months = _trailing_months(loc_key, month_key, 6)
+    if len(months) < 3:
+        return ''
+    labels = [datetime_month_name(m).split(' ')[0][:3] for m in months]
+
+    tracks = [
+        ('Net sales', _series(loc_key, months, 'sales', 'net'), 'lakh', 'high'),
+        ('Visits', _series(loc_key, months, 'sessions', 'visits'), 'int', 'high'),
+        ('Fill rate', _series(loc_key, months, 'sessions', None,
+                              lambda v: (v.get('visits', 0) / v['capacity'] * 100) if v.get('capacity') else 0), 'pct', 'high'),
+        ('Leads', _series(loc_key, months, 'leads', 'total'), 'int', 'high'),
+        ('Churn rate', _series(loc_key, months, 'lapsed', None,
+                               lambda v: (v.get('lapsed', 0) / v['total'] * 100) if v.get('total') else 0), 'pct', 'low'),
+        ('Late cancels', _series(loc_key, months, 'checkins', 'late_cancel'), 'int', 'low'),
+    ]
+
+    def fmt_value(kind, v):
+        return {'lakh': lambda x: lakh(x), 'pct': lambda x: pct(x), 'int': lambda x: fmt_int(x)}[kind](v)
+
+    rows = []
+    for name, values, kind, better in tracks:
+        t = _trend(values)
+        # The window shift and the current streak can disagree (a measure that
+        # fell over six months but has risen for three), so each is toned on
+        # its own direction rather than sharing one verdict.
+        def tone_for(direction):
+            if direction == 'flat':
+                return ''
+            good = (direction == 'up' and better == 'high') or (direction == 'down' and better == 'low')
+            return 'is-good' if good else 'is-bad'
+        shift_tone = tone_for('up' if t['change'] > 3 else ('down' if t['change'] < -3 else 'flat'))
+        streak_tone = tone_for(t['dir'])
+        peak = max(values) if values else 0
+        spark = ''.join(
+            f'<span class="pattern-bar{" is-current" if i == len(values) - 1 else ""}" '
+            f'style="--h:{(v / peak * 100) if peak else 0:.0f}%" title="{labels[i]}: {fmt_value(kind, v)}"></span>'
+            for i, v in enumerate(values))
+        streak_note = (f"{t['streak'] + 1} months {t['dir']} in a row" if t['streak'] >= 2 else t['label'])
+        rows.append(f'''            <tr>
+              <td class="metric-name">{name}</td>
+              <td class="num">{fmt_value(kind, values[-1])}</td>
+              <td class="num">{fmt_value(kind, sum(values) / len(values))}</td>
+              <td class="num {shift_tone}">{'+' if t['change'] > 0 else ''}{t['change']:.0f}%</td>
+              <td><div class="pattern-spark">{spark}</div></td>
+              <td class="pattern-read {streak_tone}">{streak_note}</td>
+            </tr>''')
+
+    table = data_table(
+        ['Measure', month_name_short(month_key), f'{len(months)}-month average', 'Window shift',
+         f'{labels[0]} &rarr; {labels[-1]}', 'What it is doing'],
+        rows, classes='pattern-table')
+    return data_panel(
+        'Patterns and trends',
+        f'Every headline measure across the last {len(months)} months, with the direction it has been '
+        f'moving and how long it has been moving that way.',
+        table)
+
+
+def month_name_short(month_key):
+    return datetime_month_name(month_key)
 
 
 def build_scheduling_recommendations(ctx):

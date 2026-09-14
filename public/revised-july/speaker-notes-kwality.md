@@ -1,15 +1,12 @@
 # KWALITY HOUSE — JULY 2026 MANAGEMENT REVIEW
-## Speaker Script & Delivery Cues
+
+## Speaker Script
 
 ### OPENING
-
-**[Walk in confidently. Smile. Pause before beginning.]**
 
 Good morning, everyone.
 
 I’ll take you through the July performance for Kwality House.
-
-**[Pause.]**
 
 Overall, I would describe July as a **strong and encouraging month**, particularly from a revenue and activity standpoint.
 
@@ -21,17 +18,11 @@ What I want to do today, though, is go a little beyond the headline number.
 
 I’ll talk about **where that growth is coming from, where we still have opportunities, and—most importantly—what we are already doing to improve those areas.**
 
-**[Pause. Look around the room.]**
-
 The key message I would keep in mind as we go through the report is this:
 
 **July shows that demand is there. Our opportunity now is to make that demand more productive—through better conversion, better retention, smarter scheduling and stronger monetisation.**
 
----
-
 # 01 — EXECUTIVE SUMMARY
-
-**[Transition calmly.]**
 
 Starting with the overall picture.
 
@@ -43,8 +34,6 @@ What I particularly like here is that this wasn't driven by one isolated metric.
 
 So, overall, we are seeing genuine commercial activity rather than simply manufacturing revenue through aggressive discounting.
 
-**[Pause.]**
-
 Trial conversion came in at **28.9%**, with **35 conversions from 121 trials**.
 
 Now, this is slightly softer than June, by about **2.2 percentage points**, but I don't see this as a structural conversion problem.
@@ -52,8 +41,6 @@ Now, this is slightly softer than June, by about **2.2 percentage points**, but 
 In fact, the rate remains well above our 2026 average excluding July.
 
 The opportunity here is really to put **more qualified people into the top of the funnel**, and then tighten our follow-up process so that we capture more of the demand we're already generating.
-
-**[Emphasise.]**
 
 And that is exactly where our focus is going.
 
@@ -65,17 +52,11 @@ So retention is moving in the right direction.
 
 There is still room to improve it further, and I'll come to the specific actions we're taking when we get to the retention section.
 
-**[Pause.]**
-
 So, if I summarise the month at the highest level:
 
 **Revenue is strong. Conversion remains healthy. Retention is improving. And the next level of growth will come from improving the quality and productivity of the business—not simply doing more of everything.**
 
----
-
 # 02 — COMMERCIAL REVENUE PERFORMANCE
-
-**[Move to next section.]**
 
 Coming to the commercial performance in a little more detail.
 
@@ -86,8 +67,6 @@ The important thing here is the composition.
 **Memberships contributed roughly 47% of revenue**, and memberships together with class packages accounted for approximately **81% of total revenue**.
 
 That gives us a reasonably diversified revenue base.
-
-**[Pause.]**
 
 One thing we are watching is average transaction value.
 
@@ -121,8 +100,6 @@ At product level, we continue to see concentration in some of the larger package
 
 That is useful because it tells us where the customer is willing to make a meaningful commitment.
 
-**[Pause.]**
-
 The opportunity is to make that upgrade conversation more systematic rather than leaving it entirely to individual selling styles.
 
 So we're working toward clearer upgrade prompts and better follow-up around package milestones.
@@ -153,8 +130,6 @@ Where we can move transactions toward efficient, low-fee methods without affecti
 
 ### When revenue happens
 
-**[Slow slightly—important operational point.]**
-
 One of the most useful findings in this section is **when we actually make money.**
 
 Three clock-hours—**8 to 9 AM, 11 AM to 12 PM, and 12 to 1 PM—generated approximately ₹12.22 lakhs**, or about **47% of the month's revenue**.
@@ -169,19 +144,13 @@ Saturday is another important commitment day.
 
 So we're aligning front-desk and sales coverage much more closely to those revenue windows.
 
-**[Pause.]**
-
 There are also two data and compliance items that require verification: the GST treatment reflected in the data and the duplicated transaction-ID issue in the POS records.
 
 I don't want to speculate on the GST position until it has been confirmed by the appropriate finance and tax advisers.
 
 What matters operationally is that **both items have been identified, and we're getting them validated and corrected rather than allowing uncertainty to carry forward.**
 
----
-
 # 03 — ACQUISITION FUNNEL PERFORMANCE
-
-**[Slightly more energetic.]**
 
 Moving to acquisition.
 
@@ -210,8 +179,6 @@ Referral is particularly interesting.
 It is our **highest-quality lead source**, with conversion around **45.5%**.
 
 That is a very strong signal.
-
-**[Pause.]**
 
 Referral leads arrive with trust already built into the relationship.
 
@@ -243,19 +210,13 @@ We know there are instructors whose newcomer experience is producing stronger do
 
 So we're going to use those instructors more deliberately in key trial slots, while having other instructors shadow them and adopt the same successful behaviours.
 
-**[Pause.]**
-
 The immediate operational change is also very simple:
 
 **every trial gets a structured follow-up within 48 hours.**
 
 No ambiguity, no dependence on memory, and no trial quietly disappearing from the pipeline.
 
----
-
 # 04 — DELIVERY, FORMATS & INSTRUCTOR PERFORMANCE
-
-**[Transition.]**
 
 Moving to studio delivery.
 
@@ -280,8 +241,6 @@ Those are not demand problems.
 Those are effectively **capacity opportunities.**
 
 Where we see sustained utilisation at those levels, we should be asking whether we can intelligently add supply.
-
-**[Pause.]**
 
 At the other end, we have some formats and slots with lower utilisation.
 
@@ -317,8 +276,6 @@ We're pairing instructors with strong newcomer and retention outcomes with colle
 
 We're also adjusting session allocation where the data shows that the current load isn't producing the best result.
 
-**[Positive tone.]**
-
 That isn't about taking opportunity away from people.
 
 It's about putting instructors into environments where they can perform at their best and giving them the support to improve.
@@ -335,11 +292,7 @@ We're using actual attendance patterns to gradually shift capacity toward strong
 
 If we do this well, we can improve overall fill without needing significantly more customer demand.
 
----
-
 # 05 — RETENTION & CHURN DYNAMICS
-
-**[Slow down slightly.]**
 
 Retention is probably one of the most important sections of this report.
 
@@ -391,8 +344,6 @@ For example, when a member's attendance drops below a defined threshold, that sh
 
 a coach check-in, a front-desk conversation, a class recommendation, or simply a personal message.
 
-**[Pause.]**
-
 Retention should start **before the renewal date**, not on the renewal date.
 
 That is the operating behaviour we're moving toward.
@@ -413,11 +364,7 @@ So we're beginning to connect front-end sales performance with downstream custom
 
 That should ultimately improve both the customer experience and the economics of the studio.
 
----
-
 # 06 — DATA-DRIVEN RECOMMENDATIONS
-
-**[More decisive tone.]**
 
 This section is where the report becomes an execution plan.
 
@@ -531,11 +478,7 @@ We're not building management decisions on assumptions.
 
 Where something requires validation, we're validating it.
 
----
-
 # 07 — FORWARD OUTLOOK & SCENARIO PLANNING
-
-**[Confident, forward-looking tone.]**
 
 So, what does all of this mean for August and the next few months?
 
@@ -544,8 +487,6 @@ The report gives us two broad scenarios.
 Without meaningful intervention, August net sales are forecast in the region of **₹23.32 to ₹24.54 lakhs**.
 
 With execution of the recommended actions, the upside scenario moves to approximately **₹27.00 to ₹28.23 lakhs.**
-
-**[Pause.]**
 
 I would not present that upside number as a promise.
 
@@ -571,8 +512,6 @@ Churn needs to continue moving down.
 
 And fill rate should progressively improve as we optimise the schedule.
 
-**[Pause.]**
-
 These are useful because they are **leading indicators**.
 
 We don't have to wait until month-end revenue arrives to understand whether the business is moving in the right direction.
@@ -595,19 +534,13 @@ Again, I would treat that as an opportunity range rather than guaranteed increme
 
 But it gives us a very useful sense of priority.
 
-**[Emphasise.]**
-
 The growth opportunity isn't dependent on finding one miraculous new initiative.
 
 It's spread across several very practical improvements to things we're already doing.
 
 And that makes the plan much more executable.
 
----
-
 # CLOSING
-
-**[Pause. Look up from the report.]**
 
 So, to close—
 
@@ -627,13 +560,9 @@ We need to schedule classes according to actual demand.
 
 And we need to convert the increased customer activity we're seeing into higher lifetime value.
 
-**[Pause.]**
-
 The good thing is that none of those require us to fundamentally reinvent the business.
 
 They require **focus, consistency and better execution.**
-
-**[Slight smile.]**
 
 So my view going into August is positive.
 
@@ -643,12 +572,8 @@ The commercial momentum is visible.
 
 And we now have much better clarity on the specific actions that can improve the quality of that growth.
 
-**[Pause.]**
-
 Our job over the next 60 to 90 days is simply to execute those actions consistently, measure them closely, and keep improving.
 
 Thank you.
-
-**[Pause. Look toward the room rather than immediately back at the screen.]**
 
 Happy to take questions.

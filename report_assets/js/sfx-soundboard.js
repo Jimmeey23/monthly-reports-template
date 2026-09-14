@@ -255,8 +255,35 @@
     return new URL('/revised-july/' + fileName, window.location.origin).href;
   }
 
+  /* The panel is a teleprompter: it must carry only what the presenter says
+     out loud. Stage directions ("[Deliver verbatim.]", "[Pause.]"), delivery
+     cues and any model-facing instruction line are removed here, and the
+     quotation marks that wrapped spoken passages are unwrapped, so nothing a
+     reader could accidentally read aloud survives. */
+  var DIRECTION_LINE = /^\s*(?:\*{0,2})\[[^\]]*\](?:\*{0,2})\s*[.:]?\s*$/;
+  var DIRECTION_PREFIX = /^\s*(?:note|cue|delivery|tone|stage direction|instruction|ai|prompt|system)\s*[:\u2014-]/i;
+
+  function stripDirections(text) {
+    var lines = String(text || '').split('\n');
+    var kept = lines.filter(function (line) {
+      var t = line.trim();
+      if (!t) return true;
+      if (DIRECTION_LINE.test(t)) return false;
+      if (DIRECTION_PREFIX.test(t)) return false;
+      return true;
+    }).map(function (line) {
+      // Inline directions inside an otherwise spoken line.
+      var out = line.replace(/\*{0,2}\[[^\]]*\]\*{0,2}/g, '').replace(/[ \t]{2,}/g, ' ');
+      var t = out.trim();
+      // Unwrap a fully quoted spoken paragraph.
+      if (/^["\u201c].*["\u201d]$/.test(t)) out = t.replace(/^["\u201c]/, '').replace(/["\u201d]$/, '');
+      return out;
+    });
+    return kept.join('\n');
+  }
+
   function normalizeMarkdown(text) {
-    return String(text || '')
+    return stripDirections(String(text || ''))
       .replace(/\r\n/g, '\n')
       .replace(/^\s*---+\s*$/gm, '')
       .replace(/[ \t]+\n/g, '\n')

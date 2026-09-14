@@ -317,6 +317,13 @@ def get_heatmap(loc, month):
 def get_sessions_by_class(loc, month):
     return DATA.get('sessions_by_class', {}).get(loc, {}).get(month, {})
 
+def get_sessions_by_slot(loc, month, with_trainer=False):
+    key = 'sessions_by_slot_trainer' if with_trainer else 'sessions_by_slot'
+    return DATA.get(key, {}).get(loc, {}).get(month, {})
+
+def get_lapsed_members(loc, month):
+    return DATA.get('lapsed_members', {}).get(loc, {}).get(month, []) or []
+
 def get_sessions_by_trainer(loc, month):
     return DATA.get('sessions_by_trainer', {}).get(loc, {}).get(month, {})
 

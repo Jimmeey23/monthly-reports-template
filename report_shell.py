@@ -68,6 +68,8 @@ INLINE_JS = [
     ('report-layout', 'js/report-layout.js'),
     ('table-behaviour', 'js/table-behaviour.js'),
     ('rank-board', 'js/rank-board.js'),
+    ('slot-board', 'js/slot-board.js'),
+    ('member-book', 'js/member-book.js'),
     # after the tables and boards have rendered, so it sees every trigger
     ('drill-modal', 'js/drill-modal.js'),
     ('brand-audio', 'js/brand-audio.js'),
@@ -147,6 +149,7 @@ def topbar(ctx):
 </div>
 </div>
 <nav aria-label="Report sections" class="topnav">{nav}</nav><div class="topbar-actions">
+<button class="brand-audio-btn topbar-audio-btn" id="brand-audio-btn" type="button" aria-label="Play Fiz-zeek Fifty-Seven" title="Play Fiz-zeek Fifty-Seven"><span class="hero-audio-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M9 18V5l11-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="17" cy="16" r="3"></circle></svg></span><span class="hero-audio-copy"><strong>Play Me</strong><small>Fiz-zeek Fifty-Seven</small></span></button>
 <button aria-label="Download styled A4 PDF" class="pdf-btn" id="pdf-export-btn" title="Download a fully styled A4 PDF — no print dialog">
 <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
 <span>Download PDF</span>
@@ -264,7 +267,6 @@ def hero(ctx, headline, sub, meta_items, marquee_items, kpi_cards):
 <img alt="Physique 57 logo" class="hero-logo" src="{LOGO}"/>
       <span>Senior Management Review · Period: {period}</span>
     </div>
-<button class="brand-audio-btn hero-audio-btn hero-topline-audio" id="brand-audio-btn" type="button" aria-label="Play Fiz-zeek Fifty-Seven" title="Play Fiz-zeek Fifty-Seven"><span class="hero-audio-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M9 18V5l11-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="17" cy="16" r="3"></circle></svg></span><span class="hero-audio-copy"><strong>Play Me</strong><small>Fiz-zeek Fifty-Seven</small></span></button>
 </div>
 <div class="hero-title-with-audio"><h1>{headline}</h1></div>
 <p class="hero-sub">{sub}</p><div aria-label="Studio photography" class="hero-media-grid"><figure aria-label="Studio photography carousel" aria-roledescription="carousel" class="hero-media-card hero-media-main hero-carousel"><div class="hero-carousel-viewport">{slides}</div><div class="hero-carousel-controls"><button aria-label="Previous image" class="hero-carousel-button" data-carousel-prev="" type="button">←</button><div aria-label="Choose image" class="hero-carousel-dots">{dots}</div><button aria-label="Next image" class="hero-carousel-button" data-carousel-next="" type="button">→</button></div><div aria-hidden="true" class="hero-carousel-progress"><span></span></div></figure><figure class="hero-media-card hero-media-side"><img alt="{HERO_SIDE[1]}" decoding="async" loading="eager" src="{HERO_SIDE[0]}"/><figcaption class="hero-media-caption">{HERO_SIDE[1]}</figcaption></figure></div>

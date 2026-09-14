@@ -153,4 +153,45 @@ document.addEventListener('DOMContentLoaded', () => {
   if (tabs.length > 0 && !document.querySelector('.location-tab.active')) {
     tabs[0].click();
   }
+
+  /* The tab bar gets out of the way while the reader scrolls down and comes
+     back on scroll-up, on a pointer near the top of the window, or on focus. */
+  var bar = document.querySelector('.location-tabs');
+  if (!bar) return;
+  var peek = document.createElement('div');
+  peek.className = 'location-tabs-peek is-armed';
+  document.body.appendChild(peek);
+
+  var lastY = window.scrollY;
+  var hovering = false;
+  var ticking = false;
+
+  function setHidden(hidden) {
+    bar.classList.toggle('is-hidden', hidden && !hovering);
+  }
+
+  function onScroll() {
+    var y = window.scrollY;
+    var goingDown = y > lastY + 4;
+    var goingUp = y < lastY - 4;
+    if (y < 120) setHidden(false);
+    else if (goingDown) setHidden(true);
+    else if (goingUp) setHidden(false);
+    lastY = y;
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!ticking) { requestAnimationFrame(onScroll); ticking = true; }
+  }, { passive: true });
+
+  peek.addEventListener('mouseenter', function () { hovering = true; setHidden(false); });
+  bar.addEventListener('mouseenter', function () { hovering = true; });
+  bar.addEventListener('mouseleave', function () { hovering = false; });
+  peek.addEventListener('mouseleave', function () {
+    hovering = false;
+    if (window.scrollY > 120) setHidden(true);
+  });
+  bar.addEventListener('focusin', function () { hovering = true; setHidden(false); });
+  bar.addEventListener('focusout', function () { hovering = false; });
 });

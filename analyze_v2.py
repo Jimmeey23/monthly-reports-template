@@ -500,6 +500,9 @@ def detect_sessions_schema(fieldnames):
         'day':       first('Day of Week', 'Day'),
         'time':      first('Time', 'Time Slot'),
         'host':      first('Host ID', 'Host Id'),
+        'late':      first('LateCancelled', 'Late Cancelled', 'Is Late Cancelled'),
+        'booked':    first('Booked', 'Booked Count'),
+        'comps':     first('Complimentary', 'Complementary'),
     }
 
 
@@ -552,6 +555,16 @@ def analyze_sessions():
     by_trainer_format = {lk: {m: defaultdict(lambda: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0}))
                              for m in MONTHS}
                         for lk in LOCATIONS}
+    # Recurring-slot view: one row per class name x day x time (the schedule
+    # grid a studio actually manages), and the same split again by trainer.
+    def _slot_bucket():
+        return {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0, 'empty': 0,
+                'late': 0, 'comps': 0, 'booked': 0,
+                'cls': '', 'day': '', 'time': '', 'trainer': '', 'fmt': '',
+                'trainers': set()}
+    by_slot = {lk: {m: defaultdict(_slot_bucket) for m in MONTHS} for lk in LOCATIONS}
+    by_slot_trainer = {lk: {m: defaultdict(_slot_bucket) for m in MONTHS} for lk in LOCATIONS}
+
     heatmap = {lk: {m: defaultdict(lambda: defaultdict(lambda: {
                         'visits': 0, 'capacity': 0, 'sessions': 0,
                         'formats': defaultdict(int), 'trainers': defaultdict(int),
@@ -562,7 +575,8 @@ def analyze_sessions():
     path, sch = sessions_source()
     if not path:
         print('  ! no usable sessions export (need a Location and a Date column)')
-        return data, by_class, by_trainer, by_format, heatmap, by_trainer_format
+        return (data, by_class, by_trainer, by_format, heatmap, by_trainer_format,
+                by_slot, by_slot_trainer)
 
     # (loc_key, month, session id) -> one class
     sessions = {}
@@ -591,9 +605,25 @@ def analyze_sessions():
             if rec is None:
                 rec = sessions[key] = {
                     'visits': 0, 'capacity': 0, 'revenue': 0.0,
+                    'late': 0, 'comps': 0, 'booked': 0,
                     'cls': cls, 'trainer': trainer, 'day': day,
                     'time': time_slot, 'fmt': classify_format(cls),
                 }
+
+            # Late cancels / comps / bookings: the legacy export carries one
+            # row per class with a count, the roster export one row per
+            # attendee with a flag — count flags, take counts once.
+            for field in ('late', 'comps', 'booked'):
+                col = sch.get(field)
+                if not col:
+                    continue
+                raw = (row.get(col, '') or '').strip()
+                if _truthy(raw):
+                    rec[field] += 1
+                elif raw:
+                    n = to_int(raw)
+                    if n > rec[field]:
+                        rec[field] = n
 
             # Visits: the roster export flags each attendee (TRUE/FALSE); the
             # legacy export already gives a per-class headcount.
@@ -655,6 +685,24 @@ def analyze_sessions():
         btf['visits'] += rec['visits']
         btf['capacity'] += rec['capacity']
 
+        slot_time = (rec['time'] or 'Unknown')[:5]
+        for target, skey in ((by_slot, (rec['cls'], rec['day'], slot_time)),
+                             (by_slot_trainer, (rec['cls'], rec['day'], slot_time, rec['trainer']))):
+            b = target[loc_key][month]['|'.join(skey)]
+            b['sessions'] += 1
+            b['visits'] += rec['visits']
+            b['capacity'] += rec['capacity']
+            b['revenue'] += rec['revenue']
+            b['late'] += rec['late']
+            b['comps'] += rec['comps']
+            b['booked'] += rec['booked']
+            if rec['visits'] == 0:
+                b['empty'] += 1
+            b['cls'], b['day'], b['time'] = rec['cls'], rec['day'], slot_time
+            b['fmt'] = rec['fmt']
+            b['trainer'] = rec['trainer'] if len(skey) == 4 else ''
+            b['trainers'].add(rec['trainer'])
+
         slot = rec['time'][:5] if rec['time'] else 'Unknown'
         hm = heatmap[loc_key][month][slot][rec['day']]
         hm['visits'] += rec['visits']
@@ -670,7 +718,8 @@ def analyze_sessions():
                 dm['fill'] = dm['visits'] / dm['capacity'] * 100 if dm['capacity'] else 0
                 dm['avg_visits'] = dm['visits'] / dm['sessions'] if dm['sessions'] else 0
 
-    return data, by_class, by_trainer, by_format, heatmap, by_trainer_format
+    return (data, by_class, by_trainer, by_format, heatmap, by_trainer_format,
+            by_slot, by_slot_trainer)
 
 
 
@@ -776,32 +825,76 @@ def analyze_new():
 # zero/trial-type products and are excluded from lapsed evaluation, e.g.
 # 'Studio Single Class', 'Newcomers 2 For 1', 'New Client Intro Pack',
 # 'Pop-up Studio Single Class'.
-LAPSED_EXCLUDE_PATTERNS = ['single class', '2 for 1', 'intro pack']
+# Products that are not real renewable memberships: trials, single visits,
+# promo bundles and one-off private formats. Zero-value rows (comps, staff,
+# corrections) are excluded as well.
+LAPSED_EXCLUDE_PATTERNS = [
+    'single class', '2 for 1', '2for1', 'intro pack', 'intro offer', 'intro',
+    'virtual private', 'happy hour private', 'happy hour', 'trial',
+    'complimentary', 'comp ', 'staff', 'newcomer', 'open barre',
+]
+
+# A membership only counts as lapsed once it is 60+ days past its end date —
+# before that the member is still inside the normal renewal window.
+LAPSED_MIN_DAYS_PAST_END = 60
 
 
 def is_excluded_lapsed_membership(product_name, amount_paid):
     """True if this membership should be excluded from lapsed metrics:
-    zero-value memberships (comps/freebies) or single-class/trial products."""
+    zero-value memberships (comps/freebies) or non-renewable products."""
     if to_float(amount_paid) <= 0:
         return True
     name = (product_name or '').lower()
     return any(p in name for p in LAPSED_EXCLUDE_PATTERNS)
 
 
+def _parse_date(v):
+    """Parse the handful of date shapes the exports use; None when unusable."""
+    raw = (v or '').strip()
+    if not raw:
+        return None
+    raw = raw.split(' ')[0]
+    for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y', '%d-%m-%Y', '%d %b %Y', '%Y/%m/%d'):
+        try:
+            return datetime.strptime(raw, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def days_past_end(end_date_str, reference=None):
+    """Days between a membership end date and the reference date (today)."""
+    d = _parse_date(end_date_str)
+    if not d:
+        return None
+    ref = reference or datetime.now()
+    return (ref - d).days
+
+
 def analyze_lapsed():
-    """Analyze lapsed memberships."""
+    """Analyze expiring memberships: who was up for renewal, who renewed, who
+    lapsed, and the member-level rows behind every number.
+
+    Excludes zero-value rows and non-renewable products (see
+    LAPSED_EXCLUDE_PATTERNS). A membership counts as lapsed only when its
+    status says Lapsed *and* it is at least LAPSED_MIN_DAYS_PAST_END days past
+    its end date; anything newer is still inside the renewal window and is
+    reported as pending instead.
+    """
     data = {lk: {} for lk in LOCATIONS}
-    by_product = {lk: {m: defaultdict(lambda: {'total': 0, 'renewed': 0, 'lapsed': 0, 'frozen': 0})
+    by_product = {lk: {m: defaultdict(lambda: {'total': 0, 'renewed': 0, 'lapsed': 0,
+                                               'frozen': 0, 'pending': 0, 'value': 0.0})
                       for m in MONTHS}
                  for lk in LOCATIONS}
-    # Cumulative unique lapsed
+    # Member-level rows, so the section can drill from any number to the people.
+    members = {lk: {m: [] for m in MONTHS} for lk in LOCATIONS}
     cumulative = {lk: defaultdict(set) for lk in LOCATIONS}
+    today = datetime.now()
 
     with open(LAPSED_FILE, encoding='utf-8-sig') as f:
         r = csv.DictReader(f, delimiter=sniff_delimiter(LAPSED_FILE))
         for row in r:
-            loc = row.get('Primary Location', '')
-            loc_key = loc_key_for(loc)
+            loc_key = loc_key_for(row.get('Primary Location', ''))
             if not loc_key:
                 continue
             ed = row.get('End Date', '')
@@ -809,56 +902,81 @@ def analyze_lapsed():
             if month not in MONTHS:
                 continue
 
-            status = row.get('Status', '')
             product = row.get('Membership Name', '') or 'Unknown'
-            member_id = row.get('Member ID', '')
-
-            if is_excluded_lapsed_membership(product, row.get('Amount Paid', '0')):
+            paid = to_float(row.get('Amount Paid', '0'))
+            if is_excluded_lapsed_membership(product, paid):
                 continue
 
-            if month not in data[loc_key]:
-                data[loc_key][month] = {'total': 0, 'renewed': 0, 'lapsed': 0, 'frozen': 0}
-            
-            d = data[loc_key][month]
-            d['total'] += 1
-            if status == 'Renewed':
-                d['renewed'] += 1
-            elif status == 'Lapsed':
-                d['lapsed'] += 1
-            elif status == 'Frozen':
-                d['frozen'] += 1
-            
-            # By product
+            raw_status = (row.get('Status', '') or '').strip()
+            past = days_past_end(ed, today)
+            status = raw_status
+            if raw_status == 'Lapsed' and past is not None and past < LAPSED_MIN_DAYS_PAST_END:
+                # Ended recently — still inside the renewal window.
+                status = 'Pending'
+
+            d = data[loc_key].setdefault(
+                month, {'total': 0, 'renewed': 0, 'lapsed': 0, 'frozen': 0,
+                        'pending': 0, 'value': 0.0, 'lapsed_value': 0.0,
+                        'renewed_value': 0.0})
             bp = by_product[loc_key][month][product]
-            bp['total'] += 1
-            if status == 'Renewed':
-                bp['renewed'] += 1
-            elif status == 'Lapsed':
-                bp['lapsed'] += 1
-            elif status == 'Frozen':
-                bp['frozen'] += 1
-            
-            # Cumulative unique lapsed members
-            if status == 'Lapsed':
-                cumulative[loc_key][month].add(member_id)
-    
-    # Compute rates
+            key = {'Renewed': 'renewed', 'Lapsed': 'lapsed',
+                   'Frozen': 'frozen', 'Pending': 'pending'}.get(status)
+            for bucket in (d, bp):
+                bucket['total'] += 1
+                bucket['value'] += paid
+                if key:
+                    bucket[key] += 1
+            if key == 'lapsed':
+                d['lapsed_value'] += paid
+            elif key == 'renewed':
+                d['renewed_value'] += paid
+
+            members[loc_key][month].append({
+                'name': row.get('Member Name', '') or 'Unknown',
+                'id': row.get('Member ID', ''),
+                'email': row.get('Member Email', ''),
+                'product': product,
+                'status': status,
+                'raw_status': raw_status,
+                'paid': round(paid, 2),
+                'end': ed,
+                'start': row.get('Start Date', ''),
+                'days_past_end': past,
+                'sessions_used': to_int(row.get('Total Sessions Completed', '0')),
+                'remaining': to_int(row.get('Remaining Sessions', '0')),
+                'last_visit': row.get('Most Recent Visit Date', ''),
+                'days_since_visit': to_int(row.get('Days Since Last Visit', '0')),
+                'late_cancels': to_int(row.get('Late Cancellations', '0')),
+                'no_shows': to_int(row.get('No Shows', '0')),
+                'attendance': to_float(row.get('Attendance Rate %', '0')),
+                'duration_days': to_int(row.get('Membership Duration (Days)', '0')),
+                'sold_by': row.get('Sold By', ''),
+            })
+
+            if key == 'lapsed':
+                cumulative[loc_key][month].add(row.get('Member ID', ''))
+
     for loc_key in LOCATIONS:
         for month in MONTHS:
             if month in data[loc_key]:
                 d = data[loc_key][month]
+                decided = d['renewed'] + d['lapsed']
                 d['churn'] = d['lapsed'] / d['total'] * 100 if d['total'] else 0
                 d['renewal_rate'] = d['renewed'] / d['total'] * 100 if d['total'] else 0
-    
-    # Cumulative unique lapsed (running total)
+                # Renewal rate among memberships whose outcome is already known.
+                d['decided'] = decided
+                d['decided_renewal_rate'] = d['renewed'] / decided * 100 if decided else 0
+                d['avg_value'] = d['value'] / d['total'] if d['total'] else 0
+            members[loc_key][month].sort(key=lambda m: (-m['paid'], m['name']))
+
     cum_data = {lk: {} for lk in LOCATIONS}
     for loc_key in LOCATIONS:
         running = set()
         for month in MONTHS:
             running.update(cumulative[loc_key][month])
             cum_data[loc_key][month] = len(running)
-    
-    return data, by_product, cum_data
+
+    return data, by_product, cum_data, members
 
 
 # ===================== CHECKINS (LATE CANCELS) =====================
@@ -935,6 +1053,17 @@ def _serialise_bucket(b):
     return out
 
 
+def _serialise_slot(v):
+    """Slot buckets carry a set of trainers; JSON wants a sorted list."""
+    out = {k: val for k, val in v.items() if not isinstance(val, set)}
+    trainers = sorted(v.get('trainers') or ())
+    out['trainers'] = trainers
+    out['trainer_count'] = len(trainers)
+    out['fill'] = v['visits'] / v['capacity'] * 100 if v.get('capacity') else 0
+    out['avg'] = v['visits'] / v['sessions'] if v.get('sessions') else 0
+    return out
+
+
 def _serialise_trainer(v):
     """Sets are collected while counting but cannot go into JSON — the report
     only ever wants how many distinct classes and days a trainer covered."""
@@ -961,7 +1090,9 @@ def main():
     sales_data, sales_breakdowns, sales_by_id = analyze_sales()
     
     print("Analyzing sessions...")
-    sessions_data, sessions_by_class, sessions_by_trainer, sessions_by_format, heatmap_data, sessions_by_trainer_format = analyze_sessions()
+    (sessions_data, sessions_by_class, sessions_by_trainer, sessions_by_format,
+     heatmap_data, sessions_by_trainer_format,
+     sessions_by_slot, sessions_by_slot_trainer) = analyze_sessions()
     
     print("Analyzing leads...")
     leads_data, leads_by_source = analyze_leads()
@@ -970,7 +1101,7 @@ def main():
     new_data, new_by_type = analyze_new()
     
     print("Analyzing lapsed...")
-    lapsed_data, lapsed_by_product, lapsed_cumulative = analyze_lapsed()
+    lapsed_data, lapsed_by_product, lapsed_cumulative, lapsed_members = analyze_lapsed()
     
     print("Analyzing checkins...")
     checkins_data, checkins_member_cancels = analyze_checkins()
@@ -1080,6 +1211,12 @@ def main():
         'sessions': sessions_data,
         'sessions_by_class': {lk: {m: dict(bc) for m, bc in months.items()}
                              for lk, months in sessions_by_class.items()},
+        'sessions_by_slot': {lk: {m: {k: _serialise_slot(v) for k, v in slots.items()}
+                                  for m, slots in months.items()}
+                            for lk, months in sessions_by_slot.items()},
+        'sessions_by_slot_trainer': {lk: {m: {k: _serialise_slot(v) for k, v in slots.items()}
+                                          for m, slots in months.items()}
+                                    for lk, months in sessions_by_slot_trainer.items()},
         'sessions_by_trainer': {lk: {m: {name: _serialise_trainer(v) for name, v in bt.items()}
                                      for m, bt in months.items()}
                                for lk, months in sessions_by_trainer.items()},
@@ -1101,6 +1238,7 @@ def main():
         'lapsed_by_product': {lk: {m: dict(bp) for m, bp in months.items()}
                              for lk, months in lapsed_by_product.items()},
         'lapsed_cumulative': lapsed_cumulative,
+        'lapsed_members': lapsed_members,
         'checkins': checkins_data,
         'active': {lk: {'total': v['total'], 'types': dict(v['types'])}
                    for lk, v in active_data.items()},

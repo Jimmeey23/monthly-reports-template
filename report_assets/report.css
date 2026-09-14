@@ -3892,3 +3892,203 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
 
 /* A figure that should span the full report width rather than sit in one pane. */
 .figure-band-wide { grid-column: 1 / -1; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Metric cards — compact
+   The hero cards had accumulated four layers of overrides: a card nested
+   inside a second card, each with its own border, radius, gradient and
+   shadow, plus a decorative stack of fake cards in the corner and trend
+   pills stretched to fill the width. At 330px tall they pushed the report
+   itself below the fold.
+
+   This is the single definition that wins: one flat surface, one border,
+   and type doing the work instead of chrome. Everything the older layers
+   drew is explicitly switched off here rather than edited in place, so the
+   card reads top to bottom in one block.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* An even, dense grid — no hand-assigned spans to keep in sync. */
+.hero-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(212px, 1fr));
+  grid-auto-flow: row;
+  gap: 10px;
+  margin-top: 20px;
+}
+.hero-kpi-grid .kpi-card,
+.hero-kpi-grid .kpi-card:nth-child(1),
+.hero-kpi-grid .kpi-card:nth-child(4),
+.hero-kpi-grid .kpi-card:nth-child(5),
+.hero-kpi-grid .kpi-card:nth-child(6),
+.hero-kpi-grid .kpi-card:nth-child(7),
+.hero-kpi-grid .kpi-card:nth-child(8) { grid-column: auto; }
+
+/* The card is the only surface. */
+.kpi-card {
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  box-shadow: none;
+  overflow: hidden;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+[data-theme='dark'] .kpi-card { background: var(--bg-card); box-shadow: none; }
+.kpi-card::before,
+.kpi-card::after,
+.kpi-card-art { display: none !important; }
+
+.kpi-card:hover:not(.is-flipped),
+[data-theme='dark'] .kpi-card:hover:not(.is-flipped) {
+  transform: none;
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+.kpi-card.is-flipped {
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--border));
+  box-shadow: none;
+}
+
+/* Both faces sit flush inside that surface, so neither draws a box. */
+.kpi-flip-shell { min-height: 148px; }
+.kpi-face { min-height: 148px !important; }
+.kpi-card-inner,
+[data-theme='dark'] .kpi-card-inner {
+  min-height: 0;
+  padding: 14px 15px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.kpi-card-front { padding: 14px 15px 0; border-radius: 0; }
+.kpi-card-back {
+  padding: 14px 15px;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg-inset);
+  box-shadow: none;
+}
+
+/* Front face: label, value, one line of context, deltas, sparkline. */
+.kpi-label {
+  max-width: 100%;
+  margin: 0 0 6px;
+  color: var(--text-subtle);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.kpi-value {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 27px;
+  font-weight: 640;
+  line-height: 1.12;
+  letter-spacing: -.03em;
+}
+.kpi-sub {
+  max-width: 100%;
+  min-height: 0;
+  margin: 3px 0 0;
+  color: var(--text-subtle);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+/* Deltas read as a line of text, not a row of buttons. Pills were wide enough
+   that a longer label ("SESSIONS", "LATE CANCELS") wrapped to a second line and
+   pushed the sparkline out of the card; as plain type they always fit. Colour
+   still carries the direction. */
+.kpi-trends { margin: 9px 0 0; gap: 14px; flex-wrap: wrap; }
+.kpi-trend {
+  flex: 0 0 auto;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 11px;
+}
+.kpi-trend::after { display: none !important; }
+.kpi-trend .trend-label {
+  color: var(--text-subtle);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+/* Body-scoped, because the shared badge palette is itself body-scoped and
+   would otherwise keep drawing a capsule around each delta. */
+body.sp-report .kpi-trend .badge,
+body.sp-report .kpi-trend .badge.good,
+body.sp-report .kpi-trend .badge.warn,
+body.sp-report .kpi-trend .badge.bad,
+body.sp-report .kpi-trend .badge.neutral,
+[data-theme="dark"] body.sp-report .kpi-trend .badge,
+[data-theme="dark"] body.sp-report .kpi-trend .badge.good,
+[data-theme="dark"] body.sp-report .kpi-trend .badge.warn,
+[data-theme="dark"] body.sp-report .kpi-trend .badge.bad {
+  min-width: 0; min-height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* The sparkline is the card's floor. Pinned, so nothing above it can push it
+   out however the deltas wrap. */
+.kpi-chart {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+}
+/* Sits opposite the label rather than competing with the chart for the floor. */
+.kpi-baseline {
+  position: absolute;
+  top: 13px;
+  right: 15px;
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  color: var(--text-subtle);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0;
+}
+.kpi-baseline::before { display: none; }
+.kpi-label { padding-right: 52px; }
+
+/* The flip affordance only appears when the card is under the pointer. */
+.kpi-flip-cue {
+  right: 12px; bottom: 8px;
+  font-size: 7px;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.kpi-card:hover .kpi-flip-cue { opacity: 1; transform: none; }
+
+/* Back face, matched to the front's density. */
+.kpi-back-top { margin-bottom: 7px; }
+.kpi-back-kicker { font-size: 7.5px; }
+.kpi-back-return { width: 20px; height: 20px; font-size: 10px; }
+.kpi-back-title { margin: 0 0 5px; font-size: 14px; font-weight: 650; }
+.kpi-back-copy { margin: 0 0 9px; font-size: 10px; line-height: 1.5; }
+.kpi-back-stats { gap: 5px; margin-bottom: 9px; }
+.kpi-back-stat { padding: 5px 4px; border-radius: 7px; }
+.kpi-back-stat span { font-size: 7px; }
+.kpi-back-stat strong { font-size: 9.5px; }
+.kpi-back-focus { padding: 6px 8px; font-size: 9px; line-height: 1.45; }
+.kpi-back-focus strong { font-size: 7.5px; }
+
+@media (max-width: 640px) {
+  .hero-kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .kpi-value { font-size: 23px; }
+}

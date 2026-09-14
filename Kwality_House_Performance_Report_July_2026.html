@@ -3903,6 +3903,206 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
 /* A figure that should span the full report width rather than sit in one pane. */
 .figure-band-wide { grid-column: 1 / -1; }
 
+/* ═══════════════════════════════════════════════════════════════════
+   Metric cards — compact
+   The hero cards had accumulated four layers of overrides: a card nested
+   inside a second card, each with its own border, radius, gradient and
+   shadow, plus a decorative stack of fake cards in the corner and trend
+   pills stretched to fill the width. At 330px tall they pushed the report
+   itself below the fold.
+
+   This is the single definition that wins: one flat surface, one border,
+   and type doing the work instead of chrome. Everything the older layers
+   drew is explicitly switched off here rather than edited in place, so the
+   card reads top to bottom in one block.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* An even, dense grid — no hand-assigned spans to keep in sync. */
+.hero-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(212px, 1fr));
+  grid-auto-flow: row;
+  gap: 10px;
+  margin-top: 20px;
+}
+.hero-kpi-grid .kpi-card,
+.hero-kpi-grid .kpi-card:nth-child(1),
+.hero-kpi-grid .kpi-card:nth-child(4),
+.hero-kpi-grid .kpi-card:nth-child(5),
+.hero-kpi-grid .kpi-card:nth-child(6),
+.hero-kpi-grid .kpi-card:nth-child(7),
+.hero-kpi-grid .kpi-card:nth-child(8) { grid-column: auto; }
+
+/* The card is the only surface. */
+.kpi-card {
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  box-shadow: none;
+  overflow: hidden;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+[data-theme='dark'] .kpi-card { background: var(--bg-card); box-shadow: none; }
+.kpi-card::before,
+.kpi-card::after,
+.kpi-card-art { display: none !important; }
+
+.kpi-card:hover:not(.is-flipped),
+[data-theme='dark'] .kpi-card:hover:not(.is-flipped) {
+  transform: none;
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+.kpi-card.is-flipped {
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--border));
+  box-shadow: none;
+}
+
+/* Both faces sit flush inside that surface, so neither draws a box. */
+.kpi-flip-shell { min-height: 148px; }
+.kpi-face { min-height: 148px !important; }
+.kpi-card-inner,
+[data-theme='dark'] .kpi-card-inner {
+  min-height: 0;
+  padding: 14px 15px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.kpi-card-front { padding: 14px 15px 0; border-radius: 0; }
+.kpi-card-back {
+  padding: 14px 15px;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg-inset);
+  box-shadow: none;
+}
+
+/* Front face: label, value, one line of context, deltas, sparkline. */
+.kpi-label {
+  max-width: 100%;
+  margin: 0 0 6px;
+  color: var(--text-subtle);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.kpi-value {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 27px;
+  font-weight: 640;
+  line-height: 1.12;
+  letter-spacing: -.03em;
+}
+.kpi-sub {
+  max-width: 100%;
+  min-height: 0;
+  margin: 3px 0 0;
+  color: var(--text-subtle);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+/* Deltas read as a line of text, not a row of buttons. Pills were wide enough
+   that a longer label ("SESSIONS", "LATE CANCELS") wrapped to a second line and
+   pushed the sparkline out of the card; as plain type they always fit. Colour
+   still carries the direction. */
+.kpi-trends { margin: 9px 0 0; gap: 14px; flex-wrap: wrap; }
+.kpi-trend {
+  flex: 0 0 auto;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 11px;
+}
+.kpi-trend::after { display: none !important; }
+.kpi-trend .trend-label {
+  color: var(--text-subtle);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+/* Body-scoped, because the shared badge palette is itself body-scoped and
+   would otherwise keep drawing a capsule around each delta. */
+body.sp-report .kpi-trend .badge,
+body.sp-report .kpi-trend .badge.good,
+body.sp-report .kpi-trend .badge.warn,
+body.sp-report .kpi-trend .badge.bad,
+body.sp-report .kpi-trend .badge.neutral,
+[data-theme="dark"] body.sp-report .kpi-trend .badge,
+[data-theme="dark"] body.sp-report .kpi-trend .badge.good,
+[data-theme="dark"] body.sp-report .kpi-trend .badge.warn,
+[data-theme="dark"] body.sp-report .kpi-trend .badge.bad {
+  min-width: 0; min-height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* The sparkline is the card's floor. Pinned, so nothing above it can push it
+   out however the deltas wrap. */
+.kpi-chart {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+}
+/* Sits opposite the label rather than competing with the chart for the floor. */
+.kpi-baseline {
+  position: absolute;
+  top: 13px;
+  right: 15px;
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  color: var(--text-subtle);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0;
+}
+.kpi-baseline::before { display: none; }
+.kpi-label { padding-right: 52px; }
+
+/* The flip affordance only appears when the card is under the pointer. */
+.kpi-flip-cue {
+  right: 12px; bottom: 8px;
+  font-size: 7px;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.kpi-card:hover .kpi-flip-cue { opacity: 1; transform: none; }
+
+/* Back face, matched to the front's density. */
+.kpi-back-top { margin-bottom: 7px; }
+.kpi-back-kicker { font-size: 7.5px; }
+.kpi-back-return { width: 20px; height: 20px; font-size: 10px; }
+.kpi-back-title { margin: 0 0 5px; font-size: 14px; font-weight: 650; }
+.kpi-back-copy { margin: 0 0 9px; font-size: 10px; line-height: 1.5; }
+.kpi-back-stats { gap: 5px; margin-bottom: 9px; }
+.kpi-back-stat { padding: 5px 4px; border-radius: 7px; }
+.kpi-back-stat span { font-size: 7px; }
+.kpi-back-stat strong { font-size: 9.5px; }
+.kpi-back-focus { padding: 6px 8px; font-size: 9px; line-height: 1.45; }
+.kpi-back-focus strong { font-size: 7.5px; }
+
+@media (max-width: 640px) {
+  .hero-kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .kpi-value { font-size: 23px; }
+}
+
 </style>
 </head>
 <body class="sp-report">
@@ -3997,10 +4197,10 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
 <div class="kpi-value">26.4%</div>
 <div class="kpi-sub">121 trials &rarr; 32 joins</div>
 <div class="kpi-trends">
-<span class="kpi-trend"><span class="trend-label">MoM</span> <span class="badge neutral">+0.0pp</span></span><span class="kpi-trend"><span class="trend-label">Trials</span> <span class="badge bad">-6.2%</span></span>
+<span class="kpi-trend"><span class="trend-label">MoM</span> <span class="badge bad">-10.0pp</span></span><span class="kpi-trend"><span class="trend-label">Trials</span> <span class="badge bad">-6.2%</span></span>
 </div>
-<div aria-label="Recent metric trend" class="kpi-chart" data-chart-type="bar" data-decimals="1" data-grouping="false" data-labels="May|Jun|Jul" data-prefix="" data-series="0.0,0.0,0.0" data-suffix="%" title="Move across the chart to inspect each comparison point"></div><div class="kpi-baseline">+0.0pp</div>
-<div aria-hidden="true" class="kpi-flip-cue">Click for context  ↗</div></div><div class="kpi-card-back kpi-face"><div class="kpi-back-top"><span class="kpi-back-kicker">Funnel quality</span><span aria-hidden="true" class="kpi-back-return">↺</span></div><h3 class="kpi-back-title">Conversion Rate</h3><p class="kpi-back-copy">121 trials produced 32 conversions, a 26.4% rate.</p><div class="kpi-back-stats"><div class="kpi-back-stat"><span>MoM</span><strong>+0.0pp</strong></div><div class="kpi-back-stat"><span>Trials</span><strong>-6.2%</strong></div><div class="kpi-back-stat"><span>Vs baseline</span><strong>+0.0pp</strong></div></div><div class="kpi-back-focus"><strong>Management focus · </strong>Fix the handover between trial and first purchase.</div></div></div><div class="metric-card-tooltip" id="metric-tip-4" role="tooltip">Trials that converted to a paid membership or pack.</div></div>
+<div aria-label="Recent metric trend" class="kpi-chart" data-chart-type="bar" data-decimals="1" data-grouping="false" data-labels="May|Jun|Jul" data-prefix="" data-series="31.6,36.4,26.4" data-suffix="%" title="Move across the chart to inspect each comparison point"></div><div class="kpi-baseline">-3.0pp</div>
+<div aria-hidden="true" class="kpi-flip-cue">Click for context  ↗</div></div><div class="kpi-card-back kpi-face"><div class="kpi-back-top"><span class="kpi-back-kicker">Funnel quality</span><span aria-hidden="true" class="kpi-back-return">↺</span></div><h3 class="kpi-back-title">Conversion Rate</h3><p class="kpi-back-copy">121 trials produced 32 conversions, a 26.4% rate.</p><div class="kpi-back-stats"><div class="kpi-back-stat"><span>MoM</span><strong>-10.0pp</strong></div><div class="kpi-back-stat"><span>Trials</span><strong>-6.2%</strong></div><div class="kpi-back-stat"><span>Vs baseline</span><strong>-3.0pp</strong></div></div><div class="kpi-back-focus"><strong>Management focus · </strong>Fix the handover between trial and first purchase.</div></div></div><div class="metric-card-tooltip" id="metric-tip-4" role="tooltip">Trials that converted to a paid membership or pack.</div></div>
 <div aria-describedby="metric-tip-5" class="kpi-card" tabindex="0"><div class="kpi-flip-shell"><div class="kpi-card-inner kpi-face kpi-card-front"><div aria-hidden="true" class="kpi-card-art"><span></span><span></span><span></span></div>
 <div class="kpi-label">Lapsed Members</div>
 <div class="kpi-value">152</div>
@@ -4047,8 +4247,8 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
       <div class="section-header">
         <div class="section-header-left">
           <span class="section-eyebrow">01 · Management Pulse &mdash; Growth, Conversion &amp; Risk</span>
-          <h2 class="section-title">July delivered soft revenue at &#8377;24.54L net &mdash; below the 2026 Avg (excl. Jul) average, with improving trial conversion and stabilising churn as the key watchpoints.</h2>
-          <p class="section-deck">Headline revenue closed at <strong>&#8377;24.54L net</strong> (&#8377;25.80L gross incl. &#8377;1.26L VAT, &#8377;1.70L discount), which is <strong>+18.2% vs Jun 2026</strong> (M-1), <strong>+6.2% vs May 2026</strong> (M-2), <strong>-5.1% vs 2026 Avg (excl. Jul)</strong>, and <strong>+37.1% vs Jul 2025</strong> (YoY). Trial conversion is 26.4% (32 of 121 trials), up +0.0pp MoM. Churn rate stands at 40.0%, improving -5.1pp MoM. Discount efficiency is &#8377;14.45 of revenue collected per &#8377;1 discounted.</p>
+          <h2 class="section-title">July delivered soft revenue at &#8377;24.54L net &mdash; below the 2026 Avg (excl. Jul) average, with declining trial conversion and stabilising churn as the key watchpoints.</h2>
+          <p class="section-deck">Headline revenue closed at <strong>&#8377;24.54L net</strong> (&#8377;25.80L gross incl. &#8377;1.26L VAT, &#8377;1.70L discount), which is <strong>+18.2% vs Jun 2026</strong> (M-1), <strong>+6.2% vs May 2026</strong> (M-2), <strong>-5.1% vs 2026 Avg (excl. Jul)</strong>, and <strong>+37.1% vs Jul 2025</strong> (YoY). Trial conversion is 26.4% (32 of 121 trials), down -10.0pp MoM. Churn rate stands at 40.0%, improving -5.1pp MoM. Discount efficiency is &#8377;14.45 of revenue collected per &#8377;1 discounted.</p>
         </div>
         <div class="section-header-right">
           <button aria-label="View month on month data" class="mom-info-btn" data-mom="exec">i</button>
@@ -4074,8 +4274,8 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
     <div class="insight-card">
       <div class="insight-num">02</div>
       <div class="insight-body">
-        <div class="insight-title">Trial conversion rate at 26.4% (n/a vs 2026 Avg (excl. Jul)) &mdash; Strong Conversion.</div>
-        <div class="insight-text">32 of 121 trialists converted (26.4%), +0.0pp vs Jun 2026 and 2026 Avg (excl. Jul) average of 0.0%. <br><strong>What this tells us:</strong> The trial experience is effectively convincing prospects to join. <br><strong>Strategic Action:</strong> Expand lead acquisition spend on high-converting channels.</div>
+        <div class="insight-title">Trial conversion rate at 26.4% (-3.0pp vs 2026 Avg (excl. Jul)) &mdash; Funnel Bottleneck.</div>
+        <div class="insight-text">32 of 121 trialists converted (26.4%), -10.0pp vs Jun 2026 and 2026 Avg (excl. Jul) average of 29.5%. <br><strong>What this tells us:</strong> Trial drop-off is occurring during the post-trial 48-hour window due to lack of immediate front-desk follow-up. <br><strong>Strategic Action:</strong> Establish an automated 24-hour phone outreach rule for expiring trials to capture ~8 additional members/month.</div>
       </div>
     </div>
     <div class="insight-card">
@@ -4277,25 +4477,25 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
             <tr>
               <td class="metric-name">Conv Rate</td>
               <td class="num">26.4%</td>
+              <td class="num">36.4%</td>
+              <td class="num">31.6%</td>
+              <td class="num">29.5%</td>
               <td class="num">0.0%</td>
-              <td class="num">0.0%</td>
-              <td class="num">0.0%</td>
-              <td class="num">0.0%</td>
-              <td><span class='badge good'>+26.4pp</span></td>
-              <td><span class='badge good'>+26.4pp</span></td>
-              <td><span class='badge good'>+26.4pp</span></td>
+              <td><span class='badge bad'>-10.0pp</span></td>
+              <td><span class='badge bad'>-5.2pp</span></td>
+              <td><span class='badge bad'>-3.0pp</span></td>
               <td><span class='badge good'>+26.4pp</span></td>
             </tr>
             <tr>
               <td class="metric-name">Converted</td>
               <td class="num">32</td>
+              <td class="num">47</td>
+              <td class="num">37</td>
+              <td class="num">32</td>
               <td class="num">0</td>
-              <td class="num">0</td>
-              <td class="num">0</td>
-              <td class="num">0</td>
-              <td><span class='badge neutral'>n/a</span></td>
-              <td><span class='badge neutral'>n/a</span></td>
-              <td><span class='badge neutral'>n/a</span></td>
+              <td><span class='badge bad'>-31.9%</span></td>
+              <td><span class='badge bad'>-13.5%</span></td>
+              <td><span class='badge bad'>-1.0%</span></td>
               <td><span class='badge neutral'>n/a</span></td>
             </tr>
             <tr>
@@ -4409,7 +4609,7 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
 </div>
 </div>
 </div><div class="balance-sheet-column">
-<div class="balance-column-label is-risk">What didn&rsquo;t work in July <span>03 signals</span></div>
+<div class="balance-column-label is-risk">What didn&rsquo;t work in July <span>04 signals</span></div>
 <div class="worked-grid">
 <div class="worked-card didnt">
 <div class="worked-icon">&#10007;</div>
@@ -4423,6 +4623,13 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
 <div>
 <div class="worked-title">Discount return per rupee</div>
 <div class="worked-text">Every &#8377;1 of discount returned <strong>&#8377;14.45</strong> of net revenue, -11.0% on the month at 6.6% penetration.</div>
+</div>
+</div>
+<div class="worked-card didnt">
+<div class="worked-icon">&#10007;</div>
+<div>
+<div class="worked-title">Trial conversion changed gear</div>
+<div class="worked-text"><strong>121 trials</strong> produced 32 conversions at 26.4%, -10.0pp on Jun 2026.</div>
 </div>
 </div>
 <div class="worked-card didnt">
@@ -5030,7 +5237,7 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
         <div class="section-header-left">
           <span class="section-eyebrow">03 · Growth Engine &mdash; Lead Quality, Conversion &amp; Retention</span>
           <h2 class="section-title">151 leads &rarr; 121 trials &rarr; 32 conversions &rarr; 32 retained. The funnel converts at 26.4% &mdash; the constraint is top-of-pipeline volume, not conversion mechanics.</h2>
-          <p class="section-deck">The conversion story in July 2026: 151 leads generated, 121 first visits / trials, 32 converted (26.4% conversion rate), and 32 retained (26.4% of trials). Leads are +18.0% MoM, conversions n/a MoM. The referral channel is the highest-quality lead source. Below we walk the funnel source-by-source with all available metrics.</p>
+          <p class="section-deck">The conversion story in July 2026: 151 leads generated, 121 first visits / trials, 32 converted (26.4% conversion rate), and 32 retained (26.4% of trials). Leads are +18.0% MoM, conversions -31.9% MoM. The referral channel is the highest-quality lead source. Below we walk the funnel source-by-source with all available metrics.</p>
         </div>
         <div class="section-header-right">
           <button aria-label="View month on month data" class="mom-info-btn" data-mom="funnel">i</button>
@@ -5061,7 +5268,7 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
       <div class="funnel-stage conv">
         <div class="funnel-stage-num">32</div>
         <div class="funnel-stage-label">Converted</div>
-        <div class="funnel-stage-sub">n/a MoM &middot; 26.4% conv rate</div>
+        <div class="funnel-stage-sub">-31.9% MoM &middot; 26.4% conv rate</div>
       </div>
       <div class="funnel-stage conv">
         <div class="funnel-stage-num">32</div>
@@ -5108,8 +5315,8 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
     <div class="insight-card">
       <div class="insight-num">05</div>
       <div class="insight-body">
-        <div class="insight-title">Conversion rate +0.0pp MoM, +0.0pp vs baseline.</div>
-        <div class="insight-text">The 26.4% conversion rate is +0.0pp vs Jun 2026 and +0.0pp vs the 2026 Avg (excl. Jul) baseline of 0.0%.</div>
+        <div class="insight-title">Conversion rate -10.0pp MoM, -3.0pp vs baseline.</div>
+        <div class="insight-text">The 26.4% conversion rate is -10.0pp vs Jun 2026 and -3.0pp vs the 2026 Avg (excl. Jul) baseline of 29.5%.</div>
       </div>
     </div>
     <div class="insight-card">
@@ -7827,7 +8034,7 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
     <div class="insight-card">
       <div class="insight-num">03</div>
       <div class="insight-body">
-        <div class="insight-title">Conversion rate target: 15&ndash;20% (from 0.0% baseline).</div>
+        <div class="insight-title">Conversion rate target: 15&ndash;20% (from 29.5% baseline).</div>
         <div class="insight-text">Funnel repair &mdash; referral amplification, trial follow-up protocol, and zero-conversion source cleanup &mdash; would lift conversion by 3-8pp. Each additional conversion is worth approximately &#8377;25,000 in LTV.</div>
       </div>
     </div>
@@ -7850,7 +8057,7 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
               <tr><td>Net Sales</td><td class="num">&#8377;25.86L</td><td class="num">&#8377;24.54L</td><td class="num">&#8377;33.61L&ndash;&#8377;38.78L</td></tr>
               <tr><td>Sessions</td><td class="num">335</td><td class="num">368</td><td class="num">368&ndash;402</td></tr>
               <tr><td>Fill Rate</td><td class="num">46.2%</td><td class="num">47.3%</td><td class="num">50%&ndash;55%</td></tr>
-              <tr><td>Conversion Rate</td><td class="num">0.0%</td><td class="num">26.4%</td><td class="num">15%&ndash;20%</td></tr>
+              <tr><td>Conversion Rate</td><td class="num">29.5%</td><td class="num">26.4%</td><td class="num">15%&ndash;20%</td></tr>
               <tr><td>Churn Rate</td><td class="num">36.6%</td><td class="num">40.0%</td><td class="num">30%&ndash;35%</td></tr>
               <tr><td>Discount Penetration</td><td class="num">13.6%</td><td class="num">6.6%</td><td class="num">&le; 8%</td></tr>
             </tbody>
@@ -7904,7 +8111,7 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
 </div>
 </div>
 <script>
-window.MOM_DATA = {"exec": {"eyebrow": "01 · Executive Summary", "title": "Executive Summary — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Net Sales", "values": [1699635.7699999998, 1789995.8700000006, 2613189.9699999997, 1827226.7399999981, 1922628.7899999972, 4762669.010000001, 2311178.8799999966, 2076834.459999998, 2454443.2199999983], "fmt": "currency", "agg": "sum"}, {"label": "Visits", "values": [0, 0, 2060, 1919, 2284, 2165, 2307, 2281, 2432], "fmt": "int", "agg": "sum"}, {"label": "Fill Rate", "values": [0, 0, 45.00764693030369, 43.89295516925892, 48.64749733759318, 45.694385816800335, 47.17791411042945, 46.34295002031694, 47.296771684169585], "fmt": "pct", "agg": "avg"}, {"label": "Trial Conversion Rate", "values": [0, 0, 0, 0, 0, 0, 0, 0, 0], "fmt": "pct", "agg": "avg"}, {"label": "Churn Rate", "values": [0, 0, 32.758620689655174, 34.46969696969697, 33.85826771653544, 32.752613240418114, 39.0728476821192, 45.1219512195122, 40.0], "fmt": "pct", "agg": "avg"}]}, "commercial": {"eyebrow": "02 · Commercial Revenue", "title": "Commercial Revenue — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Gross Sales", "values": [2008033.89, 2111894.2999999993, 2744706.03, 1921108.229999999, 2018320.5099999998, 5001383.609999997, 2428380.8, 2180716.02, 2580029.0000000005], "fmt": "currency", "agg": "sum"}, {"label": "Net Sales", "values": [1699635.7699999998, 1789995.8700000006, 2613189.9699999997, 1827226.7399999981, 1922628.7899999972, 4762669.010000001, 2311178.8799999966, 2076834.459999998, 2454443.2199999983], "fmt": "currency", "agg": "sum"}, {"label": "Discounts", "values": [106397.5, 161744.79, 300872.0, 255053.84, 209137.5, 971575.0699999998, 343404.22, 127900.01999999999, 169858.3], "fmt": "currency", "agg": "sum"}, {"label": "Transactions", "values": [277, 249, 258, 280, 279, 328, 264, 282, 349], "fmt": "int", "agg": "sum"}, {"label": "Unique Buyers", "values": [193, 178, 190, 190, 182, 223, 193, 217, 232], "fmt": "int", "agg": "sum"}, {"label": "Average Transaction Value", "values": [7249.219819494584, 8481.503212851403, 10638.395465116279, 6861.100821428568, 7234.123691756272, 15248.12076219511, 9198.41212121212, 7733.035531914894, 7392.633237822351], "fmt": "currency", "agg": "avg"}, {"label": "Discount Efficiency", "values": [15.974395732982446, 11.066791517674236, 8.685387706400062, 7.164082454120268, 9.19313269977884, 4.902008251405629, 6.730199413391008, 16.2379525820246, 14.449945748897749], "fmt": "decimal", "agg": "avg"}]}, "funnel": {"eyebrow": "03 · Acquisition Funnel", "title": "Acquisition Funnel — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Leads", "values": [0, 0, 177, 160, 163, 166, 127, 128, 151], "fmt": "int", "agg": "sum"}, {"label": "Trials", "values": [0, 0, 121, 105, 95, 91, 117, 129, 121], "fmt": "int", "agg": "sum"}, {"label": "Converted", "values": [0, 0, 0, 0, 0, 0, 0, 0, 0], "fmt": "int", "agg": "sum"}, {"label": "Retained", "values": [0, 0, 28, 31, 28, 23, 37, 47, 32], "fmt": "int", "agg": "sum"}, {"label": "Trial Conversion Rate", "values": [0, 0, 0, 0, 0, 0, 0, 0, 0], "fmt": "pct", "agg": "avg"}]}, "sessions": {"eyebrow": "04 · Sessions & Delivery", "title": "Sessions & Delivery — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Sessions", "values": [0, 0, 332, 309, 332, 338, 348, 352, 368], "fmt": "int", "agg": "sum"}, {"label": "Visits", "values": [0, 0, 2060, 1919, 2284, 2165, 2307, 2281, 2432], "fmt": "int", "agg": "sum"}, {"label": "Capacity", "values": [0, 0, 4577, 4372, 4695, 4738, 4890, 4922, 5142], "fmt": "int", "agg": "sum"}, {"label": "Fill Rate", "values": [0, 0, 45.00764693030369, 43.89295516925892, 48.64749733759318, 45.694385816800335, 47.17791411042945, 46.34295002031694, 47.296771684169585], "fmt": "pct", "agg": "avg"}, {"label": "Session Revenue", "values": [0, 0, 1535835.8299999984, 1430518.4100000008, 1693529.4400000004, 1640986.6999999993, 1813836.4899999986, 1785983.3499999999, 2103153.9599999986], "fmt": "currency", "agg": "sum"}, {"label": "Late Cancellations", "values": [0, 0, 295, 208, 304, 239, 271, 257, 295], "fmt": "int", "agg": "sum"}]}, "retention": {"eyebrow": "05 · Member Health", "title": "Member Health — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Memberships Due", "values": [0, 0, 290, 264, 254, 287, 302, 328, 380], "fmt": "int", "agg": "sum"}, {"label": "Renewed", "values": [0, 0, 194, 173, 168, 193, 183, 178, 217], "fmt": "int", "agg": "sum"}, {"label": "New Lapsed Members", "values": [0, 0, 95, 91, 86, 94, 118, 148, 152], "fmt": "int", "agg": "sum"}, {"label": "Frozen", "values": [0, 0, 1, 0, 0, 0, 1, 2, 11], "fmt": "int", "agg": "sum"}, {"label": "Renewal Rate", "values": [0, 0, 66.89655172413794, 65.53030303030303, 66.14173228346458, 67.24738675958189, 60.59602649006622, 54.268292682926834, 57.10526315789474], "fmt": "pct", "agg": "avg"}, {"label": "Churn Rate", "values": [0, 0, 32.758620689655174, 34.46969696969697, 33.85826771653544, 32.752613240418114, 39.0728476821192, 45.1219512195122, 40.0], "fmt": "pct", "agg": "avg"}]}};
+window.MOM_DATA = {"exec": {"eyebrow": "01 · Executive Summary", "title": "Executive Summary — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Net Sales", "values": [1699635.7699999998, 1789995.8700000006, 2613189.9699999997, 1827226.7399999981, 1922628.7899999972, 4762669.010000001, 2311178.8799999966, 2076834.459999998, 2454443.2199999983], "fmt": "currency", "agg": "sum"}, {"label": "Visits", "values": [0, 0, 2060, 1919, 2284, 2165, 2307, 2281, 2432], "fmt": "int", "agg": "sum"}, {"label": "Fill Rate", "values": [0, 0, 45.00764693030369, 43.89295516925892, 48.64749733759318, 45.694385816800335, 47.17791411042945, 46.34295002031694, 47.296771684169585], "fmt": "pct", "agg": "avg"}, {"label": "Trial Conversion Rate", "values": [0, 0, 23.140495867768596, 29.523809523809526, 29.47368421052631, 25.274725274725274, 31.62393162393162, 36.434108527131784, 26.446280991735538], "fmt": "pct", "agg": "avg"}, {"label": "Churn Rate", "values": [0, 0, 32.758620689655174, 34.46969696969697, 33.85826771653544, 32.752613240418114, 39.0728476821192, 45.1219512195122, 40.0], "fmt": "pct", "agg": "avg"}]}, "commercial": {"eyebrow": "02 · Commercial Revenue", "title": "Commercial Revenue — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Gross Sales", "values": [2008033.89, 2111894.2999999993, 2744706.03, 1921108.229999999, 2018320.5099999998, 5001383.609999997, 2428380.8, 2180716.02, 2580029.0000000005], "fmt": "currency", "agg": "sum"}, {"label": "Net Sales", "values": [1699635.7699999998, 1789995.8700000006, 2613189.9699999997, 1827226.7399999981, 1922628.7899999972, 4762669.010000001, 2311178.8799999966, 2076834.459999998, 2454443.2199999983], "fmt": "currency", "agg": "sum"}, {"label": "Discounts", "values": [106397.5, 161744.79, 300872.0, 255053.84, 209137.5, 971575.0699999998, 343404.22, 127900.01999999999, 169858.3], "fmt": "currency", "agg": "sum"}, {"label": "Transactions", "values": [277, 249, 258, 280, 279, 328, 264, 282, 349], "fmt": "int", "agg": "sum"}, {"label": "Unique Buyers", "values": [193, 178, 190, 190, 182, 223, 193, 217, 232], "fmt": "int", "agg": "sum"}, {"label": "Average Transaction Value", "values": [7249.219819494584, 8481.503212851403, 10638.395465116279, 6861.100821428568, 7234.123691756272, 15248.12076219511, 9198.41212121212, 7733.035531914894, 7392.633237822351], "fmt": "currency", "agg": "avg"}, {"label": "Discount Efficiency", "values": [15.974395732982446, 11.066791517674236, 8.685387706400062, 7.164082454120268, 9.19313269977884, 4.902008251405629, 6.730199413391008, 16.2379525820246, 14.449945748897749], "fmt": "decimal", "agg": "avg"}]}, "funnel": {"eyebrow": "03 · Acquisition Funnel", "title": "Acquisition Funnel — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Leads", "values": [0, 0, 177, 160, 163, 166, 127, 128, 151], "fmt": "int", "agg": "sum"}, {"label": "Trials", "values": [0, 0, 121, 105, 95, 91, 117, 129, 121], "fmt": "int", "agg": "sum"}, {"label": "Converted", "values": [0, 0, 28, 31, 28, 23, 37, 47, 32], "fmt": "int", "agg": "sum"}, {"label": "Retained", "values": [0, 0, 28, 31, 28, 23, 37, 47, 32], "fmt": "int", "agg": "sum"}, {"label": "Trial Conversion Rate", "values": [0, 0, 23.140495867768596, 29.523809523809526, 29.47368421052631, 25.274725274725274, 31.62393162393162, 36.434108527131784, 26.446280991735538], "fmt": "pct", "agg": "avg"}]}, "sessions": {"eyebrow": "04 · Sessions & Delivery", "title": "Sessions & Delivery — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Sessions", "values": [0, 0, 332, 309, 332, 338, 348, 352, 368], "fmt": "int", "agg": "sum"}, {"label": "Visits", "values": [0, 0, 2060, 1919, 2284, 2165, 2307, 2281, 2432], "fmt": "int", "agg": "sum"}, {"label": "Capacity", "values": [0, 0, 4577, 4372, 4695, 4738, 4890, 4922, 5142], "fmt": "int", "agg": "sum"}, {"label": "Fill Rate", "values": [0, 0, 45.00764693030369, 43.89295516925892, 48.64749733759318, 45.694385816800335, 47.17791411042945, 46.34295002031694, 47.296771684169585], "fmt": "pct", "agg": "avg"}, {"label": "Session Revenue", "values": [0, 0, 1535835.8299999984, 1430518.4100000008, 1693529.4400000004, 1640986.6999999993, 1813836.4899999986, 1785983.3499999999, 2103153.9599999986], "fmt": "currency", "agg": "sum"}, {"label": "Late Cancellations", "values": [0, 0, 295, 208, 304, 239, 271, 257, 295], "fmt": "int", "agg": "sum"}]}, "retention": {"eyebrow": "05 · Member Health", "title": "Member Health — Month on Month", "months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "rows": [{"label": "Memberships Due", "values": [0, 0, 290, 264, 254, 287, 302, 328, 380], "fmt": "int", "agg": "sum"}, {"label": "Renewed", "values": [0, 0, 194, 173, 168, 193, 183, 178, 217], "fmt": "int", "agg": "sum"}, {"label": "New Lapsed Members", "values": [0, 0, 95, 91, 86, 94, 118, 148, 152], "fmt": "int", "agg": "sum"}, {"label": "Frozen", "values": [0, 0, 1, 0, 0, 0, 1, 2, 11], "fmt": "int", "agg": "sum"}, {"label": "Renewal Rate", "values": [0, 0, 66.89655172413794, 65.53030303030303, 66.14173228346458, 67.24738675958189, 60.59602649006622, 54.268292682926834, 57.10526315789474], "fmt": "pct", "agg": "avg"}, {"label": "Churn Rate", "values": [0, 0, 32.758620689655174, 34.46969696969697, 33.85826771653544, 32.752613240418114, 39.0728476821192, 45.1219512195122, 40.0], "fmt": "pct", "agg": "avg"}]}};
 window.EXTRA_DATA = {"months": ["Jun 2025", "Jul 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026"], "newClientPurchases": [{"name": "Studio Single Class", "unitsSold": 81, "totalLtv": 138373, "atv": 1708, "auv": 1708}, {"name": "Money credit", "unitsSold": 34, "totalLtv": 20096, "atv": 591, "auv": 591}, {"name": "Studio Barre 57", "unitsSold": 23, "totalLtv": 36751, "atv": 1598, "auv": 1598}, {"name": "Studio 12 Class Package", "unitsSold": 23, "totalLtv": 331608, "atv": 14418, "auv": 14418}, {"name": "powerCycle", "unitsSold": 19, "totalLtv": 33250, "atv": 1750, "auv": 1750}, {"name": "Studio 8 Class Package", "unitsSold": 18, "totalLtv": 178791, "atv": 9933, "auv": 9933}, {"name": "Newcomers 2 For 1", "unitsSold": 17, "totalLtv": 29750, "atv": 1750, "auv": 1750}, {"name": "SQ-Cacao & Maca Ball", "unitsSold": 16, "totalLtv": 2362, "atv": 148, "auv": 148}, {"name": "Studio 1 Month Unlimited Membership", "unitsSold": 15, "totalLtv": 262700, "atv": 17513, "auv": 17513}, {"name": "Impact Water 350ML", "unitsSold": 13, "totalLtv": 978, "atv": 75, "auv": 75}, {"name": "Studio 4 Class Package", "unitsSold": 12, "totalLtv": 60336, "atv": 5028, "auv": 5028}, {"name": "Impact Water 500ML", "unitsSold": 10, "totalLtv": 1095, "atv": 110, "auv": 110}], "momByClientType": [{"label": "New - Complimentary Class", "fmt": "int", "agg": "sum", "values": [0, 0, 1, 0, 1, 1, 0, 1, 1]}, {"label": "New - Hosted Class", "fmt": "int", "agg": "sum", "values": [0, 0, 65, 27, 32, 30, 29, 21, 24]}, {"label": "New - Others", "fmt": "int", "agg": "sum", "values": [0, 0, 0, 1, 2, 1, 1, 1, 2]}, {"label": "New - Paid First Visit", "fmt": "int", "agg": "sum", "values": [0, 0, 2, 7, 6, 6, 9, 9, 22]}, {"label": "New - Referral Class", "fmt": "int", "agg": "sum", "values": [0, 0, 20, 27, 14, 25, 30, 18, 24]}, {"label": "New - Trial Class", "fmt": "int", "agg": "sum", "values": [0, 0, 33, 43, 40, 28, 48, 79, 48]}], "teacherScorecard": [{"instructor": "Rohan Dahima", "cls": 41, "fillRate": 55.0, "pay": 333051}, {"instructor": "Mrigakshi Jaiswal", "cls": 37, "fillRate": 50.8, "pay": 211678}, {"instructor": "Pranjali Jain", "cls": 29, "fillRate": 49.0, "pay": 202461}, {"instructor": "Cauveri Vikrant", "cls": 41, "fillRate": 38.7, "pay": 211830}, {"instructor": "Vivaran Dhasmana", "cls": 28, "fillRate": 45.3, "pay": 124727}, {"instructor": "Reshma Sharma", "cls": 21, "fillRate": 48.0, "pay": 125905}, {"instructor": "Simonelle De Vitre", "cls": 27, "fillRate": 36.7, "pay": 179741}, {"instructor": "Atulan Purohit", "cls": 21, "fillRate": 62.0, "pay": 122499}, {"instructor": "Anmol Sharma", "cls": 18, "fillRate": 85.5, "pay": 118476}, {"instructor": "Bret Saldanha", "cls": 26, "fillRate": 52.6, "pay": 122501}, {"instructor": "Richard  D'Costa", "cls": 27, "fillRate": 34.1, "pay": 99647}, {"instructor": "Karanvir Bhatia", "cls": 23, "fillRate": 32.3, "pay": 107156}, {"instructor": "Anisha Shah", "cls": 11, "fillRate": 66.7, "pay": 54907}, {"instructor": "Raunak Khemuka", "cls": 16, "fillRate": 48.8, "pay": 79917}, {"instructor": "Simran Dutt", "cls": 2, "fillRate": 20.0, "pay": 8657}], "momTrainer": [{"label": "Anisha Shah", "fmt": "int", "agg": "sum", "values": [0, 0, 25, 27, 24, 21, 21, 20, 11]}, {"label": "Anmol Sharma", "fmt": "int", "agg": "sum", "values": [0, 0, 9, 12, 11, 9, 12, 12, 18]}, {"label": "Atulan Purohit", "fmt": "int", "agg": "sum", "values": [0, 0, 20, 18, 23, 20, 12, 18, 21]}, {"label": "Bret Saldanha", "fmt": "int", "agg": "sum", "values": [0, 0, 17, 18, 20, 24, 25, 32, 26]}, {"label": "Cauveri Vikrant", "fmt": "int", "agg": "sum", "values": [0, 0, 36, 34, 34, 30, 38, 35, 41]}, {"label": "Karan Bhatia", "fmt": "int", "agg": "sum", "values": [0, 0, 6, 4, 9, 14, 12, 9, 0]}, {"label": "Karanvir Bhatia", "fmt": "int", "agg": "sum", "values": [0, 0, 0, 0, 0, 12, 9, 10, 23]}, {"label": "Mrigakshi Jaiswal", "fmt": "int", "agg": "sum", "values": [0, 0, 35, 25, 37, 27, 29, 33, 37]}, {"label": "Pranjali Jain", "fmt": "int", "agg": "sum", "values": [0, 0, 31, 31, 25, 31, 33, 33, 29]}, {"label": "Raunak Khemuka", "fmt": "int", "agg": "sum", "values": [0, 0, 18, 14, 17, 17, 17, 14, 16]}, {"label": "Reshma Sharma", "fmt": "int", "agg": "sum", "values": [0, 0, 31, 17, 20, 22, 24, 26, 21]}, {"label": "Richard  D'Costa", "fmt": "int", "agg": "sum", "values": [0, 0, 22, 19, 18, 18, 19, 18, 27]}, {"label": "Rohan Dahima", "fmt": "int", "agg": "sum", "values": [0, 0, 36, 41, 38, 46, 43, 42, 41]}, {"label": "Simonelle De Vitre", "fmt": "int", "agg": "sum", "values": [0, 0, 15, 19, 24, 22, 22, 27, 27]}, {"label": "Simran Dutt", "fmt": "int", "agg": "sum", "values": [0, 0, 12, 11, 12, 7, 10, 8, 2]}, {"label": "Vivaran Dhasmana", "fmt": "int", "agg": "sum", "values": [0, 0, 19, 19, 20, 18, 22, 15, 28]}]};
 window.SALES_CATEGORY_MATRIX = {"months": ["2026-07", "2026-06", "2026-05", "2026-04", "2026-03", "2026-02", "2026-01", "2025-07", "2025-06"], "monthLabels": {"2026-07": "Jul 2026", "2026-06": "Jun 2026", "2026-05": "May 2026", "2026-04": "Apr 2026", "2026-03": "Mar 2026", "2026-02": "Feb 2026", "2026-01": "Jan 2026", "2025-07": "Jul 2025", "2025-06": "Jun 2025"}, "categories": [{"name": "Class Packages", "values": {"2026-07": {"net": 824235, "gross": 885007, "units": 65, "txns": 65, "members": 65, "vat": 60772, "discount": 37776}, "2026-06": {"net": 798465, "gross": 838388, "units": 67, "txns": 67, "members": 67, "vat": 39923, "discount": 28040}, "2026-05": {"net": 697895, "gross": 732988, "units": 58, "txns": 58, "members": 58, "vat": 35093, "discount": 34505}, "2026-04": {"net": 809261, "gross": 849803, "units": 63, "txns": 63, "members": 63, "vat": 40542, "discount": 48065}, "2026-03": {"net": 717178, "gross": 753238, "units": 60, "txns": 60, "members": 60, "vat": 36060, "discount": 33030}, "2026-02": {"net": 643511, "gross": 675769, "units": 55, "txns": 55, "members": 55, "vat": 32259, "discount": 35278}, "2026-01": {"net": 807390, "gross": 848463, "units": 61, "txns": 61, "members": 61, "vat": 41073, "discount": 41340}, "2025-07": {"net": 532205, "gross": 628762, "units": 49, "txns": 49, "members": 49, "vat": 96557, "discount": 31545}, "2025-06": {"net": 722540, "gross": 852638, "units": 60, "txns": 60, "members": 60, "vat": 130098, "discount": 45810}}}, {"name": "Memberships", "values": {"2026-07": {"net": 1158933, "gross": 1222548, "units": 31, "txns": 31, "members": 31, "vat": 63615, "discount": 127012}, "2026-06": {"net": 803389, "gross": 843922, "units": 32, "txns": 32, "members": 32, "vat": 40532, "discount": 94670}, "2026-05": {"net": 1048267, "gross": 1105840, "units": 37, "txns": 37, "members": 37, "vat": 57573, "discount": 230149}, "2026-04": {"net": 2757538, "gross": 2895628, "units": 99, "txns": 99, "members": 99, "vat": 138090, "discount": 800500}, "2026-03": {"net": 669399, "gross": 702869, "units": 20, "txns": 20, "members": 20, "vat": 33470, "discount": 130362}, "2026-02": {"net": 884443, "gross": 944131, "units": 56, "txns": 56, "members": 56, "vat": 59688, "discount": 214462}, "2026-01": {"net": 1364276, "gross": 1432490, "units": 36, "txns": 36, "members": 36, "vat": 68214, "discount": 234057}, "2025-07": {"net": 986690, "gross": 1164294, "units": 42, "txns": 42, "members": 42, "vat": 177604, "discount": 130200}, "2025-06": {"net": 724854, "gross": 855328, "units": 35, "txns": 35, "members": 35, "vat": 130474, "discount": 60588}}}, {"name": "Money Credits", "values": {"2026-07": {"net": 20096, "gross": 132094, "units": 34, "txns": 34, "members": 34, "vat": 111998, "discount": 0}, "2026-06": {"net": 61384, "gross": 81112, "units": 17, "txns": 17, "members": 17, "vat": 19728, "discount": 0}, "2026-05": {"net": 9089, "gross": 49626, "units": 22, "txns": 22, "members": 22, "vat": 40538, "discount": 0}, "2026-04": {"net": 28871, "gross": 97360, "units": 32, "txns": 32, "members": 32, "vat": 68489, "discount": 0}, "2026-03": {"net": 10920, "gross": 61362, "units": 21, "txns": 21, "members": 21, "vat": 50442, "discount": 0}, "2026-02": {"net": 5971, "gross": 77990, "units": 21, "txns": 21, "members": 21, "vat": 72018, "discount": 5}, "2026-01": {"net": 21495, "gross": 47824, "units": 20, "txns": 20, "members": 20, "vat": 26330, "discount": 0}, "2025-07": {"net": 1444, "gross": 63444, "units": 13, "txns": 13, "members": 13, "vat": 62000, "discount": 0}, "2025-06": {"net": 15553, "gross": 35410, "units": 9, "txns": 9, "members": 9, "vat": 19857, "discount": 0}}}, {"name": "Newcomers Special", "values": {"2026-07": {"net": 29750, "gross": 31238, "units": 17, "txns": 17, "members": 17, "vat": 1488, "discount": 0}, "2026-06": {"net": 24500, "gross": 25725, "units": 14, "txns": 14, "members": 14, "vat": 1225, "discount": 0}, "2026-05": {"net": 15750, "gross": 16538, "units": 9, "txns": 9, "members": 9, "vat": 788, "discount": 0}, "2026-04": {"net": 22750, "gross": 24050, "units": 13, "txns": 13, "members": 13, "vat": 1300, "discount": 0}, "2026-03": {"net": 24500, "gross": 25725, "units": 14, "txns": 14, "members": 14, "vat": 1225, "discount": 0}, "2026-02": {"net": 33250, "gross": 35076, "units": 19, "txns": 19, "members": 19, "vat": 1826, "discount": 0}, "2026-01": {"net": 12250, "gross": 14700, "units": 7, "txns": 7, "members": 7, "vat": 2450, "discount": 0}, "2025-07": {"net": 3000, "gross": 3540, "units": 2, "txns": 2, "members": 2, "vat": 540, "discount": 0}}}, {"name": "Others", "values": {"2026-07": {"net": 11951, "gross": 12549, "units": 5, "txns": 5, "members": 5, "vat": 598, "discount": 0}, "2026-06": {"net": 110953, "gross": 116501, "units": 2, "txns": 2, "members": 2, "vat": 5548, "discount": 0}, "2026-04": {"net": 454537, "gross": 477264, "units": 5, "txns": 5, "members": 5, "vat": 22727, "discount": 24750}, "2026-03": {"net": 2, "gross": 2, "units": 2, "txns": 2, "members": 2, "vat": 0, "discount": 0}}}, {"name": "Privates", "values": {"2026-07": {"net": 78729, "gross": 82665, "units": 7, "txns": 7, "members": 7, "vat": 3936, "discount": 5070}, "2026-06": {"net": 61710, "gross": 64796, "units": 13, "txns": 13, "members": 13, "vat": 3086, "discount": 5190}, "2026-05": {"net": 251250, "gross": 263812, "units": 10, "txns": 10, "members": 10, "vat": 12562, "discount": 78750}, "2026-04": {"net": 374340, "gross": 393057, "units": 21, "txns": 21, "members": 21, "vat": 18717, "discount": 98260}, "2026-03": {"net": 220130, "gross": 231136, "units": 16, "txns": 16, "members": 16, "vat": 11006, "discount": 45570}, "2026-02": {"net": 46354, "gross": 101751, "units": 10, "txns": 10, "members": 10, "vat": 55397, "discount": 5310}, "2026-01": {"net": 154275, "gross": 161989, "units": 8, "txns": 8, "members": 8, "vat": 7714, "discount": 25475}, "2025-07": {"net": 27850, "gross": 32863, "units": 5, "txns": 5, "members": 5, "vat": 5013, "discount": 0}, "2025-06": {"net": 10000, "gross": 11800, "units": 2, "txns": 2, "members": 2, "vat": 1800, "discount": 0}}}, {"name": "Retail", "values": {"2026-07": {"net": 64625, "gross": 68670, "units": 81, "txns": 81, "members": 81, "vat": 4045, "discount": 0}, "2026-06": {"net": 29434, "gross": 32588, "units": 70, "txns": 70, "members": 70, "vat": 3153, "discount": 0}, "2026-05": {"net": 72235, "gross": 115619, "units": 60, "txns": 60, "members": 60, "vat": 43384, "discount": 0}, "2026-04": {"net": 102110, "gross": 120994, "units": 65, "txns": 65, "members": 65, "vat": 18884, "discount": 0}, "2026-03": {"net": 84983, "gross": 89839, "units": 78, "txns": 78, "members": 78, "vat": 4855, "discount": 0}, "2026-02": {"net": 49340, "gross": 53520, "units": 68, "txns": 68, "members": 68, "vat": 4180, "discount": 0}, "2026-01": {"net": 67333, "gross": 90547, "units": 62, "txns": 62, "members": 62, "vat": 23214, "discount": 0}, "2025-07": {"net": 84154, "gross": 97421, "units": 70, "txns": 70, "members": 70, "vat": 13267, "discount": 0}, "2025-06": {"net": 81189, "gross": 94088, "units": 129, "txns": 129, "members": 129, "vat": 12899, "discount": 0}}}, {"name": "Sessions/Single Classes", "values": {"2026-07": {"net": 266125, "gross": 283658, "units": 157, "txns": 157, "members": 157, "vat": 17533, "discount": 0}, "2026-06": {"net": 186999, "gross": 198186, "units": 107, "txns": 107, "members": 107, "vat": 11187, "discount": 0}, "2026-05": {"net": 216693, "gross": 230014, "units": 124, "txns": 124, "members": 124, "vat": 13321, "discount": 0}, "2026-04": {"net": 213262, "gross": 227300, "units": 123, "txns": 123, "members": 123, "vat": 14038, "discount": 0}, "2026-03": {"net": 195516, "gross": 205455, "units": 115, "txns": 115, "members": 115, "vat": 9939, "discount": 175}, "2026-02": {"net": 164357, "gross": 175228, "units": 94, "txns": 94, "members": 94, "vat": 10870, "discount": 0}, "2026-01": {"net": 186171, "gross": 198545, "units": 108, "txns": 108, "members": 108, "vat": 12374, "discount": 0}, "2025-07": {"net": 154653, "gross": 186630, "units": 102, "txns": 102, "members": 102, "vat": 31977, "discount": 0}, "2025-06": {"net": 145500, "gross": 178770, "units": 97, "txns": 97, "members": 97, "vat": 33270, "discount": 0}}}], "totals": {"2026-07": {"net": 2454443, "gross": 2718428, "units": 397, "txns": 397, "members": 397, "vat": 263985, "discount": 169858}, "2026-06": {"net": 2076834, "gross": 2201217, "units": 322, "txns": 322, "members": 322, "vat": 124382, "discount": 127900}, "2026-05": {"net": 2311179, "gross": 2514438, "units": 320, "txns": 320, "members": 320, "vat": 203259, "discount": 343404}, "2026-04": {"net": 4762669, "gross": 5085456, "units": 421, "txns": 421, "members": 421, "vat": 322787, "discount": 971575}, "2026-03": {"net": 1922629, "gross": 2069627, "units": 326, "txns": 326, "members": 326, "vat": 146998, "discount": 209138}, "2026-02": {"net": 1827227, "gross": 2063464, "units": 323, "txns": 323, "members": 323, "vat": 236238, "discount": 255054}, "2026-01": {"net": 2613190, "gross": 2794558, "units": 302, "txns": 302, "members": 302, "vat": 181368, "discount": 300872}, "2025-07": {"net": 1789996, "gross": 2176954, "units": 283, "txns": 283, "members": 283, "vat": 386958, "discount": 161745}, "2025-06": {"net": 1699636, "gross": 2028034, "units": 332, "txns": 332, "members": 332, "vat": 328398, "discount": 106398}}};
 </script>
@@ -8137,20 +8344,18 @@ window.SALES_CATEGORY_MATRIX = {"months": ["2026-07", "2026-06", "2026-05", "202
       : { a: '#2E6BD3', b: '#1E3A8A', glow: 'rgba(30,58,138,.4)' };
     var defaultActive = chart.hasAttribute('data-highlight-index') ? parseInt(chart.getAttribute('data-highlight-index'), 10) : values.length - 1;
 
-    var width = 360, height = 102, top = 14, bottom = 23, left = 10, right = 10;
+    /* The card shows a strip, not a plot: no month labels and no gridlines, so
+       the bars can fill the box instead of floating above a band of reserved
+       space. Exact months stay available on hover via the tooltip. */
+    var width = 360, height = 46, top = 3, bottom = 3, left = 6, right = 6;
     var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
     var plotH = height - top - bottom;
     var slotW = (width - left - right) / values.length;
     var gid = 'kpiChart' + index;
 
     function xCenter(i) { return left + slotW * (i + .5); }
-    var guides = [0.25, 0.5, 0.75].map(function (f) {
-      var y = top + plotH * f;
-      return '<line class="chart-guide" x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + (width - right) + '" y2="' + y.toFixed(1) + '"></line>';
-    }).join('');
-    var text = values.map(function (value, i) {
-      return '<text class="chart-label' + (i === defaultActive ? ' is-active' : '') + '" x="' + xCenter(i).toFixed(1) + '" y="97" text-anchor="middle">' + esc(labels[i] || '') + '</text>';
-    }).join('');
+    var guides = '';
+    var text = '';
     function formatValue(value) {
       var number = grouping ? value.toLocaleString('en-IN', {minimumFractionDigits: decimals, maximumFractionDigits: decimals}) : value.toFixed(decimals);
       return prefix + number + suffix;
@@ -8159,7 +8364,7 @@ window.SALES_CATEGORY_MATRIX = {"months": ["2026-07", "2026-06", "2026-05", "202
     if (type === 'bar') {
       var baseline = Math.min(0, min);
       var range = (max - baseline) || Math.max(1, Math.abs(max) * .1);
-      var barW = Math.min(38, slotW * .52);
+      var barW = Math.min(26, slotW * .38);
       function barTop(value) { return top + (1 - (value - baseline) / range) * plotH; }
       var baseY = top + plotH;
       var bars = values.map(function (value, i) {
@@ -8167,9 +8372,9 @@ window.SALES_CATEGORY_MATRIX = {"months": ["2026-07", "2026-06", "2026-05", "202
         var y = barTop(value);
         var h = Math.max(3, baseY - y);
         var cx = xCenter(i);
-        return '<rect class="chart-bar' + (isActive ? ' is-active' : '') + '" data-index="' + i + '" x="' + (cx - barW / 2).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="6" fill="' + (isActive ? 'url(#' + gid + ')' : 'var(--kpi-bar-muted, #cbd5e1)') + '"></rect>';
+        return '<rect class="chart-bar' + (isActive ? ' is-active' : '') + '" data-index="' + i + '" x="' + (cx - barW / 2).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3" fill="' + (isActive ? 'url(#' + gid + ')' : 'var(--kpi-bar-muted, #cbd5e1)') + '"></rect>';
       }).join('');
-      chart.innerHTML = '<svg viewBox="0 0 360 102" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient></defs><line class="chart-baseline" x1="' + left + '" y1="' + baseY.toFixed(1) + '" x2="' + (width - right) + '" y2="' + baseY.toFixed(1) + '"></line>' + guides + bars + text + '</svg><div class="kpi-chart-tooltip"></div>';
+      chart.innerHTML = '<svg viewBox="0 0 360 46" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient></defs><line class="chart-baseline" x1="' + left + '" y1="' + baseY.toFixed(1) + '" x2="' + (width - right) + '" y2="' + baseY.toFixed(1) + '"></line>' + guides + bars + text + '</svg><div class="kpi-chart-tooltip"></div>';
       var svg = chart.querySelector('svg');
       var tooltip = chart.querySelector('.kpi-chart-tooltip');
       var barNodes = Array.prototype.slice.call(chart.querySelectorAll('.chart-bar'));
@@ -8223,7 +8428,7 @@ window.SALES_CATEGORY_MATRIX = {"months": ["2026-07", "2026-06", "2026-05", "202
       var isActive = i === defaultActive;
       return '<circle class="chart-dot' + (isActive ? ' is-active' : '') + '" data-index="' + i + '" cx="' + p.x.toFixed(2) + '" cy="' + p.y.toFixed(2) + '" r="' + (isActive ? 5 : 3) + '"' + (isActive ? ' stroke="' + accent.b + '"' : '') + '></circle>';
     }).join('');
-    chart.innerHTML = '<svg viewBox="0 0 360 102" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient><linearGradient id="' + gid + 'fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.b + '" stop-opacity=".32"></stop><stop offset="100%" stop-color="' + accent.b + '" stop-opacity="0"></stop></linearGradient></defs>' + guides + areaMarkup + '<path class="chart-line" style="stroke:url(#' + gid + ');filter:drop-shadow(0 3px 6px ' + accent.glow + ')" d="' + linePath + '"></path>' + dots + text + '</svg><div class="kpi-chart-tooltip"></div>';
+    chart.innerHTML = '<svg viewBox="0 0 360 46" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient><linearGradient id="' + gid + 'fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.b + '" stop-opacity=".32"></stop><stop offset="100%" stop-color="' + accent.b + '" stop-opacity="0"></stop></linearGradient></defs>' + guides + areaMarkup + '<path class="chart-line" style="stroke:url(#' + gid + ');filter:drop-shadow(0 3px 6px ' + accent.glow + ')" d="' + linePath + '"></path>' + dots + text + '</svg><div class="kpi-chart-tooltip"></div>';
     var svg2 = chart.querySelector('svg');
     var tooltip2 = chart.querySelector('.kpi-chart-tooltip');
     var dotNodes = Array.prototype.slice.call(chart.querySelectorAll('.chart-dot'));

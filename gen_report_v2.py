@@ -274,8 +274,19 @@ def get_leads_source(loc, month):
     return DATA.get('leads_by_source', {}).get(loc, {}).get(month, {})
 
 def get_new(loc, month):
-    defaults = {'rate': 0, 'converted': 0, 'trials': 0, 'retained': 0}
-    return {**defaults, **(DATA.get('new', {}).get(loc, {}).get(month, {}) or {})}
+    """New-client figures, with the two derived ones filled in.
+
+    The upload carries only `trials` and `retained`. Conversion is derived, and
+    deriving it here rather than in the report context means the month-on-month
+    series and the hero sparkline get real numbers too — they previously read
+    the missing `rate` key and charted a flat line of zeros.
+    """
+    defaults = {'trials': 0, 'retained': 0}
+    row = {**defaults, **(DATA.get('new', {}).get(loc, {}).get(month, {}) or {})}
+    row.setdefault('converted', row['retained'])
+    trials = row.get('trials') or 0
+    row.setdefault('rate', (row['converted'] / trials * 100) if trials else 0)
+    return row
 
 def get_new_type(loc, month):
     return DATA.get('new_by_type', {}).get(loc, {}).get(month, {})
@@ -601,8 +612,6 @@ def build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, laps
     ctx['prev_disc_penetration'] = (prev_sales.get('disc', 0) / prev_sales.get('gross', 1)) * 100 if prev_sales.get('gross') else 0
     ctx['disc_pen_mom'] = pp_change(ctx['prev_disc_penetration'], ctx['disc_penetration'])
 
-    ctx['new']['converted'] = new.get('retained', 0)
-    ctx['new']['rate'] = (new.get('converted', 0) / new.get('trials', 1)) * 100 if new.get('trials') else 0
     ctx['trial_retention'] = (new.get('retained', 0) / new.get('trials', 1)) * 100 if new.get('trials') else 0
     ctx['cumulative_lapsed'] = get_lapsed_cumulative(loc_key).get(month_key, 0)
 

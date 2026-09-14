@@ -24,20 +24,18 @@
       : { a: '#2E6BD3', b: '#1E3A8A', glow: 'rgba(30,58,138,.4)' };
     var defaultActive = chart.hasAttribute('data-highlight-index') ? parseInt(chart.getAttribute('data-highlight-index'), 10) : values.length - 1;
 
-    var width = 360, height = 102, top = 14, bottom = 23, left = 10, right = 10;
+    /* The card shows a strip, not a plot: no month labels and no gridlines, so
+       the bars can fill the box instead of floating above a band of reserved
+       space. Exact months stay available on hover via the tooltip. */
+    var width = 360, height = 46, top = 3, bottom = 3, left = 6, right = 6;
     var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
     var plotH = height - top - bottom;
     var slotW = (width - left - right) / values.length;
     var gid = 'kpiChart' + index;
 
     function xCenter(i) { return left + slotW * (i + .5); }
-    var guides = [0.25, 0.5, 0.75].map(function (f) {
-      var y = top + plotH * f;
-      return '<line class="chart-guide" x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + (width - right) + '" y2="' + y.toFixed(1) + '"></line>';
-    }).join('');
-    var text = values.map(function (value, i) {
-      return '<text class="chart-label' + (i === defaultActive ? ' is-active' : '') + '" x="' + xCenter(i).toFixed(1) + '" y="97" text-anchor="middle">' + esc(labels[i] || '') + '</text>';
-    }).join('');
+    var guides = '';
+    var text = '';
     function formatValue(value) {
       var number = grouping ? value.toLocaleString('en-IN', {minimumFractionDigits: decimals, maximumFractionDigits: decimals}) : value.toFixed(decimals);
       return prefix + number + suffix;
@@ -46,7 +44,7 @@
     if (type === 'bar') {
       var baseline = Math.min(0, min);
       var range = (max - baseline) || Math.max(1, Math.abs(max) * .1);
-      var barW = Math.min(38, slotW * .52);
+      var barW = Math.min(26, slotW * .38);
       function barTop(value) { return top + (1 - (value - baseline) / range) * plotH; }
       var baseY = top + plotH;
       var bars = values.map(function (value, i) {
@@ -54,9 +52,9 @@
         var y = barTop(value);
         var h = Math.max(3, baseY - y);
         var cx = xCenter(i);
-        return '<rect class="chart-bar' + (isActive ? ' is-active' : '') + '" data-index="' + i + '" x="' + (cx - barW / 2).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="6" fill="' + (isActive ? 'url(#' + gid + ')' : 'var(--kpi-bar-muted, #cbd5e1)') + '"></rect>';
+        return '<rect class="chart-bar' + (isActive ? ' is-active' : '') + '" data-index="' + i + '" x="' + (cx - barW / 2).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3" fill="' + (isActive ? 'url(#' + gid + ')' : 'var(--kpi-bar-muted, #cbd5e1)') + '"></rect>';
       }).join('');
-      chart.innerHTML = '<svg viewBox="0 0 360 102" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient></defs><line class="chart-baseline" x1="' + left + '" y1="' + baseY.toFixed(1) + '" x2="' + (width - right) + '" y2="' + baseY.toFixed(1) + '"></line>' + guides + bars + text + '</svg><div class="kpi-chart-tooltip"></div>';
+      chart.innerHTML = '<svg viewBox="0 0 360 46" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient></defs><line class="chart-baseline" x1="' + left + '" y1="' + baseY.toFixed(1) + '" x2="' + (width - right) + '" y2="' + baseY.toFixed(1) + '"></line>' + guides + bars + text + '</svg><div class="kpi-chart-tooltip"></div>';
       var svg = chart.querySelector('svg');
       var tooltip = chart.querySelector('.kpi-chart-tooltip');
       var barNodes = Array.prototype.slice.call(chart.querySelectorAll('.chart-bar'));
@@ -110,7 +108,7 @@
       var isActive = i === defaultActive;
       return '<circle class="chart-dot' + (isActive ? ' is-active' : '') + '" data-index="' + i + '" cx="' + p.x.toFixed(2) + '" cy="' + p.y.toFixed(2) + '" r="' + (isActive ? 5 : 3) + '"' + (isActive ? ' stroke="' + accent.b + '"' : '') + '></circle>';
     }).join('');
-    chart.innerHTML = '<svg viewBox="0 0 360 102" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient><linearGradient id="' + gid + 'fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.b + '" stop-opacity=".32"></stop><stop offset="100%" stop-color="' + accent.b + '" stop-opacity="0"></stop></linearGradient></defs>' + guides + areaMarkup + '<path class="chart-line" style="stroke:url(#' + gid + ');filter:drop-shadow(0 3px 6px ' + accent.glow + ')" d="' + linePath + '"></path>' + dots + text + '</svg><div class="kpi-chart-tooltip"></div>';
+    chart.innerHTML = '<svg viewBox="0 0 360 46" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient><linearGradient id="' + gid + 'fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.b + '" stop-opacity=".32"></stop><stop offset="100%" stop-color="' + accent.b + '" stop-opacity="0"></stop></linearGradient></defs>' + guides + areaMarkup + '<path class="chart-line" style="stroke:url(#' + gid + ');filter:drop-shadow(0 3px 6px ' + accent.glow + ')" d="' + linePath + '"></path>' + dots + text + '</svg><div class="kpi-chart-tooltip"></div>';
     var svg2 = chart.querySelector('svg');
     var tooltip2 = chart.querySelector('.kpi-chart-tooltip');
     var dotNodes = Array.prototype.slice.call(chart.querySelectorAll('.chart-dot'));

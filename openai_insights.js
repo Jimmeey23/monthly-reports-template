@@ -1,4 +1,44 @@
-const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+const { chatCompletion, parseJsonContent } = require('./llm_providers');
+
+/* Narratives are the app's only per-report cost, so two things keep it down:
+   the cheap model on each provider (INSIGHTS_FULL_MODEL=1 opts back into the
+   expensive one), and a cache keyed by the exact prompt. Re-running a report
+   for a month whose figures have not moved costs nothing.
+
+   The cache lives outside the session directories on purpose — sessions are
+   pruned to the newest few, and a cached narrative stays valid regardless of
+   which upload produced it. */
+const USE_FAST_MODEL = process.env.INSIGHTS_FULL_MODEL !== '1';
+const CACHE_DIR = process.env.INSIGHTS_CACHE_DIR
+  || path.join(__dirname, 'uploads', '.insights-cache');
+
+// Bump when the prompt or output shape changes, so old entries are not reused.
+const PROMPT_VERSION = 'v2';
+
+function cacheKey(parts) {
+  return crypto.createHash('sha1').update(parts.join('\u0000')).digest('hex');
+}
+
+function readCache(key) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(CACHE_DIR, key + '.json'), 'utf8'));
+  } catch (e) {
+    return null;
+  }
+}
+
+function writeCache(key, value) {
+  try {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(CACHE_DIR, key + '.json'), JSON.stringify(value));
+  } catch (e) {
+    // A cache that cannot be written is not worth failing a report over.
+  }
+}
 
 const SECTION_LABELS = {
   'executive-summary': 'Executive Summary',
@@ -653,75 +693,43 @@ CONCISENESS & QUALITY RULES:
 }
 
 async function generateInsights(analysis, locKey, month, section = 'executive-summary') {
-  const apiKey = process.env.OPENAI_API_KEY;
-  const model = process.env.OPENAI_MODEL || 'gpt-4o';
-
-  if (!apiKey) {
-    const err = new Error('OPENAI_API_KEY is not configured on the server. Please add OPENAI_API_KEY to your .env file or environment.');
-    err.code = 'NO_API_KEY';
-    throw err;
-  }
-
   const digest = buildDigest(analysis, locKey, month, section);
   const sectionLabel = SECTION_LABELS[section] || section;
   const angle = ANALYTICAL_ANGLES[Math.floor(Math.random() * ANALYTICAL_ANGLES.length)];
 
-  const requestBody = JSON.stringify({
-      model,
+  const system = systemPrompt(sectionLabel, angle);
+  const user = `Analyse the following data digest for ${month}. The "trends" object has multi-month trajectory data with acceleration signals. The "anomalies" array flags statistical deviations. The "cross_metrics" object has pre-computed cross-references. Use ALL of these to produce deep, context-aware, data-backed analysis.\n\n${JSON.stringify(digest)}`;
+
+  // The angle is picked at random per call, so it is deliberately left out of
+  // the key: the same figures should hit the cache whichever lens came up.
+  const key = cacheKey([PROMPT_VERSION, locKey, month, section, JSON.stringify(digest)]);
+  const cached = readCache(key);
+  if (cached) return cached;
+
+  const requestBody = {
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: systemPrompt(sectionLabel, angle) },
-        {
-          role: 'user',
-          content: `Analyse the following data digest for ${month}. The "trends" object has multi-month trajectory data with acceleration signals. The "anomalies" array flags statistical deviations. The "cross_metrics" object has pre-computed cross-references. Use ALL of these to produce deep, context-aware, data-backed analysis.\n\n${JSON.stringify(digest)}`,
-        },
+        { role: 'system', content: system },
+        { role: 'user', content: user },
       ],
       temperature: 0.5,
       presence_penalty: 0.5,
       frequency_penalty: 0.4,
-      max_tokens: 2200,
-    });
+      // 4-6 insights and 4-5 recommendations fit inside this; the old 2200
+      // ceiling was never reached and only raised the per-call cost estimate.
+      max_tokens: 1400,
+    };
 
-  let parsed;
-  let lastError;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: requestBody,
-    });
-
-    if (!res.ok) {
-      const errText = await res.text().catch(() => res.statusText);
-      lastError = new Error(`OpenAI API error ${res.status}: ${errText}`);
-      if (res.status !== 429 || attempt === 2) throw lastError;
-      const retryAfter = Number(res.headers.get('retry-after'));
-      const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
-        ? Math.ceil(retryAfter * 1000)
-        : 1000 * Math.pow(3, attempt);
-      await new Promise(resolve => setTimeout(resolve, Math.min(delayMs, 10000)));
-      continue;
-    }
-
-    const json = await res.json();
-    const content = json.choices?.[0]?.message?.content;
-    if (!content) {
-      lastError = new Error('OpenAI returned no content');
-    } else {
-      try {
-        const cleaned = content.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-        parsed = JSON.parse(cleaned);
-        break;
-      } catch (error) {
-        lastError = new Error(`OpenAI returned invalid JSON: ${error.message}`);
-      }
-    }
-    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 750 * (attempt + 1)));
-  }
-  if (!parsed) throw lastError || new Error('OpenAI insight generation failed');
+  // OpenAI first; DeepSeek and then Nemotron pick the request up unchanged
+  // when it is out of credits, unkeyed or down (see llm_providers.js).
+  const { value: parsed, provider, model } = await chatCompletion({
+    body: requestBody,
+    fast: USE_FAST_MODEL,
+    parse: parseJsonContent,
+    onFallback: ({ from, to, reason }) =>
+      console.warn(`insights: ${from} unavailable (${reason}) \u2192 falling back to ${to}`),
+  });
+  parsed.generated_by = { provider, model };
 
   // ── Sanitize title & detailed_summary ──
   parsed.title = parsed.title || `Executive Strategic Analysis — ${month}`;
@@ -781,7 +789,13 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
     priority: r.priority
   }));
 
+  writeCache(key, parsed);
   return parsed;
 }
 
-module.exports = { generateInsights, SECTION_LABELS };
+// The report renders one narrative slot per section id, so this list is the
+// single source of truth for what to generate — server.js used to carry its
+// own copy, which had drifted and was paying for narratives nothing rendered.
+const AI_SECTIONS = Object.keys(SECTION_LABELS);
+
+module.exports = { generateInsights, SECTION_LABELS, AI_SECTIONS };

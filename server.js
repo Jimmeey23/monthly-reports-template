@@ -23,9 +23,8 @@ if (fs.existsSync(path.join(__dirname, '.env'))) {
   }
 }
 
-const { generateInsights } = require('./openai_insights');
+const { generateInsights, AI_SECTIONS } = require('./openai_insights');
 const { renderReportToPdf } = require('./pdf_export');
-const { answerCopilot, buildDataset } = require('./copilot_engine');
 
 const PORT = Number(process.env.PORT) || 3000;
 let activePort = PORT;
@@ -114,6 +113,95 @@ function getSession(sessionId) {
 
 const MANIFEST_PATH = path.join(UPLOADS_DIR, 'sessions_manifest.json');
 
+// Uploads are raw client data and each session's artefacts run to megabytes, so
+// only the newest few are kept. Anything older is removed from disk entirely,
+// not just hidden from the picker.
+const MAX_SESSIONS = Number(process.env.MAX_SESSIONS) || 3;
+
+/* Trim the manifest to MAX_SESSIONS and delete the directories that fall off
+   the end. Returns the retained entries. */
+function pruneSessions(manifest) {
+  const sorted = [...manifest].sort((a, b) => (b.created || 0) - (a.created || 0));
+  const keep = sorted.slice(0, MAX_SESSIONS);
+  const keptIds = new Set(keep.map((s) => s.sessionId));
+
+  for (const stale of sorted.slice(MAX_SESSIONS)) {
+    removeSessionDir(stale.sessionId);
+  }
+
+  // Directories with no manifest entry (a crashed upload, a manual copy) are
+  // swept on the same rule, but only once they are older than the oldest
+  // session being kept — an upload still in flight has no entry yet, and
+  // deleting it underneath the request would lose the user's data.
+  const cutoff = keep.length ? Math.min(...keep.map((s) => s.created || 0)) : 0;
+  if (!cutoff) return keep;
+  try {
+    for (const entry of fs.readdirSync(UPLOADS_DIR, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const sid = entry.name;
+      if (keptIds.has(sid) || sessions.has(sid)) continue;
+      let mtime = Infinity;
+      try {
+        mtime = fs.statSync(path.join(UPLOADS_DIR, sid)).mtimeMs;
+      } catch (e) {
+        continue;
+      }
+      if (mtime < cutoff) removeSessionDir(sid);
+    }
+  } catch (e) {}
+
+  return keep;
+}
+
+function removeSessionDir(sessionId) {
+  if (!sessionId || sessionId === 'undefined') return;
+  sessions.delete(sessionId);
+  try {
+    fs.rmSync(path.join(UPLOADS_DIR, sessionId), { recursive: true, force: true });
+  } catch (err) {
+    console.error(`Could not remove session ${sessionId}:`, err.message);
+  }
+}
+
+
+const REPORTS_INDEX_PATH = path.join(UPLOADS_DIR, 'reports_index.json');
+
+/* Every generated report is recorded here, so the app has one tabular view of
+   what has been produced rather than a filename scattered per session. Entries
+   whose file has gone (its session was pruned) are dropped on read, so the
+   table never offers a dead link. */
+function loadReports() {
+  let rows = [];
+  try {
+    rows = JSON.parse(fs.readFileSync(REPORTS_INDEX_PATH, 'utf8'));
+  } catch (e) {
+    return [];
+  }
+  if (!Array.isArray(rows)) return [];
+
+  const live = rows.filter((r) => {
+    if (!r || !r.sessionId || !r.filename) return false;
+    return fs.existsSync(path.join(UPLOADS_DIR, r.sessionId, r.filename));
+  });
+  if (live.length !== rows.length) saveReports(live);
+  return live;
+}
+
+function saveReports(rows) {
+  try {
+    fs.writeFileSync(REPORTS_INDEX_PATH, JSON.stringify(rows, null, 2));
+  } catch (e) {
+    console.error('Could not write the reports index:', e.message);
+  }
+}
+
+function recordReport(entry) {
+  const rows = loadReports().filter(
+    (r) => !(r.sessionId === entry.sessionId && r.filename === entry.filename));
+  rows.unshift(entry);
+  saveReports(rows);
+}
+
 function loadManifest() {
   let manifest = [];
   if (fs.existsSync(MANIFEST_PATH)) {
@@ -198,10 +286,10 @@ function loadManifest() {
     console.error('Error scanning UPLOADS_DIR in loadManifest:', err.message);
   }
 
-  manifest.sort((a, b) => (b.created || 0) - (a.created || 0));
+  manifest = pruneSessions(manifest);
 
   try {
-    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest.slice(0, 30), null, 2));
+    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
   } catch (e) {}
 
   return manifest;
@@ -224,8 +312,9 @@ function updateManifest(sessionData) {
   } else {
     manifest.unshift(item);
   }
+  const kept = pruneSessions(manifest);
   try {
-    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest.slice(0, 30), null, 2));
+    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(kept, null, 2));
   } catch (e) {}
 }
 
@@ -913,15 +1002,13 @@ app.post('/generate', async (req, res) => {
   // Generate AI Insights AOT for this report
   try {
     const analysis = JSON.parse(fs.readFileSync(session.analysisPath, 'utf8'));
-    const sections = ['executive-summary', 'sales-funnel', 'revenue', 'studio-utilization', 'member-retention', 'trial-conversion', 'class-attendance'];
-
     // We'll store a big map of locKey|monthKey|section -> insights
     const aiContext = {};
     const aiTasks = [];
 
     for (const loc of selectedLocs) {
       for (const month of selectedMonths) {
-        for (const sec of sections) {
+        for (const sec of AI_SECTIONS) {
           aiTasks.push(async () => {
             try {
               const res = await generateInsights(analysis, loc, month, sec);
@@ -982,6 +1069,20 @@ app.post('/generate', async (req, res) => {
         fs.writeFileSync(outputPath, html.replace('<!-- REPORT_CLIENT_PLACEHOLDER -->', bootstrap));
       } catch (spliceErr) {
         console.error('Could not inject report client script:', spliceErr.message);
+      }
+
+      try {
+        recordReport({
+          sessionId,
+          filename: outputFilename,
+          studios: selectedLocs.map((l) => (session.locations || {})[l] || l),
+          months: selectedMonths,
+          comboCount,
+          bytes: fs.statSync(outputPath).size,
+          created: Date.now(),
+        });
+      } catch (indexErr) {
+        console.error('Could not record the report:', indexErr.message);
       }
 
       res.render('result', {
@@ -1102,6 +1203,12 @@ app.get('/join/:code', (req, res) => {
 });
 
 // Health check endpoint
+app.get('/reports', (req, res) => {
+  res.render('reports', { reports: loadReports(), maxSessions: MAX_SESSIONS });
+});
+
+app.get('/api/reports', (req, res) => res.json({ reports: loadReports() }));
+
 app.get('/health', (req, res) => res.json({ status: 'ok', uploadsDir: UPLOADS_DIR }));
 
 const server = http.createServer(app);
@@ -1196,117 +1303,3 @@ if (process.env.VERCEL) {
 } else {
 module.exports = { app, server, io };
 }
-
-// ─── AI Copilot Endpoint ─────────────────────────────────────────
-/* Answers are computed straight from analysis.json (copilot_engine.js), so the
-   copilot works with or without an OpenAI key. When a key IS configured, and
-   the question is open-ended (why / recommend / explain), the model is used
-   with the full dataset instead of a one-row sample. */
-async function askOpenAI(prompt, analysisData, ctx) {
-  if (!process.env.OPENAI_API_KEY) return null;
-  const dataset = buildDataset(analysisData, ctx, { months: 14 });
-  const systemPrompt = [
-    'You are a data analyst copilot inside a fitness-studio performance report.',
-    'DATA below is the studio\'s real analysis output (JSON). Answer ONLY from it.',
-    'Never say you have no data: if a figure is genuinely absent, list the metrics you DO have.',
-    'Respond with strict JSON: {"type":"table"|"kpi"|"text","title":string,"data":<array of row objects for tables | {label,value,change} for kpi | string for text>,"description":string}.',
-    'Prefer type "table" for anything with more than one row. Keep numbers formatted with \u20b9 and Indian grouping.',
-  ].join(' ');
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `DATA: ${JSON.stringify(dataset)}\n\nScope: ${JSON.stringify(dataset.scope)}\n\nQuestion: ${prompt}` },
-      ],
-      temperature: 0.2,
-      max_tokens: 2000,
-    }),
-  });
-
-  const result = await response.json();
-  if (!result || !result.choices || !result.choices.length) {
-    throw new Error(result && result.error && result.error.message ? result.error.message : 'OpenAI returned no completion');
-  }
-  const content = result.choices[0].message.content || '{}';
-  const cleaned = content.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
-  const parsed = JSON.parse(cleaned);
-  if (!parsed || !parsed.type) return null;
-  if (parsed.type === 'table' && (!Array.isArray(parsed.data) || !parsed.data.length)) return null;
-  return parsed;
-}
-
-function saveCopilotAnswer(sessionDir, prompt, result) {
-  try {
-    const copilotPath = path.join(sessionDir, 'copilot_saves.json');
-    let saves = [];
-    if (fs.existsSync(copilotPath)) saves = JSON.parse(fs.readFileSync(copilotPath, 'utf8'));
-    saves.push({ prompt, result, timestamp: new Date().toISOString() });
-    fs.writeFileSync(copilotPath, JSON.stringify(saves, null, 2));
-  } catch (e) {
-    console.error('Could not persist copilot answer:', e.message);
-  }
-}
-
-app.post('/ai-copilot/:sessionId', async (req, res) => {
-  const { sessionId } = req.params;
-  const { prompt, loc, month, mode } = req.body || {};
-
-  if (!prompt) return res.status(400).json({ error: 'Prompt required' });
-
-  const session = getSession(sessionId);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
-
-  try {
-    const analysisPath = path.join(session.dir, 'analysis.json');
-    let analysisData = {};
-    if (fs.existsSync(analysisPath)) {
-      analysisData = JSON.parse(fs.readFileSync(analysisPath, 'utf8'));
-    }
-
-    // build = an element for the report, chat = a prose answer in the panel.
-    const ctx = { loc, month, mode: mode === 'chat' ? 'chat' : 'build' };
-    const local = answerCopilot(prompt, analysisData, ctx);
-
-    // Open-ended questions benefit from the model — but only when it is configured.
-    const wantsAI = /\b(why|recommend|explain|strategy|advice|insight|should we|how do we|what would)\b/i.test(prompt)
-      || local.confidence !== 'high';
-    if (wantsAI && process.env.OPENAI_API_KEY) {
-      try {
-        const ai = await askOpenAI(prompt, analysisData, ctx);
-        if (ai) {
-          saveCopilotAnswer(session.dir, prompt, ai);
-          return res.json(Object.assign(ai, { source: 'openai' }));
-        }
-      } catch (err) {
-        console.error('OpenAI copilot fallback:', err.message);
-      }
-    }
-
-    saveCopilotAnswer(session.dir, prompt, local);
-    res.json(local);
-  } catch (err) {
-    console.error('AI Copilot error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get saved copilot elements
-app.get('/ai-copilot/:sessionId/saves', (req, res) => {
-  const { sessionId } = req.params;
-  const session = getSession(sessionId);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
-
-  const copilotPath = path.join(session.dir, 'copilot_saves.json');
-  if (fs.existsSync(copilotPath)) {
-    res.json(JSON.parse(fs.readFileSync(copilotPath, 'utf8')));
-  } else {
-    res.json([]);
-  }
-});

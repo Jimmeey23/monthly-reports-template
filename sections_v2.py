@@ -7,6 +7,8 @@ import calendar
 import json
 import html
 
+import report_shell
+
 AI_CONTEXT = {}
 
 # Import helpers and data access functions from gen_report_v2
@@ -23,6 +25,15 @@ _badge = None
 _badge_from_pp = None
 _mult = None
 _DATA = None
+_charts_mod = None
+
+def _charts():
+    global _charts_mod
+    if _charts_mod is None:
+        import charts_v2
+        _charts_mod = charts_v2
+    return _charts_mod
+
 
 def _init_imports():
     global _lakh, _lakh_raw, _rupee, _pct, _fmt_int, _pct_change, _pp_change, _badge, _badge_from_pp, _mult, _DATA
@@ -112,10 +123,31 @@ def mult(v, decimals=1):
 
 # ─── Reusable HTML components ─────────────────────────────────────────────────
 
+# The report runs money → demand → funnel → retention → outlook → actions,
+# then a month-on-month appendix that holds every section's history grid.
 SECTION_IDS = {
     1: 'executive-summary', 2: 'revenue-performance', 3: 'conversion-funnel',
-    4: 'sessions', 5: 'lapsed', 6: 'recommendations', 7: 'predictions',
+    4: 'sessions', 5: 'lapsed', 6: 'recommendations',
+    7: 'predictions', 8: 'appendix',
 }
+
+SECTION_TITLES = {
+    'executive-summary': 'Executive summary',
+    'revenue-performance': 'Revenue performance',
+    'sessions': 'Demand & utilisation',
+    'conversion-funnel': 'Conversion funnel',
+    'lapsed': 'Retention & lapsed',
+    'predictions': 'Outlook',
+    'recommendations': 'Actions',
+}
+
+# Each section registers its month-on-month grid here while it renders; the
+# appendix at the end of the report prints them all in one place.
+MOM_REGISTRY = {}
+
+
+def reset_mom_registry():
+    MOM_REGISTRY.clear()
 
 
 
@@ -222,25 +254,71 @@ def render_ai_result(result):
     </div>'''
 
 
-def section_header(eyebrow, title, deck, section_num, total=7, loc_key='', month_key='', id_suffix=''):
+def section_header(eyebrow, title, deck, section_num, total=7, loc_key='', month_key='',
+                   id_suffix='', signals=None):
+    """Chapter opener: eyebrow, title, deck, and the live figures at a glance.
+
+    `signals` is a list of (label, value, note) — the two or three numbers the
+    chapter is about to explain. They are printed as the scrolling strip under
+    the header, so the reader sees them before the prose starts.
+    """
     section_id = SECTION_IDS.get(section_num, f'section-{section_num}')
     slot_id = f'ai-slot-{section_id}{id_suffix}'
-    mom_key = f'{loc_key}|{month_key}|{section_num}'
-    return f'''    <div class="section-hero" data-num="{section_num:02d}">
+    mom_key = report_shell.MOM_KEYS.get(section_num)
+
+    # Only the five chapters with a history table carry an `i` button; the rest
+    # would open an empty panel.
+    mom_btn = ''
+    if mom_key:
+        mom_btn = (f'<button aria-label="View month on month data" class="mom-info-btn" '
+                   f'data-mom="{mom_key}">i</button>')
+
+    marquee = ''
+    if signals:
+        marquee = report_shell.section_marquee(
+            [(value, label) for label, value, _ in signals],
+            SECTION_TITLES.get(section_id, section_id))
+
+    return f"""    <div class="section-hero{' has-section-marquee' if marquee else ''}" data-num="{section_num:02d}">
       <div class="section-header">
         <div class="section-header-left">
-          <span class="section-eyebrow">{eyebrow}</span>
+          <span class="section-eyebrow">{section_num:02d} · {eyebrow}</span>
           <h2 class="section-title">{title}</h2>
-          <div class="section-narrative-label">Key highlights &amp; management narrative</div>
           <p class="section-deck">{deck}</p>
         </div>
         <div class="section-header-right">
+          {mom_btn}
           <div class="section-anchor">Section {section_num} / {total:02d}</div>
-          <button class="mom-info-btn" type="button" data-mom-key="{mom_key}" aria-label="View month-on-month data for section {section_num}">i</button>
         </div>
       </div>
-    </div>
-    <div class="ai-slot" id="{slot_id}">{render_ai_result(AI_CONTEXT.get(f"{loc_key}|{month_key}|{section_id}", {}))}</div>'''
+    </div>{marquee}
+    <div class="ai-slot" id="{slot_id}">{render_ai_result(AI_CONTEXT.get(f"{loc_key}|{month_key}|{section_id}", {}))}</div>"""
+
+
+def figure_band(title, note, chart, legend='', wide=False):
+    """A chart card. Sits between the subsection heading and the detail table
+    so the shape of the data lands before the numbers do."""
+    return f"""    <figure class="figure-band{' figure-band-wide' if wide else ''}">
+      <div class="figure-head">
+        <div>
+          <div class="figure-title">{title}</div>
+          <figcaption class="figure-note">{note}</figcaption>
+        </div>
+      </div>
+      <div class="figure-body">{chart}{legend}</div>
+    </figure>"""
+
+
+def chart_legend(items):
+    """items = [(label, colour, value), ...] — colour may be a CSS variable."""
+    if not items:
+        return ''
+    rows = ''.join(
+        f'<li><span class="swatch" style="background: {colour};"></span>'
+        f'<span class="legend-label">{label}</span>'
+        f'<span class="legend-value">{value}</span></li>'
+        for label, colour, value in items)
+    return f'<ul class="chart-legend">{rows}</ul>'
 
 
 def subsection(title, deck):
@@ -377,7 +455,10 @@ def section_01(ctx):
     html = f'''
 <section class="report-section" id="executive-summary{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header(f"01 &middot; Management Pulse &mdash; Growth, Conversion &amp; Risk", title, deck, 1, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("Management Pulse &mdash; Growth, Conversion &amp; Risk", title, deck, 1,
+                 signals=[("Net Sales", lakh(s['net']), f"{ctx['net_mom']} MoM"),
+                          ("Fill Rate", pct(sess['fill']), f"{ctx['fill_mom']} MoM"),
+                          ("Churn Rate", pct(lapsed['churn']), f"{ctx['churn_mom']} MoM")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {mom_toggle}
 
@@ -401,10 +482,101 @@ def section_01(ctx):
 {kpi_table}
       </div>
     </div>
+
+{build_balance_sheet(ctx)}
   </div>
 </section>
 '''
     return html
+
+
+def build_balance_sheet(ctx):
+    """What worked and what didn't, read off the month's own comparators.
+
+    Each candidate names a metric, its direction of good, and the sentence to
+    print. Whichever moved most in the right direction becomes a "worked"
+    signal; whichever moved most against becomes a leak to fix. Nothing is
+    asserted that the figures don't show.
+    """
+    s = ctx['sales']
+    sess = ctx['sessions']
+    new = ctx['new']
+    lapsed = ctx['lapsed']
+    mo = ctx['mo']
+    month = mo['month_name']
+
+    def magnitude(change):
+        try:
+            return abs(float(str(change).replace('%', '').replace('+', '').replace('pp', '')))
+        except ValueError:
+            return 0.0
+
+    def improved(change, higher_is_better=True):
+        text = str(change)
+        if text in ('n/a', '') or text == '—':
+            return None
+        return text.startswith('-') != higher_is_better
+
+    # (change, higher_is_better, headline, sentence)
+    candidates = [
+        (ctx['net_mom'], True, 'Revenue moved with the month',
+         f"Net sales landed at <strong>{lakh(s['net'])}</strong>, {ctx['net_mom']} on "
+         f"{mo['prev_month_name']} and {ctx['net_baseline']} against the {ctx['baseline_label']} baseline."),
+        (ctx['fill_mom'], True, 'Capacity utilisation shifted',
+         f"Fill rate is <strong>{pct(sess['fill'])}</strong> across {fmt_int(sess['capacity'])} seats "
+         f"offered, {ctx['fill_mom']} on the month with {fmt_int(sess['empty'])} sessions running empty."),
+        (ctx['conv_mom'], True, 'Trial conversion changed gear',
+         f"<strong>{fmt_int(new['trials'])} trials</strong> produced {fmt_int(new.get('converted', 0))} "
+         f"conversions at {pct(new['rate'])}, {ctx['conv_mom']} on {mo['prev_month_name']}."),
+        (ctx['churn_mom'], False, 'Churn pressure on the member book',
+         f"Churn ran at <strong>{pct(lapsed['churn'])}</strong> against a {pct(lapsed['renewal_rate'])} "
+         f"renewal rate, {ctx['churn_mom']} on the month across {fmt_int(lapsed['total'])} expiries."),
+        (ctx['disc_eff_mom'], True, 'Discount return per rupee',
+         f"Every &#8377;1 of discount returned <strong>&#8377;{s['disc_eff']:.2f}</strong> of net revenue, "
+         f"{ctx['disc_eff_mom']} on the month at {pct(ctx['disc_penetration'])} penetration."),
+        (ctx['late_cancel_mom'], False, 'Late-cancellation discipline',
+         f"<strong>{fmt_int(ctx['checkins'].get('late_cancel', 0))} late cancellations</strong> "
+         f"({pct(ctx['lc_rate'])} of bookings), {ctx['late_cancel_mom']} on {mo['prev_month_name']}."),
+        (ctx['visits_mom'], True, 'Demand volume through the door',
+         f"<strong>{fmt_int(sess['visits'])} visits</strong> across {fmt_int(sess['sessions'])} sessions, "
+         f"{ctx['visits_mom']} on the month and {ctx['visits_baseline']} against baseline."),
+        (ctx['atv_mom'], True, 'Ticket size',
+         f"Average transaction value is <strong>{rupee(s['atv'])}</strong> across "
+         f"{fmt_int(s['sales'])} transactions, {ctx['atv_mom']} on the month."),
+    ]
+
+    worked, didnt = [], []
+    for change, higher_is_better, headline, sentence in candidates:
+        verdict = improved(change, higher_is_better)
+        if verdict is None:
+            continue
+        (worked if verdict else didnt).append((magnitude(change), headline, sentence))
+
+    worked.sort(reverse=True)
+    didnt.sort(reverse=True)
+    worked, didnt = worked[:4], didnt[:4]
+    if not worked and not didnt:
+        return ''
+
+    def column(entries, label, risk):
+        cards = ''.join(f'''
+<div class="worked-card{' didnt' if risk else ''}">
+<div class="worked-icon">{'&#10007;' if risk else '&#10003;'}</div>
+<div>
+<div class="worked-title">{headline}</div>
+<div class="worked-text">{sentence}</div>
+</div>
+</div>''' for _, headline, sentence in entries)
+        return f'''<div class="balance-sheet-column">
+<div class="balance-column-label{' is-risk' if risk else ''}">{label} <span>{len(entries):02d} signals</span></div>
+<div class="worked-grid">{cards}
+</div>
+</div>'''
+
+    return (f'<div class="balance-sheet-grid">'
+            f'{column(worked, f"What worked in {month}", False)}'
+            f'{column(didnt, f"What didn&rsquo;t work in {month}", True)}'
+            f'</div>')
 
 
 def build_section_01_insights(ctx):
@@ -719,6 +891,78 @@ def build_section_01_kpi_table(ctx):
         </div>'''
 
 
+def _visits_bar_figure(classes_sorted, sess, month_name):
+    """Top class formats by visits — the demand ranking at a glance."""
+    rows = [(name, data.get('visits', 0)) for name, data in (classes_sorted or []) if data.get('visits')]
+    if len(rows) < 2:
+        return ''
+    charts = _charts()
+    top = rows[0]
+    return figure_band(
+        f"The formats that carried {month_name}&rsquo;s visits",
+        f"{top[0]} led with {fmt_int(top[1])} visits &mdash; "
+        f"{top[1] / sess['visits'] * 100:.1f}% of the month&rsquo;s {fmt_int(sess['visits'])} visits. "
+        f"Bars are scaled to the largest format.",
+        charts.bar_list(rows, limit=10, value_fmt=lambda v: fmt_int(v)),
+        wide=True)
+
+
+def _lapse_bar_figure(prod_sorted, lapsed, month_name):
+    """Where the lapsed members came from, ranked."""
+    rows = [(name, data.get('lapsed', 0)) for name, data in (prod_sorted or []) if data.get('lapsed')]
+    if len(rows) < 2:
+        return ''
+    charts = _charts()
+    top = rows[0]
+    return figure_band(
+        f"Where {month_name}&rsquo;s {fmt_int(lapsed['lapsed'])} lapses came from",
+        f"{top[0]} accounted for {fmt_int(top[1])} of them "
+        f"({top[1] / lapsed['lapsed'] * 100:.1f}% of the lapse book). Ranked by memberships lost.",
+        charts.bar_list(rows, limit=10, value_fmt=lambda v: fmt_int(v)),
+        wide=True)
+
+
+def _scenario_figure(base_low, base_high, upside_low, upside_high, net_base, next_name, ctx):
+    """Base versus upside, as two bars scaled against each other."""
+    charts = _charts()
+    base_mid = (base_low + base_high) / 2
+    upside_mid = (upside_low + upside_high) / 2
+    return figure_band(
+        f"{next_name} {ctx['mo']['next_year']}: the two paths",
+        f"Base case {lakh(base_low)}&ndash;{lakh(base_high)} if nothing changes; "
+        f"upside {lakh(upside_low)}&ndash;{lakh(upside_high)} with the actions in chapter 07 landing. "
+        f"Bars show the midpoint of each range against {lakh(net_base)} this month.",
+        charts.bar_list(
+            [("Base case (no change)", base_mid), ("Upside case (actions land)", upside_mid)],
+            limit=2, value_fmt=lambda v: lakh(v)),
+        wide=True)
+
+
+def _section_02_mix_figure(cats, total_net, month_name, ctx):
+    """Category mix as a donut, with the long tail folded into 'Other'."""
+    if not cats or not total_net:
+        return ''
+    charts = _charts()
+
+    head = cats[:5]
+    rest = cats[5:]
+    segs = [(name, data['net'], f'var(--sec-{i + 1}-color)') for i, (name, data) in enumerate(head)]
+    if rest:
+        segs.append((f"{len(rest)} other {'category' if len(rest) == 1 else 'categories'}",
+                     sum(d['net'] for _, d in rest), 'var(--text-subtle)'))
+
+    legend = chart_legend([
+        (name, colour, pct(value / total_net * 100, 1))
+        for name, value, colour in segs
+    ])
+
+    return figure_band(
+        f"Where {month_name}&rsquo;s revenue came from",
+        f"Net revenue by category. {lakh(total_net)} in total across {len(cats)} categories.",
+        charts.donut(segs, aria_label=f'Revenue mix by category, {month_name}'),
+        legend)
+
+
 # ─── Section 02: Revenue & Sales Performance ──────────────────────────────────
 
 def section_02(ctx):
@@ -791,12 +1035,17 @@ def section_02(ctx):
     html = f'''
 <section class="report-section" id="revenue-performance{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("02 &middot; Revenue Story &mdash; Mix, Pricing Power &amp; Discount Yield", title, deck, 2, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("Revenue Story &mdash; Mix, Pricing Power &amp; Discount Yield", title, deck, 2,
+                 signals=[("Net Sales", lakh(s['net']), f"Gross {lakh(s['gross'])}"),
+                          ("ATV", rupee(s['atv']), f"{fmt_int(s['sales'])} transactions"),
+                          ("Disc Efficiency", f"&#8377;{s['disc_eff']:.2f}", f"per &#8377;1 discounted")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {mom_toggle}
 
 {subsection("Sales by Category &mdash; revenue mix and unit economics",
     "The category table below holds every metric available &mdash; revenue, units, ATV, share of revenue &mdash; so each line can be evaluated on absolute size and per-unit economics.")}
+
+{_section_02_mix_figure(cats, total_net, month_name, ctx)}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -1215,7 +1464,10 @@ def section_03(ctx):
     html = f'''
 <section class="report-section" id="conversion-funnel{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("03 &middot; Growth Engine &mdash; Lead Quality, Conversion &amp; Retention", title, deck, 3, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("Growth Engine &mdash; Lead Quality, Conversion &amp; Retention", title, deck, 3,
+                 signals=[("Leads", fmt_int(lead_count), f"{pct(leads['rate'])} lead conversion"),
+                          ("Conversions", fmt_int(conv_count), f"{pct(new['rate'])} trial conversion"),
+                          ("Retained", fmt_int(retained_count), f"{fmt_int(new['trials'])} trials")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {mom_toggle}
 
@@ -1476,7 +1728,10 @@ def section_04(ctx):
     html = f'''
 <section class="report-section" id="sessions{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("04 &middot; Studio Delivery &mdash; Demand, Capacity &amp; Instructor Impact", title, deck, 4, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("Studio Delivery &mdash; Demand, Capacity &amp; Instructor Impact", title, deck, 4,
+                 signals=[("Sessions", fmt_int(sess['sessions']), f"{fmt_int(sess['capacity'])} seats"),
+                          ("Visits", fmt_int(sess['visits']), f"{sess['avg_visits']:.1f} per class"),
+                          ("Fill Rate", pct(sess['fill']), f"{ctx['fill_mom']} MoM")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {mom_toggle}
 
@@ -1498,6 +1753,8 @@ def section_04(ctx):
 
 {subsection("Class-level view &mdash; every class format with fill rate",
     "The class table below shows every distinct class format with sessions, visits, capacity, fill rate, and revenue. Classes with fewer than 3 sessions are included for completeness but should be evaluated with caution.")}
+
+{_visits_bar_figure(classes_sorted, sess, month_name)}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -1896,6 +2153,48 @@ def build_heatmap_section(ctx):
     # Build table
     header_cells = "".join(f"<th>{t}</th>" for t in sorted_times)
 
+    def heat_class(value):
+        """Bucket a cell against the busiest slot so the four heat tints read
+        consistently down the whole grid."""
+        intensity = value / max_visits if max_visits else 0
+        if intensity > 0.75:
+            return 'heat-cell hot', 'Peak'
+        if intensity > 0.5:
+            return 'heat-cell warm', 'High'
+        if intensity > 0.25:
+            return 'heat-cell cool', 'Moderate'
+        return 'heat-cell cold', 'Low'
+
+    day_totals = {day: sum(v for (d, _), v in day_time_data.items() if d == day) for day in days}
+    slot_totals = {t: sum(v for (_, slot), v in day_time_data.items() if slot == t) for t in sorted_times}
+    rev_per_visit = (ctx['sales'].get('net', 0) or 0) / (ctx['sessions'].get('visits', 0) or 1)
+
+    # The chips summarise the grid so the reader has the shape before the numbers.
+    weekend = sum(day_totals.get(d, 0) for d in ('Sat', 'Sun'))
+    am_visits = sum(v for (_, t), v in day_time_data.items() if sort_time(t) < 12 * 60)
+    top5 = sum(v for _, v in sorted(day_time_data.items(), key=lambda kv: -kv[1])[:5])
+    busiest_day = max(day_totals.items(), key=lambda kv: kv[1]) if day_totals else ('&mdash;', 0)
+    chip_values = []
+    if peak_slots:
+        (pd, pt), pv = peak_slots[0]
+        chip_values.append(f'Peak slot: {pt} {pd} &middot; {fmt_int(pv)} visits')
+    chip_values.append(f'Busiest day: {busiest_day[0]} &middot; {fmt_int(busiest_day[1])}')
+    if total_visits_all:
+        chip_values.append(f'Weekend share: {weekend / total_visits_all * 100:.0f}%')
+        chip_values.append(f'Top-5 slots: {top5 / total_visits_all * 100:.0f}% of demand')
+        chip_values.append(f'AM vs PM: {am_visits / total_visits_all * 100:.0f}% / '
+                           f'{(total_visits_all - am_visits) / total_visits_all * 100:.0f}%')
+    chips = '\n'.join(f'        <span class="meta-pill">{c}</span>' for c in chip_values)
+
+    # Only promise a cell footer when the upload actually carries format/trainer detail.
+    has_meta = any(any(m) for m in day_time_meta.values())
+    footer_note = (' &middot; cell footer = leading format &amp; trainer for that slot.'
+                   if has_meta else ' &middot; hover a cell for its share of weekly demand.')
+
+    day_buttons = '\n'.join(
+        f'          <button class="hm-day-btn" data-day="{day}" type="button">{day}</button>'
+        for day in days)
+
     body_rows = []
     for day in days:
         cells = f"<td class='row-label'>{day}</td>"
@@ -1934,8 +2233,21 @@ def build_heatmap_section(ctx):
                     {'<div class="heat-tooltip-row"><span class="heat-tooltip-label">Trainer</span><span class="heat-tooltip-value">' + (top_trainer or "—") + '</span></div>' if top_trainer else ''}
                 </div>"""
 
-                cells += f"<td class='{cls}'>{v}{sub_html}{tooltip_html}</td>"
+                cells += f"<td class='{cls}' data-v='{v}'>{v}{sub_html}{tooltip_html}</td>"
+        day_total = day_totals.get(day, 0)
+        total_cls, _ = heat_class(day_total / len(sorted_times) if sorted_times else 0)
+        share = f"{day_total / total_visits_all * 100:.1f}% of week" if total_visits_all else ''
+        cells += (f"<td class='{total_cls}' data-v='{day_total}'>{day_total}"
+                  f"<span class='heat-sub'>{share}</span></td>")
         body_rows.append(f"            <tr>{cells}</tr>")
+
+    totals_cells = "<td class='row-label'>Slot Total</td>"
+    for t in sorted_times:
+        v = slot_totals.get(t, 0)
+        cls, _ = heat_class(v / len(days) if days else 0)
+        totals_cells += f"<td class='{cls}' data-v='{v}'>{v}</td>"
+    totals_cells += f"<td class='heat-cell hm-grand' data-v='{total_visits_all}'>{total_visits_all}</td>"
+    totals_row = f"            <tr class='hm-totals'>{totals_cells}</tr>"
 
     return f'''
 {subsection("Session heatmap &mdash; day &times; time slot demand intensity",
@@ -1948,17 +2260,39 @@ def build_heatmap_section(ctx):
     </div>
 
     <div class="data-pane full-width-block">
-      <div class="pane-title" style="padding: 16px 16px 8px;">Visit Heatmap &middot; {ctx['mo']['month_name']} {ctx['mo']['year']}</div>
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Demand Heatmap &middot; {ctx['mo']['month_name']} {ctx['mo']['year']}</div>
+          <div class="panel-subtitle">Showing <strong id="hm-metric-label">Visits (actual check-ins)</strong> &middot; {fmt_int(total_visits_all)} visits mapped {footer_note}</div>
+        </div>
+        <div class="panel-controls hm-controls">
+          <button class="hm-btn is-active" data-label="Visits (actual check-ins)" data-metric="visits">Visits</button>
+          <button class="hm-btn" data-label="Est. revenue (visits &times; {rupee(rev_per_visit)} avg/visit)" data-metric="revenue">Est. Revenue</button>
+          <button class="hm-btn" data-label="Share of weekly demand (%)" data-metric="share">Share of Week</button>
+        </div>
+      </div>
+      <div class="hm-chips">
+{chips}
+      </div>
+      <div class="hm-interactive-bar">
+        <div aria-label="Filter heatmap by day" class="hm-day-filters">
+          <button class="hm-day-btn is-active" data-day="all" type="button">All</button>
+{day_buttons}
+        </div>
+        <div aria-live="polite" class="hm-selection" id="hm-selection"><strong>Select a populated slot</strong> to inspect its day, time, visits, format and instructor.</div>
+      </div>
       <div class="table-wrap">
-        <table class="data-table heatmap-table">
+        <table class="data-table heatmap-table" id="demand-heatmap">
           <thead>
             <tr>
               <th>Day</th>
               {header_cells}
+              <th class="total-col">Day Total</th>
             </tr>
           </thead>
           <tbody>
 {chr(10).join(body_rows)}
+{totals_row}
           </tbody>
         </table>
       </div>
@@ -2021,7 +2355,10 @@ def section_05(ctx):
     html = f'''
 <section class="report-section" id="lapsed{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("05 &middot; Member Health &mdash; Renewals, Churn &amp; Reactivation", title, deck, 5, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("Member Health &mdash; Renewals, Churn &amp; Reactivation", title, deck, 5,
+                 signals=[("Expiring", fmt_int(lapsed['total']), f"{fmt_int(lapsed['renewed'])} renewed"),
+                          ("Renewal Rate", pct(lapsed['renewal_rate']), f"{fmt_int(lapsed['lapsed'])} lapsed"),
+                          ("Churn Rate", pct(lapsed['churn']), f"{ctx['churn_mom']} MoM")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {mom_toggle}
 
@@ -2048,6 +2385,8 @@ def section_05(ctx):
 
 {subsection("Lapse by product &mdash; where the churn is concentrated",
     "The product table below shows every membership SKU that reached end-of-life, split by renewal, lapse, and frozen status. The highest-lapse products are the priority reactivation targets.")}
+
+{_lapse_bar_figure(prod_sorted, lapsed, month_name)}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -2362,7 +2701,10 @@ def section_06(ctx):
     html = f'''
 <section class="report-section" id="recommendations{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("06 &middot; Decision Agenda &mdash; Priorities, Owners &amp; Measurable Outcomes", title, deck, 6, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("Decision Agenda &mdash; Priorities, Owners &amp; Measurable Outcomes", title, deck, 6,
+                 signals=[("Net Sales", lakh(s['net']), f"{ctx['net_mom']} MoM"),
+                          ("Fill Rate", pct(sess['fill']), f"{fmt_int(sess['visits'])} visits"),
+                          ("Churn Rate", pct(lapsed['churn']), f"{fmt_int(lapsed['lapsed'])} lapsed")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {mom_toggle}
 
@@ -2768,9 +3110,14 @@ def section_07(ctx):
     html = f'''
 <section class="report-section" id="predictions{ctx.get('id_suffix', '')}">
   <div class="container">
-{section_header("07 &middot; Forward View &mdash; Scenarios, Upside &amp; Early Warnings", title, deck, 7, loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
+{section_header("Forward View &mdash; Scenarios, Upside &amp; Early Warnings", title, deck, 7,
+                 signals=[("Base Case", f"{lakh(base_low)}&ndash;{lakh(base_high)}", f"{next_name} {ctx['mo']['next_year']}"),
+                          ("Upside", f"{lakh(upside_low)}&ndash;{lakh(upside_high)}", "with intervention"),
+                          ("From", lakh(net_base), f"{month_name} actual")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {mom_toggle}
+
+{_scenario_figure(base_low, base_high, upside_low, upside_high, net_base, next_name, ctx)}
 
 {subsection(f"{next_name} {ctx['mo']['next_year']} forecast &mdash; base case vs upside case",
     f"The forecast below assumes (a) no major exogenous shock, (b) historical seasonality, and (c) for the upside case, the five decisions beginning to deliver from {next_name} W3.")}
@@ -3172,118 +3519,13 @@ def _series_delta(cur, prev, kind):
 
 
 def mom_toggle_table(ctx, metrics_data, section_id):
-    """Month-on-Month block for one section.
+    """No longer rendered inline.
 
-    Months run across the columns and a row of metric tabs above the grid
-    picks which KPI is in view, so a section's whole history is one table
-    instead of a one-row-per-metric summary.
+    Month-on-month history now lives in the panel that mom-panel.js
+    opens from each section header's `i` button, reading window.MOM_DATA. The
+    call sites stay so a section can still declare which metrics it tracks.
     """
-    months = _mom_months(ctx)
-    if not months:
-        months = [ctx['month_key']]
-
-    tabs, panels = [], []
-    for idx, (metric_name, values) in enumerate(metrics_data.items()):
-        series = _metric_series(ctx, metric_name, months)
-        if series is None:
-            continue
-        if not any(v is not None for v in series):
-            continue  # nothing in the upload for this KPI — don't offer a tab
-
-        spec = MOM_DRILL_MAP[metric_name]
-        kind = spec[2]
-        panel_id = 'mom-panel-%s-%d' % (section_id, idx)
-
-        head = []
-        value_cells, mom_cells, yoy_cells = [], [], []
-        for i, mk in enumerate(months):
-            v = series[i]
-            is_current = mk == ctx['month_key']
-            head.append(
-                '<th data-col="%d" class="%s" scope="col">%s</th>'
-                % (i, 'is-current' if is_current else '', month_label(mk)))
-
-            value_cells.append(
-                '<td data-col="%d" class="mom-cell %s" data-v="%s" data-fmt="%s" data-month="%s">%s</td>'
-                % (i, 'is-current' if is_current else '',
-                   '' if v is None else repr(round(float(v), 4)), kind, month_label(mk),
-                   _fmt_series_value(v, kind)))
-
-            prev = series[i - 1] if i > 0 else None
-            txt, cls = _series_delta(v, prev, kind)
-            mom_cells.append('<td data-col="%d" class="%s %s">%s</td>'
-                             % (i, cls, 'is-current' if is_current else '', txt))
-
-            yoy = series[i - 12] if i >= 12 else None
-            txt, cls = _series_delta(v, yoy, kind)
-            yoy_cells.append('<td data-col="%d" class="%s %s">%s</td>'
-                             % (i, cls, 'is-current' if is_current else '', txt))
-
-        active = ' is-active' if not panels else ''
-        tabs.append(
-            '<button type="button" class="mom-metric-tab%s" data-panel="%s" role="tab">%s</button>'
-            % (active, panel_id, metric_name))
-
-        panels.append(
-            '<tbody class="mom-panel%s" id="%s" data-metric="%s" data-fmt="%s">'
-            '<tr><th scope="row">Value</th>%s</tr>'
-            '<tr><th scope="row">MoM</th>%s</tr>'
-            '<tr><th scope="row">YoY</th>%s</tr>'
-            '</tbody>'
-            % (active, panel_id, metric_name, kind,
-               ''.join(value_cells), ''.join(mom_cells), ''.join(yoy_cells)))
-
-    if not tabs:
-        # No mapped series for any KPI here — keep the old headline summary.
-        rows = []
-        for metric_name, values in metrics_data.items():
-            current = values.get('current', '—')
-            mom = values.get('mom', '—')
-            yoy = values.get('yoy', '—')
-            mom_class = 'positive' if str(mom).startswith('+') else 'negative' if str(mom).startswith('-') else ''
-            yoy_class = 'positive' if str(yoy).startswith('+') else 'negative' if str(yoy).startswith('-') else ''
-            rows.append(
-                '<tr><td class="metric-name">%s</td><td>%s</td>'
-                '<td class="%s">%s</td><td class="%s">%s</td></tr>'
-                % (metric_name, current, mom_class, mom, yoy_class, yoy))
-        grid = ('<table class="data-table mom-table"><thead><tr>'
-                '<th>Metric</th><th>Current</th><th>MoM Change</th><th>YoY Change</th>'
-                '</tr></thead><tbody>%s</tbody></table>' % ''.join(rows))
-        controls = ''
-    else:
-        grid = (
-            '<table class="data-table mom-table" data-cols="%d">'
-            '<thead><tr><th class="mom-corner" scope="col">Period</th>%s</tr></thead>'
-            '%s</table>'
-            % (len(months), ''.join(
-                '<th data-col="%d" class="%s" scope="col">%s</th>'
-                % (i, 'is-current' if mk == ctx['month_key'] else '', month_label(mk))
-                for i, mk in enumerate(months)),
-               ''.join(panels)))
-        controls = (
-            '<div class="mom-controls">'
-            '<div class="mom-metric-tabs" role="tablist" aria-label="Metric">%s</div>'
-            '<div class="mom-range-tabs" role="group" aria-label="Range">'
-            '<button type="button" class="mom-range-btn" data-range="6">6M</button>'
-            '<button type="button" class="mom-range-btn is-active" data-range="12">12M</button>'
-            '<button type="button" class="mom-range-btn" data-range="all">All</button>'
-            '</div></div>' % ''.join(tabs))
-
-    return """
-    <div class="mom-toggle-wrapper">
-      <button class="mom-toggle-btn" onclick="toggleMoMTable('%s')" aria-expanded="false">
-        <span>Month-on-Month Analysis</span>
-        <svg class="mom-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M4 6l4 4 4-4"/>
-        </svg>
-      </button>
-      <div id="mom-table-%s" class="mom-table-container" style="display:none;" data-range="12">
-        %s
-        %s
-        <div class="mom-drill-panel" hidden></div>
-      </div>
-    </div>
-    """ % (section_id, section_id, controls, grid)
+    return ''
 
 
 def raw_data_table(data, table_id, title="Raw Data"):
@@ -3319,3 +3561,15 @@ def raw_data_table(data, table_id, title="Raw Data"):
       </div>
     </details>
     '''
+
+
+# ─── Section 08: Month-on-Month Appendix ──────────────────────────────────────
+
+def section_08(ctx):
+    """Retired: every month-on-month grid now renders inside its own chapter.
+
+    Kept so older callers that still list an eighth chapter keep working; it
+    deliberately renders nothing rather than printing a second copy of the
+    grids that sections 01-07 already show in place.
+    """
+    return ''

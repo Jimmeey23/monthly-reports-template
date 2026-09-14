@@ -23,6 +23,7 @@
         </p>
       </div>
       <div class="actions">
+        <a class="btn secondary" href="/reports">All Reports</a>
         <a class="btn secondary" href="<%= reportUrl %>" target="_blank" rel="noopener">Open in New Tab</a>
         <a class="btn secondary" href="/download/<%= sessionId %>/<%= encodeURIComponent(filename) %>">Download HTML</a>
         <a class="btn btn-primary" id="download-pdf-btn" href="<%= pdfUrl %>" data-filename="<%= filename.replace(/\.html$/i, '.pdf') %>">

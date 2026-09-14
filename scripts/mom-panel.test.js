@@ -10,7 +10,8 @@ const FILES = [
   'public/revised-july/kwality-house-july-2026.html',
   'public/revised-july/supreme-hq-bandra-july-2026.html',
 ];
-const MODULE = fs.readFileSync(path.join(ROOT, 'public/revised-july/mom-panel.js'), 'utf8');
+// The generator inlines this copy, so the test has to exercise the same one.
+const MODULE = fs.readFileSync(path.join(ROOT, 'report_assets/js/mom-panel.js'), 'utf8');
 
 let failures = 0;
 function check(label, cond, extra) {
@@ -66,17 +67,19 @@ async function run(file) {
   check('clicking "i" opens the panel in place', firstPanel.classList.contains('is-open'));
   check('toggle button label flips to Hide', /Hide/.test(firstPanel.querySelector('.momp-toggle').textContent));
 
-  // cell drill-down
-  const cell = firstPanel.querySelector('.momp-cell[data-idx="6"]');
+  // cell drill-down. The month count follows whatever history the report
+  // carries, so read it off the data rather than assuming a fixed window.
+  const monthCount = (window.MOM_DATA[dataKeys[0]].months || []).length;
+  const cell = firstPanel.querySelector('.momp-cell[data-idx="' + (monthCount - 1) + '"]');
   cell.click();
   const drawer = firstPanel.querySelector('.momp-drawer');
   check('cell click opens a drill-down drawer', !!drawer);
   if (drawer) {
     const txt = drawer.textContent;
     check('drawer shows MoM change', /MoM change/.test(txt));
-    check('drawer shows rank', /of 7/.test(txt));
+    check('drawer shows rank', new RegExp('of ' + monthCount).test(txt));
     check('drawer shows a written insight', /is the/.test(txt));
-    check('drawer shows sparkline', drawer.querySelectorAll('.momp-spark-bar').length === 7);
+    check('drawer shows sparkline', drawer.querySelectorAll('.momp-spark-bar').length === monthCount);
     check('drawer shows stat cards', drawer.querySelectorAll('.momp-stat').length >= 5);
     check('cell marked active', cell.classList.contains('is-active'));
   }

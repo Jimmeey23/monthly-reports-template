@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Generated Reports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+Pro:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .reports-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .reports-table th, .reports-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border, #e1e5ee); }
+    .reports-table th { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted, #5a6478); font-weight: 600; }
+    .reports-table tbody tr:hover { background: var(--bg-soft, #f4f6fa); }
+    .reports-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .reports-table .row-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .reports-empty { padding: 48px 0; text-align: center; color: var(--text-muted, #5a6478); }
+    .table-scroll { overflow-x: auto; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--bg-inset, #eef1f6); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <main class="container wide">
+    <div class="editor-header">
+      <div>
+        <h1>Generated Reports</h1>
+        <p class="subtitle">
+          Every report produced by this app, newest first. All of them are built from the
+          same master template, so they share one structure and one stylesheet.
+        </p>
+      </div>
+      <div class="actions">
+        <a class="btn btn-primary" href="/">New Report</a>
+      </div>
+    </div>
+
+    <% if (!reports.length) { %>
+      <p class="reports-empty">No reports yet. Upload a month of data to generate the first one.</p>
+    <% } else { %>
+      <div class="table-scroll">
+        <table class="reports-table">
+          <thead>
+            <tr>
+              <th>Report</th>
+              <th>Studio</th>
+              <th>Period</th>
+              <th class="num">Reports</th>
+              <th class="num">Size</th>
+              <th class="num">Generated</th>
+              <th class="num">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% reports.forEach(function (r) { %>
+              <tr>
+                <td><%= r.filename %></td>
+                <td><%= (r.studios || []).join(', ') %></td>
+                <td><%= (r.months || []).join(', ') %></td>
+                <td class="num"><span class="pill"><%= r.comboCount || 1 %></span></td>
+                <td class="num"><%= ((r.bytes || 0) / 1048576).toFixed(1) %> MB</td>
+                <td class="num"><%= new Date(r.created).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) %></td>
+                <td class="num">
+                  <div class="row-actions">
+                    <a class="btn secondary" href="/report/<%= r.sessionId %>/<%= encodeURIComponent(r.filename) %>" target="_blank" rel="noopener">Open</a>
+                    <a class="btn secondary" href="/download/<%= r.sessionId %>/<%= encodeURIComponent(r.filename) %>">HTML</a>
+                    <a class="btn secondary" href="/download-pdf/<%= r.sessionId %>/<%= encodeURIComponent(r.filename) %>">PDF</a>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <p class="subtitle" style="margin-top:18px">
+        Only the <%= maxSessions %> most recent upload sessions are kept on disk. A report
+        disappears from this table once its session is pruned.
+      </p>
+    <% } %>
+  </main>
+</body>
+</html>

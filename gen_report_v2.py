@@ -19,6 +19,8 @@ OUTPUT_HTML = sys.argv[4] if len(sys.argv) > 4 else None
 AI_CONTEXT_JSON = sys.argv[5] if len(sys.argv) > 5 else None
 
 import sections_v2
+import charts_v2
+import report_shell
 if AI_CONTEXT_JSON and os.path.exists(AI_CONTEXT_JSON):
     with open(AI_CONTEXT_JSON, 'r') as f:
         sections_v2.AI_CONTEXT = json.load(f)
@@ -26,9 +28,8 @@ else:
     sections_v2.AI_CONTEXT = {}
 
 
-# Load CSS from reference (co-located with this script, not the caller's cwd)
-with open(os.path.join(SCRIPT_DIR, 'full_css.txt'), 'r') as f:
-    CSS = f.read()
+# The stylesheet lives with the rest of the document shell.
+CSS = report_shell.CSS
 
 # Load analysis data if file exists (safe for module import)
 DATA = {}
@@ -53,6 +54,8 @@ def build_location_meta(full_name):
         'full_name': full_name,
         'short_name': short_name,
         'brand_mark': mark,
+        # narration files are named by studio; fall back to a slug of the short name
+        'audio_prefix': short_name.lower().replace(' ', '-'),
     }
 
 
@@ -84,6 +87,7 @@ def build_month_meta(month_key):
         'month_name': month_name,
         'month_short': month_short,
         'year': str(year),
+        'last_day': days_in_month,
         'date_range': f'01 {month_name} {year} &mdash; {days_in_month} {month_name} {year}',
         'period_short': f'01 &mdash; {days_in_month} {month_short} {year}',
         'prev_month': prev1_month_key,
@@ -198,6 +202,8 @@ def build_location_meta(full_name):
         'full_name': full_name,
         'short_name': short_name,
         'brand_mark': mark,
+        # narration files are named by studio; fall back to a slug of the short name
+        'audio_prefix': short_name.lower().replace(' ', '-'),
     }
 
 
@@ -229,6 +235,7 @@ def build_month_meta(month_key):
         'month_name': month_name,
         'month_short': month_short,
         'year': str(year),
+        'last_day': days_in_month,
         'date_range': f'01 {month_name} {year} &mdash; {days_in_month} {month_name} {year}',
         'period_short': f'01 &mdash; {days_in_month} {month_short} {year}',
         'prev_month': prev1_month_key,
@@ -603,73 +610,6 @@ def build_context(loc_key, month_key, loc, mo, sales, sessions, leads, new, laps
     return ctx
 
 
-def build_cover_page(ctx):
-    """Generate a stunning cover page for the report."""
-    loc = ctx['loc']
-    mo = ctx['mo']
-    s = ctx['sales']
-    sess = ctx['sessions']
-    leads = ctx['leads']
-    new = ctx['new']
-    lapsed = ctx['lapsed']
-
-    return f'''
-<div class="report-cover">
-  <div class="report-cover-brand">
-    <span class="brand-mark"></span>
-    Studio Pulse · Performance Intelligence
-  </div>
-  <h1 class="report-cover-title">{loc['short_name']}</h1>
-  <p class="report-cover-subtitle">
-    Performance Report · <span class="accent-yellow">{mo['month_name']} {mo['year']}</span>
-  </p>
-  <div class="report-cover-meta">
-    <div class="report-cover-meta-item">
-      <span class="label">Location</span>
-      <span class="value">{loc['full_name']}</span>
-    </div>
-    <div class="report-cover-meta-item">
-      <span class="label">Period</span>
-      <span class="value">{mo['date_range']}</span>
-    </div>
-    <div class="report-cover-meta-item">
-      <span class="label">Reporting Basis</span>
-      <span class="value">{sess['sessions']} sessions · {s['members']} unique buyers</span>
-    </div>
-    <div class="report-cover-meta-item">
-      <span class="label">Audience</span>
-      <span class="value">Senior Management · Board Review</span>
-    </div>
-  </div>
-  <div class="report-cover-kpis">
-    <div class="report-cover-kpi">
-      <div class="kpi-label">Net Revenue</div>
-      <div class="kpi-value">{lakh(s['net'])}</div>
-    </div>
-    <div class="report-cover-kpi">
-      <div class="kpi-label">Sessions</div>
-      <div class="kpi-value">{fmt_int(sess['sessions'])}</div>
-    </div>
-    <div class="report-cover-kpi">
-      <div class="kpi-label">Fill Rate</div>
-      <div class="kpi-value">{pct(sess['fill'])}</div>
-    </div>
-    <div class="report-cover-kpi">
-      <div class="kpi-label">Conversion</div>
-      <div class="kpi-value">{pct(new['rate'])}</div>
-    </div>
-    <div class="report-cover-kpi">
-      <div class="kpi-label">Churn Rate</div>
-      <div class="kpi-value">{pct(lapsed['churn'])}</div>
-    </div>
-  </div>
-  <div class="report-cover-footer">
-    Confidential · For Internal Use Only · Generated {datetime.now().strftime('%B %d, %Y')}
-  </div>
-</div>
-'''
-
-
 def _mom_months(ctx):
     """Return up to 12 real source months ending at the selected report month."""
     return sorted(
@@ -755,13 +695,13 @@ def build_mom_dataset(ctx):
         ],
     }
     titles = {
-        1: 'Executive Summary', 2: 'Revenue Performance', 3: 'Growth & Conversion',
-        4: 'Studio Delivery', 5: 'Member Health', 6: 'Decision Agenda',
+        1: 'Executive Summary', 2: 'Commercial Revenue', 3: 'Acquisition Funnel',
+        4: 'Sessions & Delivery', 5: 'Member Health', 6: 'Decision Agenda',
         7: 'Forward Indicators',
     }
     return {
-        f'{loc_key}|{ctx["month_key"]}|{section_num}': {
-            'eyebrow': f'Section {section_num:02d} · {ctx["loc"]["short_name"]}',
+        section_num: {
+            'eyebrow': f'{section_num:02d} · {titles[section_num]}',
             'title': f'{titles[section_num]} — Month on Month',
             'months': month_labels,
             'rows': rows,
@@ -771,94 +711,134 @@ def build_mom_dataset(ctx):
 
 
 def build_mom_tables(ctx_list):
+    """Emit the three data globals the client scripts read, plus the sales
+    matrix dialog they populate. The MoM panels themselves are rendered into
+    each section by mom-panel.js."""
     datasets = {}
     for ctx in ctx_list:
-        datasets.update(build_mom_dataset(ctx))
-    payload = json.dumps(datasets, ensure_ascii=False).replace('</', '<\\/')
-    return f'''
-<div class="mom-modal-overlay" id="mom-modal-overlay" aria-hidden="true">
-  <div class="mom-modal" role="dialog" aria-modal="true" aria-labelledby="mom-modal-title" tabindex="-1">
-    <div class="mom-modal-head">
-      <div><div class="mom-modal-eyebrow" id="mom-modal-eyebrow"></div><h3 class="mom-modal-title" id="mom-modal-title"></h3></div>
-      <button class="mom-modal-close" id="mom-modal-close" type="button" aria-label="Close month-on-month table">&times;</button>
-    </div>
-    <div class="mom-modal-body"><table class="mom-table" id="mom-modal-table"></table></div>
-    <div class="mom-modal-foot">Computed from the report's normalized source data for the months shown.</div>
-  </div>
-</div>
-<script>
-window.MOM_DATA = Object.assign(window.MOM_DATA || {{}}, {payload});
-(function () {{
-  var overlay = document.getElementById('mom-modal-overlay');
-  var table = document.getElementById('mom-modal-table');
-  var dialog = overlay && overlay.querySelector('.mom-modal');
-  var lastTrigger = null;
-  if (!overlay || !table || !dialog) return;
-  function number(value) {{ return Number(value) || 0; }}
-  function format(value, kind) {{
-    var n = number(value);
-    if (kind === 'currency') return '₹' + Math.round(n).toLocaleString('en-IN');
-    if (kind === 'pct') return n.toFixed(1) + '%';
-    if (kind === 'decimal') return n.toFixed(2);
-    return Math.round(n).toLocaleString('en-IN');
-  }}
-  function aggregate(values, kind) {{
-    var nums = values.map(number);
-    var total = nums.reduce(function (sum, value) {{ return sum + value; }}, 0);
-    return kind === 'avg' && nums.length ? total / nums.length : total;
-  }}
-  function openTable(key, trigger) {{
-    var section = window.MOM_DATA[key];
-    if (!section) return;
-    var last = section.months.length - 1;
-    var head = '<thead><tr><th>Metric</th>' + section.months.map(function (month, index) {{
-      return '<th' + (index === last ? ' class="mom-current-col"' : '') + '>' + month + '</th>';
-    }}).join('') + '<th class="mom-total-col">Total / Avg</th></tr></thead>';
-    var body = '<tbody>' + section.rows.map(function (row) {{
-      var cells = row.values.map(function (value, index) {{
-        return '<td' + (index === last ? ' class="mom-current-col"' : '') + '>' + format(value, row.fmt) + '</td>';
-      }}).join('');
-      return '<tr><td>' + row.label + '</td>' + cells + '<td class="mom-total-col">' + format(aggregate(row.values, row.agg), row.fmt) + '</td></tr>';
-    }}).join('') + '</tbody>';
-    table.innerHTML = head + body;
-    document.getElementById('mom-modal-eyebrow').textContent = section.eyebrow;
-    document.getElementById('mom-modal-title').textContent = section.title;
-    lastTrigger = trigger;
-    overlay.classList.add('is-open');
-    overlay.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-    dialog.focus();
-  }}
-  function closeTable() {{
-    overlay.classList.remove('is-open');
-    overlay.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-    if (lastTrigger) lastTrigger.focus();
-  }}
-  document.querySelectorAll('.mom-info-btn[data-mom-key]').forEach(function (button) {{
-    button.addEventListener('click', function () {{ openTable(button.dataset.momKey, button); }});
-  }});
-  document.getElementById('mom-modal-close').addEventListener('click', closeTable);
-  overlay.addEventListener('click', function (event) {{ if (event.target === overlay) closeTable(); }});
-  document.addEventListener('keydown', function (event) {{ if (event.key === 'Escape' && overlay.classList.contains('is-open')) closeTable(); }});
-}}());
-</script>
-'''
+        for section_num, block in build_mom_dataset(ctx).items():
+            key = report_shell.MOM_KEYS.get(section_num)
+            if key:
+                datasets[key] = block
+    ctx = ctx_list[-1]
+    return (report_shell.sales_matrix_modal(ctx)
+            + report_shell.data_globals(datasets, build_extra_data(ctx), build_sales_matrix(ctx)))
+
+
+def build_extra_data(ctx):
+    """Drill-down tables hung off the funnel and sessions MoM panels."""
+    loc_key = ctx['loc_key']
+    months = _mom_months(ctx)
+    month_labels = [datetime.strptime(m, '%Y-%m').strftime('%b %Y') for m in months]
+
+    # What new clients bought first, ranked by how many members bought it.
+    products = get_sales_breakdowns(loc_key, ctx['month_key']).get('product', {})
+    new_client_purchases = []
+    for name, v in sorted(products.items(), key=lambda kv: -(kv[1].get('rows', 0) or 0))[:12]:
+        units = v.get('rows', 0) or 0
+        net = v.get('net', 0) or 0
+        new_client_purchases.append({
+            'name': name,
+            'unitsSold': units,
+            'totalLtv': round(net),
+            'atv': round(net / units) if units else 0,
+            'auv': round(net / units) if units else 0,
+        })
+
+    # Client type and trainer, month by month.
+    type_names = set()
+    for month in months:
+        type_names.update(get_new_type(loc_key, month) or {})
+    mom_by_client_type = [
+        {'label': name, 'fmt': 'int', 'agg': 'sum',
+         'values': [(get_new_type(loc_key, m) or {}).get(name, 0) for m in months]}
+        for name in sorted(type_names)
+    ]
+
+    trainers_now = get_sessions_by_trainer(loc_key, ctx['month_key']) or {}
+    teacher_scorecard = []
+    for name, v in sorted(trainers_now.items(), key=lambda kv: -(kv[1].get('visits', 0) or 0)):
+        capacity = v.get('capacity', 0) or 0
+        visits = v.get('visits', 0) or 0
+        teacher_scorecard.append({
+            'instructor': name,
+            'cls': v.get('sessions', 0) or 0,
+            'fillRate': round(visits / capacity * 100, 1) if capacity else 0.0,
+            'pay': round(v.get('revenue', 0) or 0),
+        })
+
+    trainer_names = set()
+    for month in months:
+        trainer_names.update(get_sessions_by_trainer(loc_key, month) or {})
+    mom_trainer = [
+        {'label': name, 'fmt': 'int', 'agg': 'sum',
+         'values': [((get_sessions_by_trainer(loc_key, m) or {}).get(name) or {}).get('sessions', 0)
+                    for m in months]}
+        for name in sorted(trainer_names)
+    ]
+
+    return {
+        'months': month_labels,
+        'newClientPurchases': new_client_purchases,
+        'momByClientType': mom_by_client_type,
+        'teacherScorecard': teacher_scorecard,
+        'momTrainer': mom_trainer,
+    }
+
+
+def build_sales_matrix(ctx):
+    """Every month of category and product sales, for the sales matrix dialog."""
+    loc_key = ctx['loc_key']
+    months = sorted(m for m in DATA.get('meta', {}).get('months', []) if m <= ctx['month_key'])
+    months.reverse()
+    month_labels = {m: datetime.strptime(m, '%Y-%m').strftime('%b %Y') for m in months}
+
+    def cell(v):
+        gross = v.get('gross', 0) or 0
+        net = v.get('net', 0) or 0
+        units = v.get('rows', 0) or 0
+        return {
+            'net': round(net), 'gross': round(gross), 'units': units, 'txns': units,
+            'members': units, 'vat': round(gross - net), 'discount': round(v.get('disc', 0) or 0),
+        }
+
+    names = set()
+    for month in months:
+        names.update(get_sales_breakdowns(loc_key, month).get('category', {}))
+
+    categories = []
+    for name in sorted(names):
+        values = {}
+        for month in months:
+            v = get_sales_breakdowns(loc_key, month).get('category', {}).get(name)
+            if v:
+                values[month] = cell(v)
+        categories.append({'name': name, 'values': values})
+
+    totals = {}
+    for month in months:
+        rows = get_sales_breakdowns(loc_key, month).get('category', {}).values()
+        if not rows:
+            continue
+        gross = sum((r.get('gross', 0) or 0) for r in rows)
+        net = sum((r.get('net', 0) or 0) for r in rows)
+        units = sum((r.get('rows', 0) or 0) for r in rows)
+        totals[month] = {
+            'net': round(net), 'gross': round(gross), 'units': units, 'txns': units,
+            'members': units, 'vat': round(gross - net),
+            'discount': round(sum((r.get('disc', 0) or 0) for r in rows)),
+        }
+
+    return {'months': months, 'monthLabels': month_labels,
+            'categories': categories, 'totals': totals}
 
 
 def build_html(ctx):
     """Assemble the full HTML document."""
     html = head(ctx)
     html += topbar(ctx)
-    html += build_cover_page(ctx)
-    html += hero(ctx)
-    html += section_01_executive_summary(ctx)
-    html += section_02_revenue(ctx)
-    html += section_03_funnel(ctx)
-    html += section_04_sessions(ctx)
-    html += section_05_lapsed(ctx)
-    html += section_06_recommendations(ctx)
-    html += section_07_predictions(ctx)
+    html += cover(ctx)
+    html += render_chapters(ctx)
     html += build_mom_tables([ctx])
     html += "\n<!-- REPORT_CLIENT_PLACEHOLDER -->\n"
     html += footer(ctx)
@@ -875,46 +855,21 @@ def build_multi_title(ctx_list):
     return f'{loc_part} &middot; {month_part}'
 
 
-def head_multi(title_suffix):
-    return f'''<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Performance Report Bundle &middot; {title_suffix}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-{CSS}
-  </style>
-</head>
-<body>
-<div class="print-frame"></div>
-'''
+def head_multi(ctx, title_suffix):
+    """A bundle uses the same document shell as a single report, so the two
+    never drift apart; only the title line differs."""
+    html = report_shell.head(ctx)
+    return html.replace(
+        f"<title>{ctx['loc']['short_name']} · Performance Report · "
+        f"{ctx['mo']['month_name']} {ctx['mo']['year']}</title>",
+        f'<title>Performance Report Bundle · {title_suffix}</title>')
 
 
-def topbar_multi(title_suffix, combo_count):
-    return f'''
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <div class="brand-mark"></div>
-      <div class="brand-text">
-        Studio Pulse &middot; Report Bundle
-        <small>{combo_count} reports &middot; {title_suffix}</small>
-      </div>
-    </div>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-      </svg>
-      <span id="theme-label">Dark</span>
-    </button>
-  </div>
-</div>
-'''
+def topbar_multi(ctx, title_suffix, combo_count):
+    html = report_shell.topbar(ctx)
+    return html.replace(
+        f"<small>Performance Report · {ctx['mo']['month_name']} {ctx['mo']['year']}</small>",
+        f'<small>{combo_count} reports · {title_suffix}</small>')
 
 
 def build_toc(ctx_list):
@@ -947,8 +902,8 @@ def build_toc(ctx_list):
 def build_html_multi(ctx_list):
     """Assemble a bundled document covering multiple studio x month combos."""
     title_suffix = build_multi_title(ctx_list)
-    html = head_multi(title_suffix)
-    html += topbar_multi(title_suffix, len(ctx_list))
+    html = head_multi(ctx_list[0], title_suffix)
+    html += topbar_multi(ctx_list[0], title_suffix, len(ctx_list))
 
     # Group by location for tabs
     locations = {}
@@ -973,14 +928,8 @@ def build_html_multi(ctx_list):
             html += f'<div id="location-{loc_key}" class="location-content {active_class}">'
             for j, ctx in enumerate(loc_ctxs):
                 html += f'\n<div class="report-instance" id="combo-{loc_key}-{j}">\n'
-                html += hero(ctx)
-                html += section_01_executive_summary(ctx)
-                html += section_02_revenue(ctx)
-                html += section_03_funnel(ctx)
-                html += section_04_sessions(ctx)
-                html += section_05_lapsed(ctx)
-                html += section_06_recommendations(ctx)
-                html += section_07_predictions(ctx)
+                html += cover(ctx)
+                html += render_chapters(ctx)
                 html += '\n</div>\n'
             html += '</div>'
     else:
@@ -989,14 +938,8 @@ def build_html_multi(ctx_list):
         for i, ctx in enumerate(ctx_list):
             style = ' style="page-break-before: always;"' if i > 0 else ''
             html += f'\n<div class="report-instance" id="combo-{i}"{style}>\n'
-            html += hero(ctx)
-            html += section_01_executive_summary(ctx)
-            html += section_02_revenue(ctx)
-            html += section_03_funnel(ctx)
-            html += section_04_sessions(ctx)
-            html += section_05_lapsed(ctx)
-            html += section_06_recommendations(ctx)
-            html += section_07_predictions(ctx)
+            html += cover(ctx)
+            html += render_chapters(ctx)
             html += '\n</div>\n'
 
     html += build_mom_tables(ctx_list)
@@ -1008,197 +951,201 @@ def build_html_multi(ctx_list):
 
 
 def head(ctx):
-    loc = ctx['loc']
-    mo = ctx['mo']
-    return f'''<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{loc['short_name']} &middot; Performance Report &middot; {mo['month_name']} {mo['year']}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-{CSS}
-  </style>
-</head>
-<body>
-<div class="print-frame"></div>
-'''
+    return report_shell.head(ctx)
 
 
 def topbar(ctx):
-    loc = ctx['loc']
-    mo = ctx['mo']
-    return f'''
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <div class="brand-mark"></div>
-      <div class="brand-text">
-        {loc['short_name']} &middot; Studio Pulse
-        <small>Performance Report &middot; {mo['month_name']} {mo['year']}</small>
-      </div>
-    </div>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-      </svg>
-      <span id="theme-label">Dark</span>
-    </button>
-  </div>
-</div>
-'''
+    return report_shell.topbar(ctx)
 
 
-def hero(ctx):
+def cover(ctx):
+    """Opening spread: the month in eight metric cards, each with a year of
+    history behind it and a back face explaining what the number means."""
     loc = ctx['loc']
     mo = ctx['mo']
     s = ctx['sales']
     sess = ctx['sessions']
+    new = ctx['new']
+    lapsed = ctx['lapsed']
+    chk = ctx['checkins']
 
-    # KPI cards
-    net_val = lakh(s['net'])
-    gross_val = lakh(s['gross'])
-    disc_val = lakh(s['disc'])
-    visits_val = fmt_int(sess['visits'])
-    fill_val = pct(sess['fill'])
-    conv_val = pct(ctx['new']['rate'])
-    lapsed_val = fmt_int(ctx['lapsed']['lapsed'])
-    disc_eff_val = f"&#8377;{s['disc_eff']:.2f}"
+    months = sorted(m for m in DATA.get('meta', {}).get('months', []) if m <= ctx['month_key'])[-3:]
+    labels = '|'.join(datetime.strptime(m, '%Y-%m').strftime('%b') for m in months)
 
-    available_months = sorted(m for m in DATA.get('meta', {}).get('months', []) if m <= ctx['month_key'])[-12:]
+    def history(getter, field, scale=1.0, decimals=2):
+        return ','.join(
+            f"{(float(getter(ctx['loc_key'], month).get(field, 0) or 0) * scale):.{decimals}f}"
+            for month in months)
 
-    def history(getter, field):
-        return [(month, float(getter(ctx['loc_key'], month).get(field, 0) or 0)) for month in available_months]
+    visits = sess.get('visits', 0) or 0
+    rev_per_visit = (s.get('net', 0) or 0) / visits if visits else 0
 
-    return f'''
-<section class="hero">
-  <div class="container hero-content">
-    <div class="hero-eyebrow">
-      <span class="dot">{loc['brand_mark']}</span>
-      Senior Management Review &middot; Period: {mo['period_short']}
-    </div>
-    <h1>
-      {loc['short_name']} <span class="accent-word">studio performance</span><br>
-      for <span class="accent-yellow">{mo['month_name']} {mo['year']}</span> &mdash; operational rhythm, funnel economics, and the lapsed-member question.
-    </h1>
-    <p class="hero-sub">
-      A data-led review of the studio&rsquo;s commercial and operational performance in {mo['month_name']} {mo['year']}, benchmarked against {mo['prev_month_name']} {mo['prev_year']}
-      and the <strong>{ctx['baseline_label']} baseline</strong>.
-      Every section is structured to surface a business decision &mdash; class schedule, trainer deployment, discount discipline,
-      and membership retention &mdash; that senior management can act on this quarter.
-    </p>
+    # Group revenue is everything sold as class access rather than a membership.
+    GROUP_CATEGORIES = ('Class Packages', 'Sessions/Single Classes', 'Newcomers Special')
+    categories = get_sales_breakdowns(ctx['loc_key'], ctx['month_key']).get('category', {})
+    cat_total = sum((v.get('net', 0) or 0) for v in categories.values()) or 1
+    group_share = sum((v.get('net', 0) or 0)
+                      for k, v in categories.items() if k in GROUP_CATEGORIES) / cat_total * 100
 
-    <div class="hero-meta">
-      <div class="hero-meta-item">
-        <span class="label">Location</span>
-        <span class="value">{loc['full_name']}</span>
-      </div>
-      <div class="hero-meta-item">
-        <span class="label">Period</span>
-        <span class="value">{mo['date_range']}</span>
-      </div>
-      <div class="hero-meta-item">
-        <span class="label">Reporting basis</span>
-        <span class="value">Net Sales &middot; {sess['sessions']} sessions &middot; {s['members']} unique buyers</span>
-      </div>
-      <div class="hero-meta-item">
-        <span class="label">Comparators</span>
-        <span class="value">{mo['prev_month_name']} {mo['prev_year']} &middot; {ctx['baseline_label']} avg &middot; YoY</span>
-      </div>
-      <div class="hero-meta-item">
-        <span class="label">Audience</span>
-        <span class="value">Senior Management &middot; Board Review</span>
-      </div>
-    </div>
+    def tone(change, higher_is_better=True, is_pp=False):
+        return (badge_from_pp if is_pp else badge)(change, higher_is_better)
 
-    <div class="hero-kpi-grid">
-      {kpi_card("Net Sales", net_val, f"Gross {gross_val} &middot; Disc {disc_val}",
-                ctx['net_mom'], ctx['net_yoy'], ctx['net_baseline'], higher_is_better=True, chart_values=history(get_sales, 'net'))}
-      {kpi_card("Visits", visits_val, f"Across {sess['sessions']} sessions",
-                ctx['visits_mom'], "n/a", ctx['visits_baseline'], higher_is_better=True, chart_values=history(get_sessions, 'visits'))}
-      {kpi_card("Fill Rate", fill_val, "Capacity utilization",
-                ctx['fill_mom'], "n/a", ctx['fill_baseline'], higher_is_better=True, is_pp=True, chart_values=history(get_sessions, 'fill'))}
-      {kpi_card("Conversion Rate", conv_val, f"{ctx['new']['trials']} trials &rarr; {ctx['new']['converted']} converted",
-                ctx['conv_mom'], "n/a", ctx['conv_baseline'], higher_is_better=True, is_pp=True, chart_values=history(get_new, 'rate'))}
-      {kpi_card("Lapsed Members", lapsed_val, f"Churn rate {pct(ctx['lapsed']['churn'])}",
-                ctx['lapsed_mom'], "n/a", "Active retention work", higher_is_better=False, chart_values=history(get_lapsed, 'lapsed'))}
-      {kpi_card("Discount Efficiency", disc_eff_val, "Revenue collected / &#8377;1 discounted",
-                ctx['disc_eff_mom'], ctx['disc_eff_yoy'], ctx['disc_eff_baseline'], higher_is_better=True, chart_values=history(get_sales, 'disc_eff'))}
-    </div>
-  </div>
-</section>
-'''
+    cards = [
+        {
+            'label': 'Net Sales', 'value': lakh(s['net']),
+            'sub': f"Gross {lakh(s['gross'])} &middot; Disc {lakh(s['disc'])}",
+            'trends': [('MoM', ctx['net_mom'], tone(ctx['net_mom'])),
+                       ('YoY', ctx['net_yoy'], tone(ctx['net_yoy']))],
+            'labels': labels, 'series': history(get_sales, 'net', 1 / 100000.0),
+            'prefix': '&#8377;', 'suffix': 'L', 'decimals': 2,
+            'baseline': ctx['net_baseline'], 'kicker': 'Commercial momentum',
+            'copy': (f"{mo['month_name']} closed at {lakh(s['net'])} net across "
+                     f"{fmt_int(s['sales'])} transactions, an ATV of {rupee(s['atv'])}."),
+            'back_stats': [('MoM', ctx['net_mom']), ('YoY', ctx['net_yoy']),
+                           ('Vs baseline', ctx['net_baseline'])],
+            'focus': 'Broaden the buyer base so growth is not price-dependent.',
+            'tip': f"Net revenue against {ctx['baseline_label']}.",
+        },
+        {
+            'label': 'Visits', 'value': fmt_int(sess['visits']),
+            'sub': f"Across {fmt_int(sess['sessions'])} sessions",
+            'trends': [('MoM', ctx['visits_mom'], tone(ctx['visits_mom'])),
+                       ('Sessions', ctx['sessions_mom'], tone(ctx['sessions_mom']))],
+            'labels': labels, 'series': history(get_sessions, 'visits', 1, 0),
+            'grouping': True, 'decimals': 0,
+            'baseline': ctx['visits_baseline'], 'kicker': 'Demand depth',
+            'copy': (f"{fmt_int(sess['visits'])} visits across {fmt_int(sess['sessions'])} sessions, "
+                     f"averaging {sess['avg_visits']:.1f} per session."),
+            'back_stats': [('MoM', ctx['visits_mom']), ('Sessions', ctx['sessions_mom']),
+                           ('Vs baseline', ctx['visits_baseline'])],
+            'focus': 'Protect the peak slots that carry most of this volume.',
+            'tip': 'Total attended visits recorded in the month.',
+        },
+        {
+            'label': 'Fill Rate', 'value': pct(sess['fill']),
+            'sub': f"{fmt_int(sess['capacity'])} seats offered",
+            'trends': [('MoM', ctx['fill_mom'], tone(ctx['fill_mom'], is_pp=True)),
+                       ('Empty', fmt_int(sess['empty']), 'warn' if sess['empty'] else 'good')],
+            'labels': labels, 'series': history(get_sessions, 'fill', 1, 1),
+            'suffix': '%', 'decimals': 1,
+            'baseline': ctx['fill_baseline'], 'kicker': 'Capacity health',
+            'copy': (f"{pct(sess['fill'])} of {fmt_int(sess['capacity'])} offered seats were taken; "
+                     f"{fmt_int(sess['empty'])} sessions ran empty."),
+            'back_stats': [('MoM', ctx['fill_mom']), ('Empty classes', fmt_int(sess['empty'])),
+                           ('Vs baseline', ctx['fill_baseline'])],
+            'focus': 'Retire or reschedule the slots that never fill.',
+            'tip': 'Visits divided by seats offered.',
+        },
+        {
+            'label': 'Conversion Rate', 'value': pct(new['rate']),
+            'sub': f"{fmt_int(new['trials'])} trials &rarr; {fmt_int(new.get('converted', 0))} joins",
+            'trends': [('MoM', ctx['conv_mom'], tone(ctx['conv_mom'], is_pp=True)),
+                       ('Trials', ctx['trials_mom'], tone(ctx['trials_mom']))],
+            'labels': labels, 'series': history(get_new, 'rate', 1, 1),
+            'suffix': '%', 'decimals': 1,
+            'baseline': ctx['conv_baseline'], 'kicker': 'Funnel quality',
+            'copy': (f"{fmt_int(new['trials'])} trials produced {fmt_int(new.get('converted', 0))} "
+                     f"conversions, a {pct(new['rate'])} rate."),
+            'back_stats': [('MoM', ctx['conv_mom']), ('Trials', ctx['trials_mom']),
+                           ('Vs baseline', ctx['conv_baseline'])],
+            'focus': 'Fix the handover between trial and first purchase.',
+            'tip': 'Trials that converted to a paid membership or pack.',
+        },
+        {
+            'label': 'Lapsed Members', 'value': fmt_int(lapsed['lapsed']),
+            'sub': f"{fmt_int(lapsed['renewed'])} of {fmt_int(lapsed['total'])} renewed",
+            'trends': [('MoM', ctx['lapsed_mom'], tone(ctx['lapsed_mom'], higher_is_better=False)),
+                       ('Churn', ctx['churn_mom'], tone(ctx['churn_mom'], False, is_pp=True))],
+            'labels': labels, 'series': history(get_lapsed, 'lapsed', 1, 0),
+            'decimals': 0,
+            'baseline': ctx['churn_baseline'], 'kicker': 'Retention watch',
+            'copy': (f"{fmt_int(lapsed['total'])} memberships reached end-of-life; "
+                     f"{pct(lapsed['renewal_rate'])} renewed and {pct(lapsed['churn'])} churned."),
+            'back_stats': [('Renewal rate', pct(lapsed['renewal_rate'])),
+                           ('Churn rate', pct(lapsed['churn'])),
+                           ('Frozen', fmt_int(lapsed['frozen']))],
+            'focus': 'Work the expiring book before it expires, not after.',
+            'tip': 'Memberships that ended without a renewal.',
+        },
+        {
+            'label': 'Discount Efficiency', 'value': f"&#8377;{s['disc_eff']:.2f}",
+            'sub': f"{pct(ctx['disc_penetration'])} of gross discounted",
+            'trends': [('MoM', ctx['disc_eff_mom'], tone(ctx['disc_eff_mom'])),
+                       ('Penetration', ctx['disc_pen_mom'], tone(ctx['disc_pen_mom'], False, is_pp=True))],
+            'labels': labels, 'series': history(get_sales, 'disc_eff', 1, 2),
+            'prefix': '&#8377;', 'decimals': 2,
+            'baseline': ctx['disc_eff_baseline'], 'kicker': 'Promotion return',
+            'copy': (f"Every &#8377;1 of discount returned &#8377;{s['disc_eff']:.2f} of net revenue; "
+                     f"discount value was {lakh(s['disc'])}."),
+            'back_stats': [('MoM', ctx['disc_eff_mom']),
+                           ('Discount value', lakh(s['disc'])),
+                           ('Penetration', pct(ctx['disc_penetration']))],
+            'focus': 'Cap the offers that buy volume without buying margin.',
+            'tip': 'Net revenue collected per rupee of discount given.',
+        },
+        {
+            'label': 'Group Revenue Share', 'value': pct(group_share),
+            'sub': 'Class packs, single classes &amp; newcomer offers',
+            'trends': [('Memberships', pct(100 - group_share), 'warn'),
+                       ('Categories', fmt_int(len(categories)), 'good')],
+            'labels': '', 'series': '',
+            'baseline': '', 'kicker': 'Group contribution',
+            'copy': (f"{pct(group_share)} of net revenue came from class access rather than "
+                     'memberships, which sets how exposed the month is to pack buyers.'),
+            'back_stats': [('Group', pct(group_share)),
+                           ('Memberships', pct(100 - group_share)),
+                           ('Categories', fmt_int(len(categories)))],
+            'focus': 'Convert repeat pack buyers onto memberships.',
+            'tip': 'Share of net revenue from class-access products.',
+        },
+        {
+            'label': 'Revenue / Visit', 'value': rupee(rev_per_visit),
+            'sub': f"{fmt_int(chk.get('late_cancel', 0))} late cancellations",
+            'trends': [('Visits', ctx['visits_mom'], tone(ctx['visits_mom'])),
+                       ('Late cancels', ctx['late_cancel_mom'],
+                        tone(ctx['late_cancel_mom'], higher_is_better=False))],
+            'labels': '', 'series': '',
+            'baseline': '', 'kicker': 'Visit economics',
+            'copy': (f"Each attended visit carried {rupee(rev_per_visit)} of net revenue. "
+                     f"{pct(ctx['lc_rate'])} of bookings were cancelled late."),
+            'back_stats': [('Revenue / visit', rupee(rev_per_visit)),
+                           ('Late cancel rate', pct(ctx['lc_rate'])),
+                           ('Visits', fmt_int(sess['visits']))],
+            'focus': 'Late cancellations are lost seats — price or penalise them.',
+            'tip': 'Net revenue divided by attended visits.',
+        },
+    ]
 
+    headline = (f"{loc['short_name']} <span class=\"accent-word\">studio performance</span><br/>"
+                f"for <span class=\"accent-yellow\">{mo['month_name']} {mo['year']}</span> — "
+                'operational rhythm, funnel economics, and the lapsed-member question.')
+    sub = (f"A data-led review of the studio&rsquo;s commercial and operational performance in "
+           f"{mo['month_name']} {mo['year']}, benchmarked against {mo['prev_month_name']} "
+           f"and the <strong>{ctx['baseline_label']} baseline</strong>. "
+           'Every section is structured to surface a business decision — class schedule, trainer '
+           'deployment, discount discipline, and membership retention — that senior management '
+           'can act on this quarter.')
 
-def kpi_card(label, value, sub, mom, yoy, baseline_text, higher_is_better=True, is_pp=False, chart_values=None):
-    """Generate an accessible two-sided KPI card with comparative context."""
-    mom_b = badge(mom, higher_is_better) if not is_pp else badge_from_pp(mom, higher_is_better)
-    yoy_b = badge(yoy, higher_is_better) if not is_pp else badge_from_pp(yoy, higher_is_better)
+    meta_items = [
+        ('Location', loc['full_name']),
+        ('Period', f"01 {mo['month_name']} {mo['year']} — {mo['last_day']} {mo['month_name']} {mo['year']}"),
+        ('Reporting basis',
+         f"Net Sales &middot; {fmt_int(sess['sessions'])} sessions &middot; {fmt_int(s['members'])} unique buyers"),
+        ('Comparators', f"{mo['prev_month_name']} &middot; {ctx['baseline_label']} &middot; YoY"),
+        ('Audience', 'Senior Management &middot; Board Review'),
+    ]
 
-    def comparison_description(period, change):
-        if change == 'n/a':
-            return f"{period} comparison is unavailable for this reporting period."
-        direction = 'improved' if change.startswith('+') else 'declined' if change.startswith('-') else 'was unchanged'
-        if not higher_is_better and direction != 'was unchanged':
-            implication = 'This reduces operating risk.' if direction == 'declined' else 'This increases operating risk.'
-        else:
-            implication = 'This is positive momentum.' if direction == 'improved' else 'This needs attention.' if direction == 'declined' else 'Performance is stable.'
-        unit = ' percentage points' if is_pp else ''
-        return f"Performance {direction} by {change}{unit} versus {period}. {implication}"
+    marquee_items = [
+        (ctx['net_mom'], 'Net Sales MoM'),
+        (fmt_int(sess['visits']), 'Studio Visits'),
+        (pct(sess['fill']), 'Fill Rate'),
+        (pct(new['rate']), 'Trial Conversion'),
+        (pct(lapsed['renewal_rate']), 'Renewal Rate'),
+        (pct(group_share), 'Group Revenue Share'),
+        (rupee(rev_per_visit), 'Revenue per Visit'),
+    ]
 
-    icons = {
-        'Net Sales': '<path d="M5 8h14M7 5h10M8 12c0 2 1.8 3.5 4 3.5s4-1.5 4-3.5-1.8-3.5-4-3.5S8 7 8 5"/>',
-        'Visits': '<path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 20v-2a4 4 0 0 0-3-3.87M16 2.13a4 4 0 0 1 0 7.75"/>',
-        'Fill Rate': '<path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16V4"/>',
-        'Conversion Rate': '<path d="M3 12h13M12 7l5 5-5 5M21 5v14"/>',
-        'Lapsed Members': '<path d="M12 8v4l3 2M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/>',
-        'Discount Efficiency': '<path d="M19 5 5 19M7 5h.01M17 19h.01M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6M17 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>',
-    }
-    icon = icons.get(label, '<path d="M4 19V5M4 19h16M8 15l3-3 3 2 5-7"/>')
-    chart_values = chart_values or []
-    chart_max = max((point[1] for point in chart_values), default=0)
-    bar_heights = [max(8, value / chart_max * 94) if chart_max else 8 for _, value in chart_values]
-    bars = ''.join(
-        f'<span class="kpi-bar-column{(" is-current" if i == len(bar_heights) - 1 else "")}" '
-        f'title="{chart_values[i][0]}: {chart_values[i][1]:,.1f}"><i style="--height:{height:.1f}%"></i>'
-        f'<small>{datetime.strptime(chart_values[i][0], "%Y-%m").strftime("%b")[0]}</small></span>'
-        for i, height in enumerate(bar_heights)
-    )
-
-    return f'''        <article class="kpi-card" role="button" tabindex="0" aria-pressed="false" aria-label="{label}: {value}. Flip for growth details">
-          <div class="kpi-card-inner">
-            <div class="kpi-card-face kpi-card-front">
-              <div class="kpi-ambient" aria-hidden="true"><span></span><span></span><span></span></div>
-              <div class="kpi-front-header">
-                <div class="kpi-title-lockup"><span class="kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24">{icon}</svg></span><div class="kpi-label">{label}</div></div>
-                <div class="kpi-value">{value}</div>
-              </div>
-              <div class="kpi-front-body">
-                <div class="kpi-chart-heading"><span>12-month trend</span><strong>{chart_values[0][0] if chart_values else ''} &ndash; {chart_values[-1][0] if chart_values else ''}</strong></div>
-                <div class="kpi-mini-chart" role="img" aria-label="12-month bar chart for {label}">{bars}</div>
-              </div>
-              <div class="kpi-card-action">View growth details <span aria-hidden="true">&rarr;</span></div>
-            </div>
-            <div class="kpi-card-face kpi-card-back">
-              <div class="kpi-back-header"><span>{label}</span><b aria-hidden="true">&times;</b></div>
-              <p class="kpi-back-description">{sub}</p>
-              <div class="kpi-comparison">
-                <div class="kpi-comparison-top"><span>MoM</span><strong class="badge {mom_b}">{mom}</strong></div>
-                <p>{comparison_description('last month', mom)}</p>
-              </div>
-              <div class="kpi-comparison">
-                <div class="kpi-comparison-top"><span>YoY</span><strong class="badge {yoy_b if yoy != 'n/a' else 'neutral'}">{yoy}</strong></div>
-                <p>{comparison_description('last year', yoy)}</p>
-              </div>
-              <div class="kpi-benchmark" title="{baseline_text}"><span>Benchmark</span><strong>{baseline_text}</strong></div>
-              <div class="kpi-card-action">Back <span aria-hidden="true">&larr;</span></div>
-            </div>
-          </div>
-        </article>'''
+    return report_shell.hero(ctx, headline, sub, meta_items, marquee_items, cards)
 
 
 # Placeholder for section functions - will be implemented next
@@ -1224,782 +1171,54 @@ def section_07_predictions(ctx):
     return section_07(ctx)
 
 
+def section_08_appendix(ctx):
+    return section_08(ctx)
+
+
+# The narrative order: money, demand, funnel, retention, outlook, actions,
+# then the month-on-month appendix.
+CHAPTERS = [
+    section_01_executive_summary,
+    section_02_revenue,
+    section_03_funnel,
+    section_04_sessions,
+    section_05_lapsed,
+    section_06_recommendations,
+    section_07_predictions,
+]
+
+
+def render_chapters(ctx):
+    reset_mom_registry()
+    # Each chapter carries its own month-on-month grid inline, so this is a
+    # straight render in narrative order.
+    return ''.join(chapter(ctx) for chapter in CHAPTERS)
+
+
 def footer(ctx):
-    loc = ctx['loc']
-    mo = ctx['mo']
     s = ctx['sales']
     sess = ctx['sessions']
-    return f'''
-
-<footer class="footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-brand-text">{loc['short_name']} &middot; Studio Pulse</div>
-        <p class="footer-text">
-          Performance Report &middot; {mo['month_name']} {mo['year']}<br>
-          Compiled from studio sales, sessions, leads, membership, and check-in records.<br>
-          Net Sales excludes tax; Gross Sales reflects amount collected per transaction.
-          Compared against the {ctx['baseline_label']} baseline.
-        </p>
-      </div>
-      <div>
-        <div class="footer-label">Contents</div>
-        <p class="footer-text">
-          01 Executive Summary<br>
-          02 Revenue &amp; Sales Performance<br>
-          03 New Client Conversion Funnel<br>
-          04 Sessions &amp; Class Performance<br>
-          05 Lapsed Memberships Deep Dive<br>
-          06 Strategic Recommendations<br>
-          07 Predictions &amp; Forward View
-        </p>
-      </div>
-      <div>
-        <div class="footer-label">Headline Metrics</div>
-        <p class="footer-text">
-          Net Sales: {lakh(s['net'])}<br>
-          Visits: {fmt_int(sess['visits'])}<br>
-          Fill Rate: {pct(sess['fill'])}<br>
-          Conversion: {pct(ctx['leads']['rate'])}<br>
-          Churn Rate: {pct(ctx['lapsed']['churn'])}<br>
-          Discount Penetration: {pct(ctx['disc_penetration'])}
-        </p>
-      </div>
-    </div>
-  </div>
-</footer>
-'''
+    return report_shell.footer(ctx, [
+        ('Net Sales', lakh(s['net'])),
+        ('Visits', fmt_int(sess['visits'])),
+        ('Fill Rate', pct(sess['fill'])),
+        ('Conversion', pct(ctx['leads']['rate'])),
+        ('Churn Rate', pct(ctx['lapsed']['churn'])),
+        ('Discount Penetration', pct(ctx['disc_penetration'])),
+    ])
 
 
 def theme_script(ctx):
-    return '''
+    """The report's own scripts. Shared chrome — theme, scroll, KPI charts,
+    carousel, PDF export — is inlined by report_shell.scripts()."""
+    return report_shell.page_furniture() + report_shell.scripts()
 
-<script>
-(function() {
-  /* ─── Theme Toggle ─────────────────────────────────────────── */
-  const root = document.documentElement;
-  const toggle = document.getElementById('theme-toggle');
-  const label = document.getElementById('theme-label');
-  const icon = document.getElementById('theme-icon');
-
-  const saved = localStorage.getItem('kh-theme') || 'dark';
-  applyTheme(saved);
-
-  if (toggle) toggle.addEventListener('click', () => {
-    const current = root.getAttribute('data-theme') || 'dark';
-    const next = current === 'dark' ? 'light' : 'dark';
-    applyTheme(next);
-    localStorage.setItem('kh-theme', next);
-  });
-
-  function applyTheme(theme) {
-    root.setAttribute('data-theme', theme);
-    if (!label || !icon) return;
-    if (theme === 'dark') {
-      label.textContent = 'Light';
-      icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-    } else {
-      label.textContent = 'Dark';
-      icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>';
-    }
-  }
-
-  /* ─── Reading Progress Bar ─────────────────────────────────── */
-  const progressBar = document.createElement('div');
-  progressBar.className = 'reading-progress';
-  progressBar.style.width = '0%';
-  document.body.appendChild(progressBar);
-
-  function updateProgress() {
-    const scrollTop = window.scrollY;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const pct = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
-    progressBar.style.width = pct + '%';
-  }
-
-  /* ─── Scroll-Triggered Section Animations ──────────────────── */
-  const sections = document.querySelectorAll('.report-section');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-      }
-    });
-  }, { threshold: 0.08, rootMargin: '0px 0px -60px 0px' });
-
-  sections.forEach(sec => observer.observe(sec));
-
-  /* ─── Quick Navigation Bar ──────────────────────────────────── */
-  const sectionLabels = [
-    { id: 'executive-summary', label: 'Executive Summary', short: '01' },
-    { id: 'revenue-performance', label: 'Revenue', short: '02' },
-    { id: 'conversion-funnel', label: 'Conversion', short: '03' },
-    { id: 'sessions', label: 'Sessions', short: '04' },
-    { id: 'lapsed', label: 'Lapsed', short: '05' },
-    { id: 'recommendations', label: 'Recommendations', short: '06' },
-    { id: 'predictions', label: 'Predictions', short: '07' }
-  ];
-
-  const quickNav = document.createElement('nav');
-  quickNav.className = 'quick-nav-bar';
-  quickNav.setAttribute('aria-label', 'Quick navigation');
-
-  // Add progress indicator
-  const progressDiv = document.createElement('div');
-  progressDiv.className = 'quick-nav-progress';
-  const progressFill = document.createElement('div');
-  progressFill.className = 'quick-nav-progress-fill';
-  progressDiv.appendChild(progressFill);
-  quickNav.appendChild(progressDiv);
-
-  sectionLabels.forEach((sec, i) => {
-    const navItem = document.createElement('button');
-    navItem.className = 'quick-nav-item';
-    navItem.setAttribute('data-section', sec.short);
-    navItem.setAttribute('data-target', sec.id);
-    navItem.setAttribute('aria-label', 'Jump to ' + sec.label);
-
-    const tooltip = document.createElement('span');
-    tooltip.className = 'quick-nav-tooltip';
-    tooltip.textContent = sec.label;
-    navItem.appendChild(tooltip);
-
-    navItem.addEventListener('click', () => {
-      const target = document.getElementById(sec.id);
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
-
-    quickNav.appendChild(navItem);
-  });
-
-  document.body.appendChild(quickNav);
-
-  function updateActiveNav() {
-    const navItems = quickNav.querySelectorAll('.quick-nav-item');
-    let activeIdx = 0;
-    sections.forEach((sec, i) => {
-      const rect = sec.getBoundingClientRect();
-      if (rect.top <= window.innerHeight * 0.4) activeIdx = i;
-    });
-    navItems.forEach((item, i) => item.classList.toggle('active', i === activeIdx));
-
-    // Update progress fill
-    const scrollTop = window.scrollY;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const pct = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
-    progressFill.style.height = pct + '%';
-  }
-
-  /* ─── Drill-Down Functionality ──────────────────────────────── */
-  function initDrillDown() {
-    const tables = document.querySelectorAll('.data-table:not(.heatmap-table):not(.mom-table)');
-
-    tables.forEach(table => {
-      const rows = table.querySelectorAll('tbody tr:not(.totals-row):not(.drill-down-detail)');
-
-      rows.forEach(row => {
-        // Only add drill-down to rows with meaningful data
-        const cells = row.querySelectorAll('td');
-        if (cells.length < 3) return;
-
-        // Add drill-down class
-        row.classList.add('drill-down-row');
-
-        // Create detail row
-        const detailRow = document.createElement('tr');
-        detailRow.className = 'drill-down-detail';
-        const detailCell = document.createElement('td');
-        detailCell.colSpan = cells.length;
-
-        // Build drill-down content from row data
-        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
-        const drillContent = document.createElement('div');
-        drillContent.className = 'drill-down-content';
-
-        cells.forEach((cell, idx) => {
-          if (idx === 0) return; // Skip first column (label)
-          const header = headers[idx] || 'Metric ' + idx;
-          const value = cell.textContent.trim();
-
-          if (value && value !== '—' && value !== 'n/a') {
-            const metric = document.createElement('div');
-            metric.className = 'drill-down-metric';
-            metric.innerHTML = `<span class="drill-down-metric-label">${header}</span><span class="drill-down-metric-value">${value}</span>`;
-            drillContent.appendChild(metric);
-          }
-        });
-
-        // Add context-aware insights
-        const insights = document.createElement('div');
-        insights.className = 'drill-down-metric drill-down-insight';
-        insights.style.flex = '1 1 100%';
-        insights.style.background = 'var(--primary-soft)';
-        insights.style.borderLeft = '3px solid var(--primary)';
-        insights.style.marginTop = 'var(--space-2)';
-
-        const rowLabel = cells[0]?.textContent.trim() || '';
-        insights.innerHTML = `<span class="drill-down-metric-label">💡 Insight</span><span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans)">Click to expand detailed analytics for ${rowLabel}</span>`;
-        drillContent.appendChild(insights);
-
-        detailCell.appendChild(drillContent);
-        detailRow.appendChild(detailCell);
-
-        // Insert detail row after current row
-        row.parentNode.insertBefore(detailRow, row.nextSibling);
-
-        // Add click handler
-        row.addEventListener('click', () => {
-          row.classList.toggle('expanded');
-          detailRow.classList.toggle('visible');
-        });
-      });
-    });
-  }
-
-  /* ─── Mobile Table Card View ───────────────────────────────── */
-  if (window.innerWidth <= 768) {
-    document.querySelectorAll('table.data-table').forEach(table => {
-      if (table.closest('.heatmap-table')) return;
-      table.classList.add('mobile-cards');
-      const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
-      table.querySelectorAll('tbody td').forEach(td => {
-        const idx = Array.from(td.parentNode.children).indexOf(td);
-        if (headers[idx]) td.setAttribute('data-label', headers[idx]);
-      });
-    });
-  }
-
-  /* ─── Unified Scroll Handler ───────────────────────────────── */
-  let scrollTicking = false;
-  window.addEventListener('scroll', () => {
-    if (!scrollTicking) {
-      window.requestAnimationFrame(() => {
-        updateProgress();
-        updateActiveNav();
-        scrollTicking = false;
-      });
-      scrollTicking = true;
-    }
-  }, { passive: true });
-
-  updateProgress();
-  updateActiveNav();
-
-  // Initialize drill-down after DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDrillDown);
-  } else {
-    initDrillDown();
-  }
-})();
-</script>
-
-<!-- AI Copilot Button -->
-<button id="ai-copilot-btn" aria-label="AI Data Copilot">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-    <path d="M2 17l10 5 10-5"/>
-    <path d="M2 12l10 5 10-5"/>
-  </svg>
-</button>
-
-<!-- AI Copilot Modal -->
-<div id="ai-copilot-backdrop" aria-hidden="true"></div>
-<div id="ai-copilot-modal" role="dialog" aria-modal="true" aria-label="AI Data Copilot">
-  <div class="copilot-header">
-    <h3>🤖 AI Data Copilot</h3>
-    <button id="ai-copilot-close" aria-label="Close">&times;</button>
-  </div>
-  <div class="copilot-modes" role="tablist" aria-label="Copilot mode">
-    <button class="copilot-mode-btn is-active" id="copilot-mode-build" data-mode="build" role="tab" aria-selected="true">Build</button>
-    <button class="copilot-mode-btn" id="copilot-mode-chat" data-mode="chat" role="tab" aria-selected="false">Chat</button>
-    <span class="copilot-scope" id="copilot-scope"></span>
-  </div>
-  <div class="copilot-body">
-    <p class="copilot-hint" id="copilot-hint"></p>
-    <div id="ai-copilot-transcript" hidden></div>
-    <textarea id="ai-copilot-input" placeholder="Describe the table or KPI you want..."></textarea>
-    <div class="copilot-actions">
-      <button id="ai-copilot-send">Build element</button>
-      <button id="ai-copilot-clear" class="copilot-ghost-btn" title="Clear this conversation">Clear</button>
-    </div>
-    <div id="ai-copilot-output"></div>
-  </div>
-</div>
-
-<script>
-// MoM Toggle Table
-function toggleMoMTable(sectionId) {
-  const container = document.getElementById('mom-table-' + sectionId);
-  if (!container) return;
-  const btn = container.closest('.mom-toggle-wrapper')?.querySelector('.mom-toggle-btn, .mom-toggle')
-    || container.previousElementSibling;
-
-  // The wrapper is collapsed with `max-height: 0`, so the .expanded class has to
-  // land on the CONTAINER (not just the button) or nothing becomes visible.
-  const isExpanded = container.classList.contains('expanded')
-    || (container.style.display !== 'none' && container.style.maxHeight !== '0px');
-
-  if (isExpanded) {
-    container.classList.remove('expanded');
-    container.style.display = 'none';
-  } else {
-    container.classList.add('expanded');
-    container.style.display = 'block';
-    container.style.maxHeight = 'none';
-  }
-  btn?.setAttribute('aria-expanded', String(!isExpanded));
-  btn?.classList.toggle('expanded', !isExpanded);
-}
-
-/* ─── MoM grid: metric tabs, month range, per-cell analytics ─────── */
-function momFmtValue(v, fmt) {
-  if (v === null || v === undefined || isNaN(v)) return '\u2014';
-  if (fmt === 'pct') return (Math.round(v * 10) / 10).toFixed(1) + '%';
-  if (fmt === 'num') return v.toFixed(2);
-  if (fmt === 'money') {
-    var a = Math.abs(v);
-    if (a >= 1e7) return '\u20b9' + (v / 1e7).toFixed(2) + 'Cr';
-    if (a >= 1e5) return '\u20b9' + (v / 1e5).toFixed(2) + 'L';
-    return '\u20b9' + Math.round(v).toLocaleString('en-IN');
-  }
-  return Math.round(v).toLocaleString('en-IN');
-}
-
-function momFmtDelta(cur, prev, fmt) {
-  if (prev === null || prev === undefined || isNaN(prev) || !prev) return '\u2014';
-  // Rate metrics are stored as percentages already, so their movement is in
-  // percentage points; everything else is a relative change.
-  var d = fmt === 'pct' ? (cur - prev) : (cur - prev) / Math.abs(prev) * 100;
-  var txt = (d >= 0 ? '+' : '') + d.toFixed(1);
-  return txt + (fmt === 'pct' ? 'pp' : '%');
-}
-
-function momCellDrill(container, cell) {
-  var panel = container.querySelector('.mom-drill-panel');
-  if (!panel) return;
-  var body = cell.closest('tbody');
-  var row = cell.closest('tr');
-  var fmt = cell.dataset.fmt || 'int';
-  var metric = body ? body.dataset.metric : '';
-
-  container.querySelectorAll('.mom-cell.is-selected').forEach(function (c) { c.classList.remove('is-selected'); });
-  cell.classList.add('is-selected');
-
-  var cells = Array.prototype.slice.call(row.querySelectorAll('td.mom-cell[data-v]'))
-    .filter(function (c) { return !c.hidden && c.dataset.v !== ''; });
-  var entries = cells.map(function (c) { return { month: c.dataset.month, v: Number(c.dataset.v) }; })
-    .filter(function (e) { return !isNaN(e.v); });
-  if (!entries.length) return;
-
-  var cur = Number(cell.dataset.v);
-  var i = entries.findIndex(function (e) { return e.month === cell.dataset.month; });
-  var prev = i > 0 ? entries[i - 1].v : null;
-  var vals = entries.map(function (e) { return e.v; });
-  var total = vals.reduce(function (a, b) { return a + b; }, 0);
-  var mean = total / vals.length;
-  var best = entries.reduce(function (a, b) { return b.v > a.v ? b : a; });
-  var worst = entries.reduce(function (a, b) { return b.v < a.v ? b : a; });
-  var rank = vals.slice().sort(function (a, b) { return b - a; }).indexOf(cur) + 1;
-  var spread = mean ? Math.abs(best.v - worst.v) / Math.abs(mean) * 100 : 0;
-
-  function tile(label, value, note) {
-    return '<div class="drill-down-metric">' +
-      '<span class="drill-down-metric-label">' + label + '</span>' +
-      '<span class="drill-down-metric-value">' + value + '</span>' +
-      (note ? '<span class="drill-down-metric-label">' + note + '</span>' : '') +
-      '</div>';
-  }
-
-  var html = '<div class="drill-down-content">' +
-    tile(metric || 'Value', momFmtValue(cur, fmt), cell.dataset.month) +
-    tile('vs previous month', momFmtDelta(cur, prev, fmt), prev === null ? 'first month shown' : 'vs ' + entries[i - 1].month) +
-    tile('Rank in window', rank + ' of ' + entries.length, 'highest = 1') +
-    (fmt === 'pct' ? '' : tile('Share of window', (total ? (cur / total * 100) : 0).toFixed(1) + '%', 'of ' + entries.length + ' months')) +
-    tile('Window average', momFmtValue(mean, fmt), fmt === 'pct' ? entries.length + ' months' : momFmtValue(total, fmt) + ' total') +
-    tile('Highest', momFmtValue(best.v, fmt), best.month) +
-    tile('Lowest', momFmtValue(worst.v, fmt), worst.month) +
-    '<div class="drill-down-metric drill-down-insight" style="flex:1 1 100%;margin-top:var(--space-2);border-left:3px solid var(--primary);background:var(--primary-soft);padding:8px 14px">' +
-    '<span class="drill-down-metric-label">Analytics</span>' +
-    '<span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans);font-weight:500">' +
-    (metric || 'Metric') + ' in ' + cell.dataset.month + ' is ' + momFmtValue(cur, fmt) +
-    (prev !== null ? ', ' + momFmtDelta(cur, prev, fmt) + ' against ' + entries[i - 1].month : '') +
-    '. It ranks ' + rank + ' of ' + entries.length + ' months in view and sits ' +
-    (cur >= mean ? (mean ? ((cur / mean - 1) * 100).toFixed(1) : '0') + '% above' : ((1 - cur / mean) * 100).toFixed(1) + '% below') +
-    ' the window average of ' + momFmtValue(mean, fmt) +
-    '. Spread between best and worst is ' + spread.toFixed(0) + '% of the mean \u2014 ' +
-    (spread < 15 ? 'a tight, predictable band.' : spread > 40 ? 'a wide swing, so treat single months with care.' : 'moderate month-to-month variation.') +
-    '</span></div></div>';
-
-  panel.innerHTML = html;
-  panel.hidden = false;
-}
-
-function initMoMGrids() {
-  document.querySelectorAll('.mom-table-container').forEach(function (container) {
-    var panels = Array.prototype.slice.call(container.querySelectorAll('tbody.mom-panel'));
-    if (!panels.length) return;
-
-    function clearDrill() {
-      var drill = container.querySelector('.mom-drill-panel');
-      if (drill) { drill.hidden = true; drill.innerHTML = ''; }
-      container.querySelectorAll('.mom-cell.is-selected').forEach(function (c) { c.classList.remove('is-selected'); });
-    }
-
-    container.querySelectorAll('.mom-metric-tab').forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        container.querySelectorAll('.mom-metric-tab').forEach(function (t) { t.classList.remove('is-active'); });
-        panels.forEach(function (p) { p.classList.remove('is-active'); });
-        tab.classList.add('is-active');
-        var target = document.getElementById(tab.dataset.panel);
-        if (target) target.classList.add('is-active');
-        clearDrill();
-      });
-    });
-
-    function applyRange(range) {
-      var heads = container.querySelectorAll('thead th[data-col]');
-      var total = heads.length;
-      var keep = range === 'all' ? total : Math.min(parseInt(range, 10) || 12, total);
-      var first = total - keep;
-      container.querySelectorAll('[data-col]').forEach(function (cell) {
-        cell.hidden = Number(cell.dataset.col) < first;
-      });
-      clearDrill();
-    }
-
-    container.querySelectorAll('.mom-range-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        container.querySelectorAll('.mom-range-btn').forEach(function (b) { b.classList.remove('is-active'); });
-        btn.classList.add('is-active');
-        container.dataset.range = btn.dataset.range;
-        applyRange(btn.dataset.range);
-      });
-    });
-    applyRange(container.dataset.range || '12');
-
-    container.querySelectorAll('td.mom-cell[data-v]').forEach(function (cell) {
-      cell.addEventListener('click', function () { momCellDrill(container, cell); });
-    });
-  });
-}
-
-
-// The MoM grid lives in a later script block, so wire it up from here.
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initMoMGrids);
-} else {
-  initMoMGrids();
-}
-
-// Multi-Location Tabs
-document.addEventListener('DOMContentLoaded', () => {
-  const tabs = document.querySelectorAll('.location-tab');
-  const contents = document.querySelectorAll('.location-content');
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const targetId = tab.dataset.location;
-
-      tabs.forEach(t => t.classList.remove('active'));
-      contents.forEach(c => c.classList.remove('active'));
-
-      tab.classList.add('active');
-      document.getElementById('location-' + targetId)?.classList.add('active');
-    });
-  });
-
-  // Activate first tab by default
-  if (tabs.length > 0 && !document.querySelector('.location-tab.active')) {
-    tabs[0].click();
-  }
-
-  // AI Copilot — two modes: Build (an element for the report) and Chat (Q&A)
-  const copilotBtn = document.getElementById('ai-copilot-btn');
-  const copilotModal = document.getElementById('ai-copilot-modal');
-  const copilotBackdrop = document.getElementById('ai-copilot-backdrop');
-  const copilotClose = document.getElementById('ai-copilot-close');
-  const copilotInput = document.getElementById('ai-copilot-input');
-  const copilotSend = document.getElementById('ai-copilot-send');
-  const copilotClear = document.getElementById('ai-copilot-clear');
-  const copilotOutput = document.getElementById('ai-copilot-output');
-  const copilotTranscript = document.getElementById('ai-copilot-transcript');
-  const copilotHint = document.getElementById('copilot-hint');
-  let copilotMode = 'build';
-
-  function openCopilot() {
-    copilotModal.classList.add('active');
-    copilotBackdrop.classList.add('active');
-    copilotInput.focus();
-  }
-
-  // Escape, and any click that lands outside the panel, shut it immediately.
-  function closeCopilot() {
-    copilotModal.classList.remove('active');
-    copilotBackdrop.classList.remove('active');
-  }
-
-  copilotBtn?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (copilotModal.classList.contains('active')) closeCopilot();
-    else openCopilot();
-  });
-
-  copilotClose?.addEventListener('click', closeCopilot);
-  copilotBackdrop?.addEventListener('mousedown', closeCopilot);
-  document.addEventListener('mousedown', (e) => {
-    if (!copilotModal.classList.contains('active')) return;
-    if (copilotModal.contains(e.target) || (copilotBtn && copilotBtn.contains(e.target))) return;
-    closeCopilot();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && copilotModal.classList.contains('active')) {
-      e.preventDefault();
-      closeCopilot();
-    }
-  });
-
-  const COPILOT_HINTS = {
-    build: 'Describe the table, KPI or breakdown you want. It is computed from the uploaded data and can be saved straight into a section of this report.',
-    chat: 'Ask anything about this report\u2019s data. Answers come from the analysis file for this upload, with the supporting table and follow-ups you can click.',
-  };
-
-  function setCopilotMode(mode) {
-    copilotMode = mode === 'chat' ? 'chat' : 'build';
-    document.querySelectorAll('.copilot-mode-btn').forEach((b) => {
-      const on = b.dataset.mode === copilotMode;
-      b.classList.toggle('is-active', on);
-      b.setAttribute('aria-selected', String(on));
-    });
-    copilotHint.textContent = COPILOT_HINTS[copilotMode];
-    copilotSend.textContent = copilotMode === 'chat' ? 'Ask' : 'Build element';
-    copilotInput.placeholder = copilotMode === 'chat'
-      ? 'Ask a question about this month\u2019s data...'
-      : 'Describe the table or KPI you want...';
-    copilotTranscript.hidden = copilotMode !== 'chat';
-    copilotOutput.innerHTML = '';
-  }
-
-  document.querySelectorAll('.copilot-mode-btn').forEach((b) => {
-    b.addEventListener('click', () => setCopilotMode(b.dataset.mode));
-  });
-  setCopilotMode('build');
-  const ctxNow = window.__REPORT_CTX__ || {};
-  const scopeEl = document.getElementById('copilot-scope');
-  if (scopeEl && ctxNow.locName) scopeEl.textContent = ctxNow.locName + ' \u00b7 ' + (ctxNow.monthLabel || '');
-
-  copilotClear?.addEventListener('click', () => {
-    copilotOutput.innerHTML = '';
-    if (copilotTranscript) copilotTranscript.innerHTML = '';
-    copilotInput.value = '';
-  });
-
-  copilotSend?.addEventListener('click', async () => {
-    const prompt = copilotInput.value.trim();
-    if (!prompt) return;
-
-    copilotSend.disabled = true;
-    copilotSend.textContent = 'Analyzing...';
-    copilotOutput.innerHTML = '<div class="copilot-loading">Processing your request...</div>';
-
-    try {
-      const sessionId = window.location.pathname.split('/')[2];
-      const ctx = window.__REPORT_CTX__ || {};
-      const response = await fetch('/ai-copilot/' + sessionId, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, loc: ctx.loc, month: ctx.month, mode: copilotMode })
-      });
-
-      const result = await response.json();
-      renderCopilotResult(result, prompt);
-    } catch (err) {
-      copilotOutput.innerHTML = '<div class="copilot-error">Error: ' + err.message + '</div>';
-    }
-
-    copilotSend.disabled = false;
-    copilotSend.textContent = 'Analyze Data';
-  });
-
-  copilotInput?.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      copilotSend.click();
-    }
-  });
-
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  }
-
-  function renderTable(rows) {
-    if (!Array.isArray(rows) || !rows.length) return '';
-    const cols = Object.keys(rows[0]);
-    let out = '<div class="copilot-table-wrap"><table class="data-table"><thead><tr>';
-    cols.forEach((c) => { out += '<th>' + esc(c) + '</th>'; });
-    out += '</tr></thead><tbody>';
-    rows.slice(0, 25).forEach((row) => {
-      out += '<tr>';
-      cols.forEach((c) => { out += '<td>' + esc(row[c]) + '</td>'; });
-      out += '</tr>';
-    });
-    out += '</tbody></table></div>';
-    if (rows.length > 25) out += '<p class="copilot-note">' + (rows.length - 25) + ' more rows not shown.</p>';
-    return out;
-  }
-
-  /* Chat mode: a transcript of question / answer turns, with follow-up chips. */
-  function renderChatTurn(result, prompt) {
-    const turn = document.createElement('div');
-    turn.className = 'copilot-turn';
-    let html = '<div class="copilot-user-line">' + esc(prompt) + '</div>';
-    html += '<div class="copilot-answer">';
-    html += '<div class="copilot-answer-title">' + esc(result.title || 'Answer') + '</div>';
-    html += '<div class="copilot-answer-body">' + esc(result.answer || result.description || '') + '</div>';
-    if (result.kpi) {
-      html += '<div class="kpi-cards"><div class="kpi-card">' +
-        '<div class="kpi-label">' + esc(result.kpi.label || 'Metric') + '</div>' +
-        '<div class="kpi-value">' + esc(result.kpi.value || '\u2014') + '</div>' +
-        (result.kpi.change ? '<div class="kpi-change">' + esc(result.kpi.change) + '</div>' : '') +
-        '</div></div>';
-    }
-    if (result.table && Array.isArray(result.table.data)) html += renderTable(result.table.data);
-    if (result.confidence) {
-      html += '<div class="copilot-meta">Answered from this upload\u2019s analysis file \u00b7 confidence: ' + esc(result.confidence) + '</div>';
-    }
-    if (Array.isArray(result.followUps) && result.followUps.length) {
-      html += '<div class="copilot-chips">';
-      result.followUps.forEach((f) => {
-        html += '<button class="copilot-chip" data-q="' + esc(f) + '">' + esc(f) + '</button>';
-      });
-      html += '</div>';
-    }
-    html += '</div>';
-    turn.innerHTML = html;
-    turn.querySelectorAll('.copilot-chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        copilotInput.value = chip.dataset.q;
-        copilotSend.click();
-      });
-    });
-    copilotTranscript.hidden = false;
-    copilotTranscript.appendChild(turn);
-    copilotTranscript.scrollTop = copilotTranscript.scrollHeight;
-  }
-
-  function renderCopilotResult(result, prompt) {
-    if (result && (result.type === 'chat' || copilotMode === 'chat')) {
-      renderChatTurn(result, prompt);
-      return;
-    }
-    let html = '<div class="copilot-result">';
-    html += '<div class="copilot-prompt">' + prompt + '</div>';
-
-    if (result.type === 'table' && Array.isArray(result.data)) {
-      html += '<h4>' + (result.title || 'Data Table') + '</h4>';
-      if (result.data.length > 0) {
-        const cols = Object.keys(result.data[0]);
-        html += '<table class="data-table"><thead><tr>';
-        cols.forEach(col => html += '<th>' + col + '</th>');
-        html += '</tr></thead><tbody>';
-        result.data.slice(0, 20).forEach(row => {
-          html += '<tr>';
-          cols.forEach(col => html += '<td>' + (row[col] || '') + '</td>');
-          html += '</tr>';
-        });
-        html += '</tbody></table>';
-      }
-    } else if (result.type === 'kpi' && result.data) {
-      html += '<div class="kpi-cards">';
-      html += '<div class="kpi-card">';
-      html += '<div class="kpi-label">' + (result.data.label || 'Metric') + '</div>';
-      html += '<div class="kpi-value">' + (result.data.value || '—') + '</div>';
-      if (result.data.change) {
-        html += '<div class="kpi-change ' + (result.data.change.startsWith('+') ? 'positive' : 'negative') + '">' + result.data.change + '</div>';
-      }
-      html += '</div></div>';
-    } else if (result.type === 'chart') {
-      html += '<div class="chart-placeholder">Chart visualization would render here</div>';
-    } else {
-      html += '<div class="copilot-text">' + (result.data || result.description || 'No data') + '</div>';
-    }
-
-    if (result.description) {
-      html += '<div class="copilot-description">' + result.description + '</div>';
-    }
-
-    // Build mode: pick the section and drop the element straight in.
-    html += '<div class="copilot-save-row">' +
-      '<select class="copilot-section-select" aria-label="Section to add this to">' +
-      '<option value="">Add to section\u2026</option>' +
-      '<option value="1">1 — Executive summary</option>' +
-      '<option value="2">2 — Revenue performance</option>' +
-      '<option value="3">3 — Conversion funnel</option>' +
-      '<option value="4">4 — Sessions</option>' +
-      '<option value="5">5 — Lapsed members</option>' +
-      '<option value="6">6 — Recommendations</option>' +
-      '<option value="7">7 — Predictions</option>' +
-      '</select>' +
-      '<button class="copilot-save-btn" onclick="saveCopilotResult(this)">Save to Report</button>' +
-      '</div>';
-    html += '</div>';
-
-    copilotOutput.innerHTML = html;
-    const sel = copilotOutput.querySelector('.copilot-section-select');
-    const saveBtn = copilotOutput.querySelector('.copilot-save-btn');
-    sel?.addEventListener('change', () => {
-      saveBtn.dataset.section = sel.value;
-      saveBtn.disabled = !sel.value;
-    });
-    if (saveBtn) saveBtn.disabled = true;
-  }
-});
-
-function saveCopilotResult(btn) {
-  const result = btn.closest('.copilot-result');
-  const section = btn.dataset.section || prompt('Which section? (1=Executive, 2=Revenue, 3=Funnel, 4=Sessions, 5=Lapsed, 6=Recommendations, 7=Predictions)');
-  if (!section) return;
-
-  const savedElement = document.createElement('div');
-  savedElement.className = 'saved-copilot-element';
-  savedElement.innerHTML = result.innerHTML;
-  savedElement.querySelector('.copilot-save-btn')?.remove();
-
-  const sectionMap = {
-    '1': 'executive-summary',
-    '2': 'revenue-performance',
-    '3': 'conversion-funnel',
-    '4': 'sessions',
-    '5': 'lapsed',
-    '6': 'recommendations',
-    '7': 'predictions'
-  };
-
-  const targetSection = document.getElementById(sectionMap[section]);
-  if (targetSection) {
-    targetSection.querySelector('.container')?.appendChild(savedElement);
-    btn.textContent = 'Saved ✓';
-    btn.disabled = true;
-  }
-}
-</script>
-
-</body>
-</html>
-'''
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# SECTION FUNCTIONS — These are the main content generators
-# ═══════════════════════════════════════════════════════════════════════════════
 
 # These will be imported from sections module
 from sections_v2 import (
     section_01, section_02, section_03, section_04,
-    section_05, section_06, section_07
+    section_05, section_06, section_07, section_08,
+    reset_mom_registry
 )
 
 

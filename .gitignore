@@ -21,3 +21,7 @@ summarized_conversations/
 *.csv
 .vercel
 .env*.local
+
+# Generated report previews (local only)
+preview/
+uploads/.insights-cache/

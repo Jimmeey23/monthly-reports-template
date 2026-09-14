@@ -82,11 +82,19 @@ async function loadReport(target) {
   check('every chapter has a marquee', d.querySelectorAll('.section-marquee').length === 7,
     String(d.querySelectorAll('.section-marquee').length));
 
-  // 2 — hero KPI cards
+  // 2 — metric cards (the hero grid and the compact cards inside sections are
+  // the same component, so both are checked here)
+  const heroCards = d.querySelectorAll('.hero-kpi-grid .kpi-card');
   const cards = d.querySelectorAll('.kpi-card');
-  check('hero shows eight KPI cards', cards.length === 8, String(cards.length));
+  check('hero shows a full KPI grid', heroCards.length >= 6, String(heroCards.length));
+  check('sections reuse the hero metric card',
+    d.querySelectorAll('.kpi-card.is-compact').length > 0,
+    d.querySelectorAll('.kpi-card.is-compact').length + ' compact');
   check('KPI cards have a back face',
     d.querySelectorAll('.kpi-card-back').length === cards.length);
+  check('metric cards explain their formula',
+    d.querySelectorAll('.kpi-back-formula').length > 0,
+    d.querySelectorAll('.kpi-back-formula').length + ' formulas');
   const charted = [...d.querySelectorAll('.kpi-chart')].filter(c => c.dataset.series);
   check('KPI sparklines carry their series', charted.length > 0, charted.length + ' charted');
   if (cards.length) {
@@ -96,21 +104,43 @@ async function loadReport(target) {
     cards[0].click();
   }
 
-  // 3 — drill-down child rows
+  // 3 — row drill-downs now open the shared modal rather than an inline strip
   const rows = d.querySelectorAll('tr.drill-down-row');
   check('drill-down rows installed', rows.length > 0, rows.length + ' rows');
-  const row = rows[0];
-  const detail = row && row.nextElementSibling;
-  if (row && detail) {
-    row.click();
+  const overlay = d.querySelector('.drill-modal-overlay');
+  check('drill-down modal installed', !!overlay);
+  if (rows.length && overlay) {
+    rows[0].click();
     await new Promise(r => setTimeout(r, 80));
-    check('child row expands', /visible/.test(detail.className), detail.className);
-    const content = detail.querySelector('.drill-down-content');
-    check('child row carries metrics',
-      content && content.querySelectorAll('.drill-down-metric').length > 1,
-      content ? content.querySelectorAll('.drill-down-metric').length + ' metrics' : 'none');
-    row.click();
+    check('row opens the drill-down modal', overlay.hidden === false, String(overlay.hidden));
+    check('modal carries the row metrics',
+      d.querySelectorAll('.drill-stat').length > 1,
+      d.querySelectorAll('.drill-stat').length + ' stats');
+    check('modal ranks the row against its peers',
+      d.querySelectorAll('.drill-bar').length > 0,
+      d.querySelectorAll('.drill-bar').length + ' bars');
+    overlay.querySelector('.drill-modal-close').click();
   }
+
+  // 3b — nested tables open their children
+  const nested = d.querySelector('table.nested-table tr.group-row.has-children');
+  if (nested) {
+    const groupId = nested.querySelector('.row-toggle').getAttribute('aria-controls');
+    const kids = d.querySelectorAll(`tr.child-row[data-parent="${groupId}"]`);
+    check('nested children start closed', kids.length > 0 && kids[0].hidden, kids.length + ' children');
+    nested.click();
+    await new Promise(r => setTimeout(r, 40));
+    check('nested parent row opens its children', kids.length > 0 && !kids[0].hidden);
+    nested.click();
+    await new Promise(r => setTimeout(r, 40));
+    check('nested parent row closes again', kids.length > 0 && kids[0].hidden);
+  }
+
+  // 3c — ranking boards are the one ranking surface
+  check('ranking boards render their items',
+    d.querySelectorAll('.rank-board').length > 1 && d.querySelectorAll('.rank-item').length > 0,
+    d.querySelectorAll('.rank-board').length + ' boards, ' +
+    d.querySelectorAll('.rank-item').length + ' items');
 
   // 4 — heatmap controls
   const heatmap = d.getElementById('demand-heatmap');

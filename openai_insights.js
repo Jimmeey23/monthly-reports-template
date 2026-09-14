@@ -692,7 +692,11 @@ CONCISENESS & QUALITY RULES:
 - Frame underperformance constructively as "opportunity" or "watch".`;
 }
 
-async function generateInsights(analysis, locKey, month, section = 'executive-summary') {
+/* `cacheOnly` is the no-spend path: everything up to the cache lookup still
+   runs, so a narrative that was already paid for is reused, but a miss returns
+   null instead of calling a provider. The caller decides what an empty slot
+   looks like. */
+async function generateInsights(analysis, locKey, month, section = 'executive-summary', options = {}) {
   const digest = buildDigest(analysis, locKey, month, section);
   const sectionLabel = SECTION_LABELS[section] || section;
   const angle = ANALYTICAL_ANGLES[Math.floor(Math.random() * ANALYTICAL_ANGLES.length)];
@@ -705,6 +709,7 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
   const key = cacheKey([PROMPT_VERSION, locKey, month, section, JSON.stringify(digest)]);
   const cached = readCache(key);
   if (cached) return cached;
+  if (options.cacheOnly) return null;
 
   const requestBody = {
       response_format: { type: 'json_object' },

@@ -60,6 +60,18 @@
         </div>
       </div>
 
+      <div class="scope-group">
+        <div class="scope-label">Narratives<span class="scope-hint">AI spend</span></div>
+        <label class="switch-row" for="no-ai">
+          <input type="checkbox" id="no-ai" name="noAi" value="1" <%= (typeof noAi !== 'undefined' && noAi) ? 'checked' : '' %> />
+          <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+          <span class="switch-copy">
+            <strong>Data only &mdash; no AI calls</strong>
+            <small>Builds the report from the CSVs alone. Narratives already in the cache are reused; nothing new is requested, so the run costs nothing.</small>
+          </span>
+        </label>
+      </div>
+
       <button type="submit" id="generate-btn" class="btn btn-primary" disabled>
         <span class="btn-label">Generate Report</span>
         <span class="btn-count" id="combo-count">0 combos</span>
@@ -73,7 +85,7 @@
     <div class="loading-card">
       <div class="spinner"></div>
       <div class="loading-title">Generating your report&hellip;</div>
-      <div class="loading-sub">Building sections and computing insights. This can take a moment for multi-studio or multi-month bundles.</div>
+      <div class="loading-sub" id="loading-sub">Building sections and computing insights. This can take a moment for multi-studio or multi-month bundles.</div>
       <div class="loading-bar"><div class="loading-bar-fill"></div></div>
     </div>
   </div>
@@ -94,8 +106,23 @@
     form.addEventListener('change', refresh);
     refresh();
 
+    const noAiInput = document.getElementById('no-ai');
+    const loadingSub = document.getElementById('loading-sub');
+    const btnLabel = document.querySelector('#generate-btn .btn-label');
+
+    function refreshAiMode() {
+      btnLabel.textContent = noAiInput.checked ? 'Generate Report (no AI)' : 'Generate Report';
+    }
+
+    noAiInput.addEventListener('change', refreshAiMode);
+    refreshAiMode();
+
     form.addEventListener('submit', () => {
       generateBtn.disabled = true;
+      if (noAiInput.checked) {
+        loadingSub.textContent =
+          'Building sections from the data alone — no AI calls, no spend. This is the fast path.';
+      }
       document.getElementById('loading-overlay').hidden = false;
     });
   </script>

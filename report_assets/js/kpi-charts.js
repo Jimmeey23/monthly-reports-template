@@ -54,7 +54,7 @@
         var cx = xCenter(i);
         return '<rect class="chart-bar' + (isActive ? ' is-active' : '') + '" data-index="' + i + '" x="' + (cx - barW / 2).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3" fill="' + (isActive ? 'url(#' + gid + ')' : 'var(--kpi-bar-muted, #cbd5e1)') + '"></rect>';
       }).join('');
-      chart.innerHTML = '<svg viewBox="0 0 360 46" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient></defs><line class="chart-baseline" x1="' + left + '" y1="' + baseY.toFixed(1) + '" x2="' + (width - right) + '" y2="' + baseY.toFixed(1) + '"></line>' + guides + bars + text + '</svg><div class="kpi-chart-tooltip"></div>';
+      chart.innerHTML = '<svg viewBox="0 0 360 46" preserveAspectRatio="none" role="img" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + accent.a + '"></stop><stop offset="100%" stop-color="' + accent.b + '"></stop></linearGradient></defs><line class="chart-baseline" x1="' + left + '" y1="' + baseY.toFixed(1) + '" x2="' + (width - right) + '" y2="' + baseY.toFixed(1) + '"></line>' + guides + bars + text + '</svg><div class="kpi-chart-tooltip"></div>';
       var svg = chart.querySelector('svg');
       var tooltip = chart.querySelector('.kpi-chart-tooltip');
       var barNodes = Array.prototype.slice.call(chart.querySelectorAll('.chart-bar'));

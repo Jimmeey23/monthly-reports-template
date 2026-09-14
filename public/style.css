@@ -1290,3 +1290,62 @@ h1, h2, h3, h4, h5, h6, .section-title, .ai-result-header-title {
   border-radius: var(--radius);
   background: var(--bg-card);
 }
+
+/* ─────────────────────────────────────────────
+   Switch — used for the "no AI calls" scope option
+   A checkbox that reads as a setting rather than a
+   selection, so it does not compete with the chips.
+   ───────────────────────────────────────────── */
+.switch-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+.switch-row:hover { border-color: var(--border-strong); }
+.switch-row input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.switch-track {
+  flex-shrink: 0;
+  position: relative;
+  width: 38px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background 200ms ease;
+}
+.switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35);
+  transition: transform 220ms cubic-bezier(.16, 1, .3, 1);
+}
+.switch-row:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.switch-row:has(input:checked) .switch-track { background: var(--accent); }
+.switch-row:has(input:checked) .switch-thumb { transform: translateX(16px); }
+.switch-row:has(input:focus-visible) { outline: none; box-shadow: 0 0 0 3px var(--primary-soft); }
+.switch-copy { display: flex; flex-direction: column; gap: 3px; }
+.switch-copy strong { font-size: 13px; font-weight: 650; color: var(--text); }
+.switch-copy small { font-size: 11.5px; line-height: 1.5; color: var(--muted); }
+
+/* The regenerate form on the result page lays its controls out in a row. */
+.switch-row-inline { align-items: center; padding: 9px 12px; }
+.switch-row-inline .switch-copy strong { font-size: 12px; white-space: nowrap; }

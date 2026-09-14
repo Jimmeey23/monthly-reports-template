@@ -3,12 +3,15 @@
 :root {
   --bg: #FFFFFF; --bg-soft: #F4F6FA; --bg-card: #FFFFFF; --bg-card-hover: #FAFBFD;
   --bg-inset: #EEF1F6; --border: #E1E5EE; --border-strong: #C8CFDD;
-  --text: #0B1A33; --text-muted: #5A6478; --text-subtle: #8C93A3;
-  --primary: #0F2C5E; --primary-2: #1E4A8F; --primary-3: #4C86E0; --primary-soft: rgba(0, 0, 0, 0.045);
-  --accent: #1E3A8A; --accent-2: #4C7BC9; --accent-soft: #E8EEFA;
-  --good: #1F8A4C; --good-soft: #E1F4E9;
-  --warn: #B87900; --warn-soft: #FFF1D1;
-  --bad: #C0392B; --bad-soft: #FBE7E4;
+  --text: #0B1A33; --text-muted: #46506A; --text-subtle: #67718A;
+  --primary: #0F2C5E; --primary-2: #1E4A8F; --primary-3: #2B5FB0; --primary-soft: rgba(15, 44, 94, 0.055);
+  --accent: #1E3A8A; --accent-2: #2F62B8; --accent-soft: #E8EEFA;
+  --good: #197A42; --good-soft: #DFF3E7;
+  --warn: #9A6600; --warn-soft: #FFF0CE;
+  --bad: #AE3325; --bad-soft: #FBE4E1;
+  /* Text that sits on a filled --primary/--accent/--good/--bad surface. */
+  --on-accent: #FFFFFF;
+  --glow: transparent;
   --shadow-sm: 0 1px 2px rgba(15,44,94,0.04), 0 1px 1px rgba(15,44,94,0.03);
   --shadow: 0 4px 12px rgba(15,44,94,0.06), 0 2px 4px rgba(15,44,94,0.04);
   --shadow-lg: 0 12px 32px rgba(15,44,94,0.08), 0 4px 12px rgba(15,44,94,0.05);
@@ -17,18 +20,22 @@
   --font-serif: 'Source Serif Pro',Georgia,'Times New Roman',serif;
   --font-mono: 'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
 }
+/* Matte black, with the accents carrying the light. Surfaces stay flat and
+   near-black so the neon reads as the only source of colour in the room. */
 [data-theme="dark"] {
-  --bg: #0A0A0A; --bg-soft: #111111; --bg-card: #141414; --bg-card-hover: #1A1A1A;
-  --bg-inset: #1C1C1C; --border: #2A2A2A; --border-strong: #3A3A3A;
-  --text: #ECECEC; --text-muted: #A8A8A8; --text-subtle: #6E6E6E;
-  --primary: #5B7BB5; --primary-2: #4266A0; --primary-3: #6E8ECB; --primary-soft: rgba(255, 255, 255, 0.06);
-  --accent: #1E3A8A; --accent-2: #4C7BC9; --accent-soft: #16233D;
-  --good: #4FB97B; --good-soft: #15301F;
-  --warn: #E0A93C; --warn-soft: #2A2113;
-  --bad: #E5705E; --bad-soft: #2E1714;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
-  --shadow: 0 4px 12px rgba(0,0,0,0.4);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
+  --bg: #050505; --bg-soft: #0B0B0C; --bg-card: #0F0F11; --bg-card-hover: #17171A;
+  --bg-inset: #141417; --border: #232327; --border-strong: #35353B;
+  --text: #F2F3F5; --text-muted: #B6B9C2; --text-subtle: #8A8E99;
+  --primary: #3BE8FF; --primary-2: #17C7E6; --primary-3: #7CF3FF; --primary-soft: rgba(59, 232, 255, 0.10);
+  --accent: #FF3DCE; --accent-2: #FF7AE0; --accent-soft: rgba(255, 61, 206, 0.12);
+  --good: #3CF29A; --good-soft: rgba(60, 242, 154, 0.13);
+  --warn: #FFC64D; --warn-soft: rgba(255, 198, 77, 0.13);
+  --bad: #FF5C7A; --bad-soft: rgba(255, 92, 122, 0.13);
+  --on-accent: #050505;
+  --glow: currentColor;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.7);
+  --shadow: 0 6px 18px rgba(0,0,0,0.65);
+  --shadow-lg: 0 18px 44px rgba(0,0,0,0.75);
 }
 *,*::before,*::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -546,16 +553,7 @@ tr.disc-high td { background: var(--warn-soft); }
 .format-btn:hover { background: var(--bg-inset); border-color: var(--border); }
 
 
-/* ───────────────────────── Presenter View ───────────────────────── */
-.presenter-bar { position: fixed; top: 0; left: 0; right: 0; background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 2000; box-shadow: var(--shadow-sm); font-size: 13px; }
-.presenter-bar.is-active { background: var(--primary); color: white; border-bottom: none; }
-.presenter-info { display: flex; align-items: center; gap: 12px; }
-.presenter-badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-weight: 600; font-family: var(--font-mono); }
-.presenter-actions { display: flex; gap: 8px; }
-.presenter-btn { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; }
-.presenter-btn:hover { background: var(--bg-hover); }
-.presenter-bar.is-active .presenter-btn { background: white; color: var(--primary); border: none; }
-.presenter-bar.is-active .presenter-btn:hover { background: rgba(255,255,255,0.9); }
+/* ───────── Presenter View (layout lives in public/report-client.js) ───────── */
 body.viewer-locked { overflow: hidden !important; pointer-events: none !important; }
 .presenter-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-card); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); z-index: 3000; display: none; flex-direction: column; gap: 16px; width: 300px; }
 .presenter-modal.is-open { display: flex; }
@@ -563,7 +561,6 @@ body.viewer-locked { overflow: hidden !important; pointer-events: none !importan
 .presenter-modal input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-inset); color: var(--text); font-family: var(--font-mono); text-align: center; letter-spacing: 2px; font-size: 16px; margin-bottom: 16px; }
 .presenter-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
-body { padding-top: 40px !important; }
 
 
 /* ───────────────────────── Premium Aesthetics Override ───────────────────────── */
@@ -1333,7 +1330,7 @@ body::before {
   align-items: center;
   width: max-content;
   padding: 13px 0;
-  animation: marqueeMove 34s linear infinite;
+  animation: marqueeMove 21s linear infinite;
 }
 .performance-marquee:hover .marquee-track { animation-play-state: paused; }
 .marquee-group { display: flex; align-items: center; }
@@ -1913,8 +1910,8 @@ body::before { background-image: radial-gradient(color-mix(in srgb, #1E3A8A 30%,
 }
 .section-marquee::before { left: 0; background: linear-gradient(90deg, #282D3E, transparent); }
 .section-marquee::after { right: 0; background: linear-gradient(-90deg, #282D3E, transparent); }
-.section-marquee .marquee-track { padding: 11px 0; animation-duration: 30s; }
-section.report-section:nth-of-type(even) .section-marquee .marquee-track { animation-direction: reverse; animation-duration: 35s; }
+.section-marquee .marquee-track { padding: 11px 0; animation-duration: 18s; }
+section.report-section:nth-of-type(even) .section-marquee .marquee-track { animation-direction: reverse; animation-duration: 21s; }
 .section-marquee .marquee-item { padding-inline: 24px; color: rgba(242,242,242,.74); font-size: 9px; letter-spacing: .12em; }
 .section-marquee .marquee-item strong { color: #f2f2f2; font-size: 10.5px; }
 .section-marquee .marquee-item::before { background: #f2f2f2; box-shadow: 0 0 13px rgba(242,242,242,.8); }
@@ -3886,8 +3883,12 @@ body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.
 }
 .bar-value { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; }
 .bar-share { font-size: 11px; color: var(--text-subtle); text-align: right; }
-.bar-row { grid-template-columns: 22px 1fr auto; }
-.bar-track, .bar-share { display: none; }
+/* The bar is the point of a ranked bar list: hiding the track left a rank, a
+   label and a value with a chasm of white between them. Track back, share
+   alongside the value. */
+.bar-row { grid-template-columns: 22px minmax(120px, 260px) 1fr auto 52px; }
+.bar-track { display: block; }
+.bar-share { display: block; }
 .stat-slab:focus-visible, .figure-band:focus-visible { outline-offset: 3px; }
 
 /* A figure that should span the full report width rather than sit in one pane. */
@@ -4091,4 +4092,1416 @@ body.sp-report .kpi-trend .badge.neutral,
 @media (max-width: 640px) {
   .hero-kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
   .kpi-value { font-size: 23px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Metric cards — graphic layer
+   The compact block above settles the anatomy; this settles the motion
+   and the marks. Nothing here adds chrome: an accent rail that draws
+   itself on hover, a pointer-tracked wash, a tone dot beside the label,
+   a taller sparkline sitting on a real floor line, and a staggered
+   entrance so the row assembles rather than appears.
+   ═══════════════════════════════════════════════════════════════════ */
+.kpi-card {
+  --kpi-accent: var(--tone-color, var(--primary));
+  position: relative;
+  isolation: isolate;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: kpiCardIn .6s cubic-bezier(.16,1,.3,1) forwards;
+  transition: border-color 220ms ease, box-shadow 260ms ease, transform 260ms cubic-bezier(.16,1,.3,1);
+}
+@keyframes kpiCardIn { to { opacity: 1; transform: translateY(0); } }
+.hero-kpi-grid .kpi-card:nth-child(1) { animation-delay: .02s; }
+.hero-kpi-grid .kpi-card:nth-child(2) { animation-delay: .06s; }
+.hero-kpi-grid .kpi-card:nth-child(3) { animation-delay: .10s; }
+.hero-kpi-grid .kpi-card:nth-child(4) { animation-delay: .14s; }
+.hero-kpi-grid .kpi-card:nth-child(5) { animation-delay: .18s; }
+.hero-kpi-grid .kpi-card:nth-child(6) { animation-delay: .22s; }
+.hero-kpi-grid .kpi-card:nth-child(7) { animation-delay: .26s; }
+.hero-kpi-grid .kpi-card:nth-child(8) { animation-delay: .30s; }
+
+/* Pointer-tracked wash — --mx/--my are already set by scroll-chrome.js. */
+.kpi-card-front::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(220px circle at var(--mx, 70%) var(--my, 10%),
+              color-mix(in srgb, var(--kpi-accent) 10%, transparent), transparent 65%);
+  transition: opacity 320ms ease;
+  pointer-events: none;
+}
+.kpi-card:hover .kpi-card-front::before { opacity: 1; }
+/* The wash sits behind the content on its own layer, so no child needs its
+   position rewritten to stay above it. */
+.kpi-card-front { isolation: isolate; }
+.kpi-card-front::before { z-index: -1; }
+
+/* The accent rail: absent at rest, drawn left-to-right on hover. */
+.kpi-card-front::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 2;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--kpi-accent), color-mix(in srgb, var(--kpi-accent) 20%, transparent));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 460ms cubic-bezier(.16,1,.3,1);
+  pointer-events: none;
+}
+.kpi-card:hover .kpi-card-front::after,
+.kpi-card:focus-visible .kpi-card-front::after { transform: scaleX(1); }
+.kpi-card:hover:not(.is-flipped) {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--kpi-accent) 26%, var(--border));
+  box-shadow: 0 14px 30px -18px color-mix(in srgb, var(--kpi-accent) 60%, transparent);
+}
+.kpi-card:focus-visible { outline: 2px solid color-mix(in srgb, var(--kpi-accent) 55%, transparent); outline-offset: 2px; }
+
+/* A tone dot instead of a decorative corner stack. */
+.kpi-label { display: flex; align-items: center; gap: 7px; }
+.kpi-label::before {
+  display: block !important;
+  content: '';
+  width: 5px; height: 5px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--kpi-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--kpi-accent) 14%, transparent);
+  transition: box-shadow 300ms ease, transform 300ms cubic-bezier(.16,1,.3,1);
+}
+.kpi-card:hover .kpi-label::before {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--kpi-accent) 16%, transparent);
+}
+
+.kpi-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.035em;
+  animation: kpiValueIn .7s .12s cubic-bezier(.16,1,.3,1) backwards;
+}
+@keyframes kpiValueIn { from { opacity: 0; transform: translateY(5px); filter: blur(4px); } }
+
+/* Direction carets — colour alone is not enough, and they cost no width. */
+.kpi-trend:has(.badge.good)::after,
+.kpi-trend:has(.badge.bad)::after {
+  display: inline !important;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+.kpi-trend:has(.badge.good)::after { content: '▲'; color: var(--good); }
+.kpi-trend:has(.badge.bad)::after  { content: '▼'; color: var(--bad); }
+
+/* Sparkline: taller, rounded, and standing on a visible floor. */
+.kpi-chart { height: 42px; }
+/* The bar chart stretches to the box (preserveAspectRatio="none" in
+   kpi-charts.js), so the SVG's own baseline is the floor — no extra rule. */
+.kpi-chart .chart-baseline { stroke: var(--border); }
+.kpi-chart .chart-bar { vector-effect: non-scaling-stroke; }
+.kpi-chart .chart-bar { rx: 3px; }
+.kpi-chart.is-drawn .chart-bar { animation-duration: .8s; }
+.kpi-chart.is-drawn .chart-bar:nth-of-type(2) { animation-delay: .07s; }
+.kpi-chart.is-drawn .chart-bar:nth-of-type(3) { animation-delay: .14s; }
+.kpi-chart.is-drawn .chart-bar:nth-of-type(4) { animation-delay: .21s; }
+.kpi-chart .chart-bar.is-active { filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--kpi-accent) 50%, transparent)); }
+.kpi-flip-shell, .kpi-face { min-height: 156px !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kpi-card { animation: none; opacity: 1; transform: none; }
+  .kpi-value { animation: none; }
+  .kpi-card-front::after { transition: none; }
+}
+/* Static media keeps the marks, drops the motion. */
+.pdf-export-stage .kpi-card,
+.pdf-export-stage .kpi-value { animation: none !important; opacity: 1 !important; transform: none !important; }
+@media print {
+  .kpi-card, .kpi-value { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+/* The delta chip is pinned to the front face, not to whatever happens to be
+   the nearest positioned ancestor. */
+.kpi-card-front { position: relative; }
+
+/* The compact card clipped its own tooltip: `overflow: hidden` on the card cut
+   the tip off at the top edge, leaving a dark band across the header. Clip the
+   flip shell instead — the faces still get rounded corners, the tooltip and the
+   hover shadow can leave the box. */
+.kpi-card { overflow: visible; }
+.kpi-flip-shell { overflow: hidden; border-radius: inherit; }
+
+/* The flip affordance shared the sparkline's floor and landed on top of the
+   latest bar. Reduced to a corner arrow, it stays out of the data. */
+.kpi-flip-cue {
+  right: 9px; bottom: 6px;
+  font-size: 0;
+  line-height: 1;
+  color: var(--kpi-accent);
+}
+.kpi-flip-cue::after {
+  content: '↗';
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ─────────────────────────────────────────────
+   Table drill-downs
+   table-behaviour.js inserts a hidden detail row under every data row and
+   toggles `.visible` on click. The rules that hid it were dropped when the
+   stylesheet moved out of full_css.txt, so every detail row rendered open
+   and unstyled — the Headline KPI Matrix came out as a column of stray
+   "Click to expand detailed analytics" strips between its rows.
+   ───────────────────────────────────────────── */
+.data-table tr.drill-down-row { cursor: pointer; transition: background 200ms ease; }
+.data-table tr.drill-down-row:hover { background: var(--bg-inset); }
+.data-table tr.drill-down-row td:first-child::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 9px;
+  color: var(--text-subtle);
+  transition: transform 200ms ease;
+}
+.data-table tr.drill-down-row.expanded td:first-child::before { transform: rotate(90deg); }
+
+.data-table tr.drill-down-detail { display: none; background: var(--bg-soft); }
+.data-table tr.drill-down-detail.visible { display: table-row; }
+.data-table tr.drill-down-detail td {
+  padding: 12px 16px;
+  border-left: 3px solid var(--primary);
+}
+
+.drill-down-content {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  font-size: 12px;
+  overflow-x: auto;
+}
+.drill-down-metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1 1 130px;
+  min-width: 118px;
+  padding: 6px 18px;
+  border-right: 1px solid var(--border);
+}
+.drill-down-metric:first-child { padding-left: 4px; }
+.drill-down-metric:last-of-type { border-right: none; }
+.drill-down-metric-label {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.drill-down-metric-value {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+}
+/* The insight chip is set full-width inline by the script. */
+.drill-down-insight {
+  flex: 1 1 100%;
+  border-right: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+@media print {
+  .data-table tr.drill-down-detail { display: none !important; }
+  .data-table tr.drill-down-row td:first-child::before { display: none; }
+}
+.pdf-export-stage .data-table tr.drill-down-detail { display: none !important; }
+.pdf-export-stage .data-table tr.drill-down-row td:first-child::before { display: none; }
+/* The detail cell inherits the table's numeric alignment otherwise, which
+   pushed the tiles and the caption to the right edge. */
+.data-table tr.drill-down-detail td { text-align: left; }
+.drill-down-content, .drill-down-metric { text-align: left; }
+
+/* ─────────────────────────────────────────────
+   Categorical series palette
+   The donut and its legend colour their segments with --sec-N-color. Those
+   tokens were defined in full_css.txt and did not survive the move to this
+   stylesheet, so every segment resolved to `stroke: none` — the revenue-mix
+   donut rendered as an empty ring with blank legend swatches.
+
+   Re-cut for this report's navy system rather than restored verbatim: the
+   first series is the brand navy, the rest are spaced around the wheel so
+   adjacent slices stay distinguishable, including for the most common forms
+   of colour blindness.
+   ───────────────────────────────────────────── */
+:root {
+  --sec-1-color: #1E3A8A;
+  --sec-2-color: #0E7C86;
+  --sec-3-color: #B87900;
+  --sec-4-color: #6D5BD0;
+  --sec-5-color: #C0392B;
+  --sec-6-color: #3B82C4;
+  --sec-7-color: #2F855A;
+}
+[data-theme="dark"] {
+  --sec-1-color: #7EA2F0;
+  --sec-2-color: #3FC7CE;
+  --sec-3-color: #E8B23C;
+  --sec-4-color: #A08BF0;
+  --sec-5-color: #E3766A;
+  --sec-6-color: #7FB3E8;
+  --sec-7-color: #56C08A;
+}
+
+/* ─────────────────────────────────────────────
+   Adaptive split layouts
+   report-layout.js measures each two-pane section and tags it, but the rules
+   those tags drive were never in this stylesheet — so a table too wide for the
+   narrow column just clipped inside it (the Headline KPI Matrix lost its last
+   two columns). These are those rules: widen, then stack full width, then
+   tighten the cells, and never stretch a short pane to match a tall one.
+   ───────────────────────────────────────────── */
+.split-grid.is-wide-data { grid-template-columns: minmax(260px, .8fr) minmax(0, 2.2fr); }
+
+.split-grid.is-stacked { grid-template-columns: minmax(0, 1fr); }
+.split-grid.is-stacked > * { width: 100%; min-width: 0; }
+/* The table leads when it owns the full width; the read follows it. */
+.split-grid.is-stacked > .data-pane { order: -1; margin-bottom: 4px; }
+/* A full-width prose pane would run to 1400px of line length, so it splits. */
+@media (min-width: 1081px) {
+  .split-grid.is-stacked > .insights-pane {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+    row-gap: 0;
+  }
+  .split-grid.is-stacked > .insights-pane > .pane-title { grid-column: 1 / -1; }
+}
+
+/* Last resort before a horizontal scrollbar: tighten the cells. */
+.split-grid.is-dense table.data-table { font-size: 12px; }
+.split-grid.is-dense table.data-table th,
+.split-grid.is-dense table.data-table td { padding-inline: 9px; }
+.split-grid.is-dense-2 table.data-table { font-size: 11px; }
+.split-grid.is-dense-2 table.data-table th,
+.split-grid.is-dense-2 table.data-table td { padding-inline: 6px; }
+.split-grid.is-dense-2 table.data-table .badge { padding: 2px 5px; font-size: 10px; }
+
+/* Stop the short pane stretching to the tall one's height. */
+.split-grid.is-loose { align-items: start; }
+.split-grid.is-loose > * { align-self: start; }
+
+/* Prose wrapping a floated table, for a short table beside a long read. */
+.split-grid.is-wrapped { display: block; }
+.split-grid.is-wrapped::after { content: ''; display: block; clear: both; }
+.split-grid.is-wrapped > .data-pane {
+  float: right;
+  width: min(56%, 700px);
+  margin: 0 0 20px 26px;
+  /* .insights-pane is position:relative, so it paints in the positioned layer,
+     above floats. Its translucent card background was washing this table out.
+     Put the float in the same layer, on top. */
+  position: relative;
+  z-index: 1;
+}
+.split-grid.is-wrapped > .insights-pane { display: block; }
+@media (max-width: 1080px) {
+  .split-grid.is-wrapped { display: grid; }
+  .split-grid.is-wrapped > .data-pane { float: none; width: 100%; margin: 0; }
+}
+
+/* ─────────────────────────────────────────────
+   Hero metric grid — a fixed six across
+   auto-fit sizes its tracks to the widest card's min-content, so twelve cards
+   collapsed to three fat columns with the type stranded on the left. Fixing
+   the column count (and letting cards shrink below their content) gives the
+   intended two rows of six.
+   ───────────────────────────────────────────── */
+.hero-kpi-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.hero-kpi-grid > .kpi-card { min-width: 0; }
+@media (max-width: 1440px) { .hero-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 1080px) { .hero-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px)  { .hero-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Two deltas must fit one line at the six-across card width. */
+.kpi-trends { gap: 10px; }
+.kpi-trend .trend-label { font-size: 8px; letter-spacing: .06em; }
+body.sp-report .kpi-trend .badge { font-size: 10.5px; }
+
+/* ─────────────────────────────────────────────
+   Donut figure bands
+   .figure-body stacks by default, which suits a ranked bar list but left the
+   revenue-mix donut sitting alone above a full-width legend — a 132px chart
+   with ~1200px of empty air beside it and one legend row per line. Side by
+   side, with the legend in as many columns as it can fill.
+   ───────────────────────────────────────────── */
+.figure-band:has(.donut) .figure-body {
+  flex-direction: row;
+  align-items: center;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+.figure-band:has(.donut) .chart-legend {
+  flex: 1 1 340px;
+  /* Capped tracks keep the value next to its label instead of flung to the
+     far edge of a 300px-wide column. */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 250px));
+  justify-content: start;
+  column-gap: 26px;
+  row-gap: 8px;
+  align-content: center;
+}
+.figure-band:has(.donut) .chart-legend li { gap: 8px; }
+.figure-band:has(.donut) .chart-legend .legend-value { margin-left: 8px; }
+.figure-band:has(.donut) .chart-legend .legend-label { flex: 1 1 auto; }
+.figure-band:has(.donut) { padding: 18px 20px; }
+.figure-band:has(.donut) .figure-head { margin-bottom: 14px; }
+@media (max-width: 720px) {
+  .figure-band:has(.donut) .figure-body { flex-direction: column; align-items: flex-start; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Shared UI kit
+   Sections used to each draw their own panel, tile strip and list, so the
+   same idea arrived in four different shapes and the light theme was only
+   ever checked on whichever one was being edited. Everything below is the
+   single definition for those surfaces: one panel, one table, one tile, one
+   ranked list, all resolving through the theme tokens so light and dark are
+   the same rules rather than two hand-tuned looks.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Tables ──────────────────────────────────────────────────────────
+   The row's name is prose and reads from the left; every metric after it
+   is a number in a column of numbers and centres under its own heading,
+   the heading included. */
+table.data-table thead th,
+table.data-table tbody td { text-align: center; }
+table.data-table thead th:first-child,
+table.data-table tbody td:first-child,
+table.data-table tbody td.metric-name { text-align: left; }
+table.data-table thead th {
+  padding: 11px 12px;
+  background: var(--bg-inset);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-strong);
+}
+table.data-table tbody td {
+  padding: 9px 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+table.data-table tbody td.num { font-family: var(--font-mono); font-size: 11.5px; }
+table.data-table tbody td.metric-name { font-family: var(--font-sans); font-weight: 500; }
+/* Zebra striping is skipped on the nested ledger, where rows appear and
+   disappear as categories open and a fixed stripe would land on the wrong
+   rows. The nesting tint carries that table instead. */
+table.data-table:not(.nested-table) tbody tr:nth-child(even) { background: color-mix(in srgb, var(--bg-inset) 34%, transparent); }
+table.data-table tbody tr:hover { background: var(--bg-card-hover); }
+table.data-table tbody tr.is-unattributed td { color: var(--text-muted); font-style: italic; }
+table.data-table tbody tr.is-unattributed td.metric-name { font-style: normal; }
+
+/* The totals rule reads as a rule, not as a coloured band, in both themes. */
+.totals-row td {
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg-card));
+  border-top: 2px solid var(--border-strong);
+  font-weight: 700;
+  color: var(--text);
+}
+.totals-row td.metric-name { color: var(--text); letter-spacing: 0.02em; text-transform: uppercase; font-size: 11px; }
+
+/* ─── Panels ──────────────────────────────────────────────────────── */
+.data-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: var(--space-5);
+}
+.data-panel .panel-header {
+  background: var(--bg-soft);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  align-items: center;
+  padding: 14px 18px;
+}
+.data-panel .panel-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.data-panel .panel-subtitle { margin-top: 3px; font-size: 12px; color: var(--text-subtle); }
+.data-panel .table-wrap { border: none; border-radius: 0; box-shadow: none; background: transparent; }
+.data-panel table.data-table thead th { border-radius: 0; }
+/* The panel already carries the surface, so a pane around it would double it. */
+.data-pane > .data-panel { border: none; box-shadow: none; margin-bottom: 0; }
+.data-pane:has(> .data-panel) { padding: 0; }
+
+/* ─── Metric blocks and tiles ─────────────────────────────────────── */
+.metric-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 22px 24px;
+  margin: 0 0 var(--space-5);
+}
+.metric-block-head { margin-bottom: 18px; }
+.metric-block-eyebrow {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border: 1px solid var(--border);
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+.metric-block-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  margin: 0 0 6px;
+  color: var(--text);
+  line-height: 1.2;
+}
+.metric-block-note { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.55; max-width: 860px; }
+
+.metric-tiles {
+  display: grid;
+  grid-template-columns: repeat(var(--tile-columns, auto-fit), minmax(160px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.metric-tile {
+  background: var(--bg-card);
+  padding: 13px 15px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.metric-tile-label {
+  font-size: 9.5px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-subtle);
+}
+.metric-tile-value {
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.1;
+}
+.metric-tile-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.metric-tile-sub .badge { font-size: 10px; padding: 1px 6px; min-width: 0; }
+.metric-tile.tone-good .metric-tile-value { color: var(--good); }
+.metric-tile.tone-warn .metric-tile-value { color: var(--warn); }
+.metric-tile.tone-bad  .metric-tile-value { color: var(--bad); }
+
+/* ─── Revenue composition block ───────────────────────────────────── */
+.revenue-source-body {
+  display: grid;
+  grid-template-columns: minmax(280px, 400px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 1080px) { .revenue-source-body { grid-template-columns: minmax(0, 1fr); } }
+.revenue-source-mix {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.donut-shell { position: relative; width: 188px; height: 188px; }
+.donut-shell .donut { width: 188px; height: 188px; }
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+}
+.donut-center-value { font-family: var(--font-mono); font-size: 21px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+.donut-center-label { font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; }
+.revenue-source-mix .chart-legend { width: 100%; grid-template-columns: minmax(0, 1fr); }
+
+.source-ledger { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.source-row {
+  display: grid;
+  grid-template-columns: 26px 10px minmax(120px, 1.6fr) minmax(70px, 1.4fr) 72px 52px 82px 72px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+}
+.source-row:nth-child(odd) { background: color-mix(in srgb, var(--bg-inset) 45%, transparent); }
+.source-row:hover { background: var(--bg-card-hover); box-shadow: inset 0 0 0 1px var(--border); }
+.source-rank { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-subtle); }
+.source-swatch { width: 10px; height: 10px; border-radius: 3px; }
+.source-name { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.source-track { height: 8px; border-radius: 4px; background: var(--bg-inset); overflow: hidden; }
+.source-track i { display: block; height: 100%; border-radius: 4px; }
+.source-net { font-family: var(--font-mono); font-weight: 700; text-align: right; color: var(--text); }
+.source-share { font-family: var(--font-mono); font-size: 11.5px; text-align: right; color: var(--text-muted); }
+.source-aov, .source-units {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  text-align: right;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+.source-aov small, .source-units small {
+  font-family: var(--font-sans);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+@media (max-width: 860px) {
+  .source-row { grid-template-columns: 22px 10px 1fr auto; row-gap: 6px; }
+  .source-track { grid-column: 3 / -1; }
+  .source-share, .source-aov, .source-units { display: none; }
+}
+
+/* ─── Share meter, used in any table's share column ───────────────── */
+.share-meter { display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+.share-meter-track {
+  width: 52px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-inset);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.share-meter-track i { display: block; height: 100%; border-radius: 3px; opacity: 0.85; }
+.share-meter-value { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+/* ─── Nested tables ───────────────────────────────────────────────── */
+table.nested-table tr.group-row.has-children { cursor: pointer; }
+.row-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.row-toggle.is-leaf { cursor: default; padding-left: 17px; }
+.row-toggle-caret {
+  width: 8px;
+  height: 8px;
+  border-right: 1.6px solid var(--text-subtle);
+  border-bottom: 1.6px solid var(--text-subtle);
+  transform: rotate(-45deg);
+  transition: transform 140ms ease;
+  flex-shrink: 0;
+  margin-right: -1px;
+}
+tr.group-row.is-open .row-toggle-caret { transform: rotate(45deg); }
+.row-toggle-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.row-toggle-name { font-weight: 600; }
+.row-toggle-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-inset);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+tr.group-row.is-open { background: var(--bg-soft); }
+tr.group-row.is-open td { border-bottom-color: var(--border-strong); }
+table.data-table tbody tr.child-row td {
+  background: color-mix(in srgb, var(--bg-inset) 55%, var(--bg-card));
+  font-size: 11.5px;
+  color: var(--text-muted);
+  padding-block: 7px;
+}
+table.data-table tbody tr.child-row td.child-name { display: flex; align-items: center; gap: 8px; padding-left: 20px; }
+.child-rule { width: 12px; height: 1px; background: var(--border-strong); flex-shrink: 0; }
+table.data-table tbody tr.child-row:hover td { background: var(--bg-card-hover); color: var(--text); }
+
+/* ─── Chips ───────────────────────────────────────────────────────── */
+.chip-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.chip-group-label {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-subtle);
+  margin-right: 2px;
+}
+.chip {
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.chip:hover { border-color: var(--border-strong); color: var(--text); background: var(--bg-card-hover); }
+.chip.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+[data-theme="dark"] .chip.is-active { color: var(--bg); }
+
+/* ─── Ranking board ───────────────────────────────────────────────── */
+.rank-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.rank-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 900px) { .rank-columns { grid-template-columns: minmax(0, 1fr); } }
+.rank-column {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+  overflow: hidden;
+}
+.rank-column-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 15px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+.rank-column-title { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: var(--text); }
+.rank-column-note { font-size: 11px; color: var(--text-subtle); }
+.rank-column.is-top .rank-column-head { box-shadow: inset 3px 0 0 var(--good); }
+.rank-column.is-bottom .rank-column-head { box-shadow: inset 3px 0 0 var(--bad); }
+
+.rank-list { list-style: none; margin: 0; padding: 6px; display: grid; gap: 3px; }
+.rank-item {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid transparent;
+}
+.rank-item:hover { border-color: var(--border); box-shadow: var(--shadow-sm); }
+.rank-index { font-family: var(--font-mono); font-size: 11px; color: var(--text-subtle); font-weight: 700; }
+.rank-body { display: grid; gap: 4px; min-width: 0; }
+.rank-name { font-size: 12.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-meta { font-size: 10.5px; color: var(--text-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-track { height: 5px; border-radius: 3px; background: var(--bg-inset); overflow: hidden; margin-top: 2px; }
+.rank-track i { display: block; height: 100%; border-radius: 3px; background: var(--primary); }
+.rank-list.tone-good .rank-track i { background: var(--good); }
+.rank-list.tone-bad  .rank-track i { background: var(--bad); }
+.rank-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.15;
+}
+.rank-value small {
+  font-family: var(--font-sans);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+/* Tables collapsed to cards on a phone still need the label/value split. */
+@media (max-width: 768px) {
+  table.data-table.mobile-cards tbody td { text-align: right; }
+  table.data-table.mobile-cards tbody td.metric-name { text-align: left; }
+}
+
+/* A change figure and what it is measured against, as one unit. */
+.delta-pill { display: inline-flex; align-items: center; gap: 6px; }
+.delta-pill-label { font-size: 10px; color: var(--text-subtle); }
+[data-theme="dark"] .metric-block-eyebrow { color: var(--primary-3); border-color: var(--border-strong); }
+
+/* Sections that still title their table with a bare .pane-title get the same
+   panel chrome as one built through data_panel(), so the report reads as one
+   component set without every builder having to be rewritten at once. */
+.data-pane > .pane-title {
+  margin: 0;
+  padding: 14px 18px !important;
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.09em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   One component set
+   Everything below exists to stop the report carrying two of anything: one
+   metric card, one ranking board, one table style, one drill-down.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Hero: the studio badge and the audio badge share a line ───────────── */
+.hero-topline {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap; margin-bottom: 28px;
+}
+.hero-topline .hero-eyebrow { margin-bottom: 0; }
+.hero-topline-audio {
+  align-self: center; margin: 0; min-width: 0;
+  padding: 8px 16px 8px 8px; height: auto;
+  background: var(--bg-card); color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: var(--shadow);
+}
+.hero-topline-audio::after { content: none; }
+.hero-topline-audio .hero-audio-copy small { color: var(--text-subtle); }
+.hero-topline-audio .hero-audio-icon {
+  flex-basis: 30px; width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: var(--on-accent);
+}
+.hero-topline-audio .hero-audio-icon svg { width: 15px; height: 15px; }
+.hero-topline-audio:hover, .hero-topline-audio:focus-visible {
+  color: var(--on-accent); background: var(--accent); border-color: var(--accent);
+}
+.hero-topline-audio:hover .hero-audio-copy small,
+.hero-topline-audio.is-playing .hero-audio-copy small { color: color-mix(in srgb, var(--on-accent) 72%, transparent); }
+@media (max-width: 720px) {
+  .hero-topline { flex-direction: column; align-items: flex-start; }
+  .hero-topline-audio { width: 100%; }
+}
+
+/* ─── Hero photography: fit the frame, never crop a face out of it ─────── */
+/* Taller frames and a high focal point: these are portraits of people mid-
+   movement, and the subject's head sits in the top third of every source
+   image, so a centred crop decapitated all three. */
+.hero-media-grid {
+  align-items: stretch;
+  height: clamp(300px, 32vw, 460px);
+  grid-template-columns: minmax(0, 1.9fr) minmax(260px, 1fr);
+}
+.hero-media-card img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: 50% 22%;
+  transform: none;
+}
+.hero-media-card:hover img { transform: scale(1.035); }
+.hero-media-main img { object-position: 50% 24%; }
+.hero-media-side img { object-position: 50% 18%; }
+.hero-carousel-viewport, .hero-carousel-slide { height: 100%; }
+.hero-carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 900px) {
+  .hero-media-grid { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .hero-media-main { height: clamp(260px, 46vw, 340px); }
+  .hero-media-side { height: clamp(220px, 38vw, 280px); }
+}
+
+/* ─── Metric card: one component, two sizes ───────────────────────────── */
+.metric-card-strip {
+  display: grid;
+  grid-template-columns: repeat(var(--tile-columns, 4), minmax(0, 1fr));
+  gap: 14px; margin: 0 0 22px;
+}
+@media (max-width: 1080px) { .metric-card-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px)  { .metric-card-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 460px)  { .metric-card-strip { grid-template-columns: minmax(0, 1fr); } }
+
+.kpi-card.is-compact { padding: 0; cursor: pointer; }
+/* Two heights: with a chart the card needs the room, without one it should not
+   sit half empty. */
+.kpi-card.is-compact .kpi-flip-shell,
+.kpi-card.is-compact .kpi-face { min-height: 144px !important; }
+.kpi-card.is-compact:has(.kpi-chart) .kpi-flip-shell,
+.kpi-card.is-compact:has(.kpi-chart) .kpi-face { min-height: 214px !important; }
+.kpi-card.is-compact .kpi-face { padding: 15px 15px 13px; }
+.kpi-card.is-compact .kpi-value { font-size: 25px; }
+.kpi-card.is-compact .kpi-label { font-size: 9.5px; }
+.kpi-card.is-compact .kpi-sub { margin-bottom: 8px; }
+.kpi-card.is-compact .kpi-chart { height: 46px; margin-top: 6px; }
+.kpi-card.is-compact .kpi-back-title { font-size: 13px; margin: 0 0 6px; }
+.kpi-card.is-compact .kpi-back-copy { font-size: 11px; line-height: 1.5; margin: 0 0 8px; }
+.kpi-card.is-compact .kpi-back-focus { font-size: 10.5px; }
+
+/* Back face: what the number means, then how it is worked out. */
+.kpi-back-formula {
+  margin: 8px 0 10px; padding: 9px 11px;
+  background: var(--bg-inset); border: 1px solid var(--border);
+  border-left: 3px solid var(--primary); border-radius: var(--radius-sm);
+}
+.kpi-back-formula-label {
+  display: block; font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-weight: 800; color: var(--text-subtle); margin-bottom: 4px;
+}
+.kpi-back-formula code {
+  display: block;
+  font-family: var(--font-mono); font-size: 10px; line-height: 1.55;
+  color: var(--text); white-space: normal; overflow-wrap: anywhere;
+}
+.kpi-drill-btn {
+  position: sticky; bottom: 0; z-index: 2;
+  margin-top: auto; align-self: stretch;
+  padding: 8px 13px; border-radius: 999px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: var(--primary-soft); color: var(--primary);
+  font: 700 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase;
+  transition: background 160ms ease, color 160ms ease;
+  backdrop-filter: blur(6px);
+}
+.kpi-drill-btn:hover, .kpi-drill-btn:focus-visible {
+  background: var(--primary); color: var(--on-accent);
+}
+/* The back face carries more words than the front, so it scrolls inside the
+   card rather than spilling past the clipped flip shell — which is what put
+   the drill button out of reach. */
+.kpi-card-back {
+  display: flex; flex-direction: column;
+  overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.kpi-card-back::-webkit-scrollbar { width: 5px; }
+.kpi-card-back::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+
+/* The flip shell clips its faces so the tooltip and hover shadow can leave the
+   card — and a clipped box cannot hold a 3-D context, which left the face
+   turned away still catching clicks. Cross-fade the two faces instead: the
+   same read, and the only face the pointer can reach is the one on show. */
+.kpi-flip-shell { transform: none !important; transform-style: flat; }
+.kpi-face {
+  backface-visibility: visible; -webkit-backface-visibility: visible;
+  transition: opacity 260ms ease, transform 380ms cubic-bezier(.16, 1, .3, 1),
+              visibility 0s linear 260ms;
+}
+.kpi-card:not(.is-flipped) .kpi-card-back,
+.kpi-card.is-flipped .kpi-card-front {
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: scale(0.97) translateY(4px);
+}
+.kpi-card.is-flipped .kpi-card-back,
+.kpi-card:not(.is-flipped) .kpi-card-front {
+  opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kpi-face { transition: opacity 1ms linear, visibility 0s; transform: none !important; }
+}
+
+/* The animated front chart needs room to breathe on the compact card. */
+.kpi-chart { overflow: visible; }
+
+/* ─── Drill-down modal ─────────────────────────────────────────────────── */
+body.has-drill-modal { overflow: hidden; }
+.drill-modal-overlay {
+  position: fixed; inset: 0; z-index: 1200;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: color-mix(in srgb, var(--bg) 20%, rgba(4, 6, 12, 0.72));
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  animation: drillFade 180ms ease;
+}
+.drill-modal-overlay[hidden] { display: none; }
+@keyframes drillFade { from { opacity: 0; } to { opacity: 1; } }
+.drill-modal {
+  position: relative; width: min(880px, 100%); max-height: min(86vh, 900px);
+  overflow: auto; padding: 26px 28px 24px;
+  background: var(--bg-card); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: drillRise 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes drillRise { from { transform: translateY(14px) scale(0.985); opacity: 0; } }
+.drill-modal:focus { outline: none; }
+.drill-modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-inset); color: var(--text-muted);
+  font-size: 19px; line-height: 1;
+}
+.drill-modal-close:hover { background: var(--bad-soft); color: var(--bad); border-color: var(--bad); }
+.drill-modal-head { padding-right: 44px; margin-bottom: 18px; }
+.drill-modal-kicker {
+  display: inline-block; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-weight: 800; color: var(--primary);
+  padding: 4px 10px; border-radius: 999px; background: var(--primary-soft);
+}
+.drill-modal-title {
+  font-family: var(--font-serif); font-size: 27px; line-height: 1.15;
+  letter-spacing: -0.02em; margin: 10px 0 6px; font-weight: 650; color: var(--text);
+}
+.drill-modal-sub { margin: 0; font-size: 13px; color: var(--text-muted); }
+.drill-modal-foot {
+  margin-top: 18px; padding-top: 12px; border-top: 1px dashed var(--border);
+  font-size: 11px; color: var(--text-subtle);
+}
+
+.drill-stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px; margin-bottom: 20px;
+}
+.drill-stat {
+  padding: 11px 13px; border-radius: var(--radius);
+  background: var(--bg-inset); border: 1px solid var(--border);
+}
+.drill-stat-label {
+  display: block; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-weight: 800; color: var(--text-subtle); margin-bottom: 5px;
+}
+.drill-stat-value {
+  display: block; font-family: var(--font-mono); font-size: 16px; font-weight: 600;
+  color: var(--text); font-variant-numeric: tabular-nums;
+}
+.drill-stat-sub { display: block; font-size: 10.5px; color: var(--text-subtle); margin-top: 3px; }
+.drill-stat.tone-good .drill-stat-value { color: var(--good); }
+.drill-stat.tone-bad  .drill-stat-value { color: var(--bad); }
+.drill-stat.tone-warn .drill-stat-value { color: var(--warn); }
+
+.drill-block { margin-bottom: 20px; }
+.drill-block-title {
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-weight: 800; color: var(--text-muted); margin-bottom: 9px;
+}
+.drill-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.drill-bar {
+  display: grid; grid-template-columns: minmax(96px, 1.3fr) 3fr minmax(66px, auto);
+  align-items: center; gap: 10px; font-size: 12px;
+}
+.drill-bar-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drill-bar-track { height: 8px; border-radius: 999px; background: var(--bg-inset); overflow: hidden; }
+.drill-bar-track i {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  animation: drillBar 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes drillBar { from { transform: scaleX(0); transform-origin: left; } }
+.drill-bar-value {
+  font-family: var(--font-mono); font-size: 11.5px; text-align: right;
+  color: var(--text-muted); font-variant-numeric: tabular-nums;
+}
+.drill-notes { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-muted); }
+.drill-notes li { margin-bottom: 5px; }
+.drill-modal-table { font-size: 12px; }
+@media (prefers-reduced-motion: reduce) {
+  .drill-modal, .drill-modal-overlay, .drill-bar-track i { animation: none; }
+}
+
+/* Anything that opens the modal says so. */
+.is-drillable { cursor: pointer; }
+.rank-item.is-drillable:hover, .bar-row.is-drillable:hover {
+  border-color: var(--primary); background: var(--primary-soft);
+}
+.rank-item:focus-visible, .bar-row:focus-visible, .kpi-card:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+}
+
+/* ─── Tables: nesting, sorting, grouped heads ─────────────────────────── */
+.data-table thead th.is-sortable { cursor: pointer; user-select: none; position: relative; padding-right: 18px; }
+.data-table thead th.is-sortable::after {
+  content: "\2195"; position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+  font-size: 9px; opacity: 0.32;
+}
+.data-table thead th.is-sortable:hover { color: var(--primary); }
+.data-table thead th.is-sortable:hover::after { opacity: 0.7; }
+.data-table thead th.is-sorted { color: var(--primary); }
+.data-table thead th.is-sorted::after { content: "\25B2"; opacity: 1; font-size: 7.5px; }
+.data-table thead th.is-sorted.is-desc::after { content: "\25BC"; }
+.data-table thead th small { display: block; font-weight: 500; opacity: 0.72; text-transform: none; letter-spacing: 0; }
+
+.data-table.grouped-head thead .col-group-row th { border-bottom: 1px solid var(--border); }
+.data-table.grouped-head thead th.col-group {
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-subtle); font-weight: 800;
+  border-left: 1px solid var(--border);
+}
+.data-table.grouped-head thead th.col-group-name { vertical-align: bottom; text-align: left; }
+
+/* A parent row is a lid, not a link: it reads as openable and moves when it does. */
+table.nested-table tr.has-children { cursor: pointer; }
+table.nested-table tr.has-children:hover > td { background: var(--primary-soft); }
+table.nested-table tr.is-open > td { background: var(--primary-soft); }
+.row-toggle {
+  display: inline-flex; align-items: center; gap: 8px; width: 100%;
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+  color: inherit; font: inherit;
+}
+.row-toggle.is-leaf { cursor: default; padding-left: 16px; }
+.row-toggle-caret {
+  flex: 0 0 auto; width: 8px; height: 8px;
+  border-right: 2px solid var(--text-subtle); border-bottom: 2px solid var(--text-subtle);
+  transform: rotate(-45deg); transition: transform 180ms ease;
+}
+tr.is-open .row-toggle-caret { transform: rotate(45deg); border-color: var(--primary); }
+.row-toggle-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; }
+.row-toggle-name { font-weight: 650; }
+.row-toggle-count {
+  margin-left: auto; padding: 1px 7px; border-radius: 999px;
+  background: var(--bg-inset); border: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 9.5px; color: var(--text-subtle);
+}
+tr.child-row > td { background: var(--bg-soft); font-size: 12px; }
+tr.child-row .metric-name { padding-left: 30px; color: var(--text-muted); }
+.child-rule {
+  display: inline-block; width: 12px; height: 1px; margin-right: 8px;
+  vertical-align: middle; background: var(--border-strong);
+}
+.panel-footnote {
+  margin: 0; padding: 11px 18px 15px;
+  font-size: 11px; line-height: 1.55; color: var(--text-subtle);
+}
+.cell-note { display: block; font-size: 9.5px; color: var(--text-subtle); font-weight: 500; }
+td.num.is-good { color: var(--good); }
+td.num.is-bad { color: var(--bad); }
+td.num.is-warn { color: var(--warn); }
+.status-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px;
+  vertical-align: baseline;
+}
+.status-dot.is-good { background: var(--good); }
+.status-dot.is-bad { background: var(--bad); }
+.status-dot.is-warn { background: var(--warn); }
+
+/* ─── Head-to-head ────────────────────────────────────────────────────── */
+.h2h-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 340px));
+  justify-content: start; gap: 14px; margin-bottom: 22px;
+}
+.h2h-table td.is-winner {
+  background: var(--good-soft);
+  color: var(--good); font-weight: 700;
+}
+.h2h-table .winner-mark { margin-left: 6px; font-size: 8px; vertical-align: 2px; }
+.h2h-table th:not(:first-child) { color: var(--text); }
+.h2h-table td.metric-name { font-weight: 600; }
+
+/* ─── Heatmap: filters dim, spotlight mutes ──────────────────────────── */
+.hm-band-btn, .hm-spot-btn, .hm-day-btn {
+  padding: 5px 11px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-inset);
+  color: var(--text-muted); font: 700 10px/1 var(--font-sans); letter-spacing: 0.05em;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.hm-band-btn:hover, .hm-spot-btn:hover, .hm-day-btn:hover { color: var(--text); border-color: var(--border-strong); }
+.hm-band-btn.is-active, .hm-spot-btn.is-active, .hm-day-btn.is-active {
+  background: var(--primary); border-color: var(--primary); color: var(--on-accent);
+}
+.hm-interactive-bar { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; padding: 12px 16px; }
+.hm-day-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.heat-cell.is-dimmed, .heatmap-table th.is-dimmed { opacity: 0.16; }
+.heat-cell.is-muted { opacity: 0.2; filter: grayscale(0.7); }
+.heat-cell { cursor: pointer; }
+
+/* ─── Trainer scorecard ───────────────────────────────────────────────── */
+.scorecard-table { font-size: 11.5px; }
+.scorecard-table td.metric-name { white-space: nowrap; }
+.scorecard-table .share-meter { justify-content: center; }
+
+/* ─── Contrast guards ──────────────────────────────────────────────────
+   Anything painted with a brand colour takes its text from --on-accent, so a
+   theme swap can never leave light text on a light fill or the reverse. */
+.badge.good   { background: var(--good-soft);   color: var(--good); }
+.badge.bad    { background: var(--bad-soft);    color: var(--bad); }
+.badge.warn   { background: var(--warn-soft);   color: var(--warn); }
+.badge.neutral{ background: var(--bg-inset);    color: var(--text-muted); }
+.chip.is-active,
+.hm-btn.is-active,
+.pdf-btn {
+  color: var(--on-accent);
+}
+/* The heat scale used opacity to make its mid tints, which left white text on
+   a washed-out fill. Mix the tint into the surface instead and state the text
+   colour, so every band is legible in both themes. */
+.heat-cell.hot  { background: var(--bad); color: var(--on-accent); opacity: 1; }
+.heat-cell.warm { background: var(--warn); color: var(--on-accent); opacity: 1; }
+.heat-cell.cool { background: var(--primary-3); color: var(--on-accent); opacity: 1; }
+.heat-cell.cold {
+  background: color-mix(in srgb, var(--primary-3) 15%, var(--bg-card));
+  color: var(--text); opacity: 1;
+}
+.heat-cell.empty { background: var(--bg-soft); color: var(--text-subtle); opacity: 1; }
+.heat-cell.is-selected { outline: 2px solid var(--text); outline-offset: -2px; }
+.meta-pill { color: var(--text-muted); background: var(--bg-inset); border: 1px solid var(--border); }
+.share-meter-value { color: var(--text-muted); }
+
+/* ─── Dark mode: let the accents glow, keep the surfaces matte ────────── */
+[data-theme="dark"] body { background: var(--bg); }
+[data-theme="dark"] .kpi-card,
+[data-theme="dark"] .data-panel,
+[data-theme="dark"] .section-hero,
+[data-theme="dark"] .insight-card,
+[data-theme="dark"] .drill-modal {
+  background: var(--bg-card);
+  background-image: none;
+}
+[data-theme="dark"] .kpi-card::after { box-shadow: 0 0 10px var(--tone-color), 0 0 0 3px var(--tone-soft); }
+[data-theme="dark"] .kpi-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), 0 14px 40px rgba(59, 232, 255, 0.10);
+}
+[data-theme="dark"] .kpi-value,
+[data-theme="dark"] .drill-modal-title { text-shadow: 0 0 22px rgba(59, 232, 255, 0.16); }
+[data-theme="dark"] .chip.is-active,
+[data-theme="dark"] .hm-btn.is-active,
+[data-theme="dark"] .hm-band-btn.is-active,
+[data-theme="dark"] .hm-spot-btn.is-active,
+[data-theme="dark"] .hm-day-btn.is-active,
+[data-theme="dark"] .kpi-drill-btn:hover {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+[data-theme="dark"] .drill-bar-track i,
+[data-theme="dark"] .share-meter-track i {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--primary) 70%, transparent);
+}
+[data-theme="dark"] .rank-column.is-top .rank-column-head { box-shadow: inset 3px 0 0 var(--good), 0 0 18px rgba(60, 242, 154, 0.08); }
+[data-theme="dark"] .rank-column.is-bottom .rank-column-head { box-shadow: inset 3px 0 0 var(--bad), 0 0 18px rgba(255, 92, 122, 0.08); }
+[data-theme="dark"] .hero::before { opacity: 0.22; }
+[data-theme="dark"] .hero::after { opacity: 0.16; }
+[data-theme="dark"] .heat-cell.hot,
+[data-theme="dark"] .heat-cell.warm,
+[data-theme="dark"] .heat-cell.cool { color: #050505; font-weight: 800; }
+[data-theme="dark"] .marquee-item strong { color: var(--primary-3); }
+[data-theme="dark"] .performance-marquee, [data-theme="dark"] .section-marquee { background: #08080A; }
+
+/* The PDF stage is always light — pin it so a dark-mode export is readable. */
+.pdf-export-stage { --on-accent: #FFFFFF; }
+.pdf-export-stage .drill-modal-overlay,
+.pdf-export-stage .kpi-drill-btn { display: none !important; }
+@media print {
+  .drill-modal-overlay, .kpi-drill-btn { display: none !important; }
+}
+.data-pane:has(> .pane-title) { padding: 0; overflow: hidden; }
+.data-pane > .pane-title + .table-wrap { border: none; border-radius: 0; box-shadow: none; }
+.data-pane > .pane-title + .table-wrap table.data-table thead th { border-radius: 0; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Theme tokens — authoritative
+   This stylesheet has accumulated a dozen :root blocks over its life, each
+   re-stating the palette, so the ones nearest the top were being quietly
+   overruled. These are last, which makes them the ones that count. Everything
+   painted with a brand colour reads its text from --on-accent, so no theme can
+   put light text on a light fill or dark on dark.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root, html[data-theme="light"] {
+  --bg: #FFFFFF; --bg-soft: #F4F6FA; --bg-card: #FFFFFF; --bg-card-hover: #FAFBFD;
+  --bg-inset: #EEF1F6; --border: #E1E5EE; --border-strong: #C3CBDB;
+  --text: #0B1A33; --text-muted: #444E68; --text-subtle: #626C85;
+  --primary: #14346B; --primary-2: #1E4A8F; --primary-3: #2B5FB0;
+  --primary-soft: rgba(20, 52, 107, 0.06);
+  --accent: #1E3A8A; --accent-2: #2F62B8; --accent-deep: #14346B;
+  --accent-soft: #E7EEFA;
+  --good: #17703C; --good-soft: #DCF1E4;
+  --warn: #8A5B00; --warn-soft: #FDEEC9;
+  --bad: #A32D20; --bad-soft: #FBE1DD;
+  --on-accent: #FFFFFF;
+}
+/* Matte black with the accents carrying all of the light. */
+html[data-theme="dark"], [data-theme="dark"] {
+  --bg: #050505; --bg-soft: #0B0B0C; --bg-card: #101012; --bg-card-hover: #17171A;
+  --bg-inset: #151518; --border: #24242A; --border-strong: #38383F;
+  --text: #F3F4F6; --text-muted: #B8BCC6; --text-subtle: #8D919C;
+  --primary: #3BE8FF; --primary-2: #17C7E6; --primary-3: #7CF3FF;
+  --primary-soft: rgba(59, 232, 255, 0.10);
+  --accent: #FF3DCE; --accent-2: #FF7AE0; --accent-deep: #17C7E6;
+  --accent-soft: rgba(255, 61, 206, 0.12);
+  --good: #3CF29A; --good-soft: rgba(60, 242, 154, 0.14);
+  --warn: #FFC64D; --warn-soft: rgba(255, 198, 77, 0.14);
+  --bad: #FF5C7A; --bad-soft: rgba(255, 92, 122, 0.14);
+  --on-accent: #050505;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.7);
+  --shadow: 0 6px 18px rgba(0,0,0,0.65);
+  --shadow-lg: 0 18px 44px rgba(0,0,0,0.75);
+}
+
+/* Component colours that were written as literal navy, restated in tokens so
+   they follow the theme instead of staying navy on a black page. */
+.chip.is-active,
+.hm-btn.is-active,
+.hm-band-btn.is-active,
+.hm-spot-btn.is-active,
+.hm-day-btn.is-active,
+.conclusion-num, .action-num,
+[data-theme='dark'] .action-num {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--on-accent) !important;
+}
+.hm-btn, .hm-band-btn, .hm-spot-btn, .hm-day-btn {
+  background: var(--bg-inset); color: var(--text-muted); border-color: var(--border);
+}
+.section-hero::before, .insights-pane::before, .subsection::before { background: var(--primary); }
+.section-hero::before { background: linear-gradient(90deg, var(--primary), transparent); }
+.ai-result-v2::before, .ai-slot .ai-result::before,
+.action-card::before { background: linear-gradient(var(--primary), transparent); }
+.scroll-progress { background: linear-gradient(90deg, var(--primary), var(--accent)); }
+.back-to-top:hover { border-color: var(--primary); }
+.ai-btn, #save-btn { color: var(--on-accent); background: linear-gradient(120deg, var(--primary), var(--accent)); }
+::selection { background: var(--primary); color: var(--on-accent); }
+.hero::before { background: radial-gradient(circle, var(--primary) 0, transparent 67%); }
+
+/* Rows and cells that tint themselves must not also restate a text colour. */
+.total-row td, .totals-row td, tr.hm-totals td {
+  background: var(--primary-soft) !important;
+  color: var(--text);
+}
+.heat-cell.hm-grand { background: var(--bg-inset); color: var(--text); }
+.heat-cell.hot  { background: var(--bad) !important; color: var(--on-accent) !important; }
+.heat-cell.warm { background: var(--warn) !important; color: var(--on-accent) !important; }
+.heat-cell.cool { background: var(--primary-3) !important; color: var(--on-accent) !important; }
+.heat-cell.cold {
+  background: color-mix(in srgb, var(--primary-3) 15%, var(--bg-card)) !important;
+  color: var(--text) !important;
+}
+.heat-cell.empty { background: var(--bg-soft) !important; color: var(--text-subtle) !important; }
+
+/* The colour-blind-safe series wheel, re-cut per theme. */
+[data-theme="dark"] {
+  --sec-1-color: #3BE8FF;
+  --sec-2-color: #FF3DCE;
+  --sec-3-color: #FFC64D;
+  --sec-4-color: #A88BFF;
+  --sec-5-color: #FF5C7A;
+  --sec-6-color: #3CF29A;
+  --sec-7-color: #7CF3FF;
+}
+
+/* The dark marquee strips have their own near-black bed, so their text is set
+   against that bed rather than against the page. */
+.performance-marquee, .section-marquee { background: #14161C; }
+.marquee-item { color: rgba(242, 242, 242, 0.78); }
+.marquee-item strong { color: #FFFFFF; }
+[data-theme="dark"] .performance-marquee,
+[data-theme="dark"] .section-marquee { background: #0A0A0C; border-color: #1B1B1F; }
+[data-theme="dark"] .marquee-item strong { color: var(--primary-3); }
+[data-theme="dark"] .marquee-item::before { background: var(--primary); box-shadow: 0 0 12px var(--primary); }
+
+/* The stage the PDF is rendered on is always light. */
+.pdf-export-stage, .pdf-export-stage * { --on-accent: #FFFFFF; }
+
+/* Badges and heatmap controls had per-theme literals written into
+   `body.sp-report …` rules, which outranked the tokens and so kept the old
+   palette in dark mode. Restated in tokens at the same specificity. */
+body.sp-report .badge.good,
+[data-theme="dark"] body.sp-report .badge.good {
+  color: var(--good); background: var(--good-soft);
+  border-color: color-mix(in srgb, var(--good) 26%, transparent);
+}
+body.sp-report .badge.warn,
+[data-theme="dark"] body.sp-report .badge.warn {
+  color: var(--warn); background: var(--warn-soft);
+  border-color: color-mix(in srgb, var(--warn) 26%, transparent);
+}
+body.sp-report .badge.bad,
+[data-theme="dark"] body.sp-report .badge.bad {
+  color: var(--bad); background: var(--bad-soft);
+  border-color: color-mix(in srgb, var(--bad) 26%, transparent);
+}
+body.sp-report .hm-controls .hm-btn {
+  border: 1px solid var(--border); background: var(--bg-inset); color: var(--text-muted);
+}
+body.sp-report .hm-controls .hm-btn.is-active {
+  background: var(--primary); border-color: var(--primary); color: var(--on-accent);
+}
+
+/* ───────── Multi-studio bundle: location tabs ─────────
+   These had no styling at all: the buttons rendered as raw browser chrome and
+   every location's content stayed on screen at once. */
+.location-tabs {
+  position: sticky;
+  top: 64px;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin: 18px auto 26px;
+  padding: 6px;
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+}
+.location-tab {
+  appearance: none;
+  padding: 9px 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: 700 10.5px/1 var(--font-sans);
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+.location-tab:hover { color: var(--text); background: var(--primary-soft); }
+.location-tab.active {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 32%, transparent);
+}
+.location-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.location-content { display: none; }
+.location-content.active { display: block; }
+
+@media (max-width: 720px) {
+  .location-tabs { top: 56px; border-radius: var(--radius-lg); }
+  .location-tab { padding: 8px 14px; }
+}
+@media print {
+  .location-tabs { display: none; }
+  .location-content { display: block; }
 }

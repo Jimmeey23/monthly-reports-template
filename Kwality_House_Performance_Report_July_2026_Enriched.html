@@ -556,24 +556,8 @@ tr.disc-high td { background: var(--warn-soft); }
 .format-btn:hover { background: var(--bg-inset); border-color: var(--border); }
 
 
-/* ───────────────────────── Presenter View ───────────────────────── */
-.presenter-bar { position: fixed; top: 0; left: 0; right: 0; background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 2000; box-shadow: var(--shadow-sm); font-size: 13px; }
-.presenter-bar.is-active { background: var(--primary); color: white; border-bottom: none; }
-.presenter-info { display: flex; align-items: center; gap: 12px; }
-.presenter-badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-weight: 600; font-family: var(--font-mono); }
-.presenter-actions { display: flex; gap: 8px; }
-.presenter-btn { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; }
-.presenter-btn:hover { background: var(--bg-hover); }
-.presenter-bar.is-active .presenter-btn { background: white; color: var(--primary); border: none; }
-.presenter-bar.is-active .presenter-btn:hover { background: rgba(255,255,255,0.9); }
+/* ───────── Presenter View (layout lives in report-client.js) ───────── */
 body.viewer-locked { overflow: hidden !important; pointer-events: none !important; }
-.presenter-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-card); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); z-index: 3000; display: none; flex-direction: column; gap: 16px; width: 300px; }
-.presenter-modal.is-open { display: flex; }
-.presenter-modal-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-.presenter-modal input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-inset); color: var(--text); font-family: var(--font-mono); text-align: center; letter-spacing: 2px; font-size: 16px; margin-bottom: 16px; }
-.presenter-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
-
-body { padding-top: 40px !important; }
 
 
 /* ───────────────────────── Premium Aesthetics Override ───────────────────────── */
@@ -4101,6 +4085,174 @@ body.sp-report .kpi-trend .badge.neutral,
 @media (max-width: 640px) {
   .hero-kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
   .kpi-value { font-size: 23px; }
+}
+
+
+/* ─────────────────────────────────────────────
+   Table drill-downs
+   table-behaviour.js inserts a hidden detail row under every data row and
+   toggles `.visible` on click. The rules that hid it were dropped when the
+   stylesheet moved out of full_css.txt, so every detail row rendered open
+   and unstyled — the Headline KPI Matrix came out as a column of stray
+   "Click to expand detailed analytics" strips between its rows.
+   ───────────────────────────────────────────── */
+.data-table tr.drill-down-row { cursor: pointer; transition: background 200ms ease; }
+.data-table tr.drill-down-row:hover { background: var(--bg-inset); }
+.data-table tr.drill-down-row td:first-child::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 9px;
+  color: var(--text-subtle);
+  transition: transform 200ms ease;
+}
+.data-table tr.drill-down-row.expanded td:first-child::before { transform: rotate(90deg); }
+
+.data-table tr.drill-down-detail { display: none; background: var(--bg-soft); }
+.data-table tr.drill-down-detail.visible { display: table-row; }
+.data-table tr.drill-down-detail td {
+  padding: 12px 16px;
+  border-left: 3px solid var(--primary);
+}
+
+.drill-down-content {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  font-size: 12px;
+  overflow-x: auto;
+}
+.drill-down-metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1 1 130px;
+  min-width: 118px;
+  padding: 6px 18px;
+  border-right: 1px solid var(--border);
+}
+.drill-down-metric:first-child { padding-left: 4px; }
+.drill-down-metric:last-of-type { border-right: none; }
+.drill-down-metric-label {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.drill-down-metric-value {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+}
+/* The insight chip is set full-width inline by the script. */
+.drill-down-insight {
+  flex: 1 1 100%;
+  border-right: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+@media print {
+  .data-table tr.drill-down-detail { display: none !important; }
+  .data-table tr.drill-down-row td:first-child::before { display: none; }
+}
+.pdf-export-stage .data-table tr.drill-down-detail { display: none !important; }
+.pdf-export-stage .data-table tr.drill-down-row td:first-child::before { display: none; }
+/* The detail cell inherits the table's numeric alignment otherwise, which
+   pushed the tiles and the caption to the right edge. */
+.data-table tr.drill-down-detail td { text-align: left; }
+.drill-down-content, .drill-down-metric { text-align: left; }
+
+
+/* ─────────────────────────────────────────────
+   Categorical series palette
+   The donut and its legend colour their segments with --sec-N-color. Those
+   tokens were defined in full_css.txt and did not survive the move to this
+   stylesheet, so every segment resolved to `stroke: none` — the revenue-mix
+   donut rendered as an empty ring with blank legend swatches.
+
+   Re-cut for this report's navy system rather than restored verbatim: the
+   first series is the brand navy, the rest are spaced around the wheel so
+   adjacent slices stay distinguishable, including for the most common forms
+   of colour blindness.
+   ───────────────────────────────────────────── */
+:root {
+  --sec-1-color: #1E3A8A;
+  --sec-2-color: #0E7C86;
+  --sec-3-color: #B87900;
+  --sec-4-color: #6D5BD0;
+  --sec-5-color: #C0392B;
+  --sec-6-color: #3B82C4;
+  --sec-7-color: #2F855A;
+}
+[data-theme="dark"] {
+  --sec-1-color: #7EA2F0;
+  --sec-2-color: #3FC7CE;
+  --sec-3-color: #E8B23C;
+  --sec-4-color: #A08BF0;
+  --sec-5-color: #E3766A;
+  --sec-6-color: #7FB3E8;
+  --sec-7-color: #56C08A;
+}
+
+/* ───────── Multi-studio bundle: location tabs ─────────
+   These had no styling at all: the buttons rendered as raw browser chrome and
+   every location's content stayed on screen at once. */
+.location-tabs {
+  position: sticky;
+  top: 64px;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  margin: 18px auto 26px;
+  padding: 6px;
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+}
+.location-tab {
+  appearance: none;
+  padding: 9px 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: 700 10.5px/1 var(--font-sans);
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+.location-tab:hover { color: var(--text); background: var(--primary-soft); }
+.location-tab.active {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 32%, transparent);
+}
+.location-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.location-content { display: none; }
+.location-content.active { display: block; }
+
+@media (max-width: 720px) {
+  .location-tabs { top: 56px; border-radius: var(--radius-lg); }
+  .location-tab { padding: 8px 14px; }
+}
+@media print {
+  .location-tabs { display: none; }
+  .location-content { display: block; }
 }
 
 </style>
@@ -8874,7 +9026,10 @@ document.addEventListener('DOMContentLoaded', () => {
         insights.style.marginTop = 'var(--space-2)';
 
         const rowLabel = cells[0]?.textContent.trim() || '';
-        insights.innerHTML = `<span class="drill-down-metric-label">💡 Insight</span><span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans)">Click to expand detailed analytics for ${rowLabel}</span>`;
+        const pointCount = drillContent.children.length;
+        insights.innerHTML = `<span class="drill-down-metric-label">${rowLabel}</span>` +
+          `<span class="drill-down-metric-value" style="font-size:12px;font-family:var(--font-sans)">` +
+          `${pointCount} comparison point${pointCount === 1 ? '' : 's'} for this row. Click the row again to close.</span>`;
         drillContent.appendChild(insights);
 
         detailCell.appendChild(drillContent);

@@ -67,6 +67,9 @@ INLINE_JS = [
     ('subsection-collapse', 'js/subsection-collapse.js'),
     ('report-layout', 'js/report-layout.js'),
     ('table-behaviour', 'js/table-behaviour.js'),
+    ('rank-board', 'js/rank-board.js'),
+    # after the tables and boards have rendered, so it sees every trigger
+    ('drill-modal', 'js/drill-modal.js'),
     ('brand-audio', 'js/brand-audio.js'),
     ('embedded-html2canvas', 'vendor/html2canvas.min.js'),
     ('embedded-jspdf', 'vendor/jspdf.umd.min.js'),
@@ -80,6 +83,12 @@ INLINE_JS = [
 def _js(obj):
     """JSON for embedding in a <script> — `</` escaped so it can't close the tag."""
     return json.dumps(obj, ensure_ascii=False).replace('</', '<\\/')
+
+
+def _attr(obj):
+    """JSON for a double-quoted HTML attribute."""
+    return (json.dumps(obj, ensure_ascii=False, separators=(',', ':'))
+            .replace('&', '&amp;').replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;'))
 
 
 def report_meta(ctx):
@@ -174,9 +183,13 @@ def section_marquee(items, label):
 
 
 def kpi_card(index, card):
-    """One hero metric: front face with a sparkline, back face with the read.
+    """One metric card: front face with an animated chart, back face with the
+    definition, the formula and a button into the item-level drill-down.
 
-    `card` carries label/value/sub/trends/series/baseline/kicker/copy/focus/tip.
+    `card` carries label/value/sub/trends/series/baseline/kicker/copy/focus/tip,
+    plus optional `definition`, `formula` and `drill`. The same component is
+    used for the hero grid and — with `compact` set — for the cards inside
+    sections, so the two never drift apart.
     """
     tip_id = f'metric-tip-{index}'
     trends = ''.join(
@@ -189,13 +202,30 @@ def kpi_card(index, card):
     chart = ''
     if card.get('series'):
         chart = (
-            '<div aria-label="Recent metric trend" class="kpi-chart" data-chart-type="bar" '
+            '<div aria-label="Recent metric trend" class="kpi-chart" '
+            f'data-chart-type="{card.get("chart_type", "area")}" '
             f'data-decimals="{card.get("decimals", 0)}" data-grouping="{str(card.get("grouping", False)).lower()}" '
             f'data-labels="{card["labels"]}" data-prefix="{card.get("prefix", "")}" '
             f'data-series="{card["series"]}" data-suffix="{card.get("suffix", "")}" '
             'title="Move across the chart to inspect each comparison point"></div>')
     baseline = f'<div class="kpi-baseline">{card["baseline"]}</div>' if card.get('baseline') else ''
-    return f'''<div aria-describedby="{tip_id}" class="kpi-card" tabindex="0"><div class="kpi-flip-shell"><div class="kpi-card-inner kpi-face kpi-card-front"><div aria-hidden="true" class="kpi-card-art"><span></span><span></span><span></span></div>
+
+    definition = (f'<p class="kpi-back-copy">{card["definition"]}</p>'
+                  if card.get('definition') else
+                  (f'<p class="kpi-back-copy">{card.get("copy", "")}</p>' if card.get('copy') else ''))
+    formula = (f'<div class="kpi-back-formula"><span class="kpi-back-formula-label">How it is calculated</span>'
+               f'<code>{card["formula"]}</code></div>') if card.get('formula') else ''
+    drill = ''
+    if card.get('drill'):
+        drill = ('<button class="kpi-drill-btn" type="button" data-drill="'
+                 + _attr(card['drill']) + '">Open item-level detail</button>')
+
+    classes = 'kpi-card' + (' is-compact' if card.get('compact') else '')
+    tone = card.get('tone')
+    if tone:
+        classes += ' tone-' + tone
+
+    return f'''<div aria-describedby="{tip_id}" class="{classes}" tabindex="0"><div class="kpi-flip-shell"><div class="kpi-card-inner kpi-face kpi-card-front"><div aria-hidden="true" class="kpi-card-art"><span></span><span></span><span></span></div>
 <div class="kpi-label">{card['label']}</div>
 <div class="kpi-value">{card['value']}</div>
 <div class="kpi-sub">{card.get('sub', '')}</div>
@@ -203,7 +233,7 @@ def kpi_card(index, card):
 {trends}
 </div>
 {chart}{baseline}
-<div aria-hidden="true" class="kpi-flip-cue">Click for context  ↗</div></div><div class="kpi-card-back kpi-face"><div class="kpi-back-top"><span class="kpi-back-kicker">{card.get('kicker', '')}</span><span aria-hidden="true" class="kpi-back-return">↺</span></div><h3 class="kpi-back-title">{card['label']}</h3><p class="kpi-back-copy">{card.get('copy', '')}</p><div class="kpi-back-stats">{back_stats}</div><div class="kpi-back-focus"><strong>Management focus · </strong>{card.get('focus', '')}</div></div></div><div class="metric-card-tooltip" id="{tip_id}" role="tooltip">{card.get('tip', '')}</div></div>'''
+<div aria-hidden="true" class="kpi-flip-cue">Click for context  ↗</div></div><div class="kpi-card-back kpi-face"><div class="kpi-back-top"><span class="kpi-back-kicker">{card.get('kicker', '')}</span><span aria-hidden="true" class="kpi-back-return">↺</span></div><h3 class="kpi-back-title">{card['label']}</h3>{definition}{formula}<div class="kpi-back-stats">{back_stats}</div><div class="kpi-back-focus"><strong>Management focus · </strong>{card.get('focus', '')}</div>{drill}</div></div><div class="metric-card-tooltip" id="{tip_id}" role="tooltip">{card.get('tip', '')}</div></div>'''
 
 
 def hero(ctx, headline, sub, meta_items, marquee_items, kpi_cards):
@@ -229,11 +259,13 @@ def hero(ctx, headline, sub, meta_items, marquee_items, kpi_cards):
 
     return f'''<section class="hero">
 <div class="container hero-content">
+<div class="hero-topline">
 <div class="hero-eyebrow">
 <img alt="Physique 57 logo" class="hero-logo" src="{LOGO}"/>
       <span>Senior Management Review · Period: {period}</span>
-      <button class="brand-audio-btn hero-audio-btn hero-eyebrow-audio" id="brand-audio-btn" type="button" aria-label="Play Fiz-zeek Fifty-Seven" title="Play Fiz-zeek Fifty-Seven"><span class="hero-audio-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M9 18V5l11-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="17" cy="16" r="3"></circle></svg></span><span class="hero-audio-copy"><strong>Play Me</strong><small>Fiz-zeek Fifty-Seven</small></span></button>
     </div>
+<button class="brand-audio-btn hero-audio-btn hero-topline-audio" id="brand-audio-btn" type="button" aria-label="Play Fiz-zeek Fifty-Seven" title="Play Fiz-zeek Fifty-Seven"><span class="hero-audio-icon"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M9 18V5l11-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="17" cy="16" r="3"></circle></svg></span><span class="hero-audio-copy"><strong>Play Me</strong><small>Fiz-zeek Fifty-Seven</small></span></button>
+</div>
 <div class="hero-title-with-audio"><h1>{headline}</h1></div>
 <p class="hero-sub">{sub}</p><div aria-label="Studio photography" class="hero-media-grid"><figure aria-label="Studio photography carousel" aria-roledescription="carousel" class="hero-media-card hero-media-main hero-carousel"><div class="hero-carousel-viewport">{slides}</div><div class="hero-carousel-controls"><button aria-label="Previous image" class="hero-carousel-button" data-carousel-prev="" type="button">←</button><div aria-label="Choose image" class="hero-carousel-dots">{dots}</div><button aria-label="Next image" class="hero-carousel-button" data-carousel-next="" type="button">→</button></div><div aria-hidden="true" class="hero-carousel-progress"><span></span></div></figure><figure class="hero-media-card hero-media-side"><img alt="{HERO_SIDE[1]}" decoding="async" loading="eager" src="{HERO_SIDE[0]}"/><figcaption class="hero-media-caption">{HERO_SIDE[1]}</figcaption></figure></div>
 <div class="hero-meta">
@@ -356,5 +388,7 @@ def data_globals(mom_data, extra_data, sales_matrix):
 def scripts():
     out = []
     for script_id, rel in INLINE_JS:
-        out.append(f'<script id="{script_id}">\n{_read(rel)}\n</script>')
+        # Namespaced: `theme-toggle` is also the id of the button in the topbar,
+        # and a duplicate id makes getElementById a coin toss.
+        out.append(f'<script id="rpt-js-{script_id}">\n{_read(rel)}\n</script>')
     return '\n'.join(out) + '\n</body></html>\n'

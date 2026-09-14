@@ -195,6 +195,13 @@ function saveReports(rows) {
   }
 }
 
+/* Checkbox values arrive as 'on', '1' or 'true' depending on the form; only an
+   absent field means unchecked. */
+function isChecked(value) {
+  if (Array.isArray(value)) value = value[value.length - 1];
+  return value !== undefined && value !== '' && value !== '0' && value !== 'false';
+}
+
 function recordReport(entry) {
   const rows = loadReports().filter(
     (r) => !(r.sessionId === entry.sessionId && r.filename === entry.filename));
@@ -886,6 +893,7 @@ app.get('/select', (req, res) => {
     locations: session.locations,
     months: [...session.months].reverse(),
     error: null,
+    noAi: isChecked(req.query.noAi),
   });
 });
 
@@ -983,6 +991,7 @@ app.post('/generate', async (req, res) => {
       locations: session.locations,
       months: [...session.months].reverse(),
       error: 'Pick at least one valid studio and month.',
+      noAi: isChecked(req.body.noAi),
     });
   }
 
@@ -999,6 +1008,11 @@ app.post('/generate', async (req, res) => {
 
   const outputPath = path.join(session.dir, outputFilename);
 
+  // The no-AI switch on the scope form. Checked means: build this report from
+  // the data alone — reuse any narrative already in the cache, never call a
+  // provider, never spend.
+  const noAi = isChecked(req.body.noAi);
+
   // Generate AI Insights AOT for this report
   try {
     const analysis = JSON.parse(fs.readFileSync(session.analysisPath, 'utf8'));
@@ -1011,7 +1025,10 @@ app.post('/generate', async (req, res) => {
         for (const sec of AI_SECTIONS) {
           aiTasks.push(async () => {
             try {
-              const res = await generateInsights(analysis, loc, month, sec);
+              const res = await generateInsights(analysis, loc, month, sec, { cacheOnly: noAi });
+              // A cache miss under the no-AI switch returns null; leaving the
+              // key out keeps the slot empty rather than rendering a null.
+              if (!res) return;
               const key = loc + '|' + month + '|' + sec;
               aiContext[key] = res;
             } catch (err) {
@@ -1024,7 +1041,9 @@ app.post('/generate', async (req, res) => {
 
     // Keep generation below provider TPM limits while still doing a small amount
     // of work in parallel. A failed optional narrative must not block the report.
-    const workerCount = Math.min(2, aiTasks.length);
+    // Cache-only lookups are local file reads, so the throttle that exists for
+    // provider rate limits would only slow them down.
+    const workerCount = noAi ? Math.min(8, aiTasks.length) : Math.min(2, aiTasks.length);
     let nextTask = 0;
     await Promise.all(Array.from({ length: workerCount }, async () => {
       while (nextTask < aiTasks.length) {
@@ -1049,6 +1068,7 @@ app.post('/generate', async (req, res) => {
           locations: session.locations,
           months: [...session.months].reverse(),
           error: `Report generation failed: ${stderr || err.message}`,
+          noAi,
         });
       }
 
@@ -1078,6 +1098,7 @@ app.post('/generate', async (req, res) => {
           studios: selectedLocs.map((l) => (session.locations || {})[l] || l),
           months: selectedMonths,
           comboCount,
+          ai: !noAi,
           bytes: fs.statSync(outputPath).size,
           created: Date.now(),
         });
@@ -1087,6 +1108,7 @@ app.post('/generate', async (req, res) => {
 
       res.render('result', {
         sessionId,
+        noAi,
         locs: selectedLocs,
         selectedMonths,
         comboCount,
@@ -1105,6 +1127,7 @@ app.post('/generate', async (req, res) => {
       locations: session.locations,
       months: [...session.months].reverse(),
       error: `Report generation failed: ${err.message}`,
+      noAi: isChecked(req.body.noAi),
     });
   }
 });

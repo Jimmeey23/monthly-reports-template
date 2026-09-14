@@ -56,6 +56,59 @@
       heatmap.classList.add('has-selection');
       if (selection) selection.innerHTML = '<strong>' + day + ' · ' + time + '</strong> — ' + visits.toLocaleString('en-IN') + ' visits · ' + detailText;
     };
+
+    /* Opening a slot shows it against the same slot on every other day and the
+       rest of its own day, which is the comparison a scheduler actually makes. */
+    var openCell = function (cell) {
+      var row = cell.closest('tr');
+      var day = row.querySelector('.row-label').textContent.trim();
+      var columnIndex = Array.prototype.indexOf.call(row.children, cell);
+      var time = headers[columnIndex] ? headers[columnIndex].textContent.trim() : 'Slot';
+      var visits = +cell.getAttribute('data-v');
+      var grandTotal = 0;
+      selectableCells.forEach(function (c) { grandTotal += +c.getAttribute('data-v'); });
+
+      var sameSlot = heatRows.map(function (r) {
+        var c = r.children[columnIndex];
+        if (!c || !c.hasAttribute('data-v')) return null;
+        return { label: r.querySelector('.row-label').textContent.trim(),
+                 value: +c.getAttribute('data-v') };
+      }).filter(Boolean);
+
+      var sameDay = Array.prototype.slice.call(row.children).map(function (c, i) {
+        if (!c.hasAttribute('data-v') || c.classList.contains('hm-grand') || i === columnIndex) return null;
+        if (!headers[i] || headers[i].classList.contains('total-col')) return null;
+        return { label: headers[i].textContent.trim(), value: +c.getAttribute('data-v') };
+      }).filter(Boolean);
+
+      var sub = cell.querySelector('.heat-sub');
+      var stats = [
+        { label: 'Visits', value: visits.toLocaleString('en-IN') },
+        { label: 'Share of week', value: grandTotal ? (visits / grandTotal * 100).toFixed(1) + '%' : '—' },
+        { label: 'Day', value: day },
+        { label: 'Slot', value: time }
+      ];
+      if (sub) stats.push({ label: 'Leading format · trainer', value: sub.textContent.trim() });
+      var slotPeak = Math.max.apply(null, sameSlot.map(function (s) { return s.value; }).concat([0]));
+      if (slotPeak) stats.push({ label: 'vs best day in this slot', value: (visits - slotPeak) + ' visits' });
+
+      if (window.__p57DrillModal) {
+        window.__p57DrillModal.open({
+          kicker: 'Demand heatmap',
+          title: day + ' · ' + time,
+          subtitle: 'How this slot compares across the week and within its own day.',
+          stats: stats,
+          bars: sameSlot,
+          barsTitle: time + ' on every day',
+          table: sameDay.length ? {
+            headers: ['Slot', 'Visits'],
+            rows: sameDay.map(function (s) { return [s.label, s.value.toLocaleString('en-IN')]; })
+          } : null,
+          tableTitle: 'The rest of ' + day,
+          footnote: 'Esc or click outside to close.'
+        }, cell);
+      }
+    };
     selectableCells.forEach(function (cell) {
       var row = cell.closest('tr');
       var day = row.querySelector('.row-label').textContent.trim();
@@ -64,9 +117,70 @@
       cell.tabIndex = 0;
       cell.setAttribute('role','button');
       cell.setAttribute('aria-label', day + ' ' + time + ', ' + cell.getAttribute('data-v') + ' visits. Select for details.');
-      cell.addEventListener('click', function () { selectCell(cell); });
+      cell.addEventListener('click', function () { selectCell(cell); openCell(cell); });
       cell.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectCell(cell); }
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectCell(cell); openCell(cell); }
+      });
+    });
+
+    /* ---- Slot filters: time band, and a peak/quiet spotlight ---- */
+    var bandFor = function (label) {
+      var h = parseInt(String(label).split(':')[0], 10);
+      if (!isFinite(h)) return 'all';
+      if (h < 12) return 'morning';
+      if (h < 17) return 'midday';
+      return 'evening';
+    };
+    var columnBands = headers.map(function (th) { return bandFor(th.textContent.trim()); });
+
+    var applyBand = function (band) {
+      heatmap.querySelectorAll('tr').forEach(function (row) {
+        Array.prototype.forEach.call(row.children, function (cell, i) {
+          if (i === 0 || i >= headers.length) return;
+          var off = band !== 'all' && columnBands[i] !== band;
+          cell.classList.toggle('is-dimmed', off);
+          if (headers[i]) headers[i].classList.toggle('is-dimmed', off);
+        });
+      });
+    };
+
+    var values = selectableCells.map(function (c) { return +c.getAttribute('data-v'); })
+      .sort(function (a, b) { return b - a; });
+    var applySpotlight = function (mode) {
+      var cut;
+      if (mode === 'peak') cut = values[Math.min(values.length - 1, Math.floor(values.length * 0.2))];
+      if (mode === 'quiet') cut = values[Math.max(0, Math.floor(values.length * 0.8))];
+      selectableCells.forEach(function (cell) {
+        var v = +cell.getAttribute('data-v');
+        var on = mode === 'off' || (mode === 'peak' ? v >= cut : v <= cut);
+        cell.classList.toggle('is-muted', !on);
+      });
+    };
+
+    document.querySelectorAll('.hm-band-btn').forEach(function (button) {
+      button.addEventListener('click', function () {
+        document.querySelectorAll('.hm-band-btn').forEach(function (b) {
+          b.classList.toggle('is-active', b === button);
+          b.setAttribute('aria-pressed', String(b === button));
+        });
+        applyBand(button.getAttribute('data-band'));
+      });
+    });
+
+    document.querySelectorAll('.hm-spot-btn').forEach(function (button) {
+      button.addEventListener('click', function () {
+        document.querySelectorAll('.hm-spot-btn').forEach(function (b) {
+          b.classList.toggle('is-active', b === button);
+          b.setAttribute('aria-pressed', String(b === button));
+        });
+        applySpotlight(button.getAttribute('data-spot'));
+        if (selection) {
+          var mode = button.getAttribute('data-spot');
+          selection.innerHTML = mode === 'off'
+            ? '<strong>All slots shown.</strong> Select a populated slot for detail.'
+            : '<strong>' + (mode === 'peak' ? 'Top 20% of slots' : 'Bottom 20% of slots') +
+              '</strong> highlighted. Select one to open its breakdown.';
+        }
       });
     });
     document.querySelectorAll('.hm-day-btn').forEach(function (button) {

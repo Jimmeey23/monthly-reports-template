@@ -366,12 +366,26 @@ def analyze_sales():
         # For each breakdown, we need to track which sale IDs have which breakdown values
         # Let's redo this more carefully
     
-    # Re-read for breakdowns with gross per sale
-    breakdown_data = {lk: {m: {'category': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
-                                'product': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
-                                'seller': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()}),
-                                'payment': defaultdict(lambda: {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0, 'sales': set()})}
+    # Re-read for breakdowns with gross per sale.
+    # `txns` holds the distinct payment transactions a bucket touched — the
+    # denominator for AOV (revenue per transaction) and UPT (line items per
+    # transaction). `rows` counts line items, so net/rows is a per-unit figure
+    # and net/txns is a per-basket one; the tables print both.
+    def _bucket():
+        return {'gross': 0.0, 'net': 0.0, 'list_value': 0.0, 'disc': 0.0, 'rows': 0,
+                'sales': set(), 'txns': set()}
+
+    breakdown_data = {lk: {m: {'category': defaultdict(_bucket),
+                                'product': defaultdict(_bucket),
+                                'seller': defaultdict(_bucket),
+                                'payment': defaultdict(_bucket)}
                       for m in MONTHS + YOY_MONTHS}
+                     for lk in LOCATIONS}
+
+    # The product rows that sit under each category, so the category table can
+    # expand in place instead of sending the reader to a separate product table.
+    cat_prod_data = {lk: {m: defaultdict(lambda: defaultdict(_bucket))
+                          for m in MONTHS + YOY_MONTHS}
                      for lk in LOCATIONS}
     
     # Track sale -> breakdown values mapping
@@ -408,6 +422,8 @@ def analyze_sales():
             sale_breakdown[loc_key][sid]['seller'].add(seller)
             sale_breakdown[loc_key][sid]['payment'].add(pay_method)
             
+            txn_id = row.get(schema['txn'], sid) if schema.get('txn') else sid
+
             for btype, bval in [('category', cat), ('product', prod), ('seller', seller), ('payment', pay_method)]:
                 bd = breakdown_data[loc_key][month][btype][bval]
                 bd['gross'] += stp
@@ -416,10 +432,27 @@ def analyze_sales():
                 bd['disc'] += disc
                 bd['rows'] += 1
                 bd['sales'].add(sid)
+                bd['txns'].add(txn_id)
+
+            cp = cat_prod_data[loc_key][month][cat][prod]
+            cp['gross'] += stp
+            cp['net'] += stp - vat
+            cp['list_value'] += mrp
+            cp['disc'] += disc
+            cp['rows'] += 1
+            cp['sales'].add(sid)
+            cp['txns'].add(txn_id)
     
     # Gross is attributed per line item above, so every breakdown bucket adds
     # back up to the month's headline gross (the old pass assigned the whole
     # deduplicated sale total to each bucket, which double counted).
+    # The nested product rows ride along inside the breakdown dict so every
+    # existing caller of get_sales_breakdowns() keeps working unchanged.
+    for lk in LOCATIONS:
+        for m in MONTHS + YOY_MONTHS:
+            breakdown_data[lk][m]['category_product'] = {
+                cat: dict(prods) for cat, prods in cat_prod_data[lk][m].items()}
+
     return data, breakdown_data, sales_data
 
 
@@ -509,7 +542,8 @@ def analyze_sessions():
     by_class = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0, 'empty': 0})
                     for m in MONTHS}
                for lk in LOCATIONS}
-    by_trainer = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0})
+    by_trainer = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0,
+                                               'empty': 0, 'classes': set(), 'days': set()})
                       for m in MONTHS}
                  for lk in LOCATIONS}
     by_format = {lk: {m: defaultdict(lambda: {'sessions': 0, 'visits': 0, 'capacity': 0, 'revenue': 0.0, 'empty': 0})
@@ -603,6 +637,10 @@ def analyze_sessions():
         bt['visits'] += rec['visits']
         bt['capacity'] += rec['capacity']
         bt['revenue'] += rec['revenue']
+        bt['classes'].add(rec['cls'])
+        bt['days'].add(rec['day'])
+        if rec['visits'] == 0:
+            bt['empty'] += 1
 
         bf = by_format[loc_key][month][rec['fmt']]
         bf['sessions'] += 1
@@ -888,6 +926,35 @@ def analyze_active():
     return data
 
 
+def _serialise_bucket(b):
+    """Sets don't survive JSON, and the report only ever needs their size, so
+    the sale and transaction sets are written out as counts."""
+    out = {k: v for k, v in b.items() if k not in ('sales', 'txns')}
+    out['sales'] = len(b.get('sales') or ())
+    out['txns'] = len(b.get('txns') or ()) or out['sales']
+    return out
+
+
+def _serialise_trainer(v):
+    """Sets are collected while counting but cannot go into JSON — the report
+    only ever wants how many distinct classes and days a trainer covered."""
+    out = {k: val for k, val in v.items() if not isinstance(val, set)}
+    out['distinct_classes'] = len(v.get('classes') or ())
+    out['distinct_days'] = len(v.get('days') or ())
+    return out
+
+
+def _serialise_breakdowns(bts):
+    out = {}
+    for btype, bd in bts.items():
+        if btype == 'category_product':
+            out[btype] = {cat: {prod: _serialise_bucket(v) for prod, v in prods.items()}
+                          for cat, prods in bd.items()}
+        else:
+            out[btype] = {k: _serialise_bucket(v) for k, v in bd.items()}
+    return out
+
+
 # ===================== MAIN =====================
 def main():
     print("Analyzing sales...")
@@ -1005,7 +1072,7 @@ def main():
     # Assemble all data
     all_data = {
         'sales': sales_data,
-        'sales_breakdowns': {lk: {m: {bt: dict(bd) for bt, bd in bts.items()} 
+        'sales_breakdowns': {lk: {m: _serialise_breakdowns(bts)
                                    for m, bts in months.items()}
                             for lk, months in sales_breakdowns.items()},
         'sales_by_id': {lk: {m: dict(sids) for m, sids in months.items()}
@@ -1013,7 +1080,8 @@ def main():
         'sessions': sessions_data,
         'sessions_by_class': {lk: {m: dict(bc) for m, bc in months.items()}
                              for lk, months in sessions_by_class.items()},
-        'sessions_by_trainer': {lk: {m: dict(bt) for m, bt in months.items()}
+        'sessions_by_trainer': {lk: {m: {name: _serialise_trainer(v) for name, v in bt.items()}
+                                     for m, bt in months.items()}
                                for lk, months in sessions_by_trainer.items()},
         'sessions_by_format': {lk: {m: dict(bf) for m, bf in months.items()}
                               for lk, months in sessions_by_format.items()},

@@ -54,6 +54,11 @@
           <% }) %>
         </select>
       </label>
+      <label class="switch-row switch-row-inline" for="no-ai-again">
+        <input type="checkbox" id="no-ai-again" name="noAi" value="1" <%= (typeof noAi !== 'undefined' && noAi) ? 'checked' : '' %> />
+        <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+        <span class="switch-copy"><strong>No AI calls</strong></span>
+      </label>
       <button type="submit" class="btn secondary">Generate Another</button>
     </form>
 

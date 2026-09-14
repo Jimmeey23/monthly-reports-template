@@ -12,8 +12,24 @@ function fitSplitLayout(grid) {
     let over = false;
     data.querySelectorAll('.table-wrap').forEach(function (w) {
       if (w.scrollWidth > w.clientWidth + 2) over = true;
+      // A table that has already been squeezed reports no wrap overflow, so
+      // compare what the table wants against what the column gives it.
+      w.querySelectorAll('table').forEach(function (t) {
+        if (t.scrollWidth > w.clientWidth + 2) over = true;
+      });
     });
     return over;
+  };
+
+  // A table with this many columns never reads well in a half-width column,
+  // whatever it measures at: give it the report's full width up front.
+  const WIDE_TABLE_COLUMNS = 7;
+  const hasWideTable = function () {
+    return Array.prototype.some.call(data.querySelectorAll('table'), function (t) {
+      const head = t.tHead && t.tHead.rows[0];
+      const cols = head ? head.cells.length : (t.rows[0] ? t.rows[0].cells.length : 0);
+      return cols >= WIDE_TABLE_COLUMNS;
+    });
   };
 
   grid.classList.remove('is-wide-data', 'is-stacked', 'is-dense', 'is-dense-2', 'is-loose', 'is-wrapped');
@@ -25,7 +41,13 @@ function fitSplitLayout(grid) {
   // Below the single-column breakpoint the CSS already stacks everything.
   if (window.innerWidth <= 1080) return;
 
-  if (overflows()) {
+  if (hasWideTable()) {
+    grid.classList.add('is-stacked');
+    if (overflows()) {
+      grid.classList.add('is-dense');
+      if (overflows()) grid.classList.add('is-dense-2');
+    }
+  } else if (overflows()) {
     grid.classList.add('is-wide-data');
     if (overflows()) {
       grid.classList.remove('is-wide-data');

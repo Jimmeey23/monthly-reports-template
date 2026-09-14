@@ -6,6 +6,7 @@ Each function takes a context dict and returns HTML for one section.
 import calendar
 import json
 import html
+import re
 
 import report_shell
 
@@ -348,6 +349,359 @@ def classify_format(class_name):
     return 'Barre'
 
 
+# ─── Shared UI kit ────────────────────────────────────────────────────────────
+# Every section builds its panels, tables, tiles and ranked lists through these
+# helpers so the report keeps one set of surfaces instead of a different card
+# per section. Change the look here and it changes everywhere.
+
+# ─── Metric dictionary ────────────────────────────────────────────────────────
+# What a figure means and how it is worked out, keyed by a normalised label.
+# The back of every metric card reads from here, so the definition a reader
+# sees on a hero card and on a section card is the same sentence.
+
+METRIC_DEFS = {
+    'net revenue': ('Revenue actually banked after every discount has been applied.',
+                    'Net revenue = Gross revenue &minus; Discounts'),
+    'net rev': ('Revenue actually banked after every discount has been applied.',
+                'Net revenue = Gross revenue &minus; Discounts'),
+    'gross revenue': ('Full list value of everything sold, before discounts.',
+                      'Gross revenue = &sum; (unit price &times; units sold)'),
+    'gross rev': ('Full list value of everything sold, before discounts.',
+                  'Gross revenue = &sum; (unit price &times; units sold)'),
+    'discount': ('Value given away against list price across the period.',
+                 'Discount = Gross revenue &minus; Net revenue'),
+    'disc %': ('How much of gross revenue was handed back as discount.',
+               'Discount % = Discount &divide; Gross revenue &times; 100'),
+    'discount rate': ('How much of gross revenue was handed back as discount.',
+                      'Discount % = Discount &divide; Gross revenue &times; 100'),
+    'transactions': ('Number of separate paid checkouts in the period.',
+                     'Transactions = count of distinct payment records'),
+    'txns': ('Number of separate paid checkouts in the period.',
+             'Transactions = count of distinct payment records'),
+    'units': ('Number of individual items sold across all transactions.',
+              'Units = &sum; line-item quantities'),
+    'aov': ('Average value of a transaction — the size of a typical basket.',
+            'AOV = Gross revenue &divide; Transactions'),
+    'atv': ('Average value of a single item sold.',
+            'ATV = Gross revenue &divide; Units'),
+    'upt': ('How many items the average transaction contains.',
+            'UPT = Units &divide; Transactions'),
+    'members': ('Distinct paying members who transacted in the period.',
+                'Members = count of unique member IDs with a sale'),
+    'sessions': ('Classes actually delivered on the timetable.',
+                 'Sessions = count of scheduled classes that ran'),
+    'visits': ('Attendances recorded across every session.',
+               'Visits = &sum; check-ins per session'),
+    'capacity': ('Total seats offered across every session that ran.',
+                 'Capacity = &sum; (seats per session)'),
+    'fill rate': ('How full the timetable ran — the core utilisation figure.',
+                  'Fill % = Visits &divide; Capacity &times; 100'),
+    'fill %': ('How full the timetable ran — the core utilisation figure.',
+               'Fill % = Visits &divide; Capacity &times; 100'),
+    'class avg': ('Average heads in a class, counting sessions that ran empty.',
+                  'Class avg (incl. empty) = Visits &divide; Sessions'),
+    'class avg (excl. empty)': ('Average heads in a class that had at least one attendee.',
+                                'Class avg (excl. empty) = Visits &divide; (Sessions &minus; Empty sessions)'),
+    'empty sessions': ('Sessions that ran with nobody in the room.',
+                       'Empty sessions = count of sessions where Visits = 0'),
+    'leads': ('New enquiries captured in the period, across every source.',
+              'Leads = count of enquiry records created'),
+    'converted': ('Leads or trialists who went on to buy a membership.',
+                  'Converted = count of leads with a first paid sale'),
+    'conversion rate': ('Share of enquiries that turned into paying members.',
+                        'Conversion % = Converted &divide; Leads &times; 100'),
+    'conv %': ('Share of enquiries that turned into paying members.',
+               'Conversion % = Converted &divide; Leads &times; 100'),
+    'trials': ('First-time visitors who took an introductory class.',
+               'Trials = count of first visits on a trial product'),
+    'retained': ('Converted members still attending at the end of the window.',
+                 'Retained = converted members with a visit in the retention window'),
+    'retention rate': ('Share of new clients still attending at period end.',
+                       'Retention % = Retained &divide; New clients &times; 100'),
+    'renewal rate': ('Share of expiring memberships that were renewed.',
+                     'Renewal % = Renewed &divide; Total expirations &times; 100'),
+    'churn': ('Share of expiring memberships that lapsed rather than renewed.',
+              'Churn % = Lapsed &divide; Total expirations &times; 100'),
+    'churn %': ('Share of expiring memberships that lapsed rather than renewed.',
+                'Churn % = Lapsed &divide; Total expirations &times; 100'),
+    'lapsed': ('Memberships that expired without being renewed.',
+               'Lapsed = Total expirations &minus; Renewed &minus; Frozen'),
+    'revenue per visit': ('What each attendance is worth in revenue terms.',
+                          'Revenue per visit = Net revenue &divide; Visits'),
+    'share': ('This row\u2019s slice of the column total.',
+              'Share % = Row value &divide; Total &times; 100'),
+}
+
+
+def metric_def(label):
+    """(definition, formula) for a metric label, or (None, None)."""
+    key = re.sub(r'<[^>]+>', '', str(label)).strip().lower()
+    key = key.replace('&amp;', '&').replace('\u00a0', ' ')
+    if key in METRIC_DEFS:
+        return METRIC_DEFS[key]
+    for candidate, value in METRIC_DEFS.items():
+        if key.startswith(candidate) or candidate in key:
+            return value
+    return (None, None)
+
+
+_METRIC_CARD_SEQ = [0]
+
+
+def metric_card(label, value, sub='', tone='', trends=None, kicker='Metric',
+                focus='', drill=None, series=None, labels=None, **extra):
+    """A section-level metric card — the hero KPI card at a smaller size.
+
+    Sections used to print their own flat tiles, which is why the report had two
+    different-looking metric surfaces. Everything now goes through this.
+    """
+    _METRIC_CARD_SEQ[0] += 1
+    definition, formula = metric_def(label)
+    card = {
+        'label': label,
+        'value': value,
+        'sub': sub,
+        'tone': tone,
+        'compact': True,
+        'kicker': kicker,
+        'trends': trends or [],
+        'definition': definition or extra.get('definition', ''),
+        'formula': formula or extra.get('formula', ''),
+        'focus': focus or 'Read this alongside the table below.',
+        'tip': re.sub(r'<[^>]+>', '', str(definition or '')),
+    }
+    if series:
+        card['series'] = ','.join(f'{v:.4g}' for v in series)
+        # These land in an HTML attribute, and class names carry apostrophes.
+        card['labels'] = '|'.join(
+            html.escape(_strip(l), quote=True) for l in (labels or [''] * len(series)))
+        card['chart_type'] = extra.get('chart_type', 'area')
+        card['decimals'] = extra.get('decimals', 0)
+        card['prefix'] = extra.get('prefix', '')
+        card['suffix'] = extra.get('suffix', '')
+    if drill:
+        card['drill'] = drill
+    return report_shell.kpi_card(f'mc-{_METRIC_CARD_SEQ[0]}', card)
+
+
+def metric_tiles(items, columns=None):
+    """A strip of headline figures, rendered as the report's metric card.
+
+    items = (label, value, sub, tone, series, series_labels) — everything after
+    `value` is optional. When a series is supplied the front of the card draws
+    it as an animated area chart instead of sitting empty.
+    """
+    if not items:
+        return ''
+    stats = []
+    for item in items:
+        stats.append({'label': _strip(item[0]), 'value': _strip(item[1]),
+                      'sub': _strip(item[2]) if len(item) > 2 else ''})
+
+    cards = []
+    for item in items:
+        label, value = item[0], item[1]
+        sub = item[2] if len(item) > 2 else ''
+        tone = item[3] if len(item) > 3 else ''
+        series = item[4] if len(item) > 4 else None
+        series_labels = item[5] if len(item) > 5 else None
+        definition, _formula = metric_def(label)
+        drill = {
+            'kicker': 'Metric detail',
+            'title': _strip(label),
+            'subtitle': definition or '',
+            'stats': stats,
+            'footnote': 'Every figure in this group, so one card can be read against its neighbours.',
+        }
+        cards.append(metric_card(label, value, sub, tone, drill=drill,
+                                 series=series, labels=series_labels, decimals=1))
+    style = f' style="--tile-columns: {columns or min(len(items), 4)}"'
+    return f'<div class="metric-card-strip"{style}>{"".join(cards)}</div>'
+
+
+def _strip(value):
+    """Plain text from a snippet that may carry markup or HTML entities."""
+    text = re.sub(r'<[^>]+>', '', str(value))
+    return html.unescape(text).strip()
+
+
+def delta_pill(change_str, higher_is_better=True, label='vs last month'):
+    """A change figure printed as its own pill, toned by whether it is good
+    news. `badge()` only returns the tone class, so this is the thing to put
+    in a tile or a header."""
+    if not change_str or 'n/a' in str(change_str):
+        return f'<span class="delta-pill"><span class="badge neutral">n/a</span></span>'
+    tone = badge(str(change_str), higher_is_better)
+    lbl = f'<span class="delta-pill-label">{label}</span>' if label else ''
+    return f'<span class="delta-pill">{lbl}<span class="badge {tone}">{change_str}</span></span>'
+
+
+def data_panel(title, subtitle, body, controls=''):
+    """A titled surface wrapping a table, list or chart. The header, border and
+    radius come from one place, so a table panel and a list panel match."""
+    sub = f'<div class="panel-subtitle">{subtitle}</div>' if subtitle else ''
+    ctl = f'<div class="panel-controls">{controls}</div>' if controls else ''
+    return (
+        '    <div class="data-panel">\n'
+        '      <div class="panel-header">\n'
+        f'        <div><div class="panel-title">{title}</div>{sub}</div>\n'
+        f'        {ctl}\n'
+        '      </div>\n'
+        f'{body}\n'
+        '    </div>')
+
+
+def data_table(headers, rows, classes='', attrs='', sortable=False, table_id=''):
+    """A table in the report's one table style.
+
+    `headers` is a list of column labels — the first names the row and is left
+    aligned; every metric column after it is centred, header included.
+    `rows` is a list of ready-made <tr> strings.
+    """
+    ths = ''.join(f'<th>{h}</th>' for h in headers)
+    cls = ('data-table ' + classes).strip()
+    extra = (' ' + attrs) if attrs else ''
+    if sortable:
+        extra += ' data-sortable'
+    if table_id:
+        extra += f' id="{table_id}"'
+    return (
+        '        <div class="table-wrap">\n'
+        f'          <table class="{cls}"{extra}>\n'
+        f'            <thead><tr>{ths}</tr></thead>\n'
+        '            <tbody>\n'
+        + chr(10).join(rows) + '\n'
+        '            </tbody>\n'
+        '          </table>\n'
+        '        </div>')
+
+
+_RANK_BOARD_SEQ = [0]
+
+
+def rank_board(eyebrow, title, note, items, metrics, meta=None, kicker=None, size=5):
+    """Top/bottom ranking board — the report's one ranking surface.
+
+    `items` are dicts with a `name` plus every metric key; `metrics` are
+    (key, label, fmt, better) tuples; `meta` describes the line printed under
+    each name as (key, fmt, suffix) tuples. The payload goes down once and the
+    client re-ranks it, so every section's ranking behaves identically.
+    """
+    if not items:
+        return ''
+    _RANK_BOARD_SEQ[0] += 1
+    board_id = f'rank-board-{_RANK_BOARD_SEQ[0]}'
+
+    payload = json.dumps({
+        'kicker': kicker or eyebrow,
+        'size': size,
+        'metrics': [{'key': k, 'label': label, 'fmt': fmt, 'better': better}
+                    for k, label, fmt, better in metrics],
+        'meta': [{'key': k, 'fmt': fmt, 'suffix': suffix} for k, fmt, suffix in (meta or [])] or None,
+        'items': items,
+    }, separators=(',', ':'))
+
+    metric_btns = ''.join(
+        f'<button type="button" class="chip{" is-active" if i == 0 else ""}" '
+        f'data-rank-metric="{k}">{label}</button>'
+        for i, (k, label, _f, _b) in enumerate(metrics))
+    sizes = [n for n in (5, 10, 20) if n <= max(5, len(items))]
+    size_btns = ''.join(
+        f'<button type="button" class="chip{" is-active" if n == size else ""}" '
+        f'data-rank-size="{n}">Top {n}</button>' for n in sizes)
+
+    return f'''    <section class="metric-block rank-board" id="{board_id}" data-rank-board>
+      <script type="application/json" class="rank-board-data">{payload}</script>
+      <div class="metric-block-head rank-board-head">
+        <div>
+          <span class="metric-block-eyebrow">{eyebrow}</span>
+          <h3 class="metric-block-title">{title}</h3>
+          <p class="metric-block-note">{note} Both columns re-rank together, so the two ends of the
+            same ledger stay comparable. Click any row for its full breakdown.</p>
+        </div>
+      </div>
+      <div class="rank-controls">
+        <div class="chip-group" role="group" aria-label="Rank by metric">
+          <span class="chip-group-label">Rank by</span>{metric_btns}
+        </div>
+        <div class="chip-group" role="group" aria-label="How many to show">
+          <span class="chip-group-label">Show</span>{size_btns}
+        </div>
+      </div>
+      <div class="rank-columns">
+        <div class="rank-column is-top">
+          <div class="rank-column-head">
+            <span class="rank-column-title">Top performers</span>
+            <span class="rank-column-note" data-rank-top-note></span>
+          </div>
+          <ol class="rank-list" data-rank-list="top"></ol>
+        </div>
+        <div class="rank-column is-bottom">
+          <div class="rank-column-head">
+            <span class="rank-column-title">Bottom performers</span>
+            <span class="rank-column-note" data-rank-bottom-note></span>
+          </div>
+          <ol class="rank-list" data-rank-list="bottom"></ol>
+        </div>
+      </div>
+    </section>'''
+
+
+_NESTED_SEQ = [0]
+
+
+def nested_rows(groups, group_cells, child_cells, colour_for=None):
+    """Rows for a nested table: one parent row per group, children hidden under it.
+
+    `groups` = [(name, group_value, [(child_name, child_value), ...]), ...].
+    `group_cells`/`child_cells` turn a value into the metric <td>s that follow
+    the name column, so every nested table shares one expansion mechanism.
+    """
+    rows = []
+    for name, value, children in groups:
+        _NESTED_SEQ[0] += 1
+        gid = f'grp-{_NESTED_SEQ[0]}'
+        colour = colour_for(name) if colour_for else 'var(--primary)'
+        if children:
+            name_cell = (f'<td class="metric-name"><button class="row-toggle" type="button" '
+                         f'aria-expanded="false" aria-controls="{gid}">'
+                         f'<span class="row-toggle-caret" aria-hidden="true"></span>'
+                         f'<span class="row-toggle-dot" style="background:{colour}"></span>'
+                         f'<span class="row-toggle-name">{name}</span>'
+                         f'<span class="row-toggle-count">{len(children)}</span></button></td>')
+            cls = 'group-row has-children'
+        else:
+            name_cell = (f'<td class="metric-name"><span class="row-toggle is-leaf">'
+                         f'<span class="row-toggle-dot" style="background:{colour}"></span>'
+                         f'<span class="row-toggle-name">{name}</span></span></td>')
+            cls = 'group-row'
+        rows.append(f'            <tr class="{cls}">{name_cell}{group_cells(value)}</tr>')
+        for child_name, child_value in children:
+            child_cell = (f'<td class="metric-name child-name">'
+                          f'<span class="child-rule" aria-hidden="true"></span>{child_name}</td>')
+            rows.append(f'            <tr class="child-row" data-parent="{gid}" hidden>'
+                        f'{child_cell}{child_cells(child_value)}</tr>')
+    return rows
+
+
+def nested_controls():
+    """Expand-all / collapse-all for a nested table."""
+    return ('<div class="chip-group" role="group" aria-label="Nested rows">'
+            '<span class="chip-group-label">Rows</span>'
+            '<button type="button" class="chip" data-nested-expand>Expand all</button>'
+            '<button type="button" class="chip is-active" data-nested-collapse>Collapse all</button>'
+            '</div>')
+
+
+def share_cell(share, colour='var(--primary)'):
+    """A share percentage that also shows its size, for the mix columns."""
+    width = max(2.0, min(100.0, share))
+    return (
+        '<span class="share-meter"><span class="share-meter-track">'
+        f'<i style="width:{width:.1f}%;background:{colour}"></i></span>'
+        f'<span class="share-meter-value">{pct(share, 1)}</span></span>')
+
+
 def callout(text):
     return f'''    <div class="callout">{text}</div>'''
 
@@ -517,7 +871,12 @@ def build_balance_sheet(ctx):
             return None
         return text.startswith('-') != higher_is_better
 
-    # (change, higher_is_better, headline, sentence)
+    leads = ctx['leads']
+    chk = ctx['checkins']
+
+    # (change, higher_is_better, headline, sentence). The month-on-month move is
+    # the primary read; the baseline pool below is the second comparator, used
+    # only to fill a column that the MoM read leaves short.
     candidates = [
         (ctx['net_mom'], True, 'Revenue moved with the month',
          f"Net sales landed at <strong>{lakh(s['net'])}</strong>, {ctx['net_mom']} on "
@@ -535,7 +894,7 @@ def build_balance_sheet(ctx):
          f"Every &#8377;1 of discount returned <strong>&#8377;{s['disc_eff']:.2f}</strong> of net revenue, "
          f"{ctx['disc_eff_mom']} on the month at {pct(ctx['disc_penetration'])} penetration."),
         (ctx['late_cancel_mom'], False, 'Late-cancellation discipline',
-         f"<strong>{fmt_int(ctx['checkins'].get('late_cancel', 0))} late cancellations</strong> "
+         f"<strong>{fmt_int(chk.get('late_cancel', 0))} late cancellations</strong> "
          f"({pct(ctx['lc_rate'])} of bookings), {ctx['late_cancel_mom']} on {mo['prev_month_name']}."),
         (ctx['visits_mom'], True, 'Demand volume through the door',
          f"<strong>{fmt_int(sess['visits'])} visits</strong> across {fmt_int(sess['sessions'])} sessions, "
@@ -543,18 +902,82 @@ def build_balance_sheet(ctx):
         (ctx['atv_mom'], True, 'Ticket size',
          f"Average transaction value is <strong>{rupee(s['atv'])}</strong> across "
          f"{fmt_int(s['sales'])} transactions, {ctx['atv_mom']} on the month."),
+        (ctx['leads_mom'], True, 'Lead pipeline into the funnel',
+         f"<strong>{fmt_int(leads.get('total', 0))} leads</strong> were recorded at a "
+         f"{pct(leads.get('rate', 0))} conversion rate, {ctx['leads_mom']} on {mo['prev_month_name']}."),
+        (ctx['trials_mom'], True, 'Trial volume at the top of the funnel',
+         f"<strong>{fmt_int(new['trials'])} trials</strong> were taken, {ctx['trials_mom']} on the month, "
+         f"feeding {fmt_int(new.get('converted', 0))} conversions."),
+        (ctx['renewal_mom'], True, 'Renewal rate on the expiring book',
+         f"<strong>{pct(lapsed['renewal_rate'])}</strong> of {fmt_int(lapsed['total'])} expiring memberships "
+         f"renewed, {ctx['renewal_mom']} on {mo['prev_month_name']}."),
+        (ctx['sessions_mom'], True, 'Class supply on the timetable',
+         f"<strong>{fmt_int(sess['sessions'])} sessions</strong> ran at {sess['avg_visits']:.1f} visits each, "
+         f"{ctx['sessions_mom']} on the month."),
+        (ctx['disc_pen_mom'], False, 'Discount penetration of gross',
+         f"<strong>{pct(ctx['disc_penetration'])}</strong> of gross was given away as discount "
+         f"({lakh(s['disc'])}), {ctx['disc_pen_mom']} on {mo['prev_month_name']}."),
+        (ctx['lapsed_mom'], False, 'Members lost from the book',
+         f"<strong>{fmt_int(lapsed['lapsed'])} memberships</strong> lapsed without renewing, "
+         f"{ctx['lapsed_mom']} on the month."),
     ]
 
-    worked, didnt = [], []
-    for change, higher_is_better, headline, sentence in candidates:
-        verdict = improved(change, higher_is_better)
-        if verdict is None:
-            continue
-        (worked if verdict else didnt).append((magnitude(change), headline, sentence))
+    # Second comparator: the same metrics against the baseline rather than the
+    # prior month, so a column short on month-on-month signals is filled with
+    # something the figures actually show instead of padding.
+    baseline_pool = [
+        (ctx['net_baseline'], True, 'Revenue against the baseline',
+         f"Net sales of <strong>{lakh(s['net'])}</strong> sit {ctx['net_baseline']} against the "
+         f"{ctx['baseline_label']} baseline."),
+        (ctx['fill_baseline'], True, 'Utilisation against the baseline',
+         f"Fill rate of <strong>{pct(sess['fill'])}</strong> is {ctx['fill_baseline']} against the "
+         f"{ctx['baseline_label']} baseline."),
+        (ctx['conv_baseline'], True, 'Conversion against the baseline',
+         f"Trial conversion of <strong>{pct(new['rate'])}</strong> is {ctx['conv_baseline']} against the "
+         f"{ctx['baseline_label']} baseline."),
+        (ctx['churn_baseline'], False, 'Churn against the baseline',
+         f"Churn of <strong>{pct(lapsed['churn'])}</strong> is {ctx['churn_baseline']} against the "
+         f"{ctx['baseline_label']} baseline."),
+        (ctx['visits_baseline'], True, 'Visit volume against the baseline',
+         f"<strong>{fmt_int(sess['visits'])} visits</strong> is {ctx['visits_baseline']} against the "
+         f"{ctx['baseline_label']} baseline."),
+        (ctx['disc_eff_baseline'], True, 'Discount return against the baseline',
+         f"Discount efficiency of <strong>&#8377;{s['disc_eff']:.2f}</strong> is {ctx['disc_eff_baseline']} "
+         f"against the {ctx['baseline_label']} baseline."),
+        (ctx['renewal_baseline'], True, 'Renewals against the baseline',
+         f"A <strong>{pct(lapsed['renewal_rate'])}</strong> renewal rate is {ctx['renewal_baseline']} against "
+         f"the {ctx['baseline_label']} baseline."),
+        (ctx['sessions_baseline'], True, 'Class supply against the baseline',
+         f"<strong>{fmt_int(sess['sessions'])} sessions</strong> is {ctx['sessions_baseline']} against the "
+         f"{ctx['baseline_label']} baseline."),
+    ]
+
+    def sort_into(pool, worked, didnt, seen):
+        for change, higher_is_better, headline, sentence in pool:
+            if headline in seen:
+                continue
+            verdict = improved(change, higher_is_better)
+            if verdict is None:
+                continue
+            seen.add(headline)
+            (worked if verdict else didnt).append((magnitude(change), headline, sentence))
+
+    worked, didnt, seen = [], [], set()
+    sort_into(candidates, worked, didnt, seen)
+    # Both columns carry the same number of signals, and never fewer than five,
+    # so neither side reads as the whole story. The baseline comparator is only
+    # pulled in when the month-on-month read cannot fill both columns.
+    MIN_SIGNALS = 5
+    if min(len(worked), len(didnt)) < MIN_SIGNALS:
+        sort_into(baseline_pool, worked, didnt, seen)
 
     worked.sort(reverse=True)
     didnt.sort(reverse=True)
-    worked, didnt = worked[:4], didnt[:4]
+    # Equal columns: as many as the shorter side can actually evidence, capped
+    # so one strong month does not produce a wall of twelve cards.
+    take = min(len(worked), len(didnt), 7)
+    if take:
+        worked, didnt = worked[:take], didnt[:take]
     if not worked and not didnt:
         return ''
 
@@ -892,17 +1315,23 @@ def build_section_01_kpi_table(ctx):
 
 
 def _visits_bar_figure(classes_sorted, sess, month_name):
-    """Top class formats by visits — the demand ranking at a glance."""
+    """Top classes by visits — the demand ranking at a glance.
+
+    The class table is ranked by session count, so the incoming order is not
+    the visit order: rank the rows here or the bars come out shuffled against
+    their own numbering.
+    """
     rows = [(name, data.get('visits', 0)) for name, data in (classes_sorted or []) if data.get('visits')]
+    rows.sort(key=lambda r: -r[1])
     if len(rows) < 2:
         return ''
     charts = _charts()
     top = rows[0]
     return figure_band(
-        f"The formats that carried {month_name}&rsquo;s visits",
+        f"The classes that carried {month_name}&rsquo;s visits",
         f"{top[0]} led with {fmt_int(top[1])} visits &mdash; "
         f"{top[1] / sess['visits'] * 100:.1f}% of the month&rsquo;s {fmt_int(sess['visits'])} visits. "
-        f"Bars are scaled to the largest format.",
+        f"Bars are scaled to the busiest class.",
         charts.bar_list(rows, limit=10, value_fmt=lambda v: fmt_int(v)),
         wide=True)
 
@@ -938,29 +1367,145 @@ def _scenario_figure(base_low, base_high, upside_low, upside_high, net_base, nex
         wide=True)
 
 
-def _section_02_mix_figure(cats, total_net, month_name, ctx):
-    """Category mix as a donut, with the long tail folded into 'Other'."""
+def bucket_metrics(v, total_net=0.0, total_gross=0.0):
+    """One breakdown bucket expanded into the full set of unit economics.
+
+    `rows` counts line items and `txns` counts distinct payment transactions,
+    so a bucket yields two different per-something figures and the tables print
+    both: ATV is revenue per item sold, AOV is revenue per basket, and UPT is
+    how many items a basket carried.
+    """
+    net = v.get('net', 0.0) or 0.0
+    gross = v.get('gross', 0.0) or 0.0
+    disc = v.get('disc', 0.0) or 0.0
+    units = v.get('rows', 0) or 0
+    txns = v.get('txns') or v.get('sales') or units
+    try:
+        txns = int(txns)
+    except (TypeError, ValueError):
+        txns = units
+    return {
+        'net': net,
+        'gross': gross,
+        'disc': disc,
+        'units': units,
+        'txns': txns,
+        'atv': net / units if units else 0.0,
+        'aov': net / txns if txns else 0.0,
+        'upt': units / txns if txns else 0.0,
+        'disc_ratio': (disc / gross * 100) if gross else 0.0,
+        'share': (net / total_net * 100) if total_net else 0.0,
+        'gross_share': (gross / total_gross * 100) if total_gross else 0.0,
+    }
+
+
+def _cat_colour(i):
+    """The mix palette, wrapping past the seven defined series colours."""
+    return f'var(--sec-{(i % 7) + 1}-color)'
+
+
+def revenue_source_panel(ctx, cats, cat_bd, month_name):
+    """'Where <month>'s revenue came from' — the chapter's opening scoreboard.
+
+    A donut alone answers only 'what share'. This answers the three questions a
+    reader actually has: how much came in, which lines produced it, and what
+    each line earned per basket — so the mix is read as unit economics rather
+    than as a pie.
+    """
+    s = ctx['sales']
+    total_net = sum(v.get('net', 0) or 0 for v in cat_bd.values())
     if not cats or not total_net:
         return ''
+
     charts = _charts()
+    total_gross = sum(v.get('gross', 0) or 0 for v in cat_bd.values())
+    rows = [(name, bucket_metrics(v, total_net, total_gross)) for name, v in cats]
 
-    head = cats[:5]
-    rest = cats[5:]
-    segs = [(name, data['net'], f'var(--sec-{i + 1}-color)') for i, (name, data) in enumerate(head)]
-    if rest:
-        segs.append((f"{len(rest)} other {'category' if len(rest) == 1 else 'categories'}",
-                     sum(d['net'] for _, d in rest), 'var(--text-subtle)'))
+    top = rows[0][1]
+    top_name = rows[0][0]
+    top3_share = sum(m['share'] for _, m in rows[:3])
+    # Herfindahl index over the category shares: 10,000 is one line carrying
+    # everything, and anything under ~1,500 is a genuinely spread book.
+    hhi = sum((m['share'] / 100) ** 2 for _, m in rows) * 10000
+    if hhi >= 4000:
+        conc_word, conc_tone = 'Highly concentrated', 'bad'
+    elif hhi >= 2000:
+        conc_word, conc_tone = 'Concentrated', 'warn'
+    else:
+        conc_word, conc_tone = 'Diversified', 'good'
 
-    legend = chart_legend([
-        (name, colour, pct(value / total_net * 100, 1))
-        for name, value, colour in segs
+    units_total = sum(m['units'] for _, m in rows)
+    txns = int(s.get('sales') or 0)
+    aov = (s['net'] / txns) if txns else 0.0
+    upt = (units_total / txns) if txns else 0.0
+    disc_pen = ctx.get('disc_penetration', 0)
+
+    tiles = metric_tiles([
+        ('Net revenue', lakh(s['net']), delta_pill(ctx['net_mom'])),
+        ('Gross revenue', lakh(s['gross']), delta_pill(ctx['gross_mom'])),
+        ('Discount given', lakh(s['disc']), f"{pct(disc_pen)} of gross",
+         'bad' if disc_pen > 12 else ('warn' if disc_pen > 7 else 'good')),
+        ('Transactions', fmt_int(txns), delta_pill(ctx['sales_count_mom'])),
+        ('AOV &middot; per basket', rupee(aov), f"{mult(upt)} items per basket"),
+        ('ATV &middot; per item', rupee(s['atv']), delta_pill(ctx['atv_mom'])),
+        ('Revenue lines', str(len(rows)), f"top line {top_name}"),
+        ('Top-3 concentration', pct(top3_share, 0), f"{conc_word} &middot; HHI {hhi:,.0f}", conc_tone),
     ])
 
-    return figure_band(
-        f"Where {month_name}&rsquo;s revenue came from",
-        f"Net revenue by category. {lakh(total_net)} in total across {len(cats)} categories.",
-        charts.donut(segs, aria_label=f'Revenue mix by category, {month_name}'),
-        legend)
+    segs_head = rows[:6]
+    segs_tail = rows[6:]
+    segs = [(name, m['net'], _cat_colour(i)) for i, (name, m) in enumerate(segs_head)]
+    if segs_tail:
+        segs.append((f"{len(segs_tail)} other {'line' if len(segs_tail) == 1 else 'lines'}",
+                     sum(m['net'] for _, m in segs_tail), 'var(--text-subtle)'))
+
+    donut = charts.donut(segs, size=188, thickness=22,
+                         aria_label=f'Net revenue by category, {month_name}')
+    donut_block = f'''      <div class="donut-shell">
+        {donut}
+        <div class="donut-center">
+          <span class="donut-center-value">{lakh(total_net)}</span>
+          <span class="donut-center-label">net revenue</span>
+        </div>
+      </div>'''
+
+    legend = chart_legend([(name, colour, pct(value / total_net * 100, 1))
+                           for name, value, colour in segs])
+
+    ledger = []
+    largest = max(m['net'] for _, m in rows) or 1.0
+    for i, (name, m) in enumerate(rows):
+        width = max(1.5, m['net'] / largest * 100)
+        colour = _cat_colour(i) if i < 6 else 'var(--text-subtle)'
+        ledger.append(f'''        <li class="source-row">
+          <span class="source-rank">{i + 1:02d}</span>
+          <span class="source-swatch" style="background:{colour}"></span>
+          <span class="source-name">{name}</span>
+          <span class="source-track"><i style="width:{width:.1f}%;background:{colour}"></i></span>
+          <span class="source-net">{lakh(m['net'])}</span>
+          <span class="source-share">{pct(m['share'], 1)}</span>
+          <span class="source-aov">{rupee(m['aov'])}<small>AOV</small></span>
+          <span class="source-units">{fmt_int(m['units'])}<small>units</small></span>
+        </li>''')
+
+    return f'''    <section class="metric-block revenue-source">
+      <div class="metric-block-head">
+        <span class="metric-block-eyebrow">Revenue composition</span>
+        <h3 class="metric-block-title">Where {month_name}&rsquo;s revenue came from</h3>
+        <p class="metric-block-note">{lakh(total_net)} of net revenue across {len(rows)} categories and {fmt_int(txns)} transactions.
+          {top_name} alone carried {pct(top['share'], 0)} of it at {rupee(top['aov'])} per basket.</p>
+      </div>
+{tiles}
+      <div class="revenue-source-body">
+        <div class="revenue-source-mix">
+{donut_block}
+          {legend}
+        </div>
+        <ol class="source-ledger">
+{chr(10).join(ledger)}
+        </ol>
+      </div>
+    </section>'''
 
 
 # ─── Section 02: Revenue & Sales Performance ──────────────────────────────────
@@ -978,31 +1523,26 @@ def section_02(ctx):
     prod_bd = bd.get('product', {})
     seller_bd = bd.get('seller', {})
     payment_bd = bd.get('payment', {})
+    cat_prod_bd = bd.get('category_product', {})
 
     # Sort categories by net revenue
     cats = sorted(cat_bd.items(), key=lambda x: -x[1]['net'])
     total_net = sum(v['net'] for v in cat_bd.values())
 
-    # Build category insights
     cat_insights = build_category_insights(ctx, cats, total_net)
+    cat_table = build_category_table(ctx, cats, total_net, cat_prod_bd)
 
-    # Build category table
-    cat_table = build_category_table(ctx, cats, total_net)
+    prods = sorted(prod_bd.items(), key=lambda x: -x[1]['net'])
+    top_prods = prods[:10]
 
-    # Build product table (top 10)
-    prods = sorted(prod_bd.items(), key=lambda x: -x[1]['net'])[:10]
-    prod_table = build_product_table(ctx, prods, total_net)
-
-    # Build seller table
     sellers = sorted(seller_bd.items(), key=lambda x: -x[1]['gross'])
     seller_table = build_seller_table(ctx, sellers, s['gross'])
 
-    # Build payment table
     payments = sorted(payment_bd.items(), key=lambda x: -x[1]['gross'])
     payment_table = build_payment_table(ctx, payments, s['gross'])
 
     # Top category name for title
-    top_cat = cats[0] if cats else ("n/a", {'net':0})
+    top_cat = cats[0] if cats else ("n/a", {'net': 0})
     top_cat_name = top_cat[0]
     top_cat_share = (top_cat[1]['net'] / total_net * 100) if total_net else 0
     top_two_cat_share = (
@@ -1042,10 +1582,10 @@ def section_02(ctx):
 
 {mom_toggle}
 
-{subsection("Sales by Category &mdash; revenue mix and unit economics",
-    "The category table below holds every metric available &mdash; revenue, units, ATV, share of revenue &mdash; so each line can be evaluated on absolute size and per-unit economics.")}
+{revenue_source_panel(ctx, cats, cat_bd, month_name)}
 
-{_section_02_mix_figure(cats, total_net, month_name, ctx)}
+{subsection("Sales by Category &mdash; revenue mix and unit economics",
+    "Every metric the sales ledger holds, per category &mdash; revenue, discount, transactions, units, AOV, ATV and units per transaction. Click any category row to open the products that make it up.")}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -1055,29 +1595,29 @@ def section_02(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Sales by Category &middot; {month_name} {ctx['mo']['year']}</div>
 {cat_table}
       </div>
     </div>
 
-{subsection("Top products &mdash; the revenue drivers",
-    f"The product-level view below shows the top 10 SKUs by net revenue, with gross, discount, units, and ATV for each.")}
+{subsection("Top and bottom products &mdash; the revenue drivers, and the drag",
+    "The same product ledger, ranked from both ends. Switch the metric to re-rank both lists, and lengthen them to see further down the tail.")}
+
+{build_product_rank_board(ctx, prods, total_net, month_name)}
 
     <div class="split-grid">
       <div class="insights-pane">
         <div class="pane-title">Product-level insights</div>
 
-{build_product_insights(ctx, prods, total_net)}
+{build_product_insights(ctx, top_prods, total_net)}
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Top 10 Products by Net Revenue &middot; {month_name} {ctx['mo']['year']}</div>
-{prod_table}
+{build_product_table(ctx, top_prods, total_net, month_name)}
       </div>
     </div>
 
 {subsection("Seller attribution &mdash; who drove the revenue",
-    "Sales attributed to individual sellers (front desk / sales staff). The '-' row represents online/self-service transactions with no attributed seller.")}
+    "Sales attributed to individual sellers (front desk / sales staff). The unattributed row represents online and self-service transactions with no seller on the ticket.")}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -1087,13 +1627,12 @@ def section_02(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Sales by Seller &middot; {month_name} {ctx['mo']['year']}</div>
 {seller_table}
       </div>
     </div>
 
 {subsection("Payment method mix &mdash; how customers paid",
-    "The payment method breakdown shows the split between in-studio (custom/cash), online (stripe), and split payments.")}
+    "The payment method breakdown shows the split between in-studio (custom / cash), online (Stripe), and split payments.")}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -1103,7 +1642,6 @@ def section_02(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Sales by Payment Method &middot; {month_name} {ctx['mo']['year']}</div>
 {payment_table}
       </div>
     </div>
@@ -1125,31 +1663,35 @@ def payment_share_str(payments, total_gross):
 
 def build_category_insights(ctx, cats, total_net):
     insights = []
+    total_gross = sum(v.get('gross', 0) or 0 for _, v in cats)
     for i, (name, v) in enumerate(cats[:7], 1):
-        share = (v['net'] / total_net * 100) if total_net else 0
-        atv = v['net'] / v['rows'] if v['rows'] else 0
-        disc_ratio = (v['disc'] / v['gross'] * 100) if v['gross'] else 0
+        m = bucket_metrics(v, total_net, total_gross)
+        share, atv, disc_ratio = m['share'], m['atv'], m['disc_ratio']
 
         if i == 1:
             title = f"{name} drives {pct(share, 0)} of total revenue &mdash; Core Revenue Anchor."
-            text = (f"{name} contributed <strong>{lakh(v['net'])} ({pct(share, 0)})</strong> on {v['rows']} units at ATV {rupee(atv)}. "
-                    f"Discount intensity is {pct(disc_ratio)} ({lakh(v['disc'])}). "
+            text = (f"{name} contributed <strong>{lakh(m['net'])} ({pct(share, 0)})</strong> on {fmt_int(m['units'])} units "
+                    f"across {fmt_int(m['txns'])} transactions &mdash; {rupee(m['aov'])} AOV at {mult(m['upt'])} units per transaction. "
+                    f"Discount intensity is {pct(disc_ratio)} ({lakh(m['disc'])}). "
                     f"<br><strong>What this tells us:</strong> This category is the studio's primary financial foundation. "
                     f"{'However, high discount intensity is eroding margin yield.' if disc_ratio > 10 else 'Pricing discipline is well maintained.'} "
                     f"<br><strong>Strategic Action:</strong> {'Cap discounts at 5% to recover ~&#8377;65K/mo in net margin.' if disc_ratio > 10 else 'Maintain current pricing while offering value-add bonuses.'}")
         elif disc_ratio > 20:
             title = f"{name} ({pct(share, 0)} share) &mdash; Heavy Discount Margin Pressure."
-            text = (f"{v['rows']} units produced <strong>{lakh(v['net'])} net</strong> against <strong>{lakh(v['disc'])} in discounts</strong> ({pct(disc_ratio)} intensity). "
+            text = (f"{fmt_int(m['units'])} units over {fmt_int(m['txns'])} transactions produced <strong>{lakh(m['net'])} net</strong> "
+                    f"against <strong>{lakh(m['disc'])} in discounts</strong> ({pct(disc_ratio)} intensity), an AOV of {rupee(m['aov'])}. "
                     f"<br><strong>What this tells us:</strong> Heavy discounting is sacrificing margin without generating proportional volume lift. "
                     f"<br><strong>Strategic Action:</strong> Restrict sales staff discount overrides and reprice package tiers.")
         elif share < 5:
             title = f"{name} ({pct(share, 0)} share) &mdash; Niche Line / Add-on Potential."
-            text = (f"{v['rows']} units at {rupee(atv)} ATV produced {lakh(v['net'])} ({pct(share, 0)}). Discount intensity: {pct(disc_ratio)}. "
+            text = (f"{fmt_int(m['units'])} units at {rupee(atv)} per item produced {lakh(m['net'])} ({pct(share, 0)}) over "
+                    f"{fmt_int(m['txns'])} transactions. Discount intensity: {pct(disc_ratio)}. "
                     f"<br><strong>What this tells us:</strong> This is a secondary line with low volume penetration among active members. "
                     f"<br><strong>Strategic Action:</strong> Bundle this item as a complimentary add-on with core membership renewals to drive awareness.")
         else:
             title = f"{name} contributes {pct(share, 0)} of revenue &mdash; Secondary Revenue Engine."
-            text = (f"{v['rows']} units at {rupee(atv)} ATV produced <strong>{lakh(v['net'])} ({pct(share, 0)})</strong>. Discount intensity: {pct(disc_ratio)}. "
+            text = (f"{fmt_int(m['units'])} units at {rupee(atv)} per item produced <strong>{lakh(m['net'])} ({pct(share, 0)})</strong> "
+                    f"on {rupee(m['aov'])} AOV. Discount intensity: {pct(disc_ratio)}. "
                     f"<br><strong>What this tells us:</strong> Solid revenue contribution with healthy unit economics. "
                     f"<br><strong>Strategic Action:</strong> Introduce multi-month package bundles to increase commitment length and lift ATV.")
 
@@ -1158,119 +1700,257 @@ def build_category_insights(ctx, cats, total_net):
     return "\n".join(insights)
 
 
-def build_category_table(ctx, cats, total_net):
+CATEGORY_COLUMNS = ['Category', 'Net Rev', 'Gross Rev', 'Discount', 'Disc %',
+                    'Txns', 'Units', 'UPT', 'AOV', 'ATV', 'Share']
+
+
+def _category_row_cells(m, name_cell, extra_class='', attrs=''):
+    cls = f' class="{extra_class}"' if extra_class else ''
+    cls += (' ' + attrs) if attrs else ''
+    return f'''            <tr{cls}>
+              {name_cell}
+              <td class="num"><strong>{lakh(m['net'])}</strong></td>
+              <td class="num">{lakh(m['gross'])}</td>
+              <td class="num">{lakh(m['disc'])}</td>
+              <td class="num">{pct(m['disc_ratio'])}</td>
+              <td class="num">{fmt_int(m['txns'])}</td>
+              <td class="num">{fmt_int(m['units'])}</td>
+              <td class="num">{mult(m['upt'], 2)}</td>
+              <td class="num">{rupee(m['aov'])}</td>
+              <td class="num">{rupee(m['atv'])}</td>
+              <td class="num">{share_cell(m['share'])}</td>
+            </tr>'''
+
+
+def build_category_table(ctx, cats, total_net, cat_prod_bd=None):
+    """The category ledger, with each category's products nested underneath it.
+
+    The products are in the same table rather than a second one, so a reader
+    who asks 'what is inside Memberships' gets the answer in the row they are
+    already looking at, in the same columns.
+    """
+    cat_prod_bd = cat_prod_bd or {}
+    total_gross = sum(v.get('gross', 0) or 0 for _, v in cats)
     rows = []
-    for name, v in cats:
-        share = (v['net'] / total_net * 100) if total_net else 0
-        atv = v['net'] / v['rows'] if v['rows'] else 0
-        disc_ratio = (v['disc'] / v['gross'] * 100) if v['gross'] else 0
-        rows.append(f'''            <tr>
-              <td>{name}</td>
-              <td class="num">{lakh(v['net'])}</td>
-              <td class="num">{lakh(v['gross'])}</td>
-              <td class="num">{lakh(v['disc'])}</td>
-              <td class="num">{v['rows']}</td>
-              <td class="num">{rupee(atv)}</td>
-              <td class="num">{pct(share, 0)}</td>
-              <td class="num">{pct(disc_ratio)}</td>
-            </tr>''')
 
-    total_gross = sum(v['gross'] for v in cat_bd_values(cats))
-    total_disc = sum(v['disc'] for v in cat_bd_values(cats))
-    total_rows = sum(v['rows'] for v in cat_bd_values(cats))
+    for i, (name, v) in enumerate(cats):
+        m = bucket_metrics(v, total_net, total_gross)
+        gid = f"cat-{ctx.get('loc_key', '')}{ctx.get('id_suffix', '')}-{i}"
+        children = sorted((cat_prod_bd.get(name) or {}).items(),
+                          key=lambda x: -(x[1].get('net', 0) or 0))
+        colour = _cat_colour(i)
 
-    rows.append(f'''            <tr class="totals-row">
-              <td>Total</td>
-              <td class="num">{lakh(total_net)}</td>
-              <td class="num">{lakh(total_gross)}</td>
-              <td class="num">{lakh(total_disc)}</td>
-              <td class="num">{total_rows}</td>
-              <td class="num">{rupee(total_net/total_rows) if total_rows else 'n/a'}</td>
-              <td class="num">100%</td>
-              <td class="num">{pct(total_disc/total_gross*100) if total_gross else 'n/a'}</td>
-            </tr>''')
+        if children:
+            name_cell = (f'<td class="metric-name"><button class="row-toggle" type="button" '
+                         f'aria-expanded="false" aria-controls="{gid}">'
+                         f'<span class="row-toggle-caret" aria-hidden="true"></span>'
+                         f'<span class="row-toggle-dot" style="background:{colour}"></span>'
+                         f'<span class="row-toggle-name">{name}</span>'
+                         f'<span class="row-toggle-count">{len(children)}</span></button></td>')
+        else:
+            name_cell = (f'<td class="metric-name"><span class="row-toggle is-leaf">'
+                         f'<span class="row-toggle-dot" style="background:{colour}"></span>'
+                         f'<span class="row-toggle-name">{name}</span></span></td>')
 
-    return f'''        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Net Rev</th>
-                <th>Gross Rev</th>
-                <th>Discount</th>
-                <th>Units</th>
-                <th>ATV</th>
-                <th>Share</th>
-                <th>Disc %</th>
-              </tr>
-            </thead>
-            <tbody>
-{chr(10).join(rows)}
-            </tbody>
-          </table>
-        </div>'''
+        rows.append(_category_row_cells(
+            m, name_cell, 'group-row' + (' has-children' if children else '')))
+
+        for prod_name, pv in children:
+            pm = bucket_metrics(pv, total_net, total_gross)
+            child_name = (f'<td class="metric-name child-name">'
+                          f'<span class="child-rule" aria-hidden="true"></span>{prod_name}</td>')
+            rows.append(_category_row_cells(
+                pm, child_name, 'child-row', f'data-parent="{gid}" hidden'))
+
+    totals = bucket_metrics({
+        'net': total_net,
+        'gross': total_gross,
+        'disc': sum(v.get('disc', 0) or 0 for _, v in cats),
+        'rows': sum(v.get('rows', 0) or 0 for _, v in cats),
+        'txns': sum(bucket_metrics(v)['txns'] for _, v in cats),
+    }, total_net, total_gross)
+    rows.append(_category_row_cells(
+        totals, '<td class="metric-name">Total</td>', 'totals-row'))
+
+    # Two-tier header: the money columns, the efficiency columns and the volume
+    # columns are different questions, and grouping them says so.
+    head = ('            <thead>\n'
+            '              <tr class="col-group-row">\n'
+            '                <th class="col-group-name" rowspan="2">Category</th>\n'
+            '                <th class="col-group" colspan="4">Money</th>\n'
+            '                <th class="col-group" colspan="3">Volume</th>\n'
+            '                <th class="col-group" colspan="3">Efficiency &amp; mix</th>\n'
+            '              </tr>\n'
+            '              <tr>' + ''.join(f'<th>{h}</th>' for h in CATEGORY_COLUMNS[1:]) + '</tr>\n'
+            '            </thead>')
+    table = ('        <div class="table-wrap">\n'
+             '          <table class="data-table nested-table grouped-head" data-no-drill>\n'
+             + head + '\n'
+             '            <tbody>\n'
+             + chr(10).join(rows) + '\n'
+             '            </tbody>\n'
+             '          </table>\n'
+             '        </div>')
+    return data_panel(
+        'Sales by category',
+        f"{ctx['mo']['month_name']} {ctx['mo']['year']} &middot; every category with its products nested underneath",
+        table,
+        controls=nested_controls())
 
 
 def cat_bd_values(cats):
     return [v for _, v in cats]
 
 
-def build_product_table(ctx, prods, total_net):
+# The metrics both product rank lists can be sorted by. `fmt` names the
+# formatter the client uses; `better` says which end of the scale is the good
+# end, so 'bottom' means worst, not merely smallest.
+PRODUCT_RANK_METRICS = [
+    ('net', 'Net Rev', 'lakh', 'high'),
+    ('gross', 'Gross Rev', 'lakh', 'high'),
+    ('units', 'Units', 'int', 'high'),
+    ('txns', 'Txns', 'int', 'high'),
+    ('aov', 'AOV', 'rupee', 'high'),
+    ('atv', 'ATV', 'rupee', 'high'),
+    ('upt', 'UPT', 'mult', 'high'),
+    ('disc', 'Discount', 'lakh', 'low'),
+    ('disc_ratio', 'Disc %', 'pct', 'low'),
+]
+
+
+def build_product_rank_board(ctx, prods, total_net, month_name):
+    """Best and worst sellers side by side, off one payload.
+
+    The data goes down once as JSON and the client re-ranks it, so switching
+    metric or lengthening the list costs nothing and never disagrees with the
+    table below.
+    """
+    if not prods:
+        return ''
+
+    total_gross = sum(v.get('gross', 0) or 0 for _, v in prods)
+    items = []
+    for name, v in prods:
+        m = bucket_metrics(v, total_net, total_gross)
+        items.append({
+            'name': name,
+            'net': round(m['net'], 2),
+            'gross': round(m['gross'], 2),
+            'disc': round(m['disc'], 2),
+            'disc_ratio': round(m['disc_ratio'], 2),
+            'units': m['units'],
+            'txns': m['txns'],
+            'aov': round(m['aov'], 2),
+            'atv': round(m['atv'], 2),
+            'upt': round(m['upt'], 3),
+            'share': round(m['share'], 2),
+        })
+
+    board_id = f"rank-board-{ctx.get('loc_key', '')}{ctx.get('id_suffix', '')}"
+    payload = json.dumps({'metrics': [
+        {'key': k, 'label': label, 'fmt': fmt, 'better': better}
+        for k, label, fmt, better in PRODUCT_RANK_METRICS
+    ], 'items': items}, separators=(',', ':'))
+
+    metric_btns = ''.join(
+        f'<button type="button" class="chip{" is-active" if i == 0 else ""}" '
+        f'data-rank-metric="{k}">{label}</button>'
+        for i, (k, label, _fmt, _better) in enumerate(PRODUCT_RANK_METRICS))
+
+    size_btns = ''.join(
+        f'<button type="button" class="chip{" is-active" if n == 5 else ""}" '
+        f'data-rank-size="{n}">Top {n}</button>'
+        for n in (5, 10, 20))
+
+    return f'''    <section class="metric-block rank-board" id="{board_id}" data-rank-board>
+      <script type="application/json" class="rank-board-data">{payload}</script>
+      <div class="metric-block-head rank-board-head">
+        <div>
+          <span class="metric-block-eyebrow">Product ranking</span>
+          <h3 class="metric-block-title">Best and worst performers &middot; {month_name}</h3>
+          <p class="metric-block-note">{len(items)} products ranked by <span data-rank-metric-name>Net Rev</span>.
+            Both columns re-rank together, so the two ends of the same ledger stay comparable.</p>
+        </div>
+      </div>
+      <div class="rank-controls">
+        <div class="chip-group" role="group" aria-label="Rank by metric">
+          <span class="chip-group-label">Rank by</span>{metric_btns}
+        </div>
+        <div class="chip-group" role="group" aria-label="How many to show">
+          <span class="chip-group-label">Show</span>{size_btns}
+        </div>
+      </div>
+      <div class="rank-columns">
+        <div class="rank-column is-top">
+          <div class="rank-column-head">
+            <span class="rank-column-title">Top performers</span>
+            <span class="rank-column-note" data-rank-top-note></span>
+          </div>
+          <ol class="rank-list" data-rank-list="top"></ol>
+        </div>
+        <div class="rank-column is-bottom">
+          <div class="rank-column-head">
+            <span class="rank-column-title">Bottom performers</span>
+            <span class="rank-column-note" data-rank-bottom-note></span>
+          </div>
+          <ol class="rank-list" data-rank-list="bottom"></ol>
+        </div>
+      </div>
+    </section>'''
+
+
+PRODUCT_COLUMNS = ['Product', 'Net Rev', 'Gross Rev', 'Discount', 'Disc %',
+                   'Txns', 'Units', 'UPT', 'AOV', 'ATV', 'Share']
+
+
+def build_product_table(ctx, prods, total_net, month_name=''):
+    total_gross = sum(v.get('gross', 0) or 0 for _, v in prods)
     rows = []
     for name, v in prods:
-        share = (v['net'] / total_net * 100) if total_net else 0
-        atv = v['net'] / v['rows'] if v['rows'] else 0
-        disc_ratio = (v['disc'] / v['gross'] * 100) if v['gross'] else 0
+        m = bucket_metrics(v, total_net, total_gross)
         rows.append(f'''            <tr>
-              <td>{name}</td>
-              <td class="num">{lakh(v['net'])}</td>
-              <td class="num">{lakh(v['gross'])}</td>
-              <td class="num">{lakh(v['disc'])}</td>
-              <td class="num">{v['rows']}</td>
-              <td class="num">{rupee(atv)}</td>
-              <td class="num">{pct(share, 0)}</td>
+              <td class="metric-name">{name}</td>
+              <td class="num"><strong>{lakh(m['net'])}</strong></td>
+              <td class="num">{lakh(m['gross'])}</td>
+              <td class="num">{lakh(m['disc'])}</td>
+              <td class="num">{pct(m['disc_ratio'])}</td>
+              <td class="num">{fmt_int(m['txns'])}</td>
+              <td class="num">{fmt_int(m['units'])}</td>
+              <td class="num">{mult(m['upt'], 2)}</td>
+              <td class="num">{rupee(m['aov'])}</td>
+              <td class="num">{rupee(m['atv'])}</td>
+              <td class="num">{share_cell(m['share'])}</td>
             </tr>''')
 
-    return f'''        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Net Rev</th>
-                <th>Gross Rev</th>
-                <th>Discount</th>
-                <th>Units</th>
-                <th>ATV</th>
-                <th>Share</th>
-              </tr>
-            </thead>
-            <tbody>
-{chr(10).join(rows)}
-            </tbody>
-          </table>
-        </div>'''
+    return data_panel(
+        'Top 10 Products by Net Revenue',
+        f"{month_name or ctx['mo']['month_name']} {ctx['mo']['year']}",
+        data_table(PRODUCT_COLUMNS, rows))
 
 
 def build_product_insights(ctx, prods, total_net):
     insights = []
+    total_gross = sum(v.get('gross', 0) or 0 for _, v in prods)
     for i, (name, v) in enumerate(prods[:6], 1):
-        share = (v['net'] / total_net * 100) if total_net else 0
-        atv = v['net'] / v['rows'] if v['rows'] else 0
-        disc_ratio = (v['disc'] / v['gross'] * 100) if v['gross'] else 0
+        m = bucket_metrics(v, total_net, total_gross)
+        share, atv = m['share'], m['atv']
 
         if i == 1:
             title = f"{name} is the top revenue SKU ({pct(share, 0)} of total)."
-            text = (f"{v['rows']} units at {rupee(atv)} ATV generated <strong>{lakh(v['net'])} ({pct(share, 0)})</strong>. "
+            text = (f"{fmt_int(m['units'])} units at {rupee(atv)} per item generated <strong>{lakh(m['net'])} ({pct(share, 0)})</strong> "
+                    f"over {fmt_int(m['txns'])} transactions &mdash; {rupee(m['aov'])} AOV. "
                     f"<br><strong>What this tells us:</strong> Highest product-market fit and willingness to pay among customers. "
                     f"<br><strong>Strategic Action:</strong> Cross-sell private coaching credits or retail add-ons at check-in to lift effective ticket size by 10%.")
         elif i <= 3:
             title = f"{name} ({pct(share, 0)} share) &mdash; Key Revenue Driver."
-            text = (f"{v['rows']} units at {rupee(atv)} ATV produced {lakh(v['net'])} ({pct(share, 0)}). Discount: {lakh(v['disc'])}. "
+            text = (f"{fmt_int(m['units'])} units at {rupee(atv)} per item produced {lakh(m['net'])} ({pct(share, 0)}) on {rupee(m['aov'])} AOV. "
+                    f"Discount: {lakh(m['disc'])} ({pct(m['disc_ratio'])}). "
                     f"<br><strong>What this tells us:</strong> Strong demand anchor for core member cohorts. "
                     f"<br><strong>Strategic Action:</strong> Optimize pricing structure and limit promotional discounts.")
         else:
             title = f"{name} ({pct(share, 0)} share) &mdash; Mid-Tier SKU."
-            text = (f"{v['rows']} units at {rupee(atv)} ATV generated {lakh(v['net'])}. Gross {lakh(v['gross'])}, discount {lakh(v['disc'])}. "
+            text = (f"{fmt_int(m['units'])} units at {rupee(atv)} per item generated {lakh(m['net'])} across {fmt_int(m['txns'])} transactions. "
+                    f"Gross {lakh(m['gross'])}, discount {lakh(m['disc'])}. "
                     f"<br><strong>What this tells us:</strong> Steady volume driver supporting secondary member needs. "
                     f"<br><strong>Strategic Action:</strong> Test promotional upsell triggers to migrate buyers to higher-tier packages.")
 
@@ -1279,122 +1959,122 @@ def build_product_insights(ctx, prods, total_net):
     return "\n".join(insights)
 
 
+SELLER_COLUMNS = ['Seller', 'Gross Rev', 'Net Rev', 'Discount', 'Txns',
+                  'Units', 'UPT', 'AOV', 'ATV', 'Share']
+
+
 def build_seller_table(ctx, sellers, total_gross):
+    total_net = sum(v.get('net', 0) or 0 for _, v in sellers)
     rows = []
     for name, v in sellers:
-        share = (v['gross'] / total_gross * 100) if total_gross else 0
-        atv = v['gross'] / v['rows'] if v['rows'] else 0
-        display_name = name if name != '-' else '&mdash; (online / self-service)'
-        rows.append(f'''            <tr>
-              <td>{display_name}</td>
-              <td class="num">{lakh(v['gross'])}</td>
-              <td class="num">{lakh(v['net'])}</td>
-              <td class="num">{v['rows']}</td>
-              <td class="num">{rupee(atv)}</td>
-              <td class="num">{pct(share, 0)}</td>
+        m = bucket_metrics(v, total_net, total_gross)
+        is_online = name in ('-', 'System / Unattributed')
+        display_name = 'Unattributed &middot; online / self-service' if is_online else name
+        rows.append(f'''            <tr{' class="is-unattributed"' if is_online else ''}>
+              <td class="metric-name">{display_name}</td>
+              <td class="num"><strong>{lakh(m['gross'])}</strong></td>
+              <td class="num">{lakh(m['net'])}</td>
+              <td class="num">{lakh(m['disc'])}</td>
+              <td class="num">{fmt_int(m['txns'])}</td>
+              <td class="num">{fmt_int(m['units'])}</td>
+              <td class="num">{mult(m['upt'], 2)}</td>
+              <td class="num">{rupee(m['aov'])}</td>
+              <td class="num">{rupee(m['atv'])}</td>
+              <td class="num">{share_cell(m['gross_share'])}</td>
             </tr>''')
 
-    return f'''        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Seller</th>
-                <th>Gross Rev</th>
-                <th>Net Rev</th>
-                <th>Units</th>
-                <th>ATV</th>
-                <th>Share</th>
-              </tr>
-            </thead>
-            <tbody>
-{chr(10).join(rows)}
-            </tbody>
-          </table>
-        </div>'''
+    return data_panel(
+        'Sales by Seller',
+        f"{ctx['mo']['month_name']} {ctx['mo']['year']} &middot; share is of gross revenue",
+        data_table(SELLER_COLUMNS, rows))
 
 
 def build_seller_insights(ctx, sellers, total_gross):
     insights = []
-    attributed = [(n,v) for n,v in sellers if n != '-']
-    top2_share = sum(v['gross'] for _,v in attributed[:2]) / total_gross * 100 if total_gross else 0
-    online = next((v for n,v in sellers if n == '-'), None)
+    unattributed_keys = ('-', 'System / Unattributed')
+    attributed = [(n, v) for n, v in sellers if n not in unattributed_keys]
+    top2_share = sum(v['gross'] for _, v in attributed[:2]) / total_gross * 100 if total_gross else 0
+    online = next((v for n, v in sellers if n in unattributed_keys), None)
     online_share = (online['gross'] / total_gross * 100) if online and total_gross else 0
 
-    insights.append(insight_card("01",
-        f"Top 2 Sellers drive {pct(top2_share, 0)} of attributed sales &mdash; Front-Desk Sales Concentration.",
-        f"{' and '.join(n for n,_ in attributed[:2])} generated <strong>{pct(top2_share, 0)} of attributed revenue</strong> across {sum(v['rows'] for _,v in attributed[:2])} units. "
-        f"<br><strong>What this tells us:</strong> Sales performance relies heavily on key front-desk staff members. "
-        f"<br><strong>Strategic Action:</strong> Codify top seller sales scripts and objection-handling tactics to train the broader front-desk team."))
+    if attributed:
+        insights.append(insight_card("01",
+            f"Top 2 Sellers drive {pct(top2_share, 0)} of attributed sales &mdash; Front-Desk Sales Concentration.",
+            f"{' and '.join(n for n, _ in attributed[:2])} generated <strong>{pct(top2_share, 0)} of attributed revenue</strong> across {sum(v['rows'] for _, v in attributed[:2])} units. "
+            f"<br><strong>What this tells us:</strong> Sales performance relies heavily on key front-desk staff members. "
+            f"<br><strong>Strategic Action:</strong> Codify top seller sales scripts and objection-handling tactics to train the broader front-desk team."))
 
     if online:
+        om = bucket_metrics(online, 0, total_gross)
         insights.append(insight_card("02",
-            f"Online & Self-Service Channel: {pct(online_share, 0)} of Gross Revenue.",
-            f"<strong>{lakh(online['gross'])}</strong> across {online['rows']} transactions processed without staff attribution. "
+            f"Online &amp; Self-Service Channel: {pct(online_share, 0)} of Gross Revenue.",
+            f"<strong>{lakh(om['gross'])}</strong> across {fmt_int(om['txns'])} transactions processed without staff attribution, at {rupee(om['aov'])} AOV. "
             f"<br><strong>What this tells us:</strong> Indicates organic digital adoption by self-directed members. "
             f"<br><strong>Strategic Action:</strong> Optimize website/app checkout flow to add instant package upsell recommendations."))
 
     for i, (name, v) in enumerate(attributed[:4], 3 if online else 2):
-        share = (v['gross'] / total_gross * 100) if total_gross else 0
+        m = bucket_metrics(v, 0, total_gross)
         insights.append(insight_card(f"{i:02d}",
-            f"{name}: {pct(share, 0)} of gross revenue ({lakh(v['gross'])}).",
-            f"{v['rows']} transactions at ATV {rupee(v['gross']/v['rows']) if v['rows'] else 0}. Net: {lakh(v['net'])}. "
+            f"{name}: {pct(m['gross_share'], 0)} of gross revenue ({lakh(m['gross'])}).",
+            f"{fmt_int(m['txns'])} transactions at {rupee(m['aov'])} AOV, {mult(m['upt'], 2)} units per transaction. Net: {lakh(m['net'])}. "
             f"<br><strong>What this tells us:</strong> Consistent sales contributor to overall front-desk performance. "
             f"<br><strong>Strategic Action:</strong> Provide targeted sales incentives for high-margin package conversions."))
 
     return "\n".join(insights)
 
 
+PAYMENT_COLUMNS = ['Payment Method', 'Gross Rev', 'Net Rev', 'Discount',
+                   'Txns', 'Units', 'UPT', 'AOV', 'Share']
+
+
+def _payment_display(name):
+    return name.replace('-', ' ').title() if name != '-' else 'Other'
+
+
 def build_payment_table(ctx, payments, total_gross):
+    total_net = sum(v.get('net', 0) or 0 for _, v in payments)
     rows = []
     for name, v in payments:
-        share = (v['gross'] / total_gross * 100) if total_gross else 0
-        display = name.replace('-', ' ').title() if name != '-' else 'Other'
+        m = bucket_metrics(v, total_net, total_gross)
         rows.append(f'''            <tr>
-              <td>{display}</td>
-              <td class="num">{lakh(v['gross'])}</td>
-              <td class="num">{lakh(v['net'])}</td>
-              <td class="num">{v['rows']}</td>
-              <td class="num">{pct(share, 0)}</td>
+              <td class="metric-name">{_payment_display(name)}</td>
+              <td class="num"><strong>{lakh(m['gross'])}</strong></td>
+              <td class="num">{lakh(m['net'])}</td>
+              <td class="num">{lakh(m['disc'])}</td>
+              <td class="num">{fmt_int(m['txns'])}</td>
+              <td class="num">{fmt_int(m['units'])}</td>
+              <td class="num">{mult(m['upt'], 2)}</td>
+              <td class="num">{rupee(m['aov'])}</td>
+              <td class="num">{share_cell(m['gross_share'])}</td>
             </tr>''')
 
-    return f'''        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Payment Method</th>
-                <th>Gross Rev</th>
-                <th>Net Rev</th>
-                <th>Units</th>
-                <th>Share</th>
-              </tr>
-            </thead>
-            <tbody>
-{chr(10).join(rows)}
-            </tbody>
-          </table>
-        </div>'''
+    return data_panel(
+        'Sales by Payment Method',
+        f"{ctx['mo']['month_name']} {ctx['mo']['year']} &middot; share is of gross revenue",
+        data_table(PAYMENT_COLUMNS, rows))
 
 
 def build_payment_insights(ctx, payments, total_gross):
     insights = []
     for i, (name, v) in enumerate(payments[:5], 1):
-        share = (v['gross'] / total_gross * 100) if total_gross else 0
-        display = name.replace('-', ' ').title() if name != '-' else 'Other'
+        m = bucket_metrics(v, 0, total_gross)
+        display = _payment_display(name)
 
         if i == 1:
-            title = f"{display} is the primary payment channel ({pct(share, 0)} of gross)."
-            text = (f"Processed <strong>{lakh(v['gross'])}</strong> ({pct(share, 0)} of total) across {v['rows']} transactions at ATV {rupee(v['gross']/v['rows']) if v['rows'] else 0}. "
+            title = f"{display} is the primary payment channel ({pct(m['gross_share'], 0)} of gross)."
+            text = (f"Processed <strong>{lakh(m['gross'])}</strong> ({pct(m['gross_share'], 0)} of total) across {fmt_int(m['txns'])} transactions at {rupee(m['aov'])} AOV. "
                     f"<br><strong>What this tells us:</strong> Members overwhelmingly prefer digital processing via {display}. "
                     f"<br><strong>Strategic Action:</strong> Enable automated recurring mandate billing for auto-renewals to reduce churn from expired cards.")
         else:
-            title = f"{display} accounts for {pct(share, 0)} of gross revenue."
-            text = (f"Processed {lakh(v['gross'])} across {v['rows']} transactions. "
+            title = f"{display} accounts for {pct(m['gross_share'], 0)} of gross revenue."
+            text = (f"Processed {lakh(m['gross'])} across {fmt_int(m['txns'])} transactions at {rupee(m['aov'])} AOV. "
                     f"<br><strong>What this tells us:</strong> Secondary payment avenue supporting specific customer preferences. "
                     f"<br><strong>Strategic Action:</strong> Ensure frictionless checkout options across all digital payment modes.")
 
         insights.append(insight_card(f"{i:02d}", title, text))
 
     return "\n".join(insights)
+
 
 
 # ─── Section 03: New Client Conversion Funnel ─────────────────────────────────
@@ -1447,6 +2127,7 @@ def section_03(ctx):
 
     # Build lead source table
     source_table = build_lead_source_table(ctx, sources_sorted, lead_count)
+    source_rank = build_lead_source_rank_board(ctx, sources_sorted, lead_count, month_name)
 
     # Build trial type breakdown
     trial_type_html = build_trial_type_section(ctx, trial_types, trial_count)
@@ -1478,6 +2159,8 @@ def section_03(ctx):
 
 {callout("<strong>How to read this section:</strong> the funnel table on the right is sorted by lead volume; conversion and retention rates are calculated off the leads column. The insight pane on the left narrates the KPIs &mdash; what each number <em>indicates</em> and <em>why</em> it matters for the business decision.")}
 
+{source_rank}
+
     <div class="split-grid">
       <div class="insights-pane">
         <div class="pane-title">Funnel-level insights</div>
@@ -1486,7 +2169,6 @@ def section_03(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Leads by Source &middot; {month_name} {ctx['mo']['year']}</div>
 {source_table}
       </div>
     </div>
@@ -1556,44 +2238,73 @@ def build_funnel_insights(ctx, sources_sorted):
     return "\n".join(insights)
 
 
+def build_lead_source_rank_board(ctx, sources_sorted, total_leads, month_name):
+    if not sources_sorted:
+        return ''
+    items = []
+    for name, v in sources_sorted:
+        leads_n = v.get('total', 0) or 0
+        conv = v.get('converted', 0) or 0
+        items.append({
+            'name': name,
+            'leads': leads_n,
+            'converted': conv,
+            'conv_rate': round((conv / leads_n * 100) if leads_n else 0, 2),
+            'share': round((leads_n / total_leads * 100) if total_leads else 0, 2),
+            'lost': leads_n - conv,
+        })
+    return rank_board(
+        'Channel ranking',
+        f'Best and worst acquisition channels &middot; {month_name}',
+        f'{len(items)} channels ranked by <span data-rank-metric-name>Conv %</span>.',
+        items,
+        metrics=[
+            ('conv_rate', 'Conv %', 'pct', 'high'),
+            ('converted', 'Converted', 'int', 'high'),
+            ('leads', 'Leads', 'int', 'high'),
+            ('share', 'Share of pipeline', 'pct', 'high'),
+            ('lost', 'Unconverted leads', 'int', 'low'),
+        ],
+        meta=[('leads', 'int', ' leads'), ('converted', 'int', ' converted'),
+              ('conv_rate', 'pct', ' conversion'), ('share', 'pct', ' of pipeline')],
+        kicker='Channel ranking')
+
+
 def build_lead_source_table(ctx, sources_sorted, total_leads):
+    total_conv = sum(v['converted'] for _, v in sources_sorted)
+    portfolio_rate = (total_conv / total_leads * 100) if total_leads else 0
+
     rows = []
     for name, v in sources_sorted:
         rate = (v['converted'] / v['total'] * 100) if v['total'] else 0
         share = (v['total'] / total_leads * 100) if total_leads else 0
+        tone = ' is-good' if rate >= portfolio_rate * 1.2 else (' is-bad' if v['converted'] == 0 and v['total'] >= 3 else '')
         rows.append(f'''            <tr>
-              <td>{name}</td>
-              <td class="num">{v['total']}</td>
-              <td class="num">{v['converted']}</td>
-              <td class="num">{pct(rate)}</td>
-              <td class="num">{pct(share, 0)}</td>
+              <td class="metric-name"><strong>{name}</strong></td>
+              <td class="num">{fmt_int(v['total'])}</td>
+              <td class="num">{fmt_int(v['converted'])}</td>
+              <td class="num">{fmt_int(v['total'] - v['converted'])}</td>
+              <td class="num{tone}">{share_cell(rate, 'var(--good)')}</td>
+              <td class="num">{share_cell(share, 'var(--accent-2)')}</td>
             </tr>''')
 
-    total_conv = sum(v['converted'] for _, v in sources_sorted)
     rows.append(f'''            <tr class="totals-row">
-              <td>Total</td>
-              <td class="num">{total_leads}</td>
-              <td class="num">{total_conv}</td>
-              <td class="num">{pct(total_conv/total_leads*100) if total_leads else 'n/a'}</td>
-              <td class="num">100%</td>
+              <td class="metric-name">All channels</td>
+              <td class="num">{fmt_int(total_leads)}</td>
+              <td class="num">{fmt_int(total_conv)}</td>
+              <td class="num">{fmt_int(total_leads - total_conv)}</td>
+              <td class="num">{pct(portfolio_rate) if total_leads else 'n/a'}</td>
+              <td class="num">100.0%</td>
             </tr>''')
 
-    return f'''        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Lead Source</th>
-                <th>Leads</th>
-                <th>Converted</th>
-                <th>Conv Rate</th>
-                <th>Share</th>
-              </tr>
-            </thead>
-            <tbody>
-{chr(10).join(rows)}
-            </tbody>
-          </table>
-        </div>'''
+    table = data_table(
+        ['Lead source', 'Leads', 'Converted', 'Unconverted', 'Conv %', 'Share of pipeline'],
+        rows, classes='lead-source-table')
+    return data_panel(
+        'Leads by source',
+        (f"{ctx['mo']['month_name']} {ctx['mo']['year']} &middot; where the pipeline came from and what each "
+         "channel actually converted. Click a column header to re-rank, or a row for its full breakdown."),
+        table)
 
 
 def build_trial_type_section(ctx, trial_types, total_trials):
@@ -1689,11 +2400,17 @@ def section_04(ctx):
     # Class insights & table
     class_insights = build_class_insights(ctx, classes_sorted, fill_data)
     class_table = build_class_table(ctx, classes_sorted)
+    class_rank = build_class_rank_board(ctx, classes_sorted, month_name)
+    class_tiles = build_class_metric_cards(ctx, classes_sorted, sess)
 
-    # Trainer insights & table
+    # Trainer insights, scorecard and ranking
     trainer_formats = get_sessions_by_trainer_format(ctx['loc_key'], ctx['month_key'])
     trainer_insights = build_trainer_insights(ctx, trainers_sorted, sess, trainer_formats)
-    trainer_table = build_trainer_table(ctx, trainers_sorted)
+    trainer_table = build_trainer_scorecard(ctx, trainers_sorted)
+    trainer_rank = build_trainer_rank_board(ctx, trainers_sorted, month_name)
+
+    head_to_head = build_format_head_to_head(ctx, formats_sorted)
+    scheduling = build_schedule_shape(ctx, classes_sorted, sess)
 
     # Heatmap
     heatmap_html = build_heatmap_section(ctx)
@@ -1751,10 +2468,17 @@ def section_04(ctx):
       </div>
     </div>
 
+{head_to_head}
+
 {subsection("Class-level view &mdash; every class format with fill rate",
-    "The class table below shows every distinct class format with sessions, visits, capacity, fill rate, and revenue. Classes with fewer than 3 sessions are included for completeness but should be evaluated with caution.")}
+    "Every distinct class format with its sessions, empty sessions, visits, capacity, fill rate, both class averages and revenue. "
+    "Classes are grouped under their studio format &mdash; open a group to see the classes inside it.")}
+
+{class_tiles}
 
 {_visits_bar_figure(classes_sorted, sess, month_name)}
+
+{class_rank}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -1764,13 +2488,16 @@ def section_04(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Sessions by Class &middot; {month_name} {ctx['mo']['year']}</div>
 {class_table}
-      </div>
-    </div>
+      </div>    </div>
 
-{subsection("Trainer performance &mdash; sessions, visits, revenue by trainer",
-    "The trainer table shows sessions, visits, capacity, fill rate, and revenue attributed to each trainer.")}
+{scheduling}
+
+{subsection("Trainer scorecard &mdash; delivery, utilisation and funnel contribution",
+    "Every coach with their sessions, empty sessions, both class averages, fill rate and apportioned funnel contribution. "
+    "Sort the scorecard by any measure, or open a row for the full breakdown.")}
+
+{trainer_rank}
 
     <div class="split-grid">
       <div class="insights-pane">
@@ -1780,7 +2507,6 @@ def section_04(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Sessions by Trainer &middot; {month_name} {ctx['mo']['year']}</div>
 {trainer_table}
       </div>
     </div>
@@ -1944,52 +2670,453 @@ def build_class_insights(ctx, classes_sorted, fill_data):
     return "\n".join(insights)
 
 
-def build_class_table(ctx, classes_sorted):
-    rows = []
-    for name, v in classes_sorted:
-        fill = (v['visits'] / v['capacity'] * 100) if v['capacity'] else 0
-        avg = v['visits'] / v['sessions'] if v['sessions'] else 0
-        fmt = classify_format(name)
-        cancels = int(v['visits'] * 0.07)
-        unique_m = max(1, int(v['visits'] * 0.65))
-        gross_rev = v['revenue'] * 1.05
+def build_format_head_to_head(ctx, formats_sorted):
+    """Barre vs PowerCycle vs Strength Lab, one metric per row.
 
+    The format table above answers 'how did each format do'. This answers 'which
+    format wins on each measure', which is the question behind a schedule
+    decision, so the winner is marked on every row rather than inferred.
+    """
+    if len(formats_sorted) < 2:
+        return ''
+
+    order = ['Barre', 'PowerCycle', 'Strength Lab']
+    by_name = dict(formats_sorted)
+    names = [n for n in order if n in by_name] + [n for n, _ in formats_sorted if n not in order]
+
+    trainer_formats = get_sessions_by_trainer_format(ctx['loc_key'], ctx['month_key']) or {}
+    coaches = {n: 0 for n in names}
+    for _trainer, fmts in trainer_formats.items():
+        for fmt_name in fmts:
+            if fmt_name in coaches:
+                coaches[fmt_name] += 1
+
+    total_sessions = sum(by_name[n].get('sessions', 0) or 0 for n in names) or 1
+    total_visits = sum(by_name[n].get('visits', 0) or 0 for n in names) or 1
+    total_rev = sum(by_name[n].get('revenue', 0) or 0 for n in names) or 1
+
+    def stats(n):
+        v = by_name[n]
+        sessions = v.get('sessions', 0) or 0
+        visits = v.get('visits', 0) or 0
+        capacity = v.get('capacity', 0) or 0
+        empty = v.get('empty', 0) or 0
+        run = max(0, sessions - empty)
+        revenue = v.get('revenue', 0) or 0.0
+        return {
+            'sessions': sessions, 'visits': visits, 'capacity': capacity,
+            'empty': empty, 'revenue': revenue,
+            'fill': (visits / capacity * 100) if capacity else 0.0,
+            'avg_incl': (visits / sessions) if sessions else 0.0,
+            'avg_excl': (visits / run) if run else 0.0,
+            'empty_rate': (empty / sessions * 100) if sessions else 0.0,
+            'rev_per_session': (revenue / sessions) if sessions else 0.0,
+            'rev_per_visit': (revenue / visits) if visits else 0.0,
+            'rev_per_seat': (revenue / capacity) if capacity else 0.0,
+            'session_share': sessions / total_sessions * 100,
+            'visit_share': visits / total_visits * 100,
+            'rev_share': revenue / total_rev * 100,
+            'coaches': coaches.get(n, 0),
+            'yield_index': (revenue / total_rev) / (sessions / total_sessions) if sessions else 0.0,
+        }
+
+    s = {n: stats(n) for n in names}
+
+    # (label, key, formatter, higher is better)
+    measures = [
+        ('Sessions delivered', 'sessions', lambda v: fmt_int(v), True),
+        ('Share of timetable', 'session_share', lambda v: pct(v), None),
+        ('Visits', 'visits', lambda v: fmt_int(v), True),
+        ('Share of attendance', 'visit_share', lambda v: pct(v), None),
+        ('Seats offered', 'capacity', lambda v: fmt_int(v), None),
+        ('Fill rate', 'fill', lambda v: pct(v), True),
+        ('Class avg &middot; incl. empty', 'avg_incl', lambda v: f'{v:.1f}', True),
+        ('Class avg &middot; excl. empty', 'avg_excl', lambda v: f'{v:.1f}', True),
+        ('Empty sessions', 'empty', lambda v: fmt_int(v), False),
+        ('Empty session rate', 'empty_rate', lambda v: pct(v), False),
+        ('Net revenue', 'revenue', lambda v: lakh(v), True),
+        ('Share of revenue', 'rev_share', lambda v: pct(v), None),
+        ('Revenue per session', 'rev_per_session', lambda v: rupee(v), True),
+        ('Revenue per visit', 'rev_per_visit', lambda v: rupee(v), True),
+        ('Revenue per seat offered', 'rev_per_seat', lambda v: rupee(v), True),
+        ('Yield index<br><small>revenue share &divide; timetable share</small>', 'yield_index', lambda v: mult(v, 2), True),
+        ('Coaches who teach it', 'coaches', lambda v: fmt_int(v), None),
+    ]
+
+    rows = []
+    winner_mark = '<span class="winner-mark" aria-label="best">&#9679;</span>'
+    for label, key, formatter, higher in measures:
+        values = [s[n][key] for n in names]
+        best = None
+        if higher is not None and any(values):
+            best = (max(values) if higher else min(values))
+        cells = ''
+        for n, value in zip(names, values):
+            win = best is not None and abs(value - best) < 1e-9
+            cls = 'num is-winner' if win else 'num'
+            cells += (f'<td class="{cls}" data-sort-value="{value}">'
+                      f'{formatter(value)}{winner_mark if win else ""}</td>')
+        rows.append(f'            <tr><td class="metric-name">{label}</td>{cells}</tr>')
+
+    headers = ['Measure'] + [f'{n}' for n in names]
+    table = data_table(headers, rows, classes='h2h-table', attrs='data-no-sort data-no-drill')
+
+    # A card per format carries the one-line read for that format.
+    cards = []
+    for n in names:
+        st = s[n]
+        verdict = ('carries the timetable' if st['session_share'] >= 45 else
+                   'holds a secondary slot' if st['session_share'] >= 20 else
+                   'is a niche block')
+        efficiency = ('earns more than its share of the schedule' if st['yield_index'] > 1.05 else
+                      'earns less than its share of the schedule' if st['yield_index'] < 0.95 else
+                      'earns in line with its share of the schedule')
+        cards.append(metric_card(
+            n,
+            pct(st['fill']),
+            f"fill &middot; {st['avg_excl']:.1f} avg per running class",
+            'good' if st['fill'] >= 50 else ('bad' if st['fill'] < 30 else 'warn'),
+            trends=[('Yield', mult(st['yield_index'], 2), 'good' if st['yield_index'] > 1 else 'bad'),
+                    ('Empty', pct(st['empty_rate'], 0), 'bad' if st['empty_rate'] > 8 else 'good')],
+            kicker='Format head-to-head',
+            focus=f"{n} {verdict} and {efficiency}.",
+            definition=(f"{n} ran {fmt_int(st['sessions'])} sessions ({pct(st['session_share'], 0)} of the timetable) "
+                        f"for {fmt_int(st['visits'])} visits and {lakh(st['revenue'])} net revenue."),
+            formula='Fill % = Visits &divide; Capacity &times; 100',
+            drill={
+                'kicker': 'Format head-to-head',
+                'title': n,
+                'subtitle': f"Every measured figure for {n} in {ctx['mo']['month_name']} {ctx['mo']['year']}.",
+                'stats': [{'label': _strip(label), 'value': _strip(formatter(s[n][key]))}
+                          for label, key, formatter, _h in measures],
+                'bars': [{'label': other, 'value': round(s[other]['revenue'], 2),
+                          'display': _strip(lakh(s[other]['revenue']))} for other in names],
+                'barsTitle': 'Net revenue by format',
+                'footnote': 'Esc or click outside to close.',
+            }))
+
+    winners = []
+    for label, key, _f, higher in measures:
+        if higher is None:
+            continue
+        pick = (max if higher else min)(names, key=lambda n: s[n][key])
+        winners.append(pick)
+    tally = {n: winners.count(n) for n in names}
+    verdict_line = ' &middot; '.join(f'<strong>{n}</strong> wins {tally[n]} of {len(winners)} measures'
+                                     for n in names)
+
+    return f'''
+{subsection("Format head-to-head &mdash; " + " vs ".join(names),
+    "The same seventeen measures for each format, side by side, with the leader marked on every row. "
+    "Use this when deciding which format gets a slot, not which format is popular.")}
+
+    <div class="h2h-cards">{''.join(cards)}</div>
+
+    <div class="data-pane full-width-block">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Head-to-head scorecard &middot; {ctx['mo']['month_name']} {ctx['mo']['year']}</div>
+          <div class="panel-subtitle">{verdict_line}. A dot marks the leader on each row; rows where
+            "best" is meaningless (shares, seat counts, coach counts) are left unmarked.</div>
+        </div>
+      </div>
+{table}
+    </div>'''
+
+
+def build_class_rank_board(ctx, classes_sorted, month_name):
+    if not classes_sorted:
+        return ''
+    items = []
+    for name, v in classes_sorted:
+        sessions = v.get('sessions', 0) or 0
+        visits = v.get('visits', 0) or 0
+        capacity = v.get('capacity', 0) or 0
+        empty = v.get('empty', 0) or 0
+        run = max(0, sessions - empty)
+        items.append({
+            'name': name,
+            'fill': round((visits / capacity * 100) if capacity else 0, 2),
+            'sessions': sessions,
+            'visits': visits,
+            'avg_incl': round((visits / sessions) if sessions else 0, 2),
+            'avg_excl': round((visits / run) if run else 0, 2),
+            'empty': empty,
+            'revenue': round(v.get('revenue', 0) or 0, 2),
+            'rev_per_session': round((v.get('revenue', 0) or 0) / sessions if sessions else 0, 2),
+        })
+    return rank_board(
+        'Class ranking',
+        f'Strongest and weakest class formats &middot; {month_name}',
+        f'{len(items)} class formats ranked by <span data-rank-metric-name>Fill %</span>.',
+        items,
+        metrics=[
+            ('fill', 'Fill %', 'pct', 'high'),
+            ('avg_excl', 'Class avg (excl. empty)', 'dec1', 'high'),
+            ('visits', 'Visits', 'int', 'high'),
+            ('sessions', 'Sessions', 'int', 'high'),
+            ('revenue', 'Net Rev', 'lakh', 'high'),
+            ('rev_per_session', 'Rev / session', 'rupee', 'high'),
+            ('empty', 'Empty sessions', 'int', 'low'),
+        ],
+        meta=[('sessions', 'int', ' sessions'), ('visits', 'int', ' visits'),
+              ('avg_excl', 'dec1', ' avg/class'), ('fill', 'pct', ' fill')],
+        kicker='Class ranking')
+
+
+def build_class_table(ctx, classes_sorted):
+    """Every class format, grouped under the studio format it belongs to."""
+    total_visits = sum(v.get('visits', 0) or 0 for _, v in classes_sorted) or 1
+    total_rev = sum(v.get('revenue', 0) or 0 for _, v in classes_sorted) or 1
+
+    def derive(v):
+        sessions = v.get('sessions', 0) or 0
+        visits = v.get('visits', 0) or 0
+        capacity = v.get('capacity', 0) or 0
+        empty = v.get('empty', 0) or 0
+        run = max(0, sessions - empty)
+        revenue = v.get('revenue', 0) or 0.0
+        return {
+            'sessions': sessions, 'visits': visits, 'capacity': capacity, 'empty': empty,
+            'revenue': revenue,
+            'fill': (visits / capacity * 100) if capacity else 0.0,
+            'avg_incl': (visits / sessions) if sessions else 0.0,
+            'avg_excl': (visits / run) if run else 0.0,
+            'rev_per_session': (revenue / sessions) if sessions else 0.0,
+            'share': revenue / total_rev * 100,
+        }
+
+    def cells(m):
+        fill_tone = ' is-good' if m['fill'] >= 55 else (' is-bad' if m['fill'] < 30 else '')
+        return (f'<td class="num">{fmt_int(m["sessions"])}</td>'
+                f'<td class="num">{fmt_int(m["empty"])}</td>'
+                f'<td class="num">{fmt_int(m["visits"])}</td>'
+                f'<td class="num">{fmt_int(m["capacity"])}</td>'
+                f'<td class="num{fill_tone}">{share_cell(m["fill"])}</td>'
+                f'<td class="num">{m["avg_incl"]:.1f}</td>'
+                f'<td class="num"><strong>{m["avg_excl"]:.1f}</strong></td>'
+                f'<td class="num">{lakh(m["revenue"])}</td>'
+                f'<td class="num">{rupee(m["rev_per_session"])}</td>'
+                f'<td class="num">{share_cell(m["share"], "var(--accent-2)")}</td>')
+
+    grouped = {}
+    for name, v in classes_sorted:
+        grouped.setdefault(classify_format(name), []).append((name, v))
+
+    groups = []
+    for fmt_name in sorted(grouped, key=lambda f: -sum(v.get('sessions', 0) or 0 for _, v in grouped[f])):
+        children = sorted(grouped[fmt_name], key=lambda x: -(x[1].get('sessions', 0) or 0))
+        rollup = {'sessions': 0, 'visits': 0, 'capacity': 0, 'empty': 0, 'revenue': 0.0}
+        for _n, v in children:
+            for key in rollup:
+                rollup[key] += v.get(key, 0) or 0
+        groups.append((fmt_name, derive(rollup), [(n, derive(v)) for n, v in children]))
+
+    rows = nested_rows(groups, cells, cells,
+                       colour_for=lambda n: _cat_colour(['Barre', 'PowerCycle', 'Strength Lab'].index(n)
+                                                        if n in ('Barre', 'PowerCycle', 'Strength Lab') else 3))
+
+    grand = {'sessions': 0, 'visits': 0, 'capacity': 0, 'empty': 0, 'revenue': 0.0}
+    for _n, v in classes_sorted:
+        for key in grand:
+            grand[key] += v.get(key, 0) or 0
+    rows.append(f'            <tr class="totals-row"><td class="metric-name">All classes</td>'
+                f'{cells(derive(grand))}</tr>')
+
+    headers = ['Class', 'Sessions', 'Empty', 'Visits', 'Capacity', 'Fill %',
+               'Class avg<br><small>incl. empty</small>', 'Class avg<br><small>excl. empty</small>',
+               'Net Rev', 'Rev / session', 'Rev share']
+    table = data_table(headers, rows, classes='nested-table', attrs='data-no-drill')
+    return data_panel(
+        'Class ledger',
+        (f"{ctx['mo']['month_name']} {ctx['mo']['year']} &middot; every class format, grouped under the "
+         "studio format it belongs to. Open a format to see the classes inside it."),
+        table,
+        controls=nested_controls())
+
+
+def build_class_metric_cards(ctx, classes_sorted, sess):
+    """The class portfolio in five figures, on the report's metric card."""
+    if not classes_sorted:
+        return ''
+    sessions = sum(v.get('sessions', 0) or 0 for _, v in classes_sorted)
+    visits = sum(v.get('visits', 0) or 0 for _, v in classes_sorted)
+    capacity = sum(v.get('capacity', 0) or 0 for _, v in classes_sorted)
+    empty = sum(v.get('empty', 0) or 0 for _, v in classes_sorted)
+    run = max(0, sessions - empty)
+    revenue = sum(v.get('revenue', 0) or 0 for _, v in classes_sorted)
+
+    # How concentrated the portfolio is: how few classes carry half the visits.
+    ranked = sorted(classes_sorted, key=lambda x: -(x[1].get('visits', 0) or 0))
+    running, carry = 0, 0
+    for _n, v in ranked:
+        running += v.get('visits', 0) or 0
+        carry += 1
+        if visits and running >= visits / 2:
+            break
+
+    # The front of each card plots the same measure across the ten biggest
+    # classes, so the headline figure arrives with its own distribution.
+    top = ranked[:10]
+    names = [n for n, _v in top]
+
+    def series_of(fn):
+        return [fn(v) for _n, v in top]
+
+    return metric_tiles([
+        ('Class formats', str(len(classes_sorted)),
+         f'{carry} carry half the visits', '',
+         series_of(lambda v: v.get('sessions', 0) or 0), names),
+        ('Sessions', fmt_int(sessions), f'{fmt_int(empty)} ran empty',
+         'bad' if sessions and empty / sessions > 0.08 else 'good',
+         series_of(lambda v: v.get('sessions', 0) or 0), names),
+        ('Fill %', pct(visits / capacity * 100 if capacity else 0),
+         f'{fmt_int(visits)} of {fmt_int(capacity)} seats',
+         'good' if capacity and visits / capacity >= 0.5 else 'warn',
+         series_of(lambda v: (v.get('visits', 0) or 0) / (v.get('capacity', 0) or 1) * 100), names),
+        ('Class avg (excl. empty)', f'{(visits / run if run else 0):.1f}',
+         f'{(visits / sessions if sessions else 0):.1f} including empty', '',
+         series_of(lambda v: (v.get('visits', 0) or 0)
+                   / max(1, (v.get('sessions', 0) or 0) - (v.get('empty', 0) or 0))), names),
+        ('Revenue per session', rupee(revenue / sessions if sessions else 0),
+         _strip(lakh(revenue)) + ' across the timetable', '',
+         series_of(lambda v: (v.get('revenue', 0) or 0) / max(1, v.get('sessions', 0) or 0)), names),
+    ], columns=5)
+
+
+def build_schedule_shape(ctx, classes_sorted, sess):
+    """How the week is actually built: slot count, mix and where the waste is.
+
+    The heatmap shows where demand lands. This shows what the schedule spends
+    its sessions on, which is the other half of a scheduling decision.
+    """
+    heatmap = get_heatmap(ctx['loc_key'], ctx['month_key']) or {}
+    if not heatmap:
+        return ''
+
+    def sort_time(t):
+        try:
+            h, m = t.split(':')
+            return int(h) * 60 + int(m)
+        except (ValueError, AttributeError):
+            return 9999
+
+    def band(t):
+        minutes = sort_time(t)
+        if minutes < 12 * 60:
+            return 'Morning (before 12:00)'
+        if minutes < 17 * 60:
+            return 'Midday (12:00&ndash;17:00)'
+        if minutes < 21 * 60:
+            return 'Evening (17:00&ndash;21:00)'
+        return 'Late (21:00 and after)'
+
+    bands = {}
+    for time_str, day_data in heatmap.items():
+        for _day, info in day_data.items():
+            visits = info.get('visits', 0) if isinstance(info, dict) else (info or 0)
+            sessions = info.get('sessions', 0) if isinstance(info, dict) else 0
+            capacity = info.get('capacity', 0) if isinstance(info, dict) else 0
+            b = bands.setdefault(band(time_str), {'sessions': 0, 'visits': 0, 'capacity': 0, 'slots': 0})
+            b['sessions'] += sessions
+            b['visits'] += visits
+            b['capacity'] += capacity
+            b['slots'] += 1
+
+    order = ['Morning (before 12:00)', 'Midday (12:00&ndash;17:00)',
+             'Evening (17:00&ndash;21:00)', 'Late (21:00 and after)']
+    present = [b for b in order if b in bands]
+    if not present:
+        return ''
+
+    total_sessions = sum(bands[b]['sessions'] for b in present) or 1
+    total_visits = sum(bands[b]['visits'] for b in present) or 1
+
+    rows = []
+    for b in present:
+        v = bands[b]
+        fill = (v['visits'] / v['capacity'] * 100) if v['capacity'] else 0
+        avg = (v['visits'] / v['sessions']) if v['sessions'] else 0
         rows.append(f'''            <tr>
-              <td><strong>{name}</strong></td>
-              <td><span class="meta-pill">{fmt}</span></td>
-              <td class="num">{v['sessions']}</td>
-              <td class="num">{v['visits']}</td>
-              <td class="num">{v['capacity']}</td>
+              <td class="metric-name"><strong>{b}</strong></td>
+              <td class="num">{fmt_int(v['slots'])}</td>
+              <td class="num">{fmt_int(v['sessions'])}</td>
+              <td class="num">{share_cell(v['sessions'] / total_sessions * 100)}</td>
+              <td class="num">{fmt_int(v['visits'])}</td>
+              <td class="num">{share_cell(v['visits'] / total_visits * 100, 'var(--accent-2)')}</td>
               <td class="num">{pct(fill)}</td>
-              <td class="num">{avg:.1f}</td>
-              <td class="num">{cancels}</td>
-              <td class="num">{unique_m}</td>
-              <td class="num">{lakh(gross_rev)}</td>
-              <td class="num">{lakh(v['revenue'])}</td>
+              <td class="num"><strong>{avg:.1f}</strong></td>
             </tr>''')
 
-    return f'''        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Class</th>
-                <th>Format</th>
-                <th>Sessions</th>
-                <th>Visits</th>
-                <th>Capacity</th>
-                <th>Fill %</th>
-                <th>Avg Size</th>
-                <th>Cancels</th>
-                <th>Unique Attendees</th>
-                <th>Gross Rev</th>
-                <th>Net Rev</th>
-              </tr>
-            </thead>
-            <tbody>
-{chr(10).join(rows)}
-            </tbody>
-          </table>
-        </div>'''
+    band_table = data_table(
+        ['Time band', 'Distinct slots', 'Sessions', 'Share of timetable', 'Visits',
+         'Share of attendance', 'Fill %', 'Class avg'],
+        rows, classes='schedule-band-table')
+
+    # Where the schedule is paying for seats nobody takes.
+    waste = []
+    for name, v in classes_sorted:
+        sessions = v.get('sessions', 0) or 0
+        capacity = v.get('capacity', 0) or 0
+        visits = v.get('visits', 0) or 0
+        if sessions < 3 or not capacity:
+            continue
+        waste.append((name, capacity - visits, (visits / capacity * 100), sessions,
+                      v.get('empty', 0) or 0))
+    waste.sort(key=lambda w: -w[1])
+
+    waste_rows = ''.join(f'''            <tr>
+              <td class="metric-name">{name}</td>
+              <td class="num">{fmt_int(sessions)}</td>
+              <td class="num">{fmt_int(empty)}</td>
+              <td class="num">{pct(fill)}</td>
+              <td class="num"><strong>{fmt_int(unsold)}</strong></td>
+            </tr>''' for name, unsold, fill, sessions, empty in waste[:10])
+
+    waste_table = data_table(
+        ['Class', 'Sessions', 'Empty', 'Fill %', 'Unsold seats'],
+        [waste_rows] if waste_rows else ['            <tr><td colspan="5">No qualifying classes.</td></tr>'],
+        classes='schedule-waste-table')
+
+    busiest = max(present, key=lambda b: bands[b]['visits'])
+    thinnest = min(present, key=lambda b: (bands[b]['visits'] / bands[b]['sessions']) if bands[b]['sessions'] else 0)
+
+    return f'''
+{subsection("Class scheduling &mdash; how the week is built",
+    "Where the timetable spends its sessions, how full each time band runs, and which classes are "
+    "paying for seats nobody takes. Read this next to the heatmap: the heatmap shows where demand "
+    "lands, this shows where supply was placed.")}
+
+    <div class="split-grid">
+      <div class="insights-pane">
+        <div class="pane-title">Scheduling read</div>
+{insight_card("01",
+    f"{busiest} carries the week at {fmt_int(bands[busiest]['visits'])} visits.",
+    f"{fmt_int(bands[busiest]['sessions'])} sessions ({pct(bands[busiest]['sessions'] / total_sessions * 100, 0)} of the "
+    f"timetable) produced {pct(bands[busiest]['visits'] / total_visits * 100, 0)} of attendance at "
+    f"{(bands[busiest]['visits'] / bands[busiest]['sessions'] if bands[busiest]['sessions'] else 0):.1f} heads per class. "
+    f"<br><strong>Strategic Action:</strong> protect this band first when reallocating coaches or trimming slots.")}
+{insight_card("02",
+    f"{thinnest} is the thinnest band at "
+    f"{(bands[thinnest]['visits'] / bands[thinnest]['sessions'] if bands[thinnest]['sessions'] else 0):.1f} heads per class.",
+    f"{fmt_int(bands[thinnest]['sessions'])} sessions returned {fmt_int(bands[thinnest]['visits'])} visits. "
+    f"<br><strong>Strategic Action:</strong> consolidate this band into fewer, fuller slots before adding anywhere else.")}
+{insight_card("03",
+    (f"{waste[0][0]} leaves {fmt_int(waste[0][1])} seats unsold across {fmt_int(waste[0][3])} sessions."
+     if waste else "No class leaves a material block of seats unsold."),
+    (f"Running at {pct(waste[0][2])} fill with {fmt_int(waste[0][4])} sessions that had nobody in the room. "
+     f"<br><strong>Strategic Action:</strong> cut or merge these sessions and move the coach hours into the "
+     f"{busiest.split(' (')[0].lower()} band."
+     if waste else "Capacity is broadly matched to demand across the qualifying classes."))}
+      </div>
+
+      <div class="data-pane">
+        <div class="pane-title" style="padding: 16px 16px 8px;">Timetable shape by time band</div>
+{band_table}
+        <div class="pane-title" style="padding: 20px 16px 8px;">Largest blocks of unsold capacity</div>
+{waste_table}
+      </div>
+    </div>'''
 
 
 def build_trainer_insights(ctx, trainers_sorted, sess, trainer_formats=None):
@@ -2051,39 +3178,181 @@ def build_trainer_insights(ctx, trainers_sorted, sess, trainer_formats=None):
     return "\n".join(insights)
 
 
-def build_trainer_table(ctx, trainers_sorted):
-    rows = []
+TRAINER_COLUMNS = [
+    'Trainer', 'Sessions', 'Empty', 'Visits', 'Capacity', 'Fill %',
+    'Class avg<br><small>incl. empty</small>', 'Class avg<br><small>excl. empty</small>',
+    'Formats', 'New clients', 'Converted', 'Conv %', 'Retained', 'Retention %',
+    'Net Rev', 'Rev / session',
+]
+
+# Which column each sort chip drives, by index into TRAINER_COLUMNS.
+TRAINER_SORTS = [
+    ('Sessions', 1), ('Fill %', 5), ('Class avg', 6), ('Empty', 2),
+    ('Converted', 10), ('Conv %', 11), ('Retention %', 13), ('Net Rev', 14),
+]
+
+
+def trainer_scorecard_rows(ctx, trainers_sorted):
+    """One dict per trainer with every scorecard figure worked out once.
+
+    Sessions, visits, capacity, revenue and empty sessions are measured. New
+    clients, conversions and retention are studio totals apportioned by each
+    trainer's share of visits — the exports do not attribute a signup to the
+    coach who taught the class, so this is an allocation, and the table says so.
+    """
+    total_visits = sum(v.get('visits', 0) or 0 for _, v in trainers_sorted) or 1
+    new_total = ctx.get('new', {}).get('trials', 0) or 0
+    conv_total = ctx.get('new', {}).get('converted', 0) or 0
+    ret_total = ctx.get('new', {}).get('retained', 0) or 0
+    trainer_formats = get_sessions_by_trainer_format(ctx['loc_key'], ctx['month_key']) or {}
+
+    out = []
     for name, v in trainers_sorted:
-        fill = (v['visits'] / v['capacity'] * 100) if v['capacity'] else 0
-        avg = v['visits'] / v['sessions'] if v['sessions'] else 0
+        sessions = v.get('sessions', 0) or 0
+        visits = v.get('visits', 0) or 0
+        capacity = v.get('capacity', 0) or 0
+        empty = v.get('empty', 0) or 0
+        run = max(0, sessions - empty)
+        share = visits / total_visits
+
+        new_c = round(new_total * share)
+        conv_c = round(conv_total * share)
+        ret_c = round(ret_total * share)
+
+        out.append({
+            'name': name,
+            'sessions': sessions,
+            'empty': empty,
+            'empty_rate': (empty / sessions * 100) if sessions else 0.0,
+            'visits': visits,
+            'capacity': capacity,
+            'fill': (visits / capacity * 100) if capacity else 0.0,
+            'avg_incl': (visits / sessions) if sessions else 0.0,
+            'avg_excl': (visits / run) if run else 0.0,
+            'formats': len(trainer_formats.get(name) or {}) or v.get('distinct_classes', 0) or 0,
+            'new': new_c,
+            'converted': conv_c,
+            'conv_rate': (conv_c / new_c * 100) if new_c else 0.0,
+            'retained': ret_c,
+            'retention_rate': (ret_c / new_c * 100) if new_c else 0.0,
+            'revenue': v.get('revenue', 0) or 0.0,
+            'rev_per_session': (v.get('revenue', 0) or 0) / sessions if sessions else 0.0,
+        })
+    return out
+
+
+def build_trainer_scorecard(ctx, trainers_sorted):
+    cards = trainer_scorecard_rows(ctx, trainers_sorted)
+    if not cards:
+        return ''
+    table_id = f"trainer-scorecard-{ctx.get('loc_key', '')}{ctx.get('id_suffix', '')}"
+
+    rows = []
+    for c in cards:
+        fill_tone = 'good' if c['fill'] >= 55 else ('bad' if c['fill'] < 30 else '')
+        empty_tone = 'bad' if c['empty_rate'] >= 10 else ''
         rows.append(f'''            <tr>
-              <td>{name}</td>
-              <td class="num">{v['sessions']}</td>
-              <td class="num">{v['visits']}</td>
-              <td class="num">{v['capacity']}</td>
-              <td class="num">{pct(fill)}</td>
-              <td class="num">{avg:.1f}</td>
-              <td class="num">{lakh(v['revenue'])}</td>
+              <td class="metric-name"><strong>{c['name']}</strong></td>
+              <td class="num">{fmt_int(c['sessions'])}</td>
+              <td class="num{' is-' + empty_tone if empty_tone else ''}">{fmt_int(c['empty'])}<small class="cell-note">{pct(c['empty_rate'], 0)}</small></td>
+              <td class="num">{fmt_int(c['visits'])}</td>
+              <td class="num">{fmt_int(c['capacity'])}</td>
+              <td class="num{' is-' + fill_tone if fill_tone else ''}">{share_cell(c['fill'])}</td>
+              <td class="num">{c['avg_incl']:.1f}</td>
+              <td class="num"><strong>{c['avg_excl']:.1f}</strong></td>
+              <td class="num">{c['formats']}</td>
+              <td class="num">{fmt_int(c['new'])}</td>
+              <td class="num">{fmt_int(c['converted'])}</td>
+              <td class="num">{pct(c['conv_rate'])}</td>
+              <td class="num">{fmt_int(c['retained'])}</td>
+              <td class="num">{pct(c['retention_rate'])}</td>
+              <td class="num"><strong>{lakh(c['revenue'])}</strong></td>
+              <td class="num">{rupee(c['rev_per_session'])}</td>
             </tr>''')
 
-    return f'''        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Trainer</th>
-                <th>Sessions</th>
-                <th>Visits</th>
-                <th>Capacity</th>
-                <th>Fill %</th>
-                <th>Avg Size</th>
-                <th>Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-{chr(10).join(rows)}
-            </tbody>
-          </table>
-        </div>'''
+    def total(key):
+        return sum(c[key] for c in cards)
+
+    t_sessions, t_visits, t_cap = total('sessions'), total('visits'), total('capacity')
+    t_empty, t_run = total('empty'), total('sessions') - total('empty')
+    t_new, t_conv, t_ret = total('new'), total('converted'), total('retained')
+    rows.append(f'''            <tr class="totals-row">
+              <td class="metric-name">All trainers</td>
+              <td class="num">{fmt_int(t_sessions)}</td>
+              <td class="num">{fmt_int(t_empty)}</td>
+              <td class="num">{fmt_int(t_visits)}</td>
+              <td class="num">{fmt_int(t_cap)}</td>
+              <td class="num">{pct(t_visits / t_cap * 100 if t_cap else 0)}</td>
+              <td class="num">{(t_visits / t_sessions if t_sessions else 0):.1f}</td>
+              <td class="num">{(t_visits / t_run if t_run else 0):.1f}</td>
+              <td class="num">&mdash;</td>
+              <td class="num">{fmt_int(t_new)}</td>
+              <td class="num">{fmt_int(t_conv)}</td>
+              <td class="num">{pct(t_conv / t_new * 100 if t_new else 0)}</td>
+              <td class="num">{fmt_int(t_ret)}</td>
+              <td class="num">{pct(t_ret / t_new * 100 if t_new else 0)}</td>
+              <td class="num">{lakh(total('revenue'))}</td>
+              <td class="num">{rupee(total('revenue') / t_sessions if t_sessions else 0)}</td>
+            </tr>''')
+
+    sort_chips = ''.join(
+        f'<button type="button" class="chip{" is-active" if i == 0 else ""}" '
+        f'data-sort-table="{table_id}" data-sort-col="{col}">{label}</button>'
+        for i, (label, col) in enumerate(TRAINER_SORTS))
+
+    controls = (f'<div class="chip-group" role="group" aria-label="Sort the scorecard">'
+                f'<span class="chip-group-label">Sort by</span>{sort_chips}</div>')
+
+    table = data_table(TRAINER_COLUMNS, rows, classes='scorecard-table', table_id=table_id)
+
+    return data_panel(
+        'Trainer scorecard',
+        (f"{ctx['mo']['month_name']} {ctx['mo']['year']} &middot; delivery, utilisation and funnel contribution per coach. "
+         "Sort by any chip or click a column header; click a row for the full breakdown."),
+        table + '\n        <p class="panel-footnote">Sessions, empty sessions, visits, capacity and revenue are measured '
+                'per coach. New clients, conversions and retention are studio totals apportioned by each coach&rsquo;s '
+                'share of visits &mdash; the exports do not attribute a signup to the coach who taught the class.</p>',
+        controls=controls)
+
+
+def build_trainer_rank_board(ctx, trainers_sorted, month_name):
+    cards = trainer_scorecard_rows(ctx, trainers_sorted)
+    if not cards:
+        return ''
+    items = [{
+        'name': c['name'],
+        'fill': round(c['fill'], 2),
+        'avg_excl': round(c['avg_excl'], 2),
+        'avg_incl': round(c['avg_incl'], 2),
+        'sessions': c['sessions'],
+        'visits': c['visits'],
+        'empty': c['empty'],
+        'converted': c['converted'],
+        'conv_rate': round(c['conv_rate'], 2),
+        'retention_rate': round(c['retention_rate'], 2),
+        'revenue': round(c['revenue'], 2),
+        'rev_per_session': round(c['rev_per_session'], 2),
+    } for c in cards]
+
+    return rank_board(
+        'Trainer ranking',
+        f'Strongest and weakest coaches &middot; {month_name}',
+        f'{len(items)} coaches ranked by <span data-rank-metric-name>Fill %</span>.',
+        items,
+        metrics=[
+            ('fill', 'Fill %', 'pct', 'high'),
+            ('avg_excl', 'Class avg (excl. empty)', 'dec1', 'high'),
+            ('sessions', 'Sessions', 'int', 'high'),
+            ('visits', 'Visits', 'int', 'high'),
+            ('revenue', 'Net Rev', 'lakh', 'high'),
+            ('rev_per_session', 'Rev / session', 'rupee', 'high'),
+            ('conv_rate', 'Conv %', 'pct', 'high'),
+            ('retention_rate', 'Retention %', 'pct', 'high'),
+            ('empty', 'Empty sessions', 'int', 'low'),
+        ],
+        meta=[('sessions', 'int', ' sessions'), ('visits', 'int', ' visits'),
+              ('avg_excl', 'dec1', ' avg/class'), ('empty', 'int', ' empty')],
+        kicker='Trainer ranking')
 
 
 def build_heatmap_section(ctx):
@@ -2276,10 +3545,24 @@ def build_heatmap_section(ctx):
       </div>
       <div class="hm-interactive-bar">
         <div aria-label="Filter heatmap by day" class="hm-day-filters">
+          <span class="chip-group-label">Day</span>
           <button class="hm-day-btn is-active" data-day="all" type="button">All</button>
 {day_buttons}
         </div>
-        <div aria-live="polite" class="hm-selection" id="hm-selection"><strong>Select a populated slot</strong> to inspect its day, time, visits, format and instructor.</div>
+        <div aria-label="Filter heatmap by time band" class="hm-day-filters">
+          <span class="chip-group-label">Band</span>
+          <button class="hm-band-btn is-active" data-band="all" type="button">All</button>
+          <button class="hm-band-btn" data-band="morning" type="button">Morning</button>
+          <button class="hm-band-btn" data-band="midday" type="button">Midday</button>
+          <button class="hm-band-btn" data-band="evening" type="button">Evening</button>
+        </div>
+        <div aria-label="Spotlight busiest or quietest slots" class="hm-day-filters">
+          <span class="chip-group-label">Spotlight</span>
+          <button class="hm-spot-btn is-active" data-spot="off" type="button">Off</button>
+          <button class="hm-spot-btn" data-spot="peak" type="button">Busiest 20%</button>
+          <button class="hm-spot-btn" data-spot="quiet" type="button">Quietest 20%</button>
+        </div>
+        <div aria-live="polite" class="hm-selection" id="hm-selection"><strong>Select a populated slot</strong> to open its breakdown &mdash; how it compares across the week and within its own day.</div>
       </div>
       <div class="table-wrap">
         <table class="data-table heatmap-table" id="demand-heatmap">
@@ -2322,6 +3605,7 @@ def section_05(ctx):
     # Product insights & table
     prod_insights = build_lapsed_product_insights(ctx, prod_sorted, lapsed)
     prod_table = build_lapsed_product_table(ctx, prod_sorted)
+    prod_rank = build_lapsed_rank_board(ctx, prod_sorted, month_name)
 
     # Cumulative trend
     cumul_html = build_cumulative_section(ctx, cumulative)
@@ -2378,7 +3662,6 @@ def section_05(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Expiration Status &middot; {month_name} {ctx['mo']['year']}</div>
 {status_table}
       </div>
     </div>
@@ -2388,6 +3671,8 @@ def section_05(ctx):
 
 {_lapse_bar_figure(prod_sorted, lapsed, month_name)}
 
+{prod_rank}
+
     <div class="split-grid">
       <div class="insights-pane">
         <div class="pane-title">Product-level insights</div>
@@ -2396,7 +3681,6 @@ def section_05(ctx):
       </div>
 
       <div class="data-pane">
-        <div class="pane-title" style="padding: 16px 16px 8px;">Lapse by Product &middot; {month_name} {ctx['mo']['year']}</div>
 {prod_table}
       </div>
     </div>
@@ -2439,39 +3723,32 @@ def build_lapsed_status_table(ctx):
     total = lapsed['total']
 
     statuses = [
-        ("Renewed", lapsed['renewed'], 'good'),
-        ("Lapsed", lapsed['lapsed'], 'bad'),
-        ("Frozen", lapsed['frozen'], 'neutral'),
+        ("Renewed", lapsed['renewed'], 'good', 'Expired and bought again.'),
+        ("Lapsed", lapsed['lapsed'], 'bad', 'Expired with no follow-on purchase.'),
+        ("Frozen", lapsed['frozen'], 'warn', 'Paused rather than ended &mdash; still recoverable.'),
     ]
 
     rows = []
-    for name, count, tone in statuses:
+    for name, count, tone, note in statuses:
         share = (count / total * 100) if total else 0
         rows.append(f'''            <tr>
-              <td>{name}</td>
-              <td class="num">{count}</td>
-              <td class="num">{pct(share)}</td>
+              <td class="metric-name"><span class="status-dot is-{tone}" aria-hidden="true"></span>
+                <strong>{name}</strong><small class="cell-note">{note}</small></td>
+              <td class="num">{fmt_int(count)}</td>
+              <td class="num">{share_cell(share, f'var(--{tone})')}</td>
             </tr>''')
     rows.append(f'''            <tr class="totals-row">
-              <td>Total</td>
-              <td class="num">{total}</td>
-              <td class="num">100%</td>
+              <td class="metric-name">All expirations</td>
+              <td class="num">{fmt_int(total)}</td>
+              <td class="num">100.0%</td>
             </tr>''')
 
-    return f'''        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Count</th>
-                <th>Share</th>
-              </tr>
-            </thead>
-            <tbody>
-{chr(10).join(rows)}
-            </tbody>
-          </table>
-        </div>'''
+    table = data_table(['Outcome', 'Members', 'Share of expirations'], rows,
+                       classes='status-table')
+    return data_panel(
+        'Expirations by outcome',
+        f"{ctx['mo']['month_name']} {ctx['mo']['year']} &middot; what happened to every membership that reached its end date",
+        table)
 
 
 def build_lapsed_product_insights(ctx, prod_sorted, lapsed):
@@ -2503,6 +3780,40 @@ def build_lapsed_product_insights(ctx, prod_sorted, lapsed):
     return "\n".join(insights)
 
 
+def build_lapsed_rank_board(ctx, prod_sorted, month_name):
+    if not prod_sorted:
+        return ''
+    total = sum(v.get('total', 0) or 0 for _, v in prod_sorted) or 1
+    items = []
+    for name, v in prod_sorted:
+        expirations = v.get('total', 0) or 0
+        items.append({
+            'name': name,
+            'expirations': expirations,
+            'renewed': v.get('renewed', 0) or 0,
+            'lapsed': v.get('lapsed', 0) or 0,
+            'frozen': v.get('frozen', 0) or 0,
+            'renewal_rate': round(((v.get('renewed', 0) or 0) / expirations * 100) if expirations else 0, 2),
+            'churn': round(((v.get('lapsed', 0) or 0) / expirations * 100) if expirations else 0, 2),
+            'share': round(expirations / total * 100, 2),
+        })
+    return rank_board(
+        'Retention ranking',
+        f'Stickiest and leakiest membership SKUs &middot; {month_name}',
+        f'{len(items)} products ranked by <span data-rank-metric-name>Renewal %</span>.',
+        items,
+        metrics=[
+            ('renewal_rate', 'Renewal %', 'pct', 'high'),
+            ('renewed', 'Renewed', 'int', 'high'),
+            ('expirations', 'Expirations', 'int', 'high'),
+            ('churn', 'Churn %', 'pct', 'low'),
+            ('lapsed', 'Lapsed', 'int', 'low'),
+        ],
+        meta=[('expirations', 'int', ' expirations'), ('renewed', 'int', ' renewed'),
+              ('lapsed', 'int', ' lapsed'), ('share', 'pct', ' of expirations')],
+        kicker='Retention ranking')
+
+
 def build_lapsed_product_table(ctx, prod_sorted):
     rows = []
     total_total = sum(v['total'] for _, v in prod_sorted)
@@ -2512,41 +3823,39 @@ def build_lapsed_product_table(ctx, prod_sorted):
 
     for name, v in prod_sorted:
         churn = (v['lapsed'] / v['total'] * 100) if v['total'] else 0
+        renewal = (v['renewed'] / v['total'] * 100) if v['total'] else 0
+        churn_tone = ' is-bad' if churn >= 60 else (' is-good' if churn < 30 else '')
         rows.append(f'''            <tr>
-              <td>{name}</td>
-              <td class="num">{v['total']}</td>
-              <td class="num">{v['renewed']}</td>
-              <td class="num">{v['lapsed']}</td>
-              <td class="num">{v['frozen']}</td>
-              <td class="num">{pct(churn)}</td>
+              <td class="metric-name"><strong>{name}</strong></td>
+              <td class="num">{fmt_int(v['total'])}</td>
+              <td class="num">{fmt_int(v['renewed'])}</td>
+              <td class="num">{share_cell(renewal, 'var(--good)')}</td>
+              <td class="num">{fmt_int(v['lapsed'])}</td>
+              <td class="num{churn_tone}">{share_cell(churn, 'var(--bad)')}</td>
+              <td class="num">{fmt_int(v['frozen'])}</td>
+              <td class="num">{share_cell(v['total'] / total_total * 100 if total_total else 0, 'var(--accent-2)')}</td>
             </tr>''')
 
     rows.append(f'''            <tr class="totals-row">
-              <td>Total</td>
-              <td class="num">{total_total}</td>
-              <td class="num">{total_renewed}</td>
-              <td class="num">{total_lapsed}</td>
-              <td class="num">{total_frozen}</td>
-              <td class="num">{pct(total_lapsed/total_total*100) if total_total else 'n/a'}</td>
+              <td class="metric-name">All products</td>
+              <td class="num">{fmt_int(total_total)}</td>
+              <td class="num">{fmt_int(total_renewed)}</td>
+              <td class="num">{pct(total_renewed / total_total * 100) if total_total else 'n/a'}</td>
+              <td class="num">{fmt_int(total_lapsed)}</td>
+              <td class="num">{pct(total_lapsed / total_total * 100) if total_total else 'n/a'}</td>
+              <td class="num">{fmt_int(total_frozen)}</td>
+              <td class="num">100.0%</td>
             </tr>''')
 
-    return f'''        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Total</th>
-                <th>Renewed</th>
-                <th>Lapsed</th>
-                <th>Frozen</th>
-                <th>Churn %</th>
-              </tr>
-            </thead>
-            <tbody>
-{chr(10).join(rows)}
-            </tbody>
-          </table>
-        </div>'''
+    table = data_table(
+        ['Product', 'Expirations', 'Renewed', 'Renewal %', 'Lapsed', 'Churn %',
+         'Frozen', 'Share of expirations'],
+        rows, classes='lapsed-table')
+    return data_panel(
+        'Expirations by product',
+        (f"{ctx['mo']['month_name']} {ctx['mo']['year']} &middot; which membership SKUs hold their members and "
+         "which lose them. Click a column header to re-rank, or a row for its full breakdown."),
+        table)
 
 
 def build_cumulative_section(ctx, cumulative):

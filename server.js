@@ -24,6 +24,7 @@ if (fs.existsSync(path.join(__dirname, '.env'))) {
 }
 
 const { generateInsights, generatePaneInsights, AI_SECTIONS } = require('./openai_insights');
+const { createAgentRouter, editToken } = require('./agent');
 const { renderReportToPdf } = require('./pdf_export');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -365,7 +366,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: '32mb' }));
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
 
@@ -1173,14 +1174,46 @@ app.post('/save-report/:sessionId/:filename', (req, res) => {
   }
 });
 
+/* Every report is served with the agent dock spliced in, rather than the dock
+   being baked into the file at generation time — so reports generated before
+   the assistant existed get it too, and a saved report stays portable.
+
+   The edit token rides along only for the report's owner. Someone who followed
+   a /join/:code presentation link arrives with ?roomCode=, and gets a dock that
+   can answer questions but cannot change or save anything. */
+function agentDockTags(session, filename, canEdit) {
+  const ctx = {
+    sessionId: session.sessionId,
+    filename,
+    editToken: canEdit ? editToken(session.dir) : null,
+  };
+  return '\n<link rel="stylesheet" href="/agent-dock.css?v=1" data-agent-dock>'
+    + `\n<script data-agent-dock>window.__AGENT_CTX__ = ${JSON.stringify(ctx).replace(/</g, '\\u003c')};</script>`
+    + '\n<script src="/agent-dock.js?v=1" data-agent-dock></script>\n';
+}
+
 app.get('/report/:sessionId/:filename', (req, res) => {
   const session = getSession(req.params.sessionId);
   if (!session) return res.status(404).send('Session not found.');
   const filePath = path.join(session.dir, req.params.filename);
   if (!filePath.startsWith(session.dir)) return res.status(400).send('Invalid path.');
-  res.sendFile(filePath, (err) => {
-    if (err) res.status(404).send('Report not found.');
-  });
+
+  let html;
+  try {
+    html = fs.readFileSync(filePath, 'utf8');
+  } catch (e) {
+    return res.status(404).send('Report not found.');
+  }
+
+  const canEdit = !req.query.roomCode && req.query.readonly !== '1';
+  const tags = agentDockTags(session, req.params.filename, canEdit);
+  const body = html.includes('data-agent-dock')
+    ? html                                           // already carries a dock (a baked save)
+    : (html.includes('</body>')
+      ? html.replace('</body>', `${tags}</body>`)
+      : html + tags);
+
+  res.type('html').send(body);
 });
 
 app.get('/download/:sessionId/:filename', (req, res) => {
@@ -1209,6 +1242,8 @@ app.get('/reports', (req, res) => {
 });
 
 app.get('/api/reports', (req, res) => res.json({ reports: loadReports() }));
+
+app.use('/agent', createAgentRouter({ getSession }));
 
 app.get('/health', (req, res) => res.json({ status: 'ok', uploadsDir: UPLOADS_DIR }));
 

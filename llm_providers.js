@@ -110,12 +110,16 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
  * @param {object}   opts
  * @param {object}   opts.body       OpenAI-shaped request body, minus `model`.
  * @param {boolean}  opts.fast       Use each provider's cheaper model.
+ * @param {boolean}  opts.wantMessage Pass the whole assistant message to
+ *                                   `parse` instead of its text, and accept a
+ *                                   reply whose only payload is `tool_calls`.
+ *                                   Agent tool-calling needs both.
  * @param {function} opts.parse      (content, json) => value. Throw to reject
  *                                   the answer and retry / fall through.
  * @param {function} opts.onFallback ({from, to, reason}) => void, for logging.
  * @returns {Promise<{value:*, provider:string, model:string}>}
  */
-async function chatCompletion({ body, fast = false, parse, onFallback } = {}) {
+async function chatCompletion({ body, fast = false, parse, onFallback, wantMessage = false } = {}) {
   const chain = configuredProviders();
   if (!chain.length) {
     const err = new Error(
@@ -167,13 +171,19 @@ async function chatCompletion({ body, fast = false, parse, onFallback } = {}) {
       }
 
       const json = await res.json().catch(() => null);
-      const content = json && json.choices && json.choices[0]
-        && json.choices[0].message && json.choices[0].message.content;
-      if (!content) {
+      const message = json && json.choices && json.choices[0] && json.choices[0].message;
+      const content = message && message.content;
+      /* A tool call carries no prose, so for the agent loop an empty `content`
+         is a valid answer as long as the model asked for a tool. */
+      const usable = wantMessage
+        ? !!(message && (content || (message.tool_calls && message.tool_calls.length)))
+        : !!content;
+      if (!usable) {
         lastError = new Error(`${p.name} returned no content`);
       } else {
+        const payload = wantMessage ? message : content;
         try {
-          return { value: parse ? parse(content, json) : content, provider: p.name, model };
+          return { value: parse ? parse(payload, json) : payload, provider: p.name, model };
         } catch (parseErr) {
           lastError = new Error(`${p.name} returned unusable output: ${parseErr.message}`);
         }

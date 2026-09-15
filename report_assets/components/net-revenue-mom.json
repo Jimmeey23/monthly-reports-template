@@ -1,0 +1,12 @@
+{
+  "title": "Net Revenue MoM",
+  "componentType": "table",
+  "target": "#revenue-performance .container",
+  "position": "append",
+  "html": "<table><tr><td>Aug</td><td>22.82L</td></tr></table>",
+  "query": "analysis[\"sales\"][\"supreme\"]",
+  "sourceId": "cmp_ad1a04bdb3",
+  "slug": "net-revenue-mom",
+  "savedAt": 1789449927767,
+  "autoApply": true
+}

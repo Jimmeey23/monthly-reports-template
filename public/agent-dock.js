@@ -153,9 +153,15 @@
         case 'hide':
         case 'show': {
           targets.forEach(function (node) {
-            var prev = node.style.display;
+            // Restoring `display` alone would leave a `style=""` behind on an
+            // element that had no style attribute — enough to dirty the saved
+            // HTML on every discarded preview.
+            var had = node.hasAttribute('style');
+            var prev = node.getAttribute('style');
             node.style.display = op.kind === 'hide' ? 'none' : '';
-            undos.push(function () { node.style.display = prev; });
+            undos.push(function () {
+              if (had) node.setAttribute('style', prev); else node.removeAttribute('style');
+            });
           });
           break;
         }

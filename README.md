@@ -82,6 +82,41 @@ Providers are tried in order — OpenAI, DeepSeek, then the free fallback — by
 `llm_providers.js`, so a missing key or an exhausted quota degrades instead of
 failing.
 
+## The in-report assistant
+
+Every report served from `/report/:sessionId/:file` gets a chat dock in the
+corner. It is not a summariser of the page — it holds the session's data:
+
+- **Questions.** It never does arithmetic itself. It writes a Python query,
+  which runs in a jailed `python3` subprocess with `analysis` (the parsed
+  `analysis.json`) and `csv("sales")`-style access to the seven uploaded CSVs,
+  and answers from the returned numbers. Each query is shown in the transcript,
+  so any figure can be checked.
+- **New components.** Ask for a table, chart, list or card and it queries the
+  numbers, copies the classes of a comparable block already in the report, and
+  renders it in place, outlined and pending. It is saved only when you press
+  Keep. "Keep + reuse monthly" also writes the recipe to
+  `report_assets/components/`, and future reports pick it up automatically
+  wherever their layout has the same anchor.
+- **Styling and layout.** Scoped CSS, hide/show, move, reorder and text edits
+  apply to the live page at once, stay pending until kept, and each kept change
+  is revertible by id.
+
+Nothing is written into the report file itself: changes live in
+`uploads/<session>/report-overrides.json` and are replayed on load, so an edit
+is always reversible. **Save** in the dock bakes the current page into the HTML.
+
+Editing is gated on a per-session token that is injected only for the report's
+owner — someone who opened the report through a `/join/:code` presentation link
+gets the same chat, read-only.
+
+| env var | |
+|---|---|
+| `AGENT_MAX_STEPS` | tool-call ceiling per turn (default 12) |
+| `AGENT_SANDBOX_TIMEOUT_MS` | wall-clock kill for one query (default 45000) |
+| `AGENT_SANDBOX_CPU` | CPU-seconds per query (default 30) |
+| `AGENT_SANDBOX_MEM_MB` | memory cap per query (default 1024) |
+
 ## Layout
 
 | path | |
@@ -94,6 +129,8 @@ failing.
 | `report_shell.py` | the master template |
 | `openai_insights.js` | narratives, with caching |
 | `llm_providers.js` | provider chain and fallback |
+| `agent/` | the in-report assistant: loop, tools, sandbox, overrides |
+| `public/agent-dock.js` | the chat panel injected into every served report |
 | `pdf_export.js` | server-side PDF route |
 | `views/` | upload, select, result, reports |
 | `scripts/` | tests |

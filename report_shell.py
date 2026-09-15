@@ -77,7 +77,6 @@ INLINE_JS = [
     ('embedded-jspdf', 'vendor/jspdf.umd.min.js'),
     ('direct-pdf-export', 'js/pdf-export.js'),
     ('mom-panel', 'js/mom-panel.js'),
-    ('section-audio', 'js/section-audio.js'),
     ('sfx-soundboard', 'js/sfx-soundboard.js'),
 ]
 
@@ -93,6 +92,23 @@ def _attr(obj):
             .replace('&', '&amp;').replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;'))
 
 
+# The "Play Me" button plays the house jingle by default. August 2026 has a
+# studio-specific anthem instead — one per location, served from /audio/.
+BRAND_AUDIO_DEFAULT = '/audio/fiz-zeek-fifty-seven.mp3'
+BRAND_AUDIO_BY_MONTH = {
+    '2026-08': {
+        'kw': '/audio/kwality-august-anthem.m4a',
+        'kwality': '/audio/kwality-august-anthem.m4a',
+        'supreme': '/audio/supreme-august-anthem.m4a',
+    },
+}
+
+
+def brand_audio_url(ctx):
+    month = BRAND_AUDIO_BY_MONTH.get(ctx.get('month_key'), {})
+    return month.get(ctx.get('loc_key'), BRAND_AUDIO_DEFAULT)
+
+
 def report_meta(ctx):
     """Identity the client scripts read instead of sniffing the URL or title."""
     loc, mo = ctx['loc'], ctx['mo']
@@ -105,6 +121,7 @@ def report_meta(ctx):
         'shortName': loc['short_name'],
         'revenuePerVisit': round(net / visits) if visits else 0,
         'audioPrefix': loc.get('audio_prefix', ctx['loc_key']),
+        'brandAudioUrl': brand_audio_url(ctx),
         'audioBase': '/audio/',
         'speakerNotesUrl': f"/report/notes/{ctx['loc_key']}-{ctx['month_key']}.md",
         'pdfHeader': f"{loc['full_name'].upper()}  /  {mo['month_name'].upper()} {mo['year']}",

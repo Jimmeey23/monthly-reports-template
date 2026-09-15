@@ -342,6 +342,151 @@ def insight_card(num, title, text):
     </div>'''
 
 
+# ─── Insight panes: AI-written where available, templates where not ──────────
+#
+# Every insight pane in the report goes through `insights_pane`. It does two
+# jobs in one place:
+#
+#   1. Registers what the pane is about — its rows and the context around them —
+#      in PANE_REQUESTS. `gen_report_v2.py --emit-panes` writes that registry
+#      out, the server sends each entry to the model, and the answers come back
+#      in AI_CONTEXT keyed the same way. Deriving the payload here means the
+#      model sees exactly the figures the reader sees.
+#
+#   2. Renders. With a generated answer the pane shows it; without one it falls
+#      back to the deterministic cards — labelled, so nobody mistakes rule-based
+#      copy for analysis.
+
+PANE_REQUESTS = []
+
+
+def pane_rows(pairs, fields, limit=12):
+    """Compact (name, values) pairs into rows the model can reason over."""
+    rows = []
+    for name, v in list(pairs)[:limit]:
+        row = {'name': name}
+        for f in fields:
+            if isinstance(v, dict) and f in v:
+                val = v[f]
+                row[f] = round(val, 2) if isinstance(val, float) else val
+        rows.append(row)
+    return rows
+
+
+def month_context(ctx):
+    """The month's headline figures, sent with every pane so the model can
+    cross-reference beyond the rows in front of it."""
+    s, sess = ctx['sales'], ctx['sessions']
+    leads, new = ctx['leads'], ctx['new']
+    lapsed, checkins = ctx['lapsed'], ctx['checkins']
+    baseline = ctx.get('baseline', {})
+    return {
+        'studio': ctx['loc']['short_name'],
+        'month': f"{ctx['mo']['month_name']} {ctx['mo']['year']}",
+        'net_sales': round(s.get('net', 0)),
+        'gross_sales': round(s.get('gross', 0)),
+        'discount': round(s.get('disc', 0)),
+        'discount_penetration_pct': round(ctx.get('disc_penetration', 0), 1),
+        'transactions': s.get('sales', 0),
+        'unique_buyers': s.get('members', 0),
+        'sessions': sess.get('sessions', 0),
+        'empty_sessions': sess.get('empty', 0),
+        'visits': sess.get('visits', 0),
+        'fill_pct': round(sess.get('fill', 0), 1),
+        'leads': leads.get('total', 0),
+        'trials': new.get('trials', 0),
+        'converted': new.get('converted', 0),
+        'conversion_pct': round(new.get('rate', 0), 1),
+        'expirations': lapsed.get('total', 0),
+        'renewed': lapsed.get('renewed', 0),
+        'lapsed': lapsed.get('lapsed', 0),
+        'churn_pct': round(lapsed.get('churn', 0), 1),
+        'late_cancels': checkins.get('late_cancel', 0),
+        'late_cancel_pct': round(ctx.get('lc_rate', 0), 1),
+        'mom': {
+            'net_sales': ctx.get('net_mom'), 'visits': ctx.get('visits_mom'),
+            'fill': ctx.get('fill_mom'), 'leads': ctx.get('leads_mom'),
+            'conversion': ctx.get('conv_mom'), 'churn': ctx.get('churn_mom'),
+        },
+        'baseline': {
+            'label': ctx.get('baseline_label'),
+            'net_sales': round(baseline.get('sales', {}).get('net', 0)),
+            'fill_pct': round(baseline.get('sessions', {}).get('fill', 0), 1),
+            'churn_pct': round(baseline.get('lapsed', {}).get('churn', 0), 1),
+        },
+    }
+
+
+def pane_payload(ctx, rows=None, note=None, extra=None):
+    payload = {'context': month_context(ctx), 'rows': rows or []}
+    if note:
+        payload['what_this_pane_covers'] = note
+    if extra:
+        payload.update(extra)
+    return payload
+
+
+
+def pane_key(ctx, key):
+    return f"{ctx['loc_key']}|{ctx['month_key']}|pane:{key}"
+
+
+def register_pane(ctx, key, title, payload):
+    PANE_REQUESTS.append({
+        'key': pane_key(ctx, key),
+        'pane': key,
+        'loc_key': ctx['loc_key'],
+        'month_key': ctx['month_key'],
+        'loc_name': ctx['loc']['short_name'],
+        'month_name': f"{ctx['mo']['month_name']} {ctx['mo']['year']}",
+        'title': title,
+        'payload': payload,
+    })
+
+
+def _ai_pane_cards(result):
+    """Render generated pane cards onto the report's own insight card."""
+    cards = (result or {}).get('cards') or []
+    out = []
+    for i, card in enumerate(cards, 1):
+        headline = html.escape(str(card.get('headline') or '').strip())
+        meaning = html.escape(str(card.get('meaning') or '').strip())
+        evidence = html.escape(str(card.get('evidence') or '').strip())
+        action = html.escape(str(card.get('action') or '').strip())
+        if not headline:
+            continue
+        body = meaning
+        if evidence:
+            body += f' <span class="insight-evidence">{evidence}</span>'
+        if action:
+            body += f'<br><strong>Do next:</strong> {action}'
+        out.append(insight_card(f'{i:02d}', headline, body))
+    return '\n'.join(out)
+
+
+def insights_pane(ctx, key, title, fallback_cards, payload=None, classes=''):
+    """One insight pane: the model's reading of these rows, or the template."""
+    if payload is not None:
+        register_pane(ctx, key, title, payload)
+
+    result = AI_CONTEXT.get(pane_key(ctx, key)) or {}
+    cards = _ai_pane_cards(result)
+    if cards:
+        by = (result.get('generated_by') or {}).get('model', '')
+        note = f'<span class="pane-source is-ai" title="{html.escape(str(by))}">AI analysis</span>'
+    else:
+        cards = fallback_cards
+        note = ('<span class="pane-source is-template" '
+                'title="Written from thresholds in the report generator, not by a model">'
+                'Rule-based summary</span>')
+
+    return f'''      <div class="insights-pane{(" " + classes) if classes else ""}">
+        <div class="pane-title">{title}{note}</div>
+
+{cards}
+      </div>'''
+
+
 def classify_format(class_name):
     """Every class is one of 3 formats: PowerCycle, Strength Lab, or Barre."""
     name = (class_name or '').lower()
@@ -421,14 +566,19 @@ METRIC_DEFS = {
                  'Retained = converted members with a visit in the retention window'),
     'retention rate': ('Share of new clients still attending at period end.',
                        'Retention % = Retained &divide; New clients &times; 100'),
-    'renewal rate': ('Share of expiring memberships that were renewed.',
+    'renewal rate': ('Share of expiring memberships that were renewed. The denominator is every '
+                     'revenue-bearing membership that reached its end date in the month.',
                      'Renewal % = Renewed &divide; Total expirations &times; 100'),
-    'churn': ('Share of expiring memberships that lapsed rather than renewed.',
+    'churn': ('Share of expiring memberships that lapsed rather than renewed. '
+              'Churn and renewal do not sum to 100: the rest are frozen, or not yet expired.',
               'Churn % = Lapsed &divide; Total expirations &times; 100'),
-    'churn %': ('Share of expiring memberships that lapsed rather than renewed.',
+    'churn %': ('Share of expiring memberships that lapsed rather than renewed. '
+                'Churn and renewal do not sum to 100: the rest are frozen, or not yet expired.',
                 'Churn % = Lapsed &divide; Total expirations &times; 100'),
-    'lapsed': ('Memberships that expired without being renewed.',
-               'Lapsed = Total expirations &minus; Renewed &minus; Frozen'),
+    'lapsed': ('Memberships whose end date has passed without a renewal.',
+               'Lapsed = end date passed AND not renewed'),
+    'pending': ('Memberships in the cohort whose end date has not arrived yet, so they have no outcome.',
+                'Pending = end date still in the future'),
     'revenue per visit': ('What each attendance is worth in revenue terms.',
                           'Revenue per visit = Net revenue &divide; Visits'),
     'share': ('This row\u2019s slice of the column total.',
@@ -1591,11 +1741,7 @@ def section_02(ctx):
     "Every metric the sales ledger holds, per category &mdash; revenue, discount, transactions, units, AOV, ATV and units per transaction. Click any category row to open the products that make it up.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Category-level insights</div>
-
-{cat_insights}
-      </div>
+      {insights_pane(ctx, "revenue-categories", "Category-level insights", cat_insights, pane_payload(ctx, pane_rows(cats, ['net','gross','disc','sales','members']), 'Revenue by product category this month.'))}
 
       <div class="data-pane">
 {cat_table}
@@ -1608,11 +1754,7 @@ def section_02(ctx):
 {build_product_rank_board(ctx, prods, total_net, month_name)}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Product-level insights</div>
-
-{build_product_insights(ctx, top_prods, total_net)}
-      </div>
+      {insights_pane(ctx, "revenue-products", "Product-level insights", build_product_insights(ctx, top_prods, total_net), pane_payload(ctx, pane_rows(top_prods, ['net','gross','disc','sales','members']), 'The best-selling products by net revenue.'))}
 
       <div class="data-pane">
 {build_product_table(ctx, top_prods, total_net, month_name)}
@@ -1623,11 +1765,7 @@ def section_02(ctx):
     "Sales attributed to individual sellers (front desk / sales staff). The unattributed row represents online and self-service transactions with no seller on the ticket.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Seller-level insights</div>
-
-{build_seller_insights(ctx, sellers, s['gross'])}
-      </div>
+      {insights_pane(ctx, "revenue-sellers", "Seller-level insights", build_seller_insights(ctx, sellers, s['gross']), pane_payload(ctx, pane_rows(sellers, ['gross','net','disc','sales','members']), 'Sales by the person who closed them.'))}
 
       <div class="data-pane">
 {seller_table}
@@ -1638,11 +1776,7 @@ def section_02(ctx):
     "The payment method breakdown shows the split between in-studio (custom / cash), online (Stripe), and split payments.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Payment-level insights</div>
-
-{build_payment_insights(ctx, payments, s['gross'])}
-      </div>
+      {insights_pane(ctx, "revenue-payments", "Payment-level insights", build_payment_insights(ctx, payments, s['gross']), pane_payload(ctx, pane_rows(payments, ['gross','sales']), 'Gross revenue split by payment method.'))}
 
       <div class="data-pane">
 {payment_table}
@@ -2165,11 +2299,7 @@ def section_03(ctx):
 {source_rank}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Funnel-level insights</div>
-
-{funnel_insights}
-      </div>
+      {insights_pane(ctx, "funnel-sources", "Funnel-level insights", funnel_insights, pane_payload(ctx, pane_rows(sources_sorted, ['total','trials','converted','retained']), 'Leads by acquisition source, with what each source converted.'))}
 
       <div class="data-pane">
 {source_table}
@@ -2341,11 +2471,7 @@ def build_trial_type_section(ctx, trial_types, total_trials):
     "The trial type breakdown shows the acquisition channel for each first visit / trial.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Trial type insights</div>
-
-{chr(10).join(insights)}
-      </div>
+      {insights_pane(ctx, "funnel-trial-types", "Trial type insights", chr(10).join(insights), pane_payload(ctx, [{'name': n.replace('New - ', ''), 'trials': c, 'share_pct': round(c / total_trials * 100, 1) if total_trials else 0} for n, c in types_sorted], 'How first visits were acquired, by trial type.'))}
 
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Trials by Type &middot; {ctx['mo']['month_name']} {ctx['mo']['year']}</div>
@@ -2460,11 +2586,7 @@ def section_04(ctx):
     f"At the format level, the breakdown shows sessions, visits, capacity, revenue, and fill rate for each of the 3 formats: Barre, PowerCycle, and Strength Lab.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Format-level insights</div>
-
-{format_insights}
-      </div>
+      {insights_pane(ctx, "sessions-formats", "Format-level insights", format_insights, pane_payload(ctx, pane_rows(formats_sorted, ['sessions','visits','capacity','revenue','empty']), 'Delivery by studio format: Barre, PowerCycle, Strength Lab.'))}
 
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Sessions by Format &middot; {month_name} {ctx['mo']['year']}</div>
@@ -2491,11 +2613,7 @@ def section_04(ctx):
 {slot_board}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Class-level insights</div>
-
-{class_insights}
-      </div>
+      {insights_pane(ctx, "sessions-classes", "Class-level insights", class_insights, pane_payload(ctx, pane_rows(classes_sorted, ['sessions','visits','capacity','revenue','empty']), 'Every class format with its fill and empty sessions.', {'recurring_slots': _slot_rows(get_sessions_by_slot(ctx['loc_key'], ctx['month_key']), False)[:12]}))}
 
       <div class="data-pane">
 {class_table}
@@ -2510,11 +2628,7 @@ def section_04(ctx):
 {trainer_rank}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Trainer-level insights</div>
-
-{trainer_insights}
-      </div>
+      {insights_pane(ctx, "sessions-trainers", "Trainer-level insights", trainer_insights, pane_payload(ctx, pane_rows(trainers_sorted, ['sessions','visits','capacity','revenue','empty','distinct_classes','distinct_days']), 'Delivery and utilisation by coach.'))}
 
       <div class="data-pane">
 {trainer_table}
@@ -3650,11 +3764,7 @@ def build_heatmap_section(ctx):
 {subsection("Session heatmap &mdash; day &times; time slot demand intensity",
     "The heatmap below shows visit volume by day of week and time slot, with the leading format and trainer for each slot. Hot cells indicate peak demand; cold cells indicate under-utilised slots. Use this to optimise the weekly schedule.")}
 
-    <div class="insights-pane full-width-block">
-      <div class="pane-title">Heatmap insights</div>
-
-{chr(10).join(insights)}
-    </div>
+{insights_pane(ctx, "sessions-heatmap", "Heatmap insights", chr(10).join(insights), pane_payload(ctx, [{'name': f'{d} {t}', 'visits': v} for (d, t), v in sorted(day_time_data.items(), key=lambda kv: -kv[1])[:14]], 'Demand by day and time slot.'), 'full-width-block')}
 
     <div class="data-pane full-width-block hm-block" data-heatmap-block>
       <div class="panel-header">
@@ -3779,19 +3889,15 @@ def section_05(ctx):
 {callout("<strong>Exclusions applied in this section:</strong> zero-value memberships (comps, staff and "
     "corrections) and every non-renewable product &mdash; intro offers and intro packs, &lsquo;2 for 1&rsquo; SKUs, "
     "single-class and trial products, virtual private, happy hour private and other one-off private formats. "
-    "<strong>Lapsed</strong> means the membership shows as lapsed <em>and</em> is at least 60 days past its end date; "
-    "anything ended more recently is counted as <strong>pending</strong>, still inside the renewal window. "
+    "<strong>Lapsed</strong> means the end date has passed and the membership was not renewed &mdash; there is no "
+    "waiting period after expiry. Only memberships whose end date is still ahead are counted as <strong>pending</strong>. "
     "What remains is the revenue-bearing book where a lapse is real lost revenue.")}
 
 {subsection("Expiration status &mdash; the headline split",
     f"Of {lapsed['total']} memberships that reached end-of-life, {pct(lapsed['renewal_rate'])} renewed, {pct(lapsed['churn'])} lapsed. The renewal rate is {'healthy' if lapsed['renewal_rate'] > 50 else 'below benchmark'}; the lapse count of {lapsed['lapsed']} is the actionable book.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Status-level insights</div>
-
-{status_insights}
-      </div>
+      {insights_pane(ctx, "retention-status", "Status-level insights", status_insights, pane_payload(ctx, [{'name': k, 'members': ctx['lapsed'].get(k2, 0)} for k, k2 in (('Renewed','renewed'),('Lapsed','lapsed'),('Frozen','frozen'),('Pending','pending'))], 'What happened to every membership that reached its end date.'))}
 
       <div class="data-pane">
 {status_table}
@@ -3800,7 +3906,7 @@ def section_05(ctx):
 
 {subsection("Renewal cohort by month &mdash; who was up, who renewed, who lapsed",
     "Every month's expiration cohort side by side: memberships reaching their end date, how many renewed, "
-    "how many lapsed, and how many are still inside the 60-day renewal window.")}
+    "how many lapsed, and how many have an end date still ahead of them.")}
 
     <div class="full-width-block">
 {renewal_cohort}
@@ -3820,11 +3926,7 @@ def section_05(ctx):
 {prod_rank}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Product-level insights</div>
-
-{prod_insights}
-      </div>
+      {insights_pane(ctx, "retention-products", "Product-level insights", prod_insights, pane_payload(ctx, pane_rows(prod_sorted, ['total','renewed','lapsed','frozen','pending','value']), 'Renewal and lapse by membership SKU.'))}
 
       <div class="data-pane">
 {prod_table}
@@ -3896,8 +3998,8 @@ def build_renewal_cohort_table(ctx):
     return data_panel(
         'Renewal cohort by month',
         'Every membership that reached its end date in the month, and what happened to it. '
-        'A membership counts as lapsed only once it is 60+ days past its end date and still '
-        'shows as lapsed &mdash; anything newer is reported as pending, still inside the renewal window.',
+        'A membership counts as lapsed as soon as its end date has passed without a renewal; '
+        'only memberships whose end date is still ahead are reported as pending.',
         table)
 
 
@@ -4027,20 +4129,35 @@ def build_lapsed_status_table(ctx):
     lapsed = ctx['lapsed']
     total = lapsed['total']
 
+    # Every outcome is listed, so the rows add up to the total. Pending is the
+    # part of the cohort whose end date has not arrived yet; leaving it out is
+    # what used to make the column fall short of "All expirations".
     statuses = [
         ("Renewed", lapsed['renewed'], 'good', 'Expired and bought again.'),
         ("Lapsed", lapsed['lapsed'], 'bad', 'Expired with no follow-on purchase.'),
         ("Frozen", lapsed['frozen'], 'warn', 'Paused rather than ended &mdash; still recoverable.'),
+        ("Pending", lapsed.get('pending', 0), 'muted', 'End date still ahead &mdash; no outcome yet.'),
     ]
 
     rows = []
+    accounted = 0
     for name, count, tone, note in statuses:
+        accounted += count
         share = (count / total * 100) if total else 0
         rows.append(f'''            <tr>
               <td class="metric-name"><span class="status-dot is-{tone}" aria-hidden="true"></span>
                 <strong>{name}</strong><small class="cell-note">{note}</small></td>
               <td class="num">{fmt_int(count)}</td>
               <td class="num">{share_cell(share, f'var(--{tone})')}</td>
+            </tr>''')
+    # Anything the statuses above do not cover would break the reconciliation,
+    # so it is shown rather than silently dropped.
+    if total - accounted:
+        rows.append(f'''            <tr>
+              <td class="metric-name"><span class="status-dot is-muted" aria-hidden="true"></span>
+                <strong>Other</strong><small class="cell-note">Status not recognised in the export.</small></td>
+              <td class="num">{fmt_int(total - accounted)}</td>
+              <td class="num">{share_cell((total - accounted) / total * 100 if total else 0, 'var(--text-muted)')}</td>
             </tr>''')
     rows.append(f'''            <tr class="totals-row">
               <td class="metric-name">All expirations</td>
@@ -4125,6 +4242,7 @@ def build_lapsed_product_table(ctx, prod_sorted):
     total_renewed = sum(v['renewed'] for _, v in prod_sorted)
     total_lapsed = sum(v['lapsed'] for _, v in prod_sorted)
     total_frozen = sum(v['frozen'] for _, v in prod_sorted)
+    total_pending = sum(v.get('pending', 0) for _, v in prod_sorted)
 
     for name, v in prod_sorted:
         churn = (v['lapsed'] / v['total'] * 100) if v['total'] else 0
@@ -4138,6 +4256,7 @@ def build_lapsed_product_table(ctx, prod_sorted):
               <td class="num">{fmt_int(v['lapsed'])}</td>
               <td class="num{churn_tone}">{share_cell(churn, 'var(--bad)')}</td>
               <td class="num">{fmt_int(v['frozen'])}</td>
+              <td class="num">{fmt_int(v.get('pending', 0))}</td>
               <td class="num">{share_cell(v['total'] / total_total * 100 if total_total else 0, 'var(--accent-2)')}</td>
             </tr>''')
 
@@ -4149,12 +4268,13 @@ def build_lapsed_product_table(ctx, prod_sorted):
               <td class="num">{fmt_int(total_lapsed)}</td>
               <td class="num">{pct(total_lapsed / total_total * 100) if total_total else 'n/a'}</td>
               <td class="num">{fmt_int(total_frozen)}</td>
+              <td class="num">{fmt_int(total_pending)}</td>
               <td class="num">100.0%</td>
             </tr>''')
 
     table = data_table(
         ['Product', 'Expirations', 'Renewed', 'Renewal %', 'Lapsed', 'Churn %',
-         'Frozen', 'Share of expirations'],
+         'Frozen', 'Pending', 'Share of expirations'],
         rows, classes='lapsed-table')
     return data_panel(
         'Expirations by product',
@@ -4223,11 +4343,7 @@ def build_cumulative_section(ctx, cumulative):
 {subsection("Cumulative lapsed trend &mdash; the growing reactivation pool",
     "The cumulative lapsed member count tracks the overall pool of un-renewed accounts over time. This detailed breakdown evaluates net additions, win-back reactivations, and overall LTV recovery opportunity.")}
 
-    <div class="insights-pane full-width-block">
-      <div class="pane-title">Cumulative Trend Insights</div>
-
-{chr(10).join(insights)}
-    </div>
+{insights_pane(ctx, "retention-cumulative", "Cumulative Trend Insights", chr(10).join(insights), pane_payload(ctx, [{'name': datetime_month_name(m), 'cumulative_lapsed': cumulative[m]} for m in sorted(cumulative)[-12:]], 'The growing pool of un-reactivated lapsed members.'), 'full-width-block')}
 
       <div class="data-pane full-width-block">
         <div class="pane-title" style="padding: 16px 16px 8px;">Cumulative Lapsed Members Trend &amp; LTV Sizing</div>
@@ -4348,11 +4464,7 @@ def section_06(ctx):
     "The scheduling decisions below are anchored to the Session Intelligence table. Every addition is justified by excess demand (fill &gt; 60%); every discontinuation by structural under-fill (fill &lt; 25%) over a sustained period.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Scheduling recommendations</div>
-
-{sched_insights}
-      </div>
+      {insights_pane(ctx, "actions-scheduling", "Scheduling recommendations", sched_insights, pane_payload(ctx, _slot_rows(get_sessions_by_slot(ctx['loc_key'], ctx['month_key']), False)[:14], 'Which recurring slots to add, cut or move.'))}
 
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Schedule Action Items &middot; {month_name} {ctx['mo']['year']}</div>
@@ -4364,11 +4476,7 @@ def section_06(ctx):
     "Discount efficiency and penetration are the most controllable inputs. The recommendations below target a hard cap and SKU-level review.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Discount recommendations</div>
-
-{discount_insights}
-      </div>
+      {insights_pane(ctx, "actions-discount", "Discount recommendations", discount_insights, pane_payload(ctx, [], 'Discount discipline: penetration, efficiency and the margin at stake.'))}
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Discount Action Items &middot; {month_name} {ctx['mo']['year']}</div>
         <div class="table-wrap">
@@ -4391,11 +4499,7 @@ def section_06(ctx):
     "The funnel recommendations target both lead volume (top of funnel) and conversion quality (mid-funnel). Lead pipeline replenishment is the most time-sensitive workstream.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Funnel recommendations</div>
-
-{funnel_recs}
-      </div>
+      {insights_pane(ctx, "actions-funnel", "Funnel recommendations", funnel_recs, pane_payload(ctx, pane_rows(get_leads_source(ctx['loc_key'], ctx['month_key']).items(), ['total','trials','converted','retained']), 'Pipeline volume and conversion quality.'))}
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Funnel Action Items &middot; {month_name} {ctx['mo']['year']}</div>
         <div class="table-wrap">
@@ -4418,11 +4522,7 @@ def section_06(ctx):
     "The retention recommendations target the reactivation of lapsed members and the prevention of future lapses through proactive CRM.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Retention recommendations</div>
-
-{retention_recs}
-      </div>
+      {insights_pane(ctx, "actions-retention", "Retention recommendations", retention_recs, pane_payload(ctx, [{'name': m['name'], 'product': m['product'], 'status': m['status'], 'value': m['paid'], 'days_since_visit': m['days_since_visit']} for m in get_lapsed_members(ctx['loc_key'], ctx['month_key'])[:14]], 'Reactivating lapsed members and preventing the next lapse.'))}
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Retention Action Items &middot; {month_name} {ctx['mo']['year']}</div>
         <div class="table-wrap">
@@ -4445,11 +4545,7 @@ def section_06(ctx):
     "The operations recommendations target the late-cancel leak &mdash; a near-zero-risk policy intervention that recovers revenue and improves scheduling discipline.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Operations recommendations</div>
-
-{ops_recs}
-      </div>
+      {insights_pane(ctx, "actions-operations", "Operations recommendations", ops_recs, pane_payload(ctx, [], 'Late-cancel policy and check-in discipline.'))}
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Operations Action Items &middot; {month_name} {ctx['mo']['year']}</div>
         <div class="table-wrap">
@@ -5122,11 +5218,7 @@ def section_07(ctx):
     f"The forecast below assumes (a) no major exogenous shock, (b) historical seasonality, and (c) for the upside case, the five decisions beginning to deliver from {next_name} W3.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Forecast insights</div>
-
-{forecast_insights}
-      </div>
+      {insights_pane(ctx, "outlook-forecast", "Forecast insights", forecast_insights, pane_payload(ctx, [], 'Next month base case versus upside case.', {'forecast': {'base_low': round(base_low), 'base_high': round(base_high), 'upside_low': round(upside_low), 'upside_high': round(upside_high), 'current_net': round(net_base)}}))}
 
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">{next_name} {ctx['mo']['next_year']} Forecast &middot; Base vs Upside</div>
@@ -5153,11 +5245,7 @@ def section_07(ctx):
     "These are the leading indicators that, if they deteriorate beyond the thresholds below, should trigger immediate management intervention.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Red flag insights</div>
-
-{red_flags}
-      </div>
+      {insights_pane(ctx, "outlook-red-flags", "Red flag insights", red_flags, pane_payload(ctx, [], 'The leading indicators to watch weekly and their thresholds.'))}
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Red Flag Thresholds &middot; {next_name} {ctx['mo']['next_year']}</div>
         <div class="table-wrap">
@@ -5181,11 +5269,7 @@ def section_07(ctx):
     f"Once all five decisions are fully delivered (estimated 60&ndash;90 days), the monthly run-rate could reach a structural step-up from the {ctx['baseline_label']} baseline.")}
 
     <div class="split-grid">
-      <div class="insights-pane">
-        <div class="pane-title">Steady-state insights</div>
-
-{steady_state}
-      </div>
+      {insights_pane(ctx, "outlook-steady-state", "Steady-state insights", steady_state, pane_payload(ctx, [], 'Where the run-rate settles once the decisions are delivered.'))}
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Steady-State Target &middot; {steady_state_end}</div>
         <div class="table-wrap">

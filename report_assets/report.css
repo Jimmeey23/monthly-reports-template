@@ -3711,6 +3711,16 @@ body.sp-report [data-demand-heatmap].has-selection tbody tr:not(.is-context-row)
 .heat-cell.is-dimmed, th.is-dimmed { opacity: .28; }
 .heat-cell.is-muted { opacity: .25; filter: saturate(.4); }
 .heat-cell.is-dimmed:hover, .heat-cell.is-muted:hover { opacity: .75; }
+
+/* Back-compat: reports generated before the heatmap controls were scoped carry
+   id="demand-heatmap" / .data-pane instead of the data-* hooks. */
+body.sp-report #sessions .data-pane:has(#demand-heatmap) { overflow: hidden; border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-lg); }
+body.sp-report #sessions .data-pane:has(#demand-heatmap) .panel-header { padding: 21px 23px; background: linear-gradient(110deg, #17243a, #263958); color: #fff; }
+body.sp-report #sessions .data-pane:has(#demand-heatmap) .panel-title { color: #fff; font-size: 19px; font-weight: 820; }
+body.sp-report #sessions .data-pane:has(#demand-heatmap) .panel-subtitle { color: rgba(255,255,255,.68); }
+body.sp-report #demand-heatmap tr.is-context-row td:not(.is-selected),
+body.sp-report #demand-heatmap th.is-context-column { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--primary) 34%, transparent); }
+body.sp-report #demand-heatmap.has-selection tbody tr:not(.is-context-row):not(.hm-totals) .heat-cell { opacity: .42; }
 @media(max-width:760px){ .hm-interactive-bar { align-items: flex-start; flex-direction: column; } .hm-selection { min-width: 0; text-align: left; } }
 @media(max-width:760px){ body.sp-report .section-hero .section-header{padding-right:0;padding-top:100px} body.sp-report .section-hero .section-header-right{top:18px;right:18px;align-items:flex-end;width:auto} }
 
@@ -5222,6 +5232,7 @@ td.num.is-warn { color: var(--warn); }
 .status-dot.is-good { background: var(--good); }
 .status-dot.is-bad { background: var(--bad); }
 .status-dot.is-warn { background: var(--warn); }
+.status-dot.is-muted { background: var(--text-subtle); }
 
 /* ─── Head-to-head ────────────────────────────────────────────────────── */
 .h2h-cards {
@@ -5657,3 +5668,23 @@ tr.is-current-row td { background: color-mix(in srgb, var(--primary) 9%, transpa
 .pattern-table td.is-good { color: var(--good); font-weight: 650; }
 .pattern-table td.is-bad { color: var(--bad); font-weight: 650; }
 .warning-table td:last-child { color: var(--text-muted); font-size: 12px; }
+
+/* ───────── Insight pane provenance ─────────
+   A reader must be able to tell analysis from rule-based copy at a glance. */
+.pane-source {
+  float: right;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.pane-source.is-ai { background: var(--primary-soft); color: var(--primary); }
+.pane-source.is-template { background: var(--bg-inset); color: var(--text-subtle); }
+.insight-evidence {
+  color: var(--text-subtle);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+@media print { .pane-source { display: none; } }

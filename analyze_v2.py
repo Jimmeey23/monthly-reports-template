@@ -834,11 +834,6 @@ LAPSED_EXCLUDE_PATTERNS = [
     'complimentary', 'comp ', 'staff', 'newcomer', 'open barre',
 ]
 
-# A membership only counts as lapsed once it is 60+ days past its end date —
-# before that the member is still inside the normal renewal window.
-LAPSED_MIN_DAYS_PAST_END = 60
-
-
 def is_excluded_lapsed_membership(product_name, amount_paid):
     """True if this membership should be excluded from lapsed metrics:
     zero-value memberships (comps/freebies) or non-renewable products."""
@@ -876,10 +871,10 @@ def analyze_lapsed():
     lapsed, and the member-level rows behind every number.
 
     Excludes zero-value rows and non-renewable products (see
-    LAPSED_EXCLUDE_PATTERNS). A membership counts as lapsed only when its
-    status says Lapsed *and* it is at least LAPSED_MIN_DAYS_PAST_END days past
-    its end date; anything newer is still inside the renewal window and is
-    reported as pending instead.
+    LAPSED_EXCLUDE_PATTERNS). A membership counts as lapsed as soon as its end
+    date has passed and it has not been renewed. Only a membership whose end
+    date is still in the future is reported as pending — there is no waiting
+    period after expiry.
     """
     data = {lk: {} for lk in LOCATIONS}
     by_product = {lk: {m: defaultdict(lambda: {'total': 0, 'renewed': 0, 'lapsed': 0,
@@ -909,10 +904,23 @@ def analyze_lapsed():
 
             raw_status = (row.get('Status', '') or '').strip()
             past = days_past_end(ed, today)
-            status = raw_status
-            if raw_status == 'Lapsed' and past is not None and past < LAPSED_MIN_DAYS_PAST_END:
-                # Ended recently — still inside the renewal window.
+
+            # The export carries more statuses than Renewed/Lapsed/Frozen:
+            # 'Active' and 'New' are memberships still running, and 'Not
+            # Activated' ones that never started. Left unmapped they counted
+            # into the denominator but into no bucket, which quietly diluted
+            # both the renewal and the churn rate. The end date decides:
+            # passed without a renewal is lapsed, still ahead is pending.
+            if raw_status == 'Not Activated':
+                continue
+            if raw_status == 'Renewed':
+                status = 'Renewed'
+            elif raw_status == 'Frozen':
+                status = 'Frozen'
+            elif past is not None and past < 0:
                 status = 'Pending'
+            else:
+                status = 'Lapsed'
 
             d = data[loc_key].setdefault(
                 month, {'total': 0, 'renewed': 0, 'lapsed': 0, 'frozen': 0,

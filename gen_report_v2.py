@@ -18,6 +18,15 @@ MONTH_KEY_ARG = sys.argv[3] if len(sys.argv) > 3 else None
 OUTPUT_HTML = sys.argv[4] if len(sys.argv) > 4 else None
 AI_CONTEXT_JSON = sys.argv[5] if len(sys.argv) > 5 else None
 
+# `--emit-panes <file>` renders the report to nowhere and writes out what each
+# insight pane is about, so the caller can have those panes written by a model
+# and feed the answers back in as the AI context on a second pass.
+EMIT_PANES = None
+if '--emit-panes' in sys.argv:
+    i = sys.argv.index('--emit-panes')
+    EMIT_PANES = sys.argv[i + 1] if len(sys.argv) > i + 1 else 'pane_requests.json'
+    del sys.argv[i:i + 2]
+
 import sections_v2
 import charts_v2
 import report_shell
@@ -1330,6 +1339,19 @@ def main():
         filename = f"{loc['short_name'].replace(' ', '_').replace(',', '')}_Performance_Report_{mo['month_name']}_{mo['year']}.html"
     else:
         filename = f"Performance_Report_Bundle_{combo_count}_reports.html"
+
+    if EMIT_PANES:
+        # Deduplicate: a bundle renders the same studio-month once per combo.
+        seen, requests = set(), []
+        for req in sections_v2.PANE_REQUESTS:
+            if req['key'] in seen:
+                continue
+            seen.add(req['key'])
+            requests.append(req)
+        with open(EMIT_PANES, 'w') as f:
+            json.dump(requests, f, ensure_ascii=False)
+        print(f"  → {EMIT_PANES} ({len(requests)} insight panes)")
+        return
 
     with open(filename, 'w') as f:
         f.write(html)

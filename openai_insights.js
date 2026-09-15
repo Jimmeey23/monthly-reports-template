@@ -803,4 +803,92 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
 // own copy, which had drifted and was paying for narratives nothing rendered.
 const AI_SECTIONS = Object.keys(SECTION_LABELS);
 
-module.exports = { generateInsights, SECTION_LABELS, AI_SECTIONS };
+
+/* ─── Pane insights ───────────────────────────────────────────────────────
+   The section-level narrative above answers "how did the month go". A pane
+   answers a narrower question — these class formats, these lapsed SKUs, this
+   payment mix — and used to be written by hardcoded f-strings in the report
+   generator, which is why every second row read the same. Each pane ships the
+   rows the reader is looking at plus the month's headline figures, so the
+   model can cross-reference rather than restate.
+
+   Cached on the payload, so re-running a month whose figures have not moved
+   costs nothing; a pane is skipped, not faked, when no provider answers. */
+
+const PANE_PROMPT_VERSION = 'p1';
+
+function panePrompt(request) {
+  return `You are a studio performance analyst writing the "${request.title}" panel of a board report for ${request.loc_name}, ${request.month_name}.
+
+Write 3-5 insight cards about THESE ROWS specifically. Return JSON:
+{"cards":[{"headline":"...","meaning":"...","evidence":"...","action":"..."}]}
+
+Field rules:
+- headline: one sentence, the finding itself, with the number in it. Never a label like "Strong performance".
+- meaning: 1-2 sentences on the mechanism — WHY this row looks like this, and what it implies. Cross-reference the month context (fill rate, churn, conversion, discount, MoM moves) where it genuinely explains the row.
+- evidence: the figures the claim rests on, comma separated. Numbers only, no prose.
+- action: one specific, assignable next step. Not "monitor this" — say what to change, where.
+
+Hard rules:
+- Every card must be about a DIFFERENT row or a different relationship between rows. Never repeat a sentence pattern across cards.
+- No two cards may share an action. If two rows need the same action, say so once and use the second card for something else.
+- Rank matters: lead with the row that carries the most money or the most risk, not the first in the list.
+- Quantify. "Down sharply" is not analysis; "down 31% to ₹2.4L, the third consecutive fall" is.
+- If a row is small or an outlier, say so rather than treating it as a trend.
+- Indian numbering (₹1.2L, ₹45K). No markdown, no bullet characters, plain sentences.
+- Write for a studio owner who knows the business. No hedging, no filler, no restating the column headers.`;
+}
+
+async function generatePaneInsights(request, options = {}) {
+  const key = cacheKey([PANE_PROMPT_VERSION, request.key, JSON.stringify(request.payload)]);
+  const cached = readCache(key);
+  if (cached) return cached;
+  if (options.cacheOnly) return null;
+
+  const body = {
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: panePrompt(request) },
+      { role: 'user', content:
+        `Pane: ${request.title}. ${request.payload.what_this_pane_covers || ''}\n\n` +
+        `${JSON.stringify(request.payload)}` },
+    ],
+    temperature: 0.6,
+    presence_penalty: 0.6,
+    frequency_penalty: 0.5,
+    max_tokens: 900,
+  };
+
+  let parsed;
+  let provider;
+  let model;
+  try {
+    ({ value: parsed, provider, model } = await chatCompletion({
+      body,
+      fast: USE_FAST_MODEL,
+      parse: parseJsonContent,
+      onFallback: ({ from, to, reason }) =>
+        console.warn(`pane ${request.pane}: ${from} unavailable (${reason}) \u2192 ${to}`),
+    }));
+  } catch (err) {
+    console.warn(`pane ${request.pane}: no narrative (${err.message})`);
+    return null;
+  }
+
+  const cards = (Array.isArray(parsed.cards) ? parsed.cards : [])
+    .filter((c) => c && (c.headline || c.meaning))
+    .slice(0, 5)
+    .map((c) => ({
+      headline: String(c.headline || '').trim(),
+      meaning: String(c.meaning || '').trim(),
+      evidence: String(c.evidence || '').trim(),
+      action: String(c.action || '').trim(),
+    }));
+  if (!cards.length) return null;
+
+  const result = { cards, generated_by: { provider, model } };
+  writeCache(key, result);
+  return result;
+}
+
+module.exports = { generateInsights, generatePaneInsights, SECTION_LABELS, AI_SECTIONS };

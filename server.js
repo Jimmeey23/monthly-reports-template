@@ -23,7 +23,7 @@ if (fs.existsSync(path.join(__dirname, '.env'))) {
   }
 }
 
-const { generateInsights, AI_SECTIONS } = require('./openai_insights');
+const { generateInsights, generatePaneInsights, AI_SECTIONS } = require('./openai_insights');
 const { renderReportToPdf } = require('./pdf_export');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -989,6 +989,24 @@ app.post('/generate', async (req, res) => {
       }
     }
 
+    /* Pane narratives: a first pass asks the generator what each insight pane
+       is about, those payloads go to the model, and the answers ride back in
+       the same AI context the section slots use. Without this the panes fall
+       back to their rule-based copy, which is what made older reports read
+       like a template. */
+    const paneRequests = await collectPaneRequests(
+      session, selectedLocs, selectedMonths, outputPath);
+    for (const request of paneRequests) {
+      aiTasks.push(async () => {
+        try {
+          const res = await generatePaneInsights(request, { cacheOnly: noAi });
+          if (res) aiContext[request.key] = res;
+        } catch (err) {
+          console.error('Failed to generate pane ' + request.pane, err.message);
+        }
+      });
+    }
+
     // Keep generation below provider TPM limits while still doing a small amount
     // of work in parallel. A failed optional narrative must not block the report.
     // Cache-only lookups are local file reads, so the throttle that exists for
@@ -1186,6 +1204,34 @@ app.get('/health', (req, res) => res.json({ status: 'ok', uploadsDir: UPLOADS_DI
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
+
+
+/* Ask the report generator what its insight panes are about. It renders the
+   whole report to derive them, then writes the payloads instead of the HTML,
+   so the model always sees exactly the rows the reader will see. */
+function collectPaneRequests(session, locs, months, outputPath) {
+  return new Promise((resolve) => {
+    const panePath = path.join(session.dir, 'panes_' + Date.now() + '.json');
+    runPythonScript(
+      GEN_REPORT_SCRIPT,
+      [session.analysisPath, locs.join(','), months.join(','), outputPath,
+       '', '--emit-panes', panePath],
+      (err, stdout, stderr) => {
+        if (err) {
+          console.warn('Could not collect insight panes:', (stderr || err.message).slice(0, 300));
+          return resolve([]);
+        }
+        try {
+          resolve(JSON.parse(fs.readFileSync(panePath, 'utf8')));
+        } catch (readErr) {
+          console.warn('Could not read insight panes:', readErr.message);
+          resolve([]);
+        } finally {
+          fs.unlink(panePath, () => {});
+        }
+      });
+  });
+}
 
 const presenterRooms = {};
 

@@ -360,7 +360,7 @@ def insight_card(num, title, text):
 PANE_REQUESTS = []
 
 
-def pane_rows(pairs, fields, limit=12):
+def pane_rows(pairs, fields, limit=8):
     """Compact (name, values) pairs into rows the model can reason over."""
     rows = []
     for name, v in list(pairs)[:limit]:
@@ -415,6 +415,24 @@ def month_context(ctx):
             'churn_pct': round(baseline.get('lapsed', {}).get('churn', 0), 1),
         },
     }
+
+
+def slot_payload_rows(ctx, limit=10):
+    """Recurring slots trimmed to the fields an insight can actually use."""
+    rows = _slot_rows(get_sessions_by_slot(ctx['loc_key'], ctx['month_key']), False)
+    rows.sort(key=lambda r: -r['visits'])
+    return [{
+        'name': f"{r['cls']} · {r['day']} {r['time']}",
+        'format': r['fmt'],
+        'sessions': r['sessions'],
+        'empty': r['empty'],
+        'visits': r['visits'],
+        'capacity': r['capacity'],
+        'fill_pct': round(r['fill'], 1),
+        'class_avg': round(r['avg_excl'], 1),
+        'late_cancels': r['late'],
+        'revenue': round(r['revenue']),
+    } for r in rows[:limit]]
 
 
 def pane_payload(ctx, rows=None, note=None, extra=None):
@@ -2613,7 +2631,7 @@ def section_04(ctx):
 {slot_board}
 
     <div class="split-grid">
-      {insights_pane(ctx, "sessions-classes", "Class-level insights", class_insights, pane_payload(ctx, pane_rows(classes_sorted, ['sessions','visits','capacity','revenue','empty']), 'Every class format with its fill and empty sessions.', {'recurring_slots': _slot_rows(get_sessions_by_slot(ctx['loc_key'], ctx['month_key']), False)[:12]}))}
+      {insights_pane(ctx, "sessions-classes", "Class-level insights", class_insights, pane_payload(ctx, pane_rows(classes_sorted, ['sessions','visits','capacity','revenue','empty']), 'Every class format with its fill and empty sessions.', {'recurring_slots': slot_payload_rows(ctx, 8)}))}
 
       <div class="data-pane">
 {class_table}
@@ -4464,7 +4482,7 @@ def section_06(ctx):
     "The scheduling decisions below are anchored to the Session Intelligence table. Every addition is justified by excess demand (fill &gt; 60%); every discontinuation by structural under-fill (fill &lt; 25%) over a sustained period.")}
 
     <div class="split-grid">
-      {insights_pane(ctx, "actions-scheduling", "Scheduling recommendations", sched_insights, pane_payload(ctx, _slot_rows(get_sessions_by_slot(ctx['loc_key'], ctx['month_key']), False)[:14], 'Which recurring slots to add, cut or move.'))}
+      {insights_pane(ctx, "actions-scheduling", "Scheduling recommendations", sched_insights, pane_payload(ctx, slot_payload_rows(ctx, 12), 'Which recurring slots to add, cut or move.'))}
 
       <div class="data-pane">
         <div class="pane-title" style="padding: 16px 16px 8px;">Schedule Action Items &middot; {month_name} {ctx['mo']['year']}</div>

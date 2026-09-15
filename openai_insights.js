@@ -815,32 +815,71 @@ const AI_SECTIONS = Object.keys(SECTION_LABELS);
    Cached on the payload, so re-running a month whose figures have not moved
    costs nothing; a pane is skipped, not faked, when no provider answers. */
 
-const PANE_PROMPT_VERSION = 'p1';
+const PANE_PROMPT_VERSION = 'p2';
 
-function panePrompt(request) {
-  return `You are a studio performance analyst writing the "${request.title}" panel of a board report for ${request.loc_name}, ${request.month_name}.
+/* Panes are generated a section at a time rather than one call each. The
+   instruction block below is ~390 tokens and the month's context another ~200;
+   sending both 21 times per studio-month cost more than the rows did. Grouped,
+   each is sent once per section — the same output for roughly half the input
+   and a third of the round trips.
 
-Write 3-5 insight cards about THESE ROWS specifically. Return JSON:
-{"cards":[{"headline":"...","meaning":"...","evidence":"...","action":"..."}]}
+   The trade is granularity: if a section's call fails, that section's panes
+   fall back to their labelled rule-based copy together instead of one at a
+   time. The report still renders, and the label tells the reader which is
+   which. */
+const PANE_INSTRUCTIONS = `You are a studio performance analyst writing the insight panels of a board report.
+
+For EACH pane you are given, write 3-5 insight cards about THAT pane's rows. Return JSON:
+{"panes":{"<pane-id>":{"cards":[{"headline":"...","meaning":"...","evidence":"...","action":"..."}]}}}
 
 Field rules:
 - headline: one sentence, the finding itself, with the number in it. Never a label like "Strong performance".
-- meaning: 1-2 sentences on the mechanism — WHY this row looks like this, and what it implies. Cross-reference the month context (fill rate, churn, conversion, discount, MoM moves) where it genuinely explains the row.
+- meaning: 1-2 sentences on the mechanism — WHY this row looks like this, and what it implies. Cross-reference the shared month context (fill rate, churn, conversion, discount, MoM moves) where it genuinely explains the row.
 - evidence: the figures the claim rests on, comma separated. Numbers only, no prose.
 - action: one specific, assignable next step. Not "monitor this" — say what to change, where.
 
 Hard rules:
-- Every card must be about a DIFFERENT row or a different relationship between rows. Never repeat a sentence pattern across cards.
-- No two cards may share an action. If two rows need the same action, say so once and use the second card for something else.
+- Every card must be about a DIFFERENT row or a different relationship between rows. Never repeat a sentence pattern, within a pane or across panes.
+- No two cards anywhere in the response may share an action.
 - Rank matters: lead with the row that carries the most money or the most risk, not the first in the list.
 - Quantify. "Down sharply" is not analysis; "down 31% to ₹2.4L, the third consecutive fall" is.
 - If a row is small or an outlier, say so rather than treating it as a trend.
 - Indian numbering (₹1.2L, ₹45K). No markdown, no bullet characters, plain sentences.
-- Write for a studio owner who knows the business. No hedging, no filler, no restating the column headers.`;
+- Write for a studio owner who knows the business. No hedging, no filler, no restating column headers.
+- Return an entry for every pane id you were given, and no others.`;
+
+function normaliseCards(raw) {
+  return (Array.isArray(raw) ? raw : [])
+    .filter((c) => c && (c.headline || c.meaning))
+    .slice(0, 5)
+    .map((c) => ({
+      headline: String(c.headline || '').trim(),
+      meaning: String(c.meaning || '').trim(),
+      evidence: String(c.evidence || '').trim(),
+      action: String(c.action || '').trim(),
+    }));
 }
 
-async function generatePaneInsights(request, options = {}) {
-  const key = cacheKey([PANE_PROMPT_VERSION, request.key, JSON.stringify(request.payload)]);
+/* One call per (studio, month, section). `requests` are the pane entries the
+   report generator emitted; the answer is a map of pane key -> {cards}. */
+async function generatePaneInsights(requests, options = {}) {
+  const group = Array.isArray(requests) ? requests : [requests];
+  if (!group.length) return {};
+
+  // Context is identical across a section's panes, so it is hoisted out and
+  // sent once instead of once per pane.
+  const context = (group[0].payload || {}).context || {};
+  const panes = group.map((r) => ({
+    id: r.pane,
+    title: r.title,
+    covers: (r.payload || {}).what_this_pane_covers || '',
+    rows: (r.payload || {}).rows || [],
+    ...Object.fromEntries(Object.entries(r.payload || {})
+      .filter(([k]) => !['context', 'rows', 'what_this_pane_covers'].includes(k))),
+  }));
+
+  const key = cacheKey([PANE_PROMPT_VERSION, group[0].loc_key, group[0].month_key,
+                        group.map((r) => r.pane).join(','), JSON.stringify({ context, panes })]);
   const cached = readCache(key);
   if (cached) return cached;
   if (options.cacheOnly) return null;
@@ -848,15 +887,17 @@ async function generatePaneInsights(request, options = {}) {
   const body = {
     response_format: { type: 'json_object' },
     messages: [
-      { role: 'system', content: panePrompt(request) },
+      { role: 'system', content: PANE_INSTRUCTIONS },
       { role: 'user', content:
-        `Pane: ${request.title}. ${request.payload.what_this_pane_covers || ''}\n\n` +
-        `${JSON.stringify(request.payload)}` },
+        `Studio: ${group[0].loc_name}. Month: ${group[0].month_name}.\n` +
+        `Shared month context: ${JSON.stringify(context)}\n\n` +
+        `Panes to write: ${JSON.stringify(panes)}` },
     ],
     temperature: 0.6,
     presence_penalty: 0.6,
     frequency_penalty: 0.5,
-    max_tokens: 900,
+    // 3-5 short cards per pane, a handful of panes per section.
+    max_tokens: Math.min(2400, 420 * group.length),
   };
 
   let parsed;
@@ -868,27 +909,23 @@ async function generatePaneInsights(request, options = {}) {
       fast: USE_FAST_MODEL,
       parse: parseJsonContent,
       onFallback: ({ from, to, reason }) =>
-        console.warn(`pane ${request.pane}: ${from} unavailable (${reason}) \u2192 ${to}`),
+        console.warn(`panes ${group[0].pane.split('-')[0]}: ${from} unavailable (${reason}) \u2192 ${to}`),
     }));
   } catch (err) {
-    console.warn(`pane ${request.pane}: no narrative (${err.message})`);
+    console.warn(`panes ${group[0].pane.split('-')[0]}: no narrative (${err.message})`);
     return null;
   }
 
-  const cards = (Array.isArray(parsed.cards) ? parsed.cards : [])
-    .filter((c) => c && (c.headline || c.meaning))
-    .slice(0, 5)
-    .map((c) => ({
-      headline: String(c.headline || '').trim(),
-      meaning: String(c.meaning || '').trim(),
-      evidence: String(c.evidence || '').trim(),
-      action: String(c.action || '').trim(),
-    }));
-  if (!cards.length) return null;
+  const answers = (parsed && parsed.panes) || {};
+  const out = {};
+  for (const request of group) {
+    const cards = normaliseCards((answers[request.pane] || {}).cards);
+    if (cards.length) out[request.key] = { cards, generated_by: { provider, model } };
+  }
+  if (!Object.keys(out).length) return null;
 
-  const result = { cards, generated_by: { provider, model } };
-  writeCache(key, result);
-  return result;
+  writeCache(key, out);
+  return out;
 }
 
 module.exports = { generateInsights, generatePaneInsights, SECTION_LABELS, AI_SECTIONS };

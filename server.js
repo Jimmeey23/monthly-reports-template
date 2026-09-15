@@ -996,13 +996,23 @@ app.post('/generate', async (req, res) => {
        like a template. */
     const paneRequests = await collectPaneRequests(
       session, selectedLocs, selectedMonths, outputPath);
+    // Grouped by studio, month and section: one call writes a section's panes
+    // together, so the instruction block and the month context are sent once
+    // instead of once per pane.
+    const paneGroups = new Map();
     for (const request of paneRequests) {
+      const section = String(request.pane).split('-')[0];
+      const groupKey = `${request.loc_key}|${request.month_key}|${section}`;
+      if (!paneGroups.has(groupKey)) paneGroups.set(groupKey, []);
+      paneGroups.get(groupKey).push(request);
+    }
+    for (const [groupKey, group] of paneGroups) {
       aiTasks.push(async () => {
         try {
-          const res = await generatePaneInsights(request, { cacheOnly: noAi });
-          if (res) aiContext[request.key] = res;
+          const res = await generatePaneInsights(group, { cacheOnly: noAi });
+          if (res) Object.assign(aiContext, res);
         } catch (err) {
-          console.error('Failed to generate pane ' + request.pane, err.message);
+          console.error('Failed to generate panes ' + groupKey, err.message);
         }
       });
     }

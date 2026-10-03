@@ -868,7 +868,6 @@ def build_html(ctx):
     html += "\n<!-- REPORT_CLIENT_PLACEHOLDER -->\n"
     html += footer(ctx)
     html += theme_script(ctx)
-    html += "\n</body>\n</html>\n"
     return html
 
 
@@ -971,7 +970,6 @@ def build_html_multi(ctx_list):
     html += "\n<!-- REPORT_CLIENT_PLACEHOLDER -->\n"
     html += footer(ctx_list[-1])
     html += theme_script(ctx_list[-1])
-    html += "\n</body>\n</html>\n"
     return html
 
 

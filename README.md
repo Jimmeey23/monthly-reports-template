@@ -47,7 +47,7 @@ fetch is the optional narration audio the app serves from `/audio/`.
 | path | what it is |
 |---|---|
 | `report.css` | the report stylesheet, single source of truth |
-| `js/` | theme, scroll chrome, KPI charts, heatmap, card flip, carousel, PDF export, MoM panel, section audio, soundboard |
+| `js/` | theme, scroll chrome, reader focus/search tools, KPI charts, heatmap, card flip, carousel, PDF export, MoM panel, section audio, soundboard |
 | `vendor/` | html2canvas and jsPDF, for in-browser PDF export |
 | `img/` | logo and hero photography |
 | `reference/` | the two hand-built July 2026 reports the template was derived from, kept as the visual spec |

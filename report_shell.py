@@ -60,6 +60,7 @@ HERO_SIDE = (_data_uri('img/hero-side.jpg', 'image/jpeg'), 'Studio portrait · P
 INLINE_JS = [
     ('theme-toggle', 'js/theme-toggle.js'),
     ('scroll-chrome', 'js/scroll-chrome.js'),
+    ('reader-tools', 'js/reader-tools.js'),
     ('kpi-charts', 'js/kpi-charts.js'),
     ('heatmap-controls', 'js/heatmap-controls.js'),
     ('metric-card-flip', 'js/metric-card-flip.js'),

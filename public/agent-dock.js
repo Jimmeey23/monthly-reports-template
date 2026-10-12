@@ -36,7 +36,7 @@
     options = options || {};
     var headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
     if (CTX.editToken) headers['x-agent-edit-token'] = CTX.editToken;
-    return fetch(path, Object.assign({}, options, { headers: headers }));
+    return fetch(new URL(path, window.location.href).href, Object.assign({}, options, { headers: headers }));
   }
 
   function escapeHtml(text) {
@@ -91,6 +91,14 @@
       }
 
       if (!line.trim()) { i += 1; continue; }
+
+      // A pipe-prefixed line without a table divider is ordinary text.
+      // Consume it so malformed model tables cannot stall the UI thread.
+      if (/^\s*\|/.test(line)) {
+        out.push('<p>' + inline(line) + '</p>');
+        i += 1;
+        continue;
+      }
 
       var para = [];
       while (i < lines.length && lines[i].trim() && !/^\s*[-*]\s+/.test(lines[i]) && !/^\s*\|/.test(lines[i])) {
@@ -317,7 +325,10 @@
     statusLine = dock.querySelector('.agent-status');
 
     dock.querySelector('.agent-fab').addEventListener('click', toggle);
-    dock.querySelector('[data-act="close"]').addEventListener('click', toggle);
+    dock.querySelector('[data-act="close"]').addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && state.open) { e.preventDefault(); setOpen(false); }
+    });
     dock.querySelector('[data-act="changes"]').addEventListener('click', showChanges);
     var saveBtn = dock.querySelector('[data-act="save"]');
     if (saveBtn) saveBtn.addEventListener('click', saveReport);
@@ -340,10 +351,15 @@
   }
 
   function toggle() {
-    state.open = !state.open;
+    setOpen(!state.open);
+  }
+
+  function setOpen(open) {
+    state.open = open;
     dock.querySelector('.agent-panel').hidden = !state.open;
     dock.classList.toggle('is-open', state.open);
     if (state.open) input.focus();
+    else dock.querySelector('.agent-fab').focus();
   }
 
   function say(role, text, isHtml) {
@@ -395,7 +411,7 @@
 
     var lastChip = null;
 
-    fetch(BASE + '/message', {
+    api(BASE + '/message', {
       method: 'POST',
       headers: Object.assign(
         { 'Content-Type': 'application/json' },
@@ -403,6 +419,11 @@
       ),
       body: JSON.stringify({ message: message }),
     }).then(function (res) {
+      if (!res.ok) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          throw new Error(data.error || 'Request failed (' + res.status + ').');
+        });
+      }
       if (!res.body) throw new Error('Streaming is not supported by this browser.');
       var reader = res.body.getReader();
       var decoder = new TextDecoder();

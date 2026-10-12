@@ -40,6 +40,23 @@ Reports are fully self-contained — CSS, scripts, fonts and images are all
 inlined, so a downloaded file works with no server behind it. The only runtime
 fetch is the optional narration audio the app serves from `/audio/`.
 
+### Analytical content standard
+
+`report_assets/content/analysis-standard.txt` defines recurring analytical depth
+for section narratives and detail panels: sales mix, member frequency, matched
+instructor/slot comparisons, activation, format economics, cancellations, lead
+cohorts and competing explanations. Missing inputs must be stated rather than
+invented. Cohort calculations require linked records; this standard does not
+manufacture unavailable data. New AI narratives require a working provider.
+
+`supplemental_analysis.py` includes the supplied September 2026 Bandra analyses
+only for that studio/month, including in bundles and regenerated reports. Their
+source-reported snapshot and unreconciled populations are labeled. Content and
+supporting workbooks live in `report_assets/content/`; rendering uses the existing
+stylesheet. Other months never inherit these figures. The duplicate review is
+included once. Source charts are represented by their labels and evidence tables
+to avoid importing the supplied documents' separate visual design.
+
 ### Template assets
 
 `report_assets/` holds everything the shell inlines:

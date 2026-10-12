@@ -17,7 +17,8 @@ const CACHE_DIR = process.env.INSIGHTS_CACHE_DIR
   || path.join(__dirname, 'uploads', '.insights-cache');
 
 // Bump when the prompt or output shape changes, so old entries are not reused.
-const PROMPT_VERSION = 'v2';
+const PROMPT_VERSION = 'v3-evidence-depth';
+const ANALYSIS_STANDARD = fs.readFileSync(path.join(__dirname, 'report_assets', 'content', 'analysis-standard.txt'), 'utf8');
 
 function cacheKey(parts) {
   return crypto.createHash('sha1').update(parts.join('\u0000')).digest('hex');
@@ -593,6 +594,8 @@ ${FITNESS_INDUSTRY_CONTEXT}
 
 ${angle}
 
+${ANALYSIS_STANDARD}
+
 ═══════════════════════════════════════════════════════════════
 WHAT THE DASHBOARD ALREADY SHOWS (DO NOT SIMPLY RESTATE):
 ═══════════════════════════════════════════════════════════════
@@ -701,12 +704,12 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
   const sectionLabel = SECTION_LABELS[section] || section;
   const angle = ANALYTICAL_ANGLES[Math.floor(Math.random() * ANALYTICAL_ANGLES.length)];
 
-  const system = systemPrompt(sectionLabel, angle);
+  const system = systemPrompt(sectionLabel, angle) + '\n\n' + ANALYSIS_STANDARD;
   const user = `Analyse the following data digest for ${month}. The "trends" object has multi-month trajectory data with acceleration signals. The "anomalies" array flags statistical deviations. The "cross_metrics" object has pre-computed cross-references. Use ALL of these to produce deep, context-aware, data-backed analysis.\n\n${JSON.stringify(digest)}`;
 
   // The angle is picked at random per call, so it is deliberately left out of
   // the key: the same figures should hit the cache whichever lens came up.
-  const key = cacheKey([PROMPT_VERSION, locKey, month, section, JSON.stringify(digest)]);
+  const key = cacheKey([PROMPT_VERSION, ANALYSIS_STANDARD, locKey, month, section, JSON.stringify(digest)]);
   const cached = readCache(key);
   if (cached) return cached;
   if (options.cacheOnly) return null;
@@ -815,7 +818,7 @@ const AI_SECTIONS = Object.keys(SECTION_LABELS);
    Cached on the payload, so re-running a month whose figures have not moved
    costs nothing; a pane is skipped, not faked, when no provider answers. */
 
-const PANE_PROMPT_VERSION = 'p2';
+const PANE_PROMPT_VERSION = 'p3-evidence-depth';
 
 /* Panes are generated a section at a time rather than one call each. The
    instruction block below is ~390 tokens and the month's context another ~200;
@@ -828,6 +831,8 @@ const PANE_PROMPT_VERSION = 'p2';
    time. The report still renders, and the label tells the reader which is
    which. */
 const PANE_INSTRUCTIONS = `You are a studio performance analyst writing the insight panels of a board report.
+
+${ANALYSIS_STANDARD}
 
 For EACH pane you are given, write 3-5 insight cards about THAT pane's rows. Return JSON:
 {"panes":{"<pane-id>":{"cards":[{"headline":"...","meaning":"...","evidence":"...","action":"..."}]}}}

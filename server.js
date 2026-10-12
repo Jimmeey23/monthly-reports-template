@@ -1187,9 +1187,9 @@ function agentDockTags(session, filename, canEdit) {
     filename,
     editToken: canEdit ? editToken(session.dir) : null,
   };
-  return '\n<link rel="stylesheet" href="/agent-dock.css?v=1" data-agent-dock>'
+  return '\n<link rel="stylesheet" href="/agent-dock.css?v=2" data-agent-dock>'
     + `\n<script data-agent-dock>window.__AGENT_CTX__ = ${JSON.stringify(ctx).replace(/</g, '\\u003c')};</script>`
-    + '\n<script src="/agent-dock.js?v=1" data-agent-dock></script>\n';
+    + '\n<script src="/agent-dock.js?v=2" data-agent-dock></script>\n';
 }
 
 app.get('/report/:sessionId/:filename', (req, res) => {
@@ -1207,10 +1207,13 @@ app.get('/report/:sessionId/:filename', (req, res) => {
 
   const canEdit = !req.query.roomCode && req.query.readonly !== '1';
   const tags = agentDockTags(session, req.params.filename, canEdit);
+  // Embedded libraries contain literal </body> strings. Only the final
+  // document closing tag is an insertion point; never replace inside JS.
+  const bodyCloseIndex = html.lastIndexOf('</body>');
   const body = html.includes('data-agent-dock')
     ? html                                           // already carries a dock (a baked save)
-    : (html.includes('</body>')
-      ? html.replace('</body>', `${tags}</body>`)
+    : (bodyCloseIndex !== -1
+      ? html.slice(0, bodyCloseIndex) + tags + html.slice(bodyCloseIndex)
       : html + tags);
 
   res.type('html').send(body);

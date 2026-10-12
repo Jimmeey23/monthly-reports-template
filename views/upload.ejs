@@ -399,7 +399,7 @@
         formData.append('totalChunks', totalChunks);
         formData.append('chunk', blobChunk, `${slotField}_part_${chunkIndex}.csv`);
 
-        const res = await fetch('/upload-chunk', {
+        const res = await fetch(new URL('/upload-chunk', window.location.href).href, {
           method: 'POST',
           body: formData,
         });
@@ -443,7 +443,7 @@
         loadingTitle.textContent = 'Running performance analysis on full dataset…';
         loadingSub.textContent = 'Aggregating revenue, conversion funnel, check-ins & session metrics across full CSV history.';
 
-        const analyzeRes = await fetch('/analyze-session', {
+        const analyzeRes = await fetch(new URL('/analyze-session', window.location.href).href, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId }),
@@ -467,7 +467,7 @@
     // Fetch persistent saved sessions on load
     (async function checkSavedSessions() {
       try {
-        const res = await fetch('/api/saved-sessions');
+        const res = await fetch(new URL('/api/saved-sessions', window.location.href).href);
         const data = await res.json();
         const validSessions = (data.sessions || []).filter(s => s && s.sessionId && s.sessionId !== 'undefined');
         if (validSessions.length > 0) {

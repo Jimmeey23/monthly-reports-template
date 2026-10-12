@@ -48,6 +48,9 @@
   overflow: hidden;
 }
 
+/* Author display rules must not override the panel's hidden state. */
+.agent-dock [hidden] { display: none !important; }
+
 .agent-head {
   display: flex;
   align-items: center;

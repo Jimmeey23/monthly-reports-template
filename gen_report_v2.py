@@ -1276,7 +1276,8 @@ def render_chapters(ctx):
     reset_mom_registry()
     # Each chapter carries its own month-on-month grid inline, so this is a
     # straight render in narrative order.
-    return ''.join(chapter(ctx) for chapter in CHAPTERS)
+    from supplemental_analysis import render as render_supplement
+    return ''.join(chapter(ctx) for chapter in CHAPTERS) + render_supplement(ctx)
 
 
 def footer(ctx):

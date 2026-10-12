@@ -173,6 +173,22 @@ def render_ai_result(result):
     insights = result.get('insights') or result.get('key_insights') or []
     recs = result.get('recommendations') or result.get('actions') or []
 
+    # SVG Micro-Icons for refined boardroom aesthetics
+    svg_star = '<svg class="ai-header-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.2L21 12l-6.6 2.8L12 22l-2.4-7.2L3 12l6.6-2.8z"/></svg>'
+    svg_doc = '<svg class="ai-block-icon-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
+    svg_insight = '<svg class="ai-block-icon-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    svg_target = '<svg class="ai-block-icon-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
+    svg_cal = '<svg class="ai-pill-icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+    svg_user = '<svg class="ai-pill-icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+
+    # Subtitle based on section role
+    if recs and not insights:
+        header_sub = 'Strategic Decision Agenda &amp; Action Plan'
+    elif recs and insights:
+        header_sub = 'Executive Performance Overview &amp; Priorities'
+    else:
+        header_sub = 'Operational Diagnostic &amp; Analytical Findings'
+
     # 1. Detailed Summary Block
     summary_html = ''
     if summary_text:
@@ -181,11 +197,11 @@ def render_ai_result(result):
             paras = [summary_text.strip()]
         para_tags = "".join([f'<p class="ai-summary-para">{p}</p>' for p in paras])
         summary_html = f'''<div class="ai-summary-narrative-block">
-            <div class="ai-block-heading">&#128203; Detailed Executive Narrative</div>
+            <div class="ai-block-heading">{svg_doc} <span>Detailed Analytical Narrative</span></div>
             {para_tags}
         </div>'''
 
-    # 2. Bulleted Insights Block ("What These Metrics Tell Us")
+    # 2. Bulleted Insights Block
     insights_html = ''
     if insights:
         items_html = ''
@@ -193,25 +209,24 @@ def render_ai_result(result):
             headline = safe_html(ins.get('headline') or ins.get('title', '—'))
             meaning = safe_html(ins.get('meaning') or (ins.text if hasattr(ins, 'text') else ins.get('text', '—')))
             evidence = safe_html(ins.get('data_evidence', ''))
-
-            # Cleanly merge evidence into narrative context if present, without raw badge callouts
             evidence_text = f' <span class="ai-bullet-evidence-inline">({evidence})</span>' if evidence and evidence != '—' else ''
 
             items_html += f'''
             <li class="ai-bullet-item">
-              <div class="ai-bullet-dot">&#128161;</div>
+              <div class="ai-bullet-dot">{svg_insight}</div>
               <div class="ai-bullet-content">
                 <div class="ai-bullet-header"><strong class="ai-bullet-title">{headline}</strong></div>
                 <div class="ai-bullet-meaning">{meaning}{evidence_text}</div>
               </div>
             </li>'''
 
+        heading_title = "What These Metrics Tell Us" if recs else "Key Analytical Findings"
         insights_html = f'''<div class="ai-list-block">
-            <div class="ai-block-heading">&#128161; What These Metrics Tell Us ({len(insights)})</div>
+            <div class="ai-block-heading">{svg_insight} <span>{heading_title} ({len(insights)})</span></div>
             <ul class="ai-bullet-list">{items_html}</ul>
         </div>'''
 
-    # 3. Bulleted Recommendations Block ("Strategic Action Plan")
+    # 3. Bulleted Recommendations Block (only rendered when recommendations exist)
     recs_html = ''
     if recs:
         items_html = ''
@@ -224,13 +239,13 @@ def render_ai_result(result):
             priority = safe_html(r.get('priority', '')).lower()
 
             pri_pill = f'<span class="meta-pill pri-{priority}">{priority.upper()} PRIORITY</span>' if priority and priority != '—' else ''
-            time_pill = f'<span class="meta-pill">&#128197; {timeline}</span>' if timeline and timeline != '—' else ''
-            owner_pill = f'<span class="meta-pill">&#128100; {owner}</span>' if owner and owner != '—' else ''
-            impact_html = f'<div class="ai-rec-impact-tag">&#127919; <strong>Expected Impact:</strong> {impact}</div>' if impact and impact != '—' else ''
+            time_pill = f'<span class="meta-pill">{svg_cal} {timeline}</span>' if timeline and timeline != '—' else ''
+            owner_pill = f'<span class="meta-pill">{svg_user} {owner}</span>' if owner and owner != '—' else ''
+            impact_html = f'<div class="ai-rec-impact-tag">{svg_target} <strong>Expected Impact:</strong> {impact}</div>' if impact and impact != '—' else ''
 
             items_html += f'''
             <li class="ai-bullet-item rec-item">
-              <div class="ai-bullet-dot rec-dot">&#127919;</div>
+              <div class="ai-bullet-dot rec-dot">{svg_target}</div>
               <div class="ai-bullet-content">
                 <div class="ai-bullet-header"><strong class="ai-bullet-title">{rec_title}</strong></div>
                 <div class="ai-bullet-meaning">{desc}</div>
@@ -240,16 +255,16 @@ def render_ai_result(result):
             </li>'''
 
         recs_html = f'''<div class="ai-list-block">
-            <div class="ai-block-heading">&#127919; Actionable Recommendations ({len(recs)})</div>
+            <div class="ai-block-heading">{svg_target} <span>Actionable Strategic Priorities ({len(recs)})</span></div>
             <ul class="ai-bullet-list">{items_html}</ul>
         </div>'''
 
     return f'''<div class="ai-result ai-result-v2">
         <div class="ai-result-header">
-            <div class="ai-result-header-icon">&#10024;</div>
+            <div class="ai-result-header-icon">{svg_star}</div>
             <div>
                 <div class="ai-result-header-title">{title}</div>
-                <div class="ai-result-header-sub">Strategic Analysis &amp; Action Plan</div>
+                <div class="ai-result-header-sub">{header_sub}</div>
             </div>
         </div>
         {summary_html}
@@ -4436,26 +4451,13 @@ def section_06(ctx):
             f"{'baseline-plus to baseline-strong' if s['net'] > ctx['baseline']['sales']['net'] else 'baseline to baseline-plus'} "
             f"by {mo['next_month_name']} {ctx['mo']['next_year']}.")
 
-    # Build MoM toggle data
-    mom_data = {
-        'Net Sales': {'current': lakh(s['net']), 'mom': ctx['net_mom'], 'yoy': ctx['net_yoy']},
-        'Sessions': {'current': fmt_int(sess['sessions']), 'mom': ctx['sessions_mom'], 'yoy': 'n/a'},
-        'Fill Rate': {'current': pct(sess['fill']), 'mom': ctx['fill_mom'], 'yoy': 'n/a'},
-        'Leads': {'current': fmt_int(leads['total']), 'mom': ctx['leads_mom'], 'yoy': 'n/a'},
-        'Lapsed': {'current': fmt_int(lapsed['lapsed']), 'mom': ctx['lapsed_mom'], 'yoy': 'n/a'},
-        'Late Cancels': {'current': fmt_int(checkins['late_cancel']), 'mom': ctx['late_cancel_mom'], 'yoy': 'n/a'},
-    }
-    mom_toggle = mom_toggle_table(ctx, mom_data, f'recommendations{ctx.get("id_suffix", "")}')
-
     html = f'''
 <section class="report-section" id="recommendations{ctx.get('id_suffix', '')}">
   <div class="container">
 {section_header("Decision Agenda &mdash; Priorities, Owners &amp; Measurable Outcomes", title, deck, 6,
-                 signals=[("Net Sales", lakh(s['net']), f"{ctx['net_mom']} MoM"),
-                          ("Fill Rate", pct(sess['fill']), f"{fmt_int(sess['visits'])} visits"),
-                          ("Churn Rate", pct(lapsed['churn']), f"{fmt_int(lapsed['lapsed'])} lapsed")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
-
-{mom_toggle}
+                 signals=[("Target Focus", "Margin &amp; ATV", f"{rupee(s.get('atv', 0))} ATV"),
+                          ("Capacity Unlock", "Prime Fill", f"{pct(sess.get('fill', 0))} fill"),
+                          ("Pipeline Quality", "Trial Conversion", f"{pct(leads.get('converted', 0), leads.get('total', 1))} conv")], loc_key=ctx["loc_key"], month_key=ctx["month_key"], id_suffix=ctx.get("id_suffix", ""))}
 
 {subsection("The five decisions &mdash; ranked by what each is worth",
     "Each decision below is sized from this month's own numbers, names the evidence behind it, and carries the "

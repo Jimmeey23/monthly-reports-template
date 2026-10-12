@@ -1022,7 +1022,8 @@ app.post('/generate', async (req, res) => {
     // of work in parallel. A failed optional narrative must not block the report.
     // Cache-only lookups are local file reads, so the throttle that exists for
     // provider rate limits would only slow them down.
-    const workerCount = noAi ? Math.min(8, aiTasks.length) : Math.min(2, aiTasks.length);
+    const defaultWorkers = noAi ? Math.min(8, aiTasks.length) : Math.min(3, aiTasks.length);
+    const workerCount = Math.min(aiTasks.length, Number(process.env.AI_CONCURRENCY) || defaultWorkers);
     let nextTask = 0;
     await Promise.all(Array.from({ length: workerCount }, async () => {
       while (nextTask < aiTasks.length) {

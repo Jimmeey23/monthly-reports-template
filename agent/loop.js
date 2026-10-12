@@ -155,6 +155,7 @@ async function runTurn({ message, ctx, emit = () => {} } = {}) {
 
     const { value: assistant } = await chatCompletion({
       body,
+      fast: process.env.AGENT_FULL_MODEL === '1' ? false : true,
       wantMessage: true,
       parse: m => m,
       onFallback: info => emit({ type: 'status', text: `${info.from} unavailable — trying ${info.to}` }),

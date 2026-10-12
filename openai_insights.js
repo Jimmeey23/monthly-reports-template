@@ -17,7 +17,7 @@ const CACHE_DIR = process.env.INSIGHTS_CACHE_DIR
   || path.join(__dirname, 'uploads', '.insights-cache');
 
 // Bump when the prompt or output shape changes, so old entries are not reused.
-const PROMPT_VERSION = 'v3-evidence-depth';
+const PROMPT_VERSION = 'v4-specialized-dedup';
 const ANALYSIS_STANDARD = fs.readFileSync(path.join(__dirname, 'report_assets', 'content', 'analysis-standard.txt'), 'utf8');
 
 function cacheKey(parts) {
@@ -587,14 +587,15 @@ function buildDigest(analysis, locKey, month, section) {
   }
 }
 
-function systemPrompt(sectionLabel, angle) {
-  return `You are a SENIOR FITNESS-STUDIO BUSINESS STRATEGIST and trusted advisor with 15 years of experience helping premium boutique fitness studios grow. You are producing the "${sectionLabel}" analysis for a monthly management performance report.
+function systemPrompt(sectionLabel, section, angle) {
+  // Common instructions on tone and rigor
+  const commonHeader = `You are a SENIOR FITNESS-STUDIO BUSINESS STRATEGIST and trusted advisor with 15 years of experience helping premium boutique fitness studios grow. You are producing the "${sectionLabel}" analysis for a monthly management performance report.
 
 ${FITNESS_INDUSTRY_CONTEXT}
 
-${angle}
-
 ${ANALYSIS_STANDARD}
+
+${angle}
 
 ═══════════════════════════════════════════════════════════════
 WHAT THE DASHBOARD ALREADY SHOWS (DO NOT SIMPLY RESTATE):
@@ -607,92 +608,136 @@ The report dashboard already displays raw numbers, KPI cards, charts, and tables
 - Lapsed member counts, renewal rates, product breakdowns
 - Month-over-month and baseline percentage changes
 
-Your job is to go DEEPER — explain the WHY, the WHAT NEXT, and the SO WHAT. Don't restate numbers the user can already read.
+Your job is to go DEEPER — explain the WHY, the MECHANISM, and the SO WHAT. Don't restate numbers the user can already read.
 
 ═══════════════════════════════════════════════════════════════
 TONE & FRAMING — CRITICAL:
 ═══════════════════════════════════════════════════════════════
-
 You are a TRUSTED ADVISOR. Your job is to EMPOWER and MOTIVATE, not alarm.
-
 1. LEAD with wins and strengths — celebrate with specificity, not generic praise.
-2. Frame every gap as an OPPORTUNITY with quantified upside: "Lead conversion at 12% is the studio's single biggest growth lever — moving to 25% doubles the pipeline without additional spend."
-3. For every dip or underperformance, ALWAYS pair it with a concrete fix and the expected outcome of implementing it.
-4. Use CONSTRUCTIVE language: "opportunity to capture", "room to unlock", "next growth lever", "potential upside", "quick win available."
-5. NEVER use: "alarming", "crisis", "failing", "dangerous", "problematic", "concerning", "troubling."
-6. The reader should finish feeling ENERGISED and clear on what to do next.
-
-═══════════════════════════════════════════════════════════════
-DEPTH MODEL — WHAT SEPARATES BASIC FROM ADVANCED:
-═══════════════════════════════════════════════════════════════
-
-❌ BASIC (UNACCEPTABLE):
-"Gross sales increased 18.3% to ₹2,580,029"
-
-✅ ADVANCED (THE MINIMUM BAR):
-"This month's 18.3% revenue growth is primarily volume-driven — transactions jumped 23.8% while ATV dipped 4.4%. This means the studio is attracting more customers (a strong sign of market pull), and the next unlock is stabilising ATV through premium upsells or package restructuring, which could add an estimated ₹95K/month in recovered margin."
-
-═══════════════════════════════════════════════════════════════
-ANALYTICAL FRAMEWORKS:
-═══════════════════════════════════════════════════════════════
-
-1. DECOMPOSITION: Revenue = Volume × Price. Growth = Organic + Promotional. Report which component drives the aggregate.
-2. CROSS-REFERENCING: Connect 2+ metrics that reveal something new when combined.
-3. TREND VELOCITY: Use multi-month trend data — is momentum accelerating or decelerating?
-4. COUNTERFACTUAL: "If X had stayed at last month's level, Y would have been Z."
-5. OPPORTUNITY SIZING: Quantify the upside of closing each gap.
-6. PATTERN RECOGNITION: Identify repeating behaviors, seasonal signals, or structural shifts across the multi-month data.
+2. Frame every gap as an OPPORTUNITY with quantified upside.
+3. Use CONSTRUCTIVE language: "opportunity to capture", "room to unlock", "next growth lever", "potential upside".
+4. NEVER use: "alarming", "crisis", "failing", "dangerous", "problematic", "concerning", "troubling."
+5. Write like a strategic advisor — dense, precise, evidence-backed, but warm and encouraging.
 
 ═══════════════════════════════════════════════════════════════
 HARD RULES:
 ═══════════════════════════════════════════════════════════════
-
 1. Every claim MUST cite specific numbers from the data to back it up.
 2. Every insight MUST cross-reference at least 2 metrics.
 3. Use ₹ for currency. Format large numbers with commas (e.g., ₹25,80,029).
 4. No hedging — state conclusions confidently with evidence inline.
 5. Never repeat the same insight in different words.
-6. Use the "trends" data for trajectory-based statements.
-7. Use the "cross_metrics" and "anomalies" data to anchor analysis.
-8. Write like a strategic advisor — dense, precise, evidence-backed, but warm and encouraging.
+6. Use the "trends" data for trajectory-based statements and "cross_metrics" to anchor analysis.`;
+
+  // Output specification specialized by section to eliminate repeated content across chapters:
+  if (section === 'recommendations') {
+    return `${commonHeader}
 
 ═══════════════════════════════════════════════════════════════
-REQUIRED OUTPUT — UNIFIED STRUCTURE in valid JSON:
-Do NOT segregate output into multiple complicated sub-sections.
-Return ONLY these key fields in JSON:
+REQUIRED OUTPUT — STRATEGIC ACTION AGENDA in valid JSON:
 ═══════════════════════════════════════════════════════════════
-
+Return ONLY these fields in JSON (do NOT include separate generic insights, this is the action chapter):
 {
-  "title": "Executive Strategic Analysis — [Month Year]",
-  "detailed_summary": "A rich 2-3 paragraph written narrative providing a complete executive story for this period. Cover the overall trajectory, primary revenue/operational mechanisms driving results, leading vs lagging signals, and key underlying tensions. Write like a senior strategic advisor — confident, data-backed, and articulate. Do not just list metrics.",
-  "insights": [
-    {
-      "headline": "Short punchy headline (max 8 words)",
-      "meaning": "2-3 sentences explaining WHAT this metric or combination of metrics tells us about business health, root causes, or operational friction. NEVER just restate numbers — explain the underlying mechanism and implication.",
-      "data_evidence": "The specific numbers supporting this insight (e.g., '₹25,80,029 gross (+18.3%) driven by 349 transactions (+23.8%) while ATV compressed 4.4%')",
-      "classification": "excellent|healthy|opportunity|watch"
-    }
-  ],
+  "title": "Executive Decision Agenda & Action Plan",
+  "detailed_summary": "A rich 1-2 paragraph executive strategic synthesis explaining the core decision framework for this quarter. Synthesize the primary strategic priorities connecting commercial, funnel, session, and retention levers into coherent next steps.",
   "recommendations": [
     {
       "title": "Clear action title (e.g., 'Launch Premium Package Upsell at Check-in')",
-      "description": "2-3 sentences detailing the step-by-step initiative, which lever to pull, and why the data justifies it.",
+      "description": "2-3 sentences detailing the step-by-step initiative, which lever to pull, and why the cross-metric data justifies it.",
       "expected_impact": "Quantified expected outcome (e.g., 'Lifting ATV to ₹8,000 adds ~₹2.1L/month in gross revenue')",
-      "timeline": "This week / Next 2 weeks / By end of month / This quarter",
+      "timeline": "Immediate / This week / Next 2 weeks / By end of month / This quarter",
       "priority": "high|medium|low",
       "owner": "Specific role (e.g., Studio Manager, Head Coach, Sales Lead)"
     }
   ]
 }
 
-QUANTITIES:
-- insights: 4-6 high-impact bullets ("What These Metrics Tell Us")
-- recommendations: 4-5 prioritized action bullets ("Strategic Action Plan")
+QUANTITIES: 5-6 high-impact, prioritized recommendations.`;
+  }
 
-CONCISENESS & QUALITY RULES:
-- Never restate raw numbers without explaining the mechanism behind them.
-- Cross-reference at least 2 metrics per insight.
-- Frame underperformance constructively as "opportunity" or "watch".`;
+  if (section === 'executive-summary') {
+    return `${commonHeader}
+
+═══════════════════════════════════════════════════════════════
+REQUIRED OUTPUT — EXECUTIVE SUMMARY in valid JSON:
+═══════════════════════════════════════════════════════════════
+Return ONLY these fields in JSON:
+{
+  "title": "Executive Strategic Analysis — Monthly Performance",
+  "detailed_summary": "A rich 2-3 paragraph written narrative providing a complete executive story for this period. Cover the overall trajectory, primary revenue/operational mechanisms driving results, leading vs lagging signals, and key underlying tensions.",
+  "insights": [
+    {
+      "headline": "Short punchy headline (max 8 words)",
+      "meaning": "2-3 sentences explaining WHAT this combination of metrics tells us about business health, root causes, or operational friction.",
+      "data_evidence": "The specific numbers supporting this insight",
+      "classification": "excellent|healthy|opportunity|watch"
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Clear action title",
+      "description": "2-3 sentences detailing the priority strategic move.",
+      "expected_impact": "Quantified expected outcome",
+      "timeline": "This week / Next 2 weeks / By end of month",
+      "priority": "high|medium|low",
+      "owner": "Specific role"
+    }
+  ]
+}
+
+QUANTITIES:
+- insights: 4 high-conviction bullets ("What These Metrics Tell Us")
+- recommendations: 3 top strategic imperatives ("Executive Priorities")`;
+  }
+
+  if (section === 'predictions') {
+    return `${commonHeader}
+
+═══════════════════════════════════════════════════════════════
+REQUIRED OUTPUT — FORWARD TRAJECTORY & OUTLOOK in valid JSON:
+═══════════════════════════════════════════════════════════════
+Return ONLY these fields in JSON:
+{
+  "title": "Forward Trajectory, Velocity & Scenario Outlook",
+  "detailed_summary": "A rich 2-paragraph forward-looking narrative evaluating multi-month momentum, acceleration/deceleration trends, velocity risks, and what trailing velocity implies for the upcoming 60-90 days.",
+  "insights": [
+    {
+      "headline": "Short punchy headline (max 8 words)",
+      "meaning": "2-3 sentences evaluating leading indicators, trend acceleration, or trajectory risks.",
+      "data_evidence": "Specific multi-month trend or velocity figures",
+      "classification": "healthy|opportunity|watch"
+    }
+  ]
+}
+
+QUANTITIES: 4 forward signal / leading indicator bullets.`;
+  }
+
+  // Diagnostic Chapters (revenue-performance, conversion-funnel, sessions, lapsed):
+  // Focus purely on deep root-cause diagnosis. Do NOT generate redundant global recommendations here!
+  return `${commonHeader}
+
+═══════════════════════════════════════════════════════════════
+REQUIRED OUTPUT — DEEP OPERATIONAL DIAGNOSTIC in valid JSON:
+═══════════════════════════════════════════════════════════════
+Focus exclusively on DIAGNOSIS: root causes, volume vs price decomposition, mix shifts, and operational mechanics.
+Do NOT generate a generic action plan here — strategic recommendations belong in the dedicated Decision Agenda.
+Return ONLY these fields in JSON:
+{
+  "title": "${sectionLabel} — Diagnostic Analysis",
+  "detailed_summary": "A rich 2-paragraph written diagnostic explaining WHY this department/metric moved as it did. Unpack operational mechanisms, customer behaviors, driver breakdowns, and cross-metric tensions.",
+  "insights": [
+    {
+      "headline": "Short punchy headline (max 8 words)",
+      "meaning": "2-3 sentences explaining the mechanism behind this metric or combination of metrics. Explain why the numbers look like this.",
+      "data_evidence": "The specific numbers supporting this finding",
+      "classification": "excellent|healthy|opportunity|watch"
+    }
+  ]
+}
+
+QUANTITIES: 4-6 high-impact diagnostic bullets ("Key Analytical Findings").`;
 }
 
 /* `cacheOnly` is the no-spend path: everything up to the cache lookup still
@@ -704,7 +749,8 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
   const sectionLabel = SECTION_LABELS[section] || section;
   const angle = ANALYTICAL_ANGLES[Math.floor(Math.random() * ANALYTICAL_ANGLES.length)];
 
-  const system = systemPrompt(sectionLabel, angle) + '\n\n' + ANALYSIS_STANDARD;
+  // Single system prompt without duplicate ANALYSIS_STANDARD concatenation
+  const system = systemPrompt(sectionLabel, section, angle);
   const user = `Analyse the following data digest for ${month}. The "trends" object has multi-month trajectory data with acceleration signals. The "anomalies" array flags statistical deviations. The "cross_metrics" object has pre-computed cross-references. Use ALL of these to produce deep, context-aware, data-backed analysis.\n\n${JSON.stringify(digest)}`;
 
   // The angle is picked at random per call, so it is deliberately left out of
@@ -713,6 +759,10 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
   const cached = readCache(key);
   if (cached) return cached;
   if (options.cacheOnly) return null;
+
+  // Tailored max_tokens per section: diagnostic and forecast sections need fewer tokens,
+  // saving latency, reservation overhead, and cost.
+  const maxTokens = (section === 'executive-summary' || section === 'recommendations') ? 1100 : 850;
 
   const requestBody = {
       response_format: { type: 'json_object' },
@@ -723,9 +773,7 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
       temperature: 0.5,
       presence_penalty: 0.5,
       frequency_penalty: 0.4,
-      // 4-6 insights and 4-5 recommendations fit inside this; the old 2200
-      // ceiling was never reached and only raised the per-call cost estimate.
-      max_tokens: 1400,
+      max_tokens: maxTokens,
     };
 
   // OpenAI first; DeepSeek and then Nemotron pick the request up unchanged
@@ -740,7 +788,7 @@ async function generateInsights(analysis, locKey, month, section = 'executive-su
   parsed.generated_by = { provider, model };
 
   // ── Sanitize title & detailed_summary ──
-  parsed.title = parsed.title || `Executive Strategic Analysis — ${month}`;
+  parsed.title = parsed.title || `${sectionLabel} Analysis — ${month}`;
   parsed.detailed_summary = parsed.detailed_summary || parsed.summary || parsed.performance_summary?.narrative || '';
 
   // ── Sanitize insights ──
